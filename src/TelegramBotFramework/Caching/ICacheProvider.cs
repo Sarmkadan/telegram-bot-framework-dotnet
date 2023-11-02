@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -50,7 +51,7 @@ public interface ICacheProvider
 /// <summary>
 /// Statistics about cache performance.
 /// </summary>
-public class CacheStatistics
+public sealed class CacheStatistics
 {
     public long HitCount { get; set; }
     public long MissCount { get; set; }

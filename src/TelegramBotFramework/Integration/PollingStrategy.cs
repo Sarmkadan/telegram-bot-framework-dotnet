@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.Integration;
 /// Implements polling strategy for fetching Telegram updates.
 /// Used as an alternative to webhooks for receiving bot updates.
 /// </summary>
-public class PollingStrategy
+public sealed class PollingStrategy
 {
     private readonly TelegramApiClient _apiClient;
     private readonly ILogger<PollingStrategy> _logger;
@@ -33,7 +34,7 @@ public class PollingStrategy
     /// </summary>
     public void Start(TimeSpan? pollInterval = null)
     {
-        if (_pollingTask != null && !_pollingTask.IsCompleted)
+        if (_pollingTask  is not null && !_pollingTask.IsCompleted)
         {
             _logger.LogWarning("Polling is already running");
             return;
@@ -52,12 +53,12 @@ public class PollingStrategy
     /// </summary>
     public async Task StopAsync()
     {
-        if (_cancellationTokenSource == null)
+        if (_cancellationTokenSource  is null)
             return;
 
         _cancellationTokenSource.Cancel();
 
-        if (_pollingTask != null)
+        if (_pollingTask  is not null)
         {
             try
             {
@@ -79,7 +80,7 @@ public class PollingStrategy
     {
         return new PollingStatus
         {
-            IsRunning = _pollingTask != null && !_pollingTask.IsCompleted,
+            IsRunning = _pollingTask  is not null && !_pollingTask.IsCompleted,
             LastUpdateId = _lastUpdateId,
             LastPollTime = LastPollTime
         };
@@ -127,7 +128,7 @@ public class PollingStrategy
         {
             _lastUpdateId = update.UpdateId;
 
-            if (OnUpdateReceived != null)
+            if (OnUpdateReceived  is not null)
             {
                 await OnUpdateReceived.Invoke(update);
             }
@@ -142,7 +143,7 @@ public class PollingStrategy
 /// <summary>
 /// Represents the current polling status.
 /// </summary>
-public class PollingStatus
+public sealed class PollingStatus
 {
     public bool IsRunning { get; set; }
     public long LastUpdateId { get; set; }

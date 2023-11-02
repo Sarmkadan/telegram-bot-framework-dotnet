@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -33,7 +34,7 @@ public static class ReflectionHelper
         assembly ??= Assembly.GetCallingAssembly();
 
         return assembly.GetTypes()
-            .Where(t => t.GetCustomAttribute<TAttribute>() != null);
+            .Where(t => t.GetCustomAttribute<TAttribute>()  is not null);
     }
 
     /// <summary>
@@ -41,7 +42,7 @@ public static class ReflectionHelper
     /// </summary>
     public static T? CreateInstance<T>(Type type) where T : class
     {
-        if (type == null)
+        if (type  is null)
             return null;
 
         try
@@ -59,7 +60,7 @@ public static class ReflectionHelper
     /// </summary>
     public static T? CreateInstance<T>(Type type, params object[] args) where T : class
     {
-        if (type == null)
+        if (type  is null)
             return null;
 
         try
@@ -78,7 +79,7 @@ public static class ReflectionHelper
     public static IEnumerable<PropertyInfo> GetProperties<TAttribute>(Type type) where TAttribute : Attribute
     {
         return type.GetProperties()
-            .Where(p => p.GetCustomAttribute<TAttribute>() != null);
+            .Where(p => p.GetCustomAttribute<TAttribute>()  is not null);
     }
 
     /// <summary>
@@ -95,7 +96,7 @@ public static class ReflectionHelper
     /// </summary>
     public static object? GetPropertyValue(object obj, string propertyName)
     {
-        if (obj == null)
+        if (obj  is null)
             return null;
 
         var property = obj.GetType().GetProperty(propertyName);
@@ -107,11 +108,11 @@ public static class ReflectionHelper
     /// </summary>
     public static bool SetPropertyValue(object obj, string propertyName, object? value)
     {
-        if (obj == null)
+        if (obj  is null)
             return false;
 
         var property = obj.GetType().GetProperty(propertyName);
-        if (property == null || !property.CanWrite)
+        if (property  is null || !property.CanWrite)
             return false;
 
         try

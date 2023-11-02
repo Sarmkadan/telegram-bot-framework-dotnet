@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a user's active session with state tracking.
 /// </summary>
-public class UserSession
+public sealed class UserSession
 {
     public string SessionId { get; set; } = string.Empty;
 

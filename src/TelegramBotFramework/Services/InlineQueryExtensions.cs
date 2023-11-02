@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -21,7 +22,7 @@ public static class InlineQueryExtensions
     public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddInlineQueryHandling(
         this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        if (services == null)
+        if (services  is null)
             throw new ArgumentNullException(nameof(services));
 
         services.AddSingleton<IInlineQueryService, InlineQueryService>();
@@ -38,7 +39,7 @@ public static class InlineQueryExtensions
     public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddInlineQueryHandlingWithLocalCache(
         this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        if (services == null)
+        if (services  is null)
             throw new ArgumentNullException(nameof(services));
 
         services.AddSingleton<Caching.ICacheProvider, Caching.LocalCacheProvider>();

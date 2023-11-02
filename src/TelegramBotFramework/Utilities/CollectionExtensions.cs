@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -16,7 +17,7 @@ public static class CollectionExtensions
     /// </summary>
     public static T? GetOrDefault<T>(this IList<T> list, int index, T? defaultValue = default)
     {
-        if (list == null || index < 0 || index >= list.Count)
+        if (list  is null || index < 0 || index >= list.Count)
             return defaultValue;
 
         return list[index];
@@ -68,7 +69,7 @@ public static class CollectionExtensions
     /// </summary>
     public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
     {
-        return source == null || !source.Any();
+        return source  is null || !source.Any();
     }
 
     /// <summary>
@@ -76,7 +77,7 @@ public static class CollectionExtensions
     /// </summary>
     public static bool HasItems<T>(this IEnumerable<T>? source)
     {
-        return source != null && source.Any();
+        return source  is not null && source.Any();
     }
 
     /// <summary>
@@ -101,7 +102,7 @@ public static class CollectionExtensions
     /// </summary>
     public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
     {
-        if (collection == null || items == null)
+        if (collection  is null || items  is null)
             return;
 
         foreach (var item in items)

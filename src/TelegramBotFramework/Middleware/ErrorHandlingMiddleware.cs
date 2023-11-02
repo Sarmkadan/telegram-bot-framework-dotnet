@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.Middleware;
 /// Global error handling middleware that catches all unhandled exceptions
 /// and returns consistent error responses to clients.
 /// </summary>
-public class ErrorHandlingMiddleware
+public sealed class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
@@ -72,7 +73,7 @@ public class ErrorHandlingMiddleware
 /// <summary>
 /// Standard error response structure for API clients.
 /// </summary>
-public class ErrorResponse
+public sealed class ErrorResponse
 {
     public string ErrorCode { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

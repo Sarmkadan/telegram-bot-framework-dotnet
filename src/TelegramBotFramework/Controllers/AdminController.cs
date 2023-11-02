@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/admin")]
-public class AdminController : ControllerBase
+public sealed class AdminController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly ICommandService _commandService;
@@ -224,7 +225,7 @@ public class AdminController : ControllerBase
         try
         {
             var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
-            if (command == null)
+            if (command  is null)
             {
                 return NotFound($"Command {commandName} not found");
             }
