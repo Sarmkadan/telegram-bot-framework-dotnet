@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageId>Zaiets.telegram.bot.framework.dotnet</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.2</Version>
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Opinionated Telegram bot framework for .NET - commands, menus, state machine, middleware</Description>
     <PackageTags>telegram bot framework dotnet csharp middleware state-machine commands menus</PackageTags>
