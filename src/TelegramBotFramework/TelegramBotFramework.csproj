@@ -5,10 +5,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <RepositoryUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>Zaiets.telegram.bot.framework.dotnet</PackageId>
+    <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
+    <Description>Opinionated Telegram bot framework for .NET - commands, menus, state machine, middleware</Description>
+    <PackageTags>telegram bot framework dotnet csharp middleware state-machine commands menus</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
