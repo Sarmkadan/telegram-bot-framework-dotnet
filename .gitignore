@@ -42,6 +42,7 @@ _ReSharper*/
 *.log
 *.vspscc
 *.vssscc
+*.DotSettings.user
 
 # IDE settings
 .idea/
