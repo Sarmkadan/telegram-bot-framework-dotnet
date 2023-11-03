@@ -5,6 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <RepositoryUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Vladyslav Zaiets</Authors>
   </PropertyGroup>
 
   <ItemGroup>
