@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramBotFramework", "src\TelegramBotFramework\TelegramBotFramework.csproj", "{E8AE4010-4081-4646-8A9D-80DE0F4913F5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3F8A5B21-C6D4-4E78-AF01-234567890ABC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "telegram-bot-framework-dotnet.Tests", "tests\telegram-bot-framework-dotnet.Tests\telegram-bot-framework-dotnet.Tests.csproj", "{4A9B6C32-D7E5-4F89-B012-34567890BCDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +33,24 @@ Global
 		{E8AE4010-4081-4646-8A9D-80DE0F4913F5}.Release|x64.Build.0 = Release|Any CPU
 		{E8AE4010-4081-4646-8A9D-80DE0F4913F5}.Release|x86.ActiveCfg = Release|Any CPU
 		{E8AE4010-4081-4646-8A9D-80DE0F4913F5}.Release|x86.Build.0 = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|x64.Build.0 = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Debug|x86.Build.0 = Debug|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|x64.ActiveCfg = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|x64.Build.0 = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E8AE4010-4081-4646-8A9D-80DE0F4913F5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{4A9B6C32-D7E5-4F89-B012-34567890BCDE} = {3F8A5B21-C6D4-4E78-AF01-234567890ABC}
 	EndGlobalSection
 EndGlobal
