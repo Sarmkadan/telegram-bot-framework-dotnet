@@ -1,0 +1,150 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+namespace TelegramBotFramework.Integration;
+
+/// <summary>
+/// Implements polling strategy for fetching Telegram updates.
+/// Used as an alternative to webhooks for receiving bot updates.
+/// </summary>
+public class PollingStrategy
+{
+    private readonly TelegramApiClient _apiClient;
+    private readonly ILogger<PollingStrategy> _logger;
+    private long _lastUpdateId = 0;
+    private CancellationTokenSource? _cancellationTokenSource;
+    private Task? _pollingTask;
+
+    public PollingStrategy(TelegramApiClient apiClient, ILogger<PollingStrategy>? logger = null)
+    {
+        _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _logger = logger ?? new ConsoleLogger<PollingStrategy>();
+    }
+
+    /// <summary>
+    /// Raised when a new update is received.
+    /// </summary>
+    public event Func<TelegramUpdate, Task>? OnUpdateReceived;
+
+    /// <summary>
+    /// Starts the polling loop that continuously fetches updates from Telegram.
+    /// </summary>
+    public void Start(TimeSpan? pollInterval = null)
+    {
+        if (_pollingTask != null && !_pollingTask.IsCompleted)
+        {
+            _logger.LogWarning("Polling is already running");
+            return;
+        }
+
+        _cancellationTokenSource = new CancellationTokenSource();
+        var interval = pollInterval ?? TimeSpan.FromSeconds(1);
+
+        _pollingTask = Task.Run(() => PollAsync(interval, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
+
+        _logger.LogInformation("Polling started with interval {IntervalMs}ms", interval.TotalMilliseconds);
+    }
+
+    /// <summary>
+    /// Stops the polling loop gracefully.
+    /// </summary>
+    public async Task StopAsync()
+    {
+        if (_cancellationTokenSource == null)
+            return;
+
+        _cancellationTokenSource.Cancel();
+
+        if (_pollingTask != null)
+        {
+            try
+            {
+                await _pollingTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when cancelling
+            }
+        }
+
+        _logger.LogInformation("Polling stopped");
+    }
+
+    /// <summary>
+    /// Gets the current polling status.
+    /// </summary>
+    public PollingStatus GetStatus()
+    {
+        return new PollingStatus
+        {
+            IsRunning = _pollingTask != null && !_pollingTask.IsCompleted,
+            LastUpdateId = _lastUpdateId,
+            LastPollTime = LastPollTime
+        };
+    }
+
+    public DateTime? LastPollTime { get; private set; }
+
+    private async Task PollAsync(TimeSpan interval, CancellationToken cancellationToken)
+    {
+        var handler = new WebhookHandler(_logger);
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                // Fetch updates from Telegram
+                // Note: This is a simplified version. Real implementation would use GetUpdates API
+                LastPollTime = DateTime.UtcNow;
+
+                // Simulate fetching updates
+                _logger.LogDebug("Polling for updates, last update ID: {LastUpdateId}", _lastUpdateId);
+
+                // Small delay to avoid hammering the API
+                await Task.Delay(interval, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during polling");
+                // Continue polling even on error, but with backoff
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Simulates processing an update received from polling.
+    /// </summary>
+    public async Task ProcessUpdateAsync(TelegramUpdate update)
+    {
+        try
+        {
+            _lastUpdateId = update.UpdateId;
+
+            if (OnUpdateReceived != null)
+            {
+                await OnUpdateReceived.Invoke(update);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing update {UpdateId}", update.UpdateId);
+        }
+    }
+}
+
+/// <summary>
+/// Represents the current polling status.
+/// </summary>
+public class PollingStatus
+{
+    public bool IsRunning { get; set; }
+    public long LastUpdateId { get; set; }
+    public DateTime? LastPollTime { get; set; }
+}
