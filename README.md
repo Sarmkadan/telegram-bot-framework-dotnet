@@ -9,6 +9,7 @@ An opinionated, production-ready framework for building Telegram bots with C# an
 **Table of Contents**
 - [Features](#features)
 - [Architecture](#architecture)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
 - [Installation Guide](#installation-guide)
 - [Usage Examples](#usage-examples)
@@ -17,7 +18,7 @@ An opinionated, production-ready framework for building Telegram bots with C# an
 - [Troubleshooting](#troubleshooting)
 - [Performance](#performance)
 - [Testing](#testing)
-- [Ecosystem](#ecosystem)
+- [Related Projects](#related-projects)
 - [Contributing](#contributing)
 
 ---
@@ -127,6 +128,36 @@ telegram-bot-framework-dotnet/
 ├── LICENSE                        # MIT license
 └── CONTRIBUTING.md                # Contribution guidelines
 ```
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/Sarmkadan/telegram-bot-framework-dotnet.git
+cd telegram-bot-framework-dotnet
+dotnet restore && dotnet build
+```
+
+Set your bot token in `src/TelegramBotFramework/appsettings.json`:
+
+```json
+{
+  "BotConfiguration": {
+    "BotToken": "YOUR_BOT_TOKEN_HERE",
+    "BotUsername": "your_bot_username"
+  }
+}
+```
+
+Run the framework:
+
+```bash
+cd src/TelegramBotFramework
+dotnet run
+```
+
+The REST API is available at `http://localhost:5001`. Send messages via `POST /api/bot/message` and register commands via the command service. See [Usage Examples](#usage-examples) for code samples.
 
 ---
 
@@ -791,7 +822,7 @@ When adding new features, place unit tests alongside the relevant test class and
 
 ---
 
-## Ecosystem
+## Related Projects
 
 Part of a collection of .NET libraries and tools. See more at [github.com/sarmkadan](https://github.com/sarmkadan).
 
