@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -15,7 +16,7 @@ namespace TelegramBotFramework.Examples
     /// State management example showing how to handle complex user flows with form data,
     /// multi-step processes, and conversation state tracking.
     /// </summary>
-    public class StateManagementExample
+public sealed class StateManagementExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<StateManagementExample> _logger;

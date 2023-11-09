@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ using TelegramBotFramework.Models;
 /// Formats data as JSON output for API responses and exports.
 /// Supports both single objects and collections with customizable serialization.
 /// </summary>
-public class JsonFormatter : IOutputFormatter
+public sealed class JsonFormatter : IOutputFormatter
 {
     private readonly JsonSerializerOptions _options;
 

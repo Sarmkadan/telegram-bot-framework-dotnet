@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -70,7 +71,7 @@ public static class JsonUtility
         try
         {
             result = JsonSerializer.Deserialize<T>(json, DefaultOptions);
-            return result != null;
+            return result  is not null;
         }
         catch
         {

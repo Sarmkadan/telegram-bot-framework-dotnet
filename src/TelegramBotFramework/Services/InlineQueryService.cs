@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -46,7 +47,7 @@ public interface IInlineQueryService
 /// <summary>
 /// Default implementation of <see cref="IInlineQueryService"/>.
 /// </summary>
-public class InlineQueryService : IInlineQueryService
+public sealed class InlineQueryService : IInlineQueryService
 {
     private const string CacheKeyPrefix = "inline_query_";
     private const int DefaultPageSize = 10;
@@ -118,7 +119,7 @@ public class InlineQueryService : IInlineQueryService
     {
         await Task.Delay(0, cancellationToken);
         var allResults = await _cache.GetAsync<IList<Models.InlineQueryResult>>(BuildCacheKey(queryText));
-        return allResults == null ? null : Paginate(allResults, pageNumber, DefaultPageSize);
+        return allResults  is null ? null : Paginate(allResults, pageNumber, DefaultPageSize);
     }
 
     /// <inheritdoc/>

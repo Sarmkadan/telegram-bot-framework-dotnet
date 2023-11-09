@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Examples
     /// Interactive menu navigation example demonstrating nested menus, buttons, and navigation flows.
     /// Shows how to create rich user interfaces with inline keyboards and callback handling.
     /// </summary>
-    public class MenuNavigationExample
+public sealed class MenuNavigationExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<MenuNavigationExample> _logger;

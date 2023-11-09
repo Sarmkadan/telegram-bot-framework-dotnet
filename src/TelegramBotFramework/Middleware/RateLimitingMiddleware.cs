@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ using System.Collections.Concurrent;
 /// Rate limiting middleware that prevents abuse by tracking request counts per IP/user.
 /// Uses sliding window algorithm to enforce request quotas.
 /// </summary>
-public class RateLimitingMiddleware
+public sealed class RateLimitingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly RateLimitingOptions _options;
@@ -78,7 +79,7 @@ public class RateLimitingMiddleware
 /// <summary>
 /// Configuration options for rate limiting behavior.
 /// </summary>
-public class RateLimitingOptions
+public sealed class RateLimitingOptions
 {
     public bool Enabled { get; set; } = true;
     public int RequestsPerWindow { get; set; } = 100;

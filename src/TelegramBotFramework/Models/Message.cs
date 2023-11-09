@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a message in the bot system.
 /// </summary>
-public class Message
+public sealed class Message
 {
     public long MessageId { get; set; }
 

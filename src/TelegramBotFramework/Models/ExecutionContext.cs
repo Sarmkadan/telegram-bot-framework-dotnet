@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents the execution context for a command or operation.
 /// </summary>
-public class ExecutionContext
+public sealed class ExecutionContext
 {
     public string ContextId { get; set; } = Guid.NewGuid().ToString();
 

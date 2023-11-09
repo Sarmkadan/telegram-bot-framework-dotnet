@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -210,7 +211,7 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
                         $"which does not exist in flow '{_flowId}'.");
             }
 
-            if (step.DefaultNextStepId != null && !stepIds.Contains(step.DefaultNextStepId))
+            if (step.DefaultNextStepId  is not null && !stepIds.Contains(step.DefaultNextStepId))
                 throw new InvalidOperationException(
                     $"Step '{step.StepId}' references DefaultNextStepId '{step.DefaultNextStepId}' " +
                     $"which does not exist in flow '{_flowId}'.");

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ using System.Collections.Concurrent;
 /// Manages event subscriptions and broadcasts events to all registered handlers.
 /// Thread-safe for concurrent operations.
 /// </summary>
-public class EventBus : IEventBus
+public sealed class EventBus : IEventBus
 {
     private readonly ConcurrentDictionary<Type, List<object>> _subscribers = new();
     private readonly ILogger<EventBus> _logger;
@@ -25,7 +26,7 @@ public class EventBus : IEventBus
 
     public void Subscribe<TEvent>(IEventHandler<TEvent> handler) where TEvent : class, IEvent
     {
-        if (handler == null)
+        if (handler  is null)
             throw new ArgumentNullException(nameof(handler));
 
         var eventType = typeof(TEvent);
@@ -42,7 +43,7 @@ public class EventBus : IEventBus
 
     public void Unsubscribe<TEvent>(IEventHandler<TEvent> handler) where TEvent : class, IEvent
     {
-        if (handler == null)
+        if (handler  is null)
             return;
 
         var eventType = typeof(TEvent);
@@ -61,7 +62,7 @@ public class EventBus : IEventBus
 
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class, IEvent
     {
-        if (@event == null)
+        if (@event  is null)
             throw new ArgumentNullException(nameof(@event));
 
         var eventType = typeof(TEvent);
@@ -90,7 +91,7 @@ public class EventBus : IEventBus
             var handleMethod = handler.GetType()
                 .GetMethod("HandleAsync", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
-            if (handleMethod != null)
+            if (handleMethod  is not null)
             {
                 try
                 {

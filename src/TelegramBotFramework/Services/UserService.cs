@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Implementation of user management service.
 /// </summary>
-public class UserService : IUserService
+public sealed class UserService : IUserService
 {
     private readonly Repositories.IUserRepository _userRepository;
     private readonly Microsoft.Extensions.Logging.ILogger<UserService> _logger;
@@ -28,7 +29,7 @@ public class UserService : IUserService
         CancellationToken cancellationToken = default)
     {
         var existingUser = await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken);
-        if (existingUser != null)
+        if (existingUser  is not null)
         {
             return existingUser;
         }
@@ -71,7 +72,7 @@ public class UserService : IUserService
     public async Task<bool> BanUserAsync(long userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null)
+        if (user  is null)
         {
             return false;
         }
@@ -86,7 +87,7 @@ public class UserService : IUserService
     public async Task<bool> UnbanUserAsync(long userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null)
+        if (user  is null)
         {
             return false;
         }
@@ -106,7 +107,7 @@ public class UserService : IUserService
     public async Task<bool> PromoteToAdminAsync(long userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null)
+        if (user  is null)
         {
             return false;
         }
@@ -121,7 +122,7 @@ public class UserService : IUserService
     public async Task<bool> DemoteAdminAsync(long userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null || user.Role != Models.UserRole.Administrator)
+        if (user  is null || user.Role != Models.UserRole.Administrator)
         {
             return false;
         }
@@ -147,7 +148,7 @@ public class UserService : IUserService
     public async Task RecordUserActivityAsync(long userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user != null)
+        if (user  is not null)
         {
             user.UpdateActivity();
             await _userRepository.UpdateAsync(user, cancellationToken);

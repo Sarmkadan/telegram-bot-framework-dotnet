@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Examples
     /// Caching example demonstrating performance optimization techniques using cache providers,
     /// cache invalidation patterns, and TTL management.
     /// </summary>
-    public class CachingExample
+public sealed class CachingExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<CachingExample> _logger;
@@ -59,7 +60,7 @@ namespace TelegramBotFramework.Examples
 
             // Get value from cache
             var cachedUser = await _cacheProvider.GetAsync(userKey);
-            if (cachedUser != null)
+            if (cachedUser  is not null)
             {
                 _logger.LogInformation("Retrieved from cache: {Value}", cachedUser);
             }
@@ -74,7 +75,7 @@ namespace TelegramBotFramework.Examples
 
             // Verify removal
             var afterRemoval = await _cacheProvider.GetAsync(userKey);
-            _logger.LogInformation("After removal, cache contains value: {HasValue}", afterRemoval != null);
+            _logger.LogInformation("After removal, cache contains value: {HasValue}", afterRemoval  is not null);
         }
 
         private async Task DemonstrateCacheExpirationAsync()
