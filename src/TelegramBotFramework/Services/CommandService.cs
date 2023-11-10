@@ -14,8 +14,11 @@ public sealed class CommandService : ICommandService
     private readonly Repositories.ICommandRepository _commandRepository;
     private readonly IUserService _userService;
     private readonly Microsoft.Extensions.Logging.ILogger<CommandService> _logger;
-    private readonly Dictionary<string, int> _commandExecutionRateLimiter = new();
+    private readonly Dictionary<string, (int Count, DateTime WindowStart)> _commandExecutionRateLimiter = new();
     private readonly object _rateLimitLockObj = new();
+    private DateTime _lastCleanup = DateTime.UtcNow;
+    private static readonly TimeSpan RateLimitWindow = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
 
     public CommandService(
         Repositories.ICommandRepository commandRepository,
@@ -136,19 +139,33 @@ public sealed class CommandService : ICommandService
 
         lock (_rateLimitLockObj)
         {
-            var key = $"{userId}:{commandName}";
-            if (!_commandExecutionRateLimiter.TryGetValue(key, out var count))
+            // Periodically evict expired entries to prevent unbounded growth
+            var now = DateTime.UtcNow;
+            if (now - _lastCleanup > CleanupInterval)
             {
-                _commandExecutionRateLimiter[key] = 1;
+                var expiredKeys = _commandExecutionRateLimiter
+                    .Where(kvp => now - kvp.Value.WindowStart > RateLimitWindow)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+                foreach (var expired in expiredKeys)
+                    _commandExecutionRateLimiter.Remove(expired);
+                _lastCleanup = now;
+            }
+
+            var key = $"{userId}:{commandName}";
+            if (!_commandExecutionRateLimiter.TryGetValue(key, out var entry) ||
+                now - entry.WindowStart > RateLimitWindow)
+            {
+                _commandExecutionRateLimiter[key] = (1, now);
                 return false;
             }
 
-            if (count >= command.RateLimitPerMinute)
+            if (entry.Count >= command.RateLimitPerMinute)
             {
                 return true;
             }
 
-            _commandExecutionRateLimiter[key]++;
+            _commandExecutionRateLimiter[key] = (entry.Count + 1, entry.WindowStart);
             return false;
         }
     }
