@@ -29,7 +29,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
 
         try
         {
-            var value = await GetValueAsync(key);
+            var value = await GetValueAsync(key).ConfigureAwait(false);
             if (value  is null)
                 return default;
 
@@ -50,7 +50,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
         try
         {
             var json = JsonSerializer.Serialize(value);
-            await SetValueAsync(key, json, expiration);
+            await SetValueAsync(key, json, expiration).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -65,7 +65,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
 
         try
         {
-            await RemoveValueAsync(key);
+            await RemoveValueAsync(key).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -80,7 +80,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
 
         try
         {
-            return await KeyExistsAsync(key);
+            return await KeyExistsAsync(key).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -91,12 +91,12 @@ public abstract class DistributedCacheProvider : ICacheProvider
 
     public virtual async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
-        var existing = await GetAsync<T>(key);
+        var existing = await GetAsync<T>(key).ConfigureAwait(false);
         if (existing  is not null)
             return existing;
 
-        var value = await factory();
-        await SetAsync(key, value, expiration);
+        var value = await factory().ConfigureAwait(false);
+        await SetAsync(key, value, expiration).ConfigureAwait(false);
         return value;
     }
 
@@ -104,7 +104,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
     {
         try
         {
-            await FlushAllAsync();
+            await FlushAllAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -116,7 +116,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
     {
         try
         {
-            return await GetStatsAsync();
+            return await GetStatsAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -172,7 +172,7 @@ public sealed class NoOpCacheProvider : ICacheProvider
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
-        return await factory();
+        return await factory().ConfigureAwait(false);
     }
 
     public Task FlushAsync() => Task.CompletedTask;

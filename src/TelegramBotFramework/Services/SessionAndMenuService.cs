@@ -42,19 +42,19 @@ public sealed class SessionService : ISessionService
         };
 
         session.Validate();
-        var created = await _sessionRepository.CreateAsync(session, cancellationToken);
+        var created = await _sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Session created: {SessionId} for user {UserId}", session.SessionId, userId);
         return created;
     }
 
     public async Task<Models.UserSession?> GetActiveSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
-        return await _sessionRepository.GetActiveByUserIdAsync(userId, cancellationToken);
+        return await _sessionRepository.GetActiveByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Models.UserSession?> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> UpdateSessionContextAsync(
@@ -63,7 +63,7 @@ public sealed class SessionService : ISessionService
         string value,
         CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
             return false;
@@ -71,33 +71,33 @@ public sealed class SessionService : ISessionService
 
         session.SetContextData(contextKey, value);
         session.UpdateActivity();
-        await _sessionRepository.UpdateAsync(session, cancellationToken);
+        await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
     public async Task<string?> GetSessionContextAsync(string sessionId, string contextKey, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
         return session?.GetContextData(contextKey);
     }
 
     public async Task<bool> CloseSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
             return false;
         }
 
         session.State = Models.SessionState.Closed;
-        await _sessionRepository.UpdateAsync(session, cancellationToken);
+        await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Session closed: {SessionId}", sessionId);
         return true;
     }
 
     public async Task<int> CloseExpiredSessionsAsync(CancellationToken cancellationToken = default)
     {
-        var count = await _sessionRepository.CloseExpiredSessionsAsync(cancellationToken);
+        var count = await _sessionRepository.CloseExpiredSessionsAsync(cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Closed {Count} expired sessions", count);
         return count;
     }
@@ -107,7 +107,7 @@ public sealed class SessionService : ISessionService
         string menuId,
         CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
             throw new Exceptions.SessionException($"Session {sessionId} not found", sessionId);
@@ -116,17 +116,17 @@ public sealed class SessionService : ISessionService
         session.CurrentMenuId = menuId;
         session.CurrentContext = "menu";
         session.UpdateActivity();
-        var updated = await _sessionRepository.UpdateAsync(session, cancellationToken);
+        var updated = await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
         return updated;
     }
 
     public async Task RecordSessionActivityAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
         if (session  is not null && !session.IsExpired())
         {
             session.UpdateActivity();
-            await _sessionRepository.UpdateAsync(session, cancellationToken);
+            await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
         }
     }
 }
@@ -149,20 +149,20 @@ public sealed class MenuService : IMenuService
 
     public async Task<Models.Menu?> GetMenuAsync(string menuId, CancellationToken cancellationToken = default)
     {
-        return await _menuRepository.GetByIdAsync(menuId, cancellationToken);
+        return await _menuRepository.GetByIdAsync(menuId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Models.Menu> CreateMenuAsync(Models.Menu menu, CancellationToken cancellationToken = default)
     {
         menu.Validate();
-        var created = await _menuRepository.CreateAsync(menu, cancellationToken);
+        var created = await _menuRepository.CreateAsync(menu, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Menu created: {MenuId}", menu.Id);
         return created;
     }
 
     public async Task<bool> DeleteMenuAsync(string menuId, CancellationToken cancellationToken = default)
     {
-        var result = await _menuRepository.DeleteAsync(menuId, cancellationToken);
+        var result = await _menuRepository.DeleteAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (result)
         {
             _logger.LogInformation("Menu deleted: {MenuId}", menuId);
@@ -173,32 +173,32 @@ public sealed class MenuService : IMenuService
     public async Task<Models.Menu> UpdateMenuAsync(Models.Menu menu, CancellationToken cancellationToken = default)
     {
         menu.Validate();
-        var updated = await _menuRepository.UpdateAsync(menu, cancellationToken);
+        var updated = await _menuRepository.UpdateAsync(menu, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Menu updated: {MenuId}", menu.Id);
         return updated;
     }
 
     public async Task<Models.MenuButton?> GetButtonAsync(string menuId, string callbackData, CancellationToken cancellationToken = default)
     {
-        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken).ConfigureAwait(false);
         return menu?.GetButton(callbackData);
     }
 
     public async Task<Models.Menu> AddButtonAsync(string menuId, Models.MenuButton button, CancellationToken cancellationToken = default)
     {
-        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (menu  is null)
         {
             throw new InvalidOperationException($"Menu {menuId} not found");
         }
 
         menu.AddButton(button);
-        return await _menuRepository.UpdateAsync(menu, cancellationToken);
+        return await _menuRepository.UpdateAsync(menu, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> RemoveButtonAsync(string menuId, string callbackData, CancellationToken cancellationToken = default)
     {
-        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (menu  is null)
         {
             return false;
@@ -207,19 +207,19 @@ public sealed class MenuService : IMenuService
         var removed = menu.RemoveButton(callbackData);
         if (removed)
         {
-            await _menuRepository.UpdateAsync(menu, cancellationToken);
+            await _menuRepository.UpdateAsync(menu, cancellationToken).ConfigureAwait(false);
         }
         return removed;
     }
 
     public async Task<IList<Models.Menu>> GetActiveMenusAsync(CancellationToken cancellationToken = default)
     {
-        return await _menuRepository.GetActiveAsync(cancellationToken);
+        return await _menuRepository.GetActiveAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<List<Models.MenuButton>>> GetArrangedButtonsAsync(string menuId, CancellationToken cancellationToken = default)
     {
-        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (menu  is null)
         {
             return new List<List<Models.MenuButton>>();
