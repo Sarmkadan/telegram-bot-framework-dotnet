@@ -16,7 +16,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<Models.BotUser?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.TryGetValue(id, out var user) ? user : null;
@@ -25,7 +25,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<IList<Models.BotUser>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values.ToList();
@@ -34,7 +34,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<Models.BotUser> CreateAsync(Models.BotUser entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -45,7 +45,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<Models.BotUser> UpdateAsync(Models.BotUser entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -56,7 +56,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Remove(id);
@@ -65,7 +65,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.ContainsKey(id);
@@ -74,7 +74,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Count;
@@ -83,7 +83,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<Models.BotUser?> GetByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values.FirstOrDefault(u => u.TelegramId == telegramId);
@@ -92,7 +92,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<Models.BotUser?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values.FirstOrDefault(u => u.Username == username);
@@ -101,7 +101,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<IList<Models.BotUser>> GetByStatusAsync(Models.UserStatus status, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values.Where(u => u.Status == status).ToList();
@@ -110,7 +110,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<IList<Models.BotUser>> GetByRoleAsync(Models.UserRole role, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values.Where(u => u.Role == role).ToList();
@@ -119,7 +119,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<IList<Models.BotUser>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         var lower = searchTerm.ToLower();
         lock (_lockObj)
         {
@@ -133,7 +133,7 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public async Task<IList<Models.BotUser>> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _users.Values
@@ -155,7 +155,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<Models.Command?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.TryGetValue(id, out var cmd) ? cmd : null;
@@ -164,7 +164,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<IList<Models.Command>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values.ToList();
@@ -173,7 +173,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<Models.Command> CreateAsync(Models.Command entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -184,7 +184,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<Models.Command> UpdateAsync(Models.Command entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -195,7 +195,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Remove(id);
@@ -204,7 +204,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.ContainsKey(id);
@@ -213,7 +213,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Count;
@@ -222,7 +222,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<Models.Command?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values.FirstOrDefault(c => c.Name == name);
@@ -231,7 +231,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<IList<Models.Command>> GetEnabledAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values.Where(c => c.IsEnabled).ToList();
@@ -240,7 +240,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<IList<Models.Command>> GetByTypeAsync(Models.CommandType type, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values.Where(c => c.Type == type).ToList();
@@ -249,7 +249,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<IList<Models.Command>> GetAdminOnlyAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values.Where(c => c.RequiresAdmin).ToList();
@@ -258,7 +258,7 @@ public sealed class InMemoryCommandRepository : ICommandRepository
 
     public async Task<IList<Models.Command>> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _commands.Values

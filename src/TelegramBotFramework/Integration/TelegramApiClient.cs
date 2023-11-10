@@ -45,7 +45,7 @@ public sealed class TelegramApiClient
             throw new ArgumentException("Message text cannot be empty", nameof(text));
 
         var payload = new { chat_id = chatId, text = text };
-        return await SendApiRequestAsync("sendMessage", payload);
+        return await SendApiRequestAsync("sendMessage", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public sealed class TelegramApiClient
             reply_markup = new { inline_keyboard = buttons }
         };
 
-        return await SendApiRequestAsync("sendMessage", payload);
+        return await SendApiRequestAsync("sendMessage", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public sealed class TelegramApiClient
             throw new ArgumentException("Message ID must be positive", nameof(messageId));
 
         var payload = new { chat_id = chatId, message_id = messageId, text = newText };
-        return await SendApiRequestAsync("editMessageText", payload);
+        return await SendApiRequestAsync("editMessageText", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public sealed class TelegramApiClient
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
         var payload = new { chat_id = chatId, message_id = messageId };
-        return await SendApiRequestAsync("deleteMessage", payload);
+        return await SendApiRequestAsync("deleteMessage", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public sealed class TelegramApiClient
     /// </summary>
     public async Task<string?> GetMeAsync()
     {
-        return await GetApiRequestAsync("getMe");
+        return await GetApiRequestAsync("getMe").ConfigureAwait(false);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed class TelegramApiClient
             throw new ArgumentException("Callback query ID cannot be empty", nameof(callbackQueryId));
 
         var payload = new { callback_query_id = callbackQueryId, text = notificationText };
-        return await SendApiRequestAsync("answerCallbackQuery", payload);
+        return await SendApiRequestAsync("answerCallbackQuery", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public sealed class TelegramApiClient
             throw new ArgumentException("Invalid webhook URL", nameof(webhookUrl));
 
         var payload = new { url = webhookUrl };
-        return await SendApiRequestAsync("setWebhook", payload);
+        return await SendApiRequestAsync("setWebhook", payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public sealed class TelegramApiClient
     /// </summary>
     public async Task<bool> RemoveWebhookAsync()
     {
-        return await SendApiRequestAsync("setWebhook", new { url = string.Empty });
+        return await SendApiRequestAsync("setWebhook", new { url = string.Empty }).ConfigureAwait(false);
     }
 
     private async Task<bool> SendApiRequestAsync<T>(string method, T payload) where T : class
@@ -147,7 +147,7 @@ public sealed class TelegramApiClient
             var json = JsonUtility.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content);
+            var response = await client.PostAsync(url, content).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -155,7 +155,7 @@ public sealed class TelegramApiClient
                 return true;
             }
 
-            var errorContent = await response.Content.ReadAsStringAsync();
+            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             _logger.LogWarning("Telegram API call failed: {Method}, Status: {StatusCode}, Error: {Error}",
                 method, response.StatusCode, errorContent);
 
@@ -175,11 +175,11 @@ public sealed class TelegramApiClient
             var client = _httpClientFactory.GetTelegramClient();
             var url = $"bot{_botToken}/{method}";
 
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync(url).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
 
             _logger.LogWarning("Telegram API GET call failed: {Method}, Status: {StatusCode}",

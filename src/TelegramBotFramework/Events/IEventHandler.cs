@@ -43,7 +43,7 @@ public abstract class EventHandlerBase<TEvent> : IEventHandler<TEvent> where TEv
             _logger.LogInformation("Handling event {EventType} with ID {CorrelationId}",
                 @event.EventType, @event.CorrelationId);
 
-            await ExecuteAsync(@event);
+            await ExecuteAsync(@event).ConfigureAwait(false);
 
             _logger.LogInformation("Event {EventType} handled successfully", @event.EventType);
         }
