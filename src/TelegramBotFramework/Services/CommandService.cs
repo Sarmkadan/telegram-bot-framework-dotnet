@@ -30,12 +30,22 @@ public sealed class CommandService : ICommandService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Retrieves a command by name. Automatically normalizes names to include the "/" prefix.
+    /// </summary>
+    /// <param name="commandName">Command name with or without "/" prefix.</param>
+    /// <returns>The command definition, or null if not registered.</returns>
     public async Task<Models.Command?> GetCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
         var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
         return await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Registers a new bot command. Validates the command definition before persisting.
+    /// </summary>
+    /// <param name="command">Command definition including name, description, and handler.</param>
+    /// <returns>The persisted command with any server-assigned fields populated.</returns>
     public async Task<Models.Command> RegisterCommandAsync(Models.Command command, CancellationToken cancellationToken = default)
     {
         command.Validate();
@@ -55,6 +65,10 @@ public sealed class CommandService : ICommandService
         return result;
     }
 
+    /// <summary>
+    /// Returns commands available to the given user role. Admin-only commands are
+    /// excluded for users below Administrator level.
+    /// </summary>
     public async Task<IList<Models.Command>> GetAvailableCommandsAsync(
         Models.UserRole userRole = Models.UserRole.User,
         CancellationToken cancellationToken = default)
