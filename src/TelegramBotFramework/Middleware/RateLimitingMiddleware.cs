@@ -4,84 +4,76 @@
 // CTO & Software Architect
 // =============================================================================
 
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Strategies; // Assuming RateLimitingStrategy is here
+
 namespace TelegramBotFramework.Middleware;
 
-using System.Collections.Concurrent;
-
 /// <summary>
-/// Rate limiting middleware that prevents abuse by tracking request counts per IP/user.
-/// Uses sliding window algorithm to enforce request quotas.
+/// Middleware for handling rate limiting of user requests.
 /// </summary>
-public sealed class RateLimitingMiddleware
+public sealed class RateLimitingMiddleware : IBotMiddleware
 {
-    private readonly RequestDelegate _next;
-    private readonly RateLimitingOptions _options;
-    private readonly ConcurrentDictionary<string, RequestWindow> _requestWindows;
+    private readonly ICommandService _commandService;
+    private readonly BotConfiguration _configuration;
+    private readonly ILogger<RateLimitingMiddleware> _logger;
+    private readonly IRateLimitingStrategy _rateLimitingStrategy;
 
-    public RateLimitingMiddleware(RequestDelegate next, RateLimitingOptions? options = null)
+    public RateLimitingMiddleware(
+        ICommandService commandService,
+        BotConfiguration configuration,
+        IRateLimitingStrategy rateLimitingStrategy,
+        ILogger<RateLimitingMiddleware> logger)
     {
-        _next = next;
-        _options = options ?? new RateLimitingOptions();
-        _requestWindows = new ConcurrentDictionary<string, RequestWindow>();
+        _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _rateLimitingStrategy = rateLimitingStrategy ?? throw new ArgumentNullException(nameof(rateLimitingStrategy));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public int Priority => 20; // Rate limiting usually comes after authorization
+
+    public async Task<ExecutionContext> ProcessAsync(
+        ExecutionContext context,
+        Func<ExecutionContext, Task<ExecutionContext>> next,
+        CancellationToken cancellationToken)
     {
-        if (!_options.Enabled)
+        if (!_configuration.EnableRateLimiting || !context.IsValid)
         {
-            await _next(context);
-            return;
+            return await next(context).ConfigureAwait(false);
         }
 
-        var identifier = GetClientIdentifier(context);
-        var window = _requestWindows.AddOrUpdate(identifier, _ => new RequestWindow(),
-            (_, existing) =>
-            {
-                if (DateTime.UtcNow - existing.WindowStart > _options.WindowDuration)
-                {
-                    return new RequestWindow();
-                }
-                return existing;
-            });
-
-        if (window.RequestCount >= _options.RequestsPerWindow)
+        if (context.User == null)
         {
-            context.Response.StatusCode = 429; // Too Many Requests
-            context.Response.Headers["Retry-After"] = ((int)(_options.WindowDuration - (DateTime.UtcNow - window.WindowStart)).TotalSeconds).ToString();
-            await context.Response.WriteAsync("Rate limit exceeded");
-            return;
+            context.AddError("User not found in context for rate limiting.");
+            _logger.LogWarning("RateLimitingMiddleware: User not found for UserId: {UserId}", context.UserId);
+            return await next(context).ConfigureAwait(false);
         }
 
-        window.RequestCount++;
-        context.Items["RateLimitRemaining"] = _options.RequestsPerWindow - window.RequestCount;
-
-        await _next(context);
-    }
-
-    private static string GetClientIdentifier(HttpContext context)
-    {
-        // Prefer X-Forwarded-For for proxied requests
-        if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
+        // Check if user is an admin or owner, bypass rate limiting for them
+        if (_configuration.IsAdmin(context.User.UserId))
         {
-            return forwardedFor.ToString().Split(',')[0].Trim();
+            _logger.LogDebug("RateLimitingMiddleware: User {UserId} is admin, bypassing rate limit.", context.User.UserId);
+            return await next(context).ConfigureAwait(false);
         }
 
-        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-    }
+        var key = $"RateLimit:{context.User.UserId}";
+        var limit = _configuration.RateLimitPerMinute; // e.g., 30 requests per minute
+        var interval = TimeSpan.FromMinutes(1);
 
-    private class RequestWindow
-    {
-        public DateTime WindowStart { get; } = DateTime.UtcNow;
-        public int RequestCount { get; set; }
-    }
-}
+        var allowed = await _rateLimitingStrategy.IsActionAllowedAsync(key, limit, interval, cancellationToken)
+            .ConfigureAwait(false);
 
-/// <summary>
-/// Configuration options for rate limiting behavior.
-/// </summary>
-public sealed class RateLimitingOptions
-{
-    public bool Enabled { get; set; } = true;
-    public int RequestsPerWindow { get; set; } = 100;
-    public TimeSpan WindowDuration { get; set; } = TimeSpan.FromMinutes(1);
+        if (!allowed)
+        {
+            context.AddError($"Rate limit exceeded for user {context.User.UserId}. Please try again later.");
+            _logger.LogWarning("RateLimitingMiddleware: User {UserId} exceeded rate limit.", context.User.UserId);
+            // Optionally, you could set a specific status code or type of error here
+            return context; // Stop processing if rate limit exceeded
+        }
+
+        return await next(context).ConfigureAwait(false);
+    }
 }

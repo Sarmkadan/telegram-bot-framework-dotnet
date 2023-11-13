@@ -53,7 +53,8 @@ public sealed class BotOrchestrator : IBotOrchestrator
     private readonly IMessageService _messageService;
     private readonly IMenuService _menuService;
     private readonly Microsoft.Extensions.Logging.ILogger<BotOrchestrator> _logger;
-    private readonly List<Middleware.IBotMiddleware> _middleware;
+    private readonly IEnumerable<Middleware.IBotMiddleware> _middleware;
+    private readonly Models.BotConfiguration _configuration;
 
     public BotOrchestrator(
         IUserService userService,
@@ -61,6 +62,8 @@ public sealed class BotOrchestrator : IBotOrchestrator
         ISessionService sessionService,
         IMessageService messageService,
         IMenuService menuService,
+        IEnumerable<Middleware.IBotMiddleware> middleware,
+        Models.BotConfiguration configuration,
         Microsoft.Extensions.Logging.ILogger<BotOrchestrator> logger)
     {
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
@@ -68,17 +71,9 @@ public sealed class BotOrchestrator : IBotOrchestrator
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
         _menuService = menuService ?? throw new ArgumentNullException(nameof(menuService));
+        _middleware = middleware?.OrderByDescending(m => m.Priority).ToList() ?? throw new ArgumentNullException(nameof(middleware));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-        // Initialize middleware pipeline (ordered by priority)
-        _middleware = new List<Middleware.IBotMiddleware>
-        {
-            new Middleware.ErrorHandlingMiddleware(logger),
-            new Middleware.LoggingMiddleware(logger),
-            new Middleware.AuthorizationMiddleware(userService, commandService, logger),
-            new Middleware.RateLimitMiddleware(commandService, new Models.BotConfiguration(), logger)
-        };
-    }
 
     public async Task<Models.ExecutionContext> ProcessUserMessageAsync(
         long userId,
@@ -298,20 +293,22 @@ public sealed class BotOrchestrator : IBotOrchestrator
         Models.ExecutionContext context,
         CancellationToken cancellationToken)
     {
-        var sortedMiddleware = _middleware.OrderByDescending(m => m.Priority).ToList();
+        var middlewareList = _middleware.ToList(); // Create a copy to avoid modifying the original collection
+        var index = 0;
 
-        Func<Models.ExecutionContext, Task<Models.ExecutionContext>> executeNext = null!;
-        executeNext = async (ctx) =>
+        Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next = null!;
+        next = async (ctx) =>
         {
-            if (sortedMiddleware.Count == 0)
-                return ctx;
-
-            var middleware = sortedMiddleware.First();
-            sortedMiddleware.RemoveAt(0);
-            return await middleware.ProcessAsync(ctx, executeNext, cancellationToken).ConfigureAwait(false);
+            if (index < middlewareList.Count)
+            {
+                var currentMiddleware = middlewareList[index];
+                index++;
+                return await currentMiddleware.ProcessAsync(ctx, next, cancellationToken).ConfigureAwait(false);
+            }
+            return ctx; // All middleware processed, return the context
         };
 
-        return await executeNext(context).ConfigureAwait(false);
+        return await next(context).ConfigureAwait(false);
     }
 
     /// <summary>
