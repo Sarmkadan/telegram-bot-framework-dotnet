@@ -399,7 +399,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     }
 
     /// <inheritdoc/>
-    public Task<int> CleanupExpiredFlowStatesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CleanupExpiredFlowStatesAsync(CancellationToken cancellationToken = default)
     {
         var cleaned = 0;
 
@@ -410,17 +410,47 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
             var timeout = flow.Timeout ?? _options.DefaultFlowTimeout;
             if (DateTime.UtcNow - state.LastActivityAt <= timeout) continue;
 
-            state.Status       = FlowStateStatus.TimedOut;
-            state.CompletedAt  = DateTime.UtcNow;
-            state.AbortReason  = "Inactivity timeout (cleanup sweep)";
-            _activeStates.TryRemove(userId, out _);
+            switch (_options.TimeoutEvictionPolicy)
+            {
+                case FlowEvictionPolicy.ResetToInitialStep:
+                    state.CurrentStepId  = flow.InitialStepId;
+                    state.Status         = FlowStateStatus.WaitingForInput;
+                    state.LastActivityAt = DateTime.UtcNow;
+                    state.AbortReason    = null;
+                    _logger.LogInformation(
+                        "Flow reset to initial step after timeout — UserId: {UserId}, FlowId: {FlowId}",
+                        userId, state.FlowId);
+                    break;
+
+                default:
+                    state.Status      = FlowStateStatus.TimedOut;
+                    state.CompletedAt = DateTime.UtcNow;
+                    state.AbortReason = "Inactivity timeout (cleanup sweep)";
+                    _activeStates.TryRemove(userId, out _);
+
+                    if (_options.OnEviction is not null)
+                    {
+                        try
+                        {
+                            await _options.OnEviction(state, cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex,
+                                "OnEviction callback threw for UserId: {UserId}, FlowId: {FlowId}",
+                                userId, state.FlowId);
+                        }
+                    }
+                    break;
+            }
+
             cleaned++;
         }
 
         if (cleaned > 0)
-            _logger.LogInformation("Cleanup removed {Count} expired flow states", cleaned);
+            _logger.LogInformation("Cleanup processed {Count} expired flow states", cleaned);
 
-        return Task.FromResult(cleaned);
+        return cleaned;
     }
 
     // -------------------------------------------------------------------------
