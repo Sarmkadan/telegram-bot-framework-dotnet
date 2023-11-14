@@ -45,6 +45,9 @@ public static class DependencyInjectionSetup
         services.AddSingleton<Services.IMessageService, Services.MessageService>();
         services.AddSingleton<Services.IBotOrchestrator, Services.BotOrchestrator>();
 
+        // Register built-in command handlers
+        services.AddTransient<Commands.ICommandHandler, Commands.HelpCommandHandler>();
+
         // Register rate limiting strategy
         services.AddSingleton<Strategies.IRateLimitingStrategy, Strategies.InMemoryRateLimitingStrategy>();
 
