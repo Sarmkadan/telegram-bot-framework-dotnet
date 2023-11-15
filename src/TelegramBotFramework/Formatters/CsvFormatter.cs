@@ -85,18 +85,18 @@ public sealed class CsvFormatter : IOutputFormatter
     public string FormatMessages(IEnumerable<Message> messages)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Id,Text,SenderId,ChatId,Timestamp,Type");
+        sb.AppendLine("MessageId,Content,UserId,ChatId,CreatedAt,Type");
 
         foreach (var msg in messages)
         {
             var fields = new[]
             {
-                EscapeField(msg.Id),
-                EscapeField(msg.Text),
-                EscapeField(msg.SenderId),
-                EscapeField(msg.ChatId),
-                EscapeField(msg.Timestamp.ToString("O")),
-                EscapeField(msg.MessageType.ToString())
+                EscapeField(msg.MessageId.ToString()),
+                EscapeField(msg.Content),
+                EscapeField(msg.UserId.ToString()),
+                EscapeField(msg.ChatId.ToString()),
+                EscapeField(msg.CreatedAt.ToString("O")),
+                EscapeField(msg.Type.ToString())
             };
 
             sb.AppendLine(string.Join(FieldSeparator, fields));

@@ -51,12 +51,11 @@ public static class CryptoUtility
         if (string.IsNullOrEmpty(password))
             throw new ArgumentException("Password cannot be empty", nameof(password));
 
-        using var rng = new RNGCryptoServiceProvider();
         var saltBytes = new byte[16];
-        rng.GetBytes(saltBytes);
+        RandomNumberGenerator.Fill(saltBytes);
 
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 10000, HashAlgorithmName.SHA256);
-        var hash = pbkdf2.GetBytes(20);
+        var hash = new byte[20];
+        Rfc2898DeriveBytes.Pbkdf2(password, saltBytes, hash, 10000, HashAlgorithmName.SHA256);
 
         var hashBytes = new byte[36];
         Array.Copy(saltBytes, 0, hashBytes, 0, 16);
@@ -79,8 +78,8 @@ public static class CryptoUtility
             var saltBytes = new byte[16];
             Array.Copy(hashBytes, 0, saltBytes, 0, 16);
 
-            using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 10000, HashAlgorithmName.SHA256);
-            var hash2 = pbkdf2.GetBytes(20);
+            var hash2 = new byte[20];
+            Rfc2898DeriveBytes.Pbkdf2(password, saltBytes, hash2, 10000, HashAlgorithmName.SHA256);
 
             for (int i = 0; i < 20; i++)
             {
@@ -104,9 +103,8 @@ public static class CryptoUtility
         if (length <= 0)
             throw new ArgumentException("Length must be greater than 0", nameof(length));
 
-        using var rng = new RNGCryptoServiceProvider();
         var bytes = new byte[length];
-        rng.GetBytes(bytes);
+        RandomNumberGenerator.Fill(bytes);
 
         var sb = new StringBuilder(length);
         foreach (var b in bytes)
@@ -120,9 +118,8 @@ public static class CryptoUtility
     /// </summary>
     public static string GenerateRandomToken(int lengthInBytes = 32)
     {
-        using var rng = new RNGCryptoServiceProvider();
         var bytes = new byte[lengthInBytes];
-        rng.GetBytes(bytes);
+        RandomNumberGenerator.Fill(bytes);
         return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
     }
 

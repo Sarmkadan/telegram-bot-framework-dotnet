@@ -198,8 +198,10 @@ public sealed class TelegramApiClient
 // Dummy logger for demonstration when DI logger not available
 internal sealed class ConsoleLogger<T> : ILogger<T>
 {
-    public IDisposable BeginScope<TState>(TState state) => new NullDisposable();
+    IDisposable? ILogger.BeginScope<TState>(TState state) => new NullDisposable();
+
     public bool IsEnabled(LogLevel logLevel) => true;
+
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         Console.WriteLine($"[{logLevel}] {formatter(state, exception)}");

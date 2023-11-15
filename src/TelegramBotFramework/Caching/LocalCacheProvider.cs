@@ -156,9 +156,13 @@ public sealed class LocalCacheProvider : ICacheProvider
         foreach (var entry in _cache.Values)
         {
             if (entry.Value is string str)
+            {
                 total += System.Text.Encoding.UTF8.GetByteCount(str);
-            else
+            }
+            else if (entry.Value is not null)
+            {
                 total += System.Runtime.InteropServices.Marshal.SizeOf(entry.Value) * 10; // Rough estimate
+            }
         }
         return total;
     }

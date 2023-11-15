@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using TelegramBotFramework.Integration;
+
 namespace TelegramBotFramework.Events;
 
 /// <summary>

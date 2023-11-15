@@ -12,14 +12,10 @@ namespace TelegramBotFramework.Strategies;
 /// </summary>
 public interface IRateLimitingStrategy
 {
-    /// <summary>
-    /// Checks if a request from an identifier is allowed.
-    /// </summary>
+    /// <summary>Checks if a request from an identifier is allowed.</summary>
     bool IsRequestAllowed(string identifier);
 
-    /// <summary>
-    /// Gets the remaining requests for an identifier.
-    /// </summary>
+    /// <summary>Gets the remaining requests for an identifier.</summary>
     int GetRemainingRequests(string identifier);
 }
 

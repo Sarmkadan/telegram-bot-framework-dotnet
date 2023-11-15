@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Exceptions;
 /// <summary>
 /// Base exception for all bot framework errors.
 /// </summary>
-public sealed class BotFrameworkException : Exception
+public class BotFrameworkException : Exception
 {
     public string? ErrorCode { get; set; }
 
