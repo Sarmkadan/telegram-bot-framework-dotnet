@@ -9,6 +9,10 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// High-level orchestrator for bot operations, coordinating multiple services.
 /// </summary>
+/// <remarks>
+/// Provides a unified interface for processing user messages, executing commands,
+/// managing menus and sessions, and handling the overall bot workflow.
+/// </remarks>
 public interface IBotOrchestrator
 {
     Task<Models.ExecutionContext> ProcessUserMessageAsync(
@@ -45,6 +49,10 @@ public interface IBotOrchestrator
 /// <summary>
 /// Implementation of bot orchestrator.
 /// </summary>
+/// <remarks>
+/// Coordinates all bot services to process user interactions, manage state,
+/// and execute commands through the middleware pipeline.
+/// </remarks>
 public sealed class BotOrchestrator : IBotOrchestrator
 {
     private readonly IUserService _userService;
@@ -76,6 +84,16 @@ public sealed class BotOrchestrator : IBotOrchestrator
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Processes an incoming user message through the complete bot pipeline.
+    /// </summary>
+    /// <param name="userId">The Telegram user ID.</param>
+    /// <param name="chatId">The chat ID where the message was sent.</param>
+    /// <param name="content">The message content/text.</param>
+    /// <param name="firstName">The user's first name.</param>
+    /// <param name="lastName">The user's last name (optional).</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>Execution context containing the result of message processing.</returns>
     public async Task<Models.ExecutionContext> ProcessUserMessageAsync(
         long userId,
         long chatId,
