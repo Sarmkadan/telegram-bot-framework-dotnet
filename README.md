@@ -129,6 +129,69 @@ var user = await cache.GetOrCreateAsync($"user:{userId}",
   TimeSpan.FromHours(1));
 ```
 
+## Docker Support
+
+You can run the Telegram Bot Framework using Docker for easy deployment and consistent environments.
+
+### Prerequisites
+
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+- Environment variables for your bot configuration
+
+
+### Quick Start with Docker Compose
+
+1. Build and start the services:
+
+```bash
+docker-compose up --build
+```
+
+2. The bot will be available at `http://localhost:8080`
+
+
+### Configuration
+
+The bot is configured via environment variables. Create a `.env` file:
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+TELEGRAM_BOT_USERNAME=your_bot_username
+ASPNETCORE_ENVIRONMENT=Production
+LOG_LEVEL=Information
+```
+
+### Available Services
+
+The docker-compose setup includes:
+
+- **telegram-bot**: The main bot application
+- **redis**: Distributed cache for session management
+- **postgres**: Optional PostgreSQL database for persistent storage
+
+### Custom Docker Build
+
+Build the Docker image manually:
+
+```bash
+docker build -t telegram-bot-framework .
+```
+
+Run the container:
+
+```bash
+docker run -p 8080:8080 -e TELEGRAM_BOT_TOKEN=your_token telegram-bot-framework
+```
+
+### Health Check
+
+The container includes a health check that verifies the bot is running:
+
+```bash
+docker ps --filter "name=telegram-bot" --format "{{.Status}}"
+```
+
 ## Testing
 
 ```bash
