@@ -1,0 +1,52 @@
+# Common Docker ignore patterns for .NET applications
+
+# Build output directories
+bin/
+obj/
+
+# Source control
+.git/
+.gitignore
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# IDE specific files
+.idea/
+*.swp
+*.swo
+
+# Test results
+TestResults/
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Build artifacts
+publish/
+*.userprefs
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+/data/
+*.db
+*.sqlite
