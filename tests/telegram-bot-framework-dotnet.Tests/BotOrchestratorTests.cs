@@ -6,6 +6,7 @@ using Moq;
 using TelegramBotFramework.Models;
 using TelegramBotFramework.Services;
 using Xunit;
+using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
@@ -205,12 +206,12 @@ public sealed class BotOrchestratorTests
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
         _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
         _mockMiddleware2.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "Hello", "John", "Doe");
@@ -252,10 +253,10 @@ public sealed class BotOrchestratorTests
         _mockCommandService.Setup(s => s.GetCommandAsync("start", It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
         _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "/start", "John", "Doe");
@@ -301,7 +302,7 @@ public sealed class BotOrchestratorTests
             .ReturnsAsync(contextWithErrors);
 
         _mockMessageService.Setup(s => s.MarkAsFailedAsync(1, "Validation failed", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         // Act
         var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "", "John", "Doe");
@@ -330,7 +331,7 @@ public sealed class BotOrchestratorTests
             .Returns(Task.CompletedTask);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ExecuteUserCommandAsync(123, 456, "test");
@@ -376,7 +377,7 @@ public sealed class BotOrchestratorTests
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true });
         _mockSessionService.Setup(s => s.NavigateToMenuAsync("session-123", "main", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true });
 
         // Act
         var result = await _orchestrator.DisplayMenuAsync(123, "main");
@@ -420,7 +421,7 @@ public sealed class BotOrchestratorTests
             .Returns(Task.CompletedTask);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.HandleMenuButtonAsync(123, "main", "/start");
@@ -447,7 +448,7 @@ public sealed class BotOrchestratorTests
         _mockMenuService.Setup(s => s.GetMenuAsync("submenu", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Menu { MenuId = "submenu", Title = "Sub Menu", Buttons = new List<MenuButton>() });
         _mockSessionService.Setup(s => s.NavigateToMenuAsync("session-123", "submenu", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true, CurrentMenuId = "submenu" });
 
         // Act
         var result = await _orchestrator.HandleMenuButtonAsync(123, "main", "submenu");

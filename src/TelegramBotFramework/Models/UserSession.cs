@@ -19,13 +19,24 @@ public sealed class UserSession
 
     public SessionState State { get; set; } = SessionState.Active;
 
+    /// <summary>
+    /// Convenience view of <see cref="State"/> as a boolean flag. Setting this
+    /// property transitions the session to <see cref="SessionState.Active"/> or
+    /// <see cref="SessionState.Closed"/>.
+    /// </summary>
+    public bool IsActive
+    {
+        get => State == SessionState.Active;
+        set => State = value ? SessionState.Active : SessionState.Closed;
+    }
+
     public string CurrentContext { get; set; } = "menu";
 
     public string? CurrentMenuId { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime LastActivityAt { get; set; } = DateTime.UtcNow;
+    public DateTime? LastActivityAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? ExpiresAt { get; set; }
 

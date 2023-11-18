@@ -11,6 +11,7 @@ using TelegramBotFramework.Models;
 using TelegramBotFramework.Repositories;
 using TelegramBotFramework.Services;
 using Xunit;
+using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
@@ -106,7 +107,7 @@ public sealed class CommandServiceAdditionalTests
 
         _mockRepository
             .Setup(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(command);
 
         // Act
         var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
@@ -243,7 +244,7 @@ public sealed class CommandServiceAdditionalTests
             .ReturnsAsync(command);
         _mockRepository
             .Setup(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(command);
 
         // Act
         await _service.RecordCommandExecutionAsync("test").ConfigureAwait(false);

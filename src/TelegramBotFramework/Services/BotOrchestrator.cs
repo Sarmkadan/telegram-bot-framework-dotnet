@@ -336,7 +336,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
     /// <summary>
     /// Extracts command name from message.
     /// </summary>
-    private static string ExtractCommandName(string messageContent)
+    internal static string ExtractCommandName(string messageContent)
     {
         var parts = messageContent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return parts.Length > 0 ? parts[0].TrimStart('/') : string.Empty;
