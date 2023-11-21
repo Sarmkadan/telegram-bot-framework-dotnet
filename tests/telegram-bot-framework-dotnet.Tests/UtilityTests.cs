@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class StringExtensionTests
+public sealed class StringExtensionTests
 {
     [Theory]
     [InlineData("Hello World", 5, "Hell…")]
@@ -148,7 +149,7 @@ public class StringExtensionTests
     }
 }
 
-public class ValidationUtilityTests
+public sealed class ValidationUtilityTests
 {
     [Theory]
     [InlineData(1L, true)]
@@ -302,7 +303,7 @@ public class ValidationUtilityTests
     }
 }
 
-public class CollectionExtensionTests
+public sealed class CollectionExtensionTests
 {
     [Fact]
     public void Chunk_DividesListIntoBatchesOfCorrectSize()
@@ -427,7 +428,7 @@ public class CollectionExtensionTests
     }
 }
 
-public class DateTimeExtensionTests
+public sealed class DateTimeExtensionTests
 {
     [Fact]
     public void ToUnixTimestamp_WhenGivenUnixEpoch_ReturnsZero()

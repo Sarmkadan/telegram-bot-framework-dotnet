@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -18,10 +19,10 @@ public static class DependencyInjectionSetup
             this Microsoft.Extensions.DependencyInjection.IServiceCollection services,
             Models.BotConfiguration botConfig)
     {
-        if (services == null)
+        if (services  is null)
             throw new ArgumentNullException(nameof(services));
 
-        if (botConfig == null)
+        if (botConfig  is null)
             throw new ArgumentNullException(nameof(botConfig));
 
         botConfig.Validate();
@@ -76,7 +77,7 @@ public static class DependencyInjectionSetup
 /// <summary>
 /// Default configuration loader from appsettings.json.
 /// </summary>
-public class ConfigurationLoader
+public sealed class ConfigurationLoader
 {
     /// <summary>
     /// Loads bot configuration from JSON file.

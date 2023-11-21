@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an interactive menu interface in the bot.
 /// </summary>
-public class Menu
+public sealed class Menu
 {
     public string Id { get; set; } = string.Empty;
 
@@ -123,7 +124,7 @@ public class Menu
     }
 }
 
-public class MenuButton
+public sealed class MenuButton
 {
     public string Label { get; set; } = string.Empty;
 

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Examples
     /// Admin operations example demonstrating user role management, banning, promoting users,
     /// and managing bot configuration from code.
     /// </summary>
-    public class AdminOperationsExample
+public sealed class AdminOperationsExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AdminOperationsExample> _logger;
@@ -116,14 +117,14 @@ namespace TelegramBotFramework.Examples
 
             // Query user by telegram ID
             var user = await _userService.GetUserByTelegramIdAsync(777777777);
-            if (user != null)
+            if (user  is not null)
             {
                 _logger.LogInformation("Found user by Telegram ID: {FirstName} {LastName}",
                     user.FirstName, user.LastName);
             }
 
             // Update user profile information
-            if (user != null)
+            if (user  is not null)
             {
                 user.Username = "user_username";
                 user.PhoneNumber = "+1234567890";
@@ -134,7 +135,7 @@ namespace TelegramBotFramework.Examples
 
             // Get user with full details
             var detailedUser = await _userService.GetUserByIdAsync(user!.Id);
-            if (detailedUser != null)
+            if (detailedUser  is not null)
             {
                 _logger.LogInformation("User Details: ID={Id}, Telegram={TId}, Username={Username}, Status={Status}, Role={Role}",
                     detailedUser.Id, detailedUser.TelegramId, detailedUser.Username,

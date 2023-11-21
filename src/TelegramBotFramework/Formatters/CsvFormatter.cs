@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ using TelegramBotFramework.Models;
 /// Formats data as CSV output for exports and data interchange.
 /// Handles escaping, quoted fields, and supports generic collections.
 /// </summary>
-public class CsvFormatter : IOutputFormatter
+public sealed class CsvFormatter : IOutputFormatter
 {
     private const string FieldSeparator = ",";
     private const string LineEnding = "\r\n";
