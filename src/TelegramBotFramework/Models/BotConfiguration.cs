@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+#nullable enable
+
 namespace TelegramBotFramework.Models;
 
 /// <summary>
@@ -16,7 +18,7 @@ public class BotConfiguration
 
     public long? OwnerId { get; set; }
 
-    public string? DatabaseConnectionString { get; set; }
+    public string DatabaseConnectionString { get; set; } = string.Empty;
 
     public int SessionTimeoutMinutes { get; set; } = 30;
 
@@ -34,9 +36,9 @@ public class BotConfiguration
 
     public string? WebhookSecret { get; set; }
 
-    public Dictionary<string, string>? CustomSettings { get; set; }
+    public Dictionary<string, string> CustomSettings { get; set; } = new();
 
-    public List<long>? AdminIds { get; set; }
+    public List<long> AdminIds { get; set; } = new();
 
     public bool EnableRateLimiting { get; set; } = true;
 
