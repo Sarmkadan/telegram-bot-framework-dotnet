@@ -105,12 +105,12 @@ public sealed class LocalCacheProvider : ICacheProvider
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
-        var existing = await GetAsync<T>(key);
+        var existing = await GetAsync<T>(key).ConfigureAwait(false);
         if (existing  is not null)
             return existing;
 
-        var value = await factory();
-        await SetAsync(key, value, expiration);
+        var value = await factory().ConfigureAwait(false);
+        await SetAsync(key, value, expiration).ConfigureAwait(false);
         return value;
     }
 

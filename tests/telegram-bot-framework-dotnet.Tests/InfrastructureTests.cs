@@ -21,9 +21,9 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task SetAsync_ThenGetAsync_ReturnsStoredValue()
     {
-        await _cache.SetAsync("greeting", "hello");
+        await _cache.SetAsync("greeting", "hello").ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("greeting");
+        var result = await _cache.GetAsync<string>("greeting").ConfigureAwait(false);
 
         result.Should().Be("hello");
     }
@@ -31,7 +31,7 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task GetAsync_WhenKeyDoesNotExist_ReturnsDefault()
     {
-        var result = await _cache.GetAsync<string>("missing-key");
+        var result = await _cache.GetAsync<string>("missing-key").ConfigureAwait(false);
 
         result.Should().BeNull();
     }
@@ -39,10 +39,10 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task GetAsync_WhenEntryHasExpired_ReturnsDefault()
     {
-        await _cache.SetAsync("expiring", "value", TimeSpan.FromMilliseconds(1));
-        await Task.Delay(50);
+        await _cache.SetAsync("expiring", "value", TimeSpan.FromMilliseconds(1)).ConfigureAwait(false);
+        await Task.Delay(50).ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("expiring");
+        var result = await _cache.GetAsync<string>("expiring").ConfigureAwait(false);
 
         result.Should().BeNull();
     }
@@ -50,9 +50,9 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task GetAsync_WhenEntryNotExpired_ReturnsValue()
     {
-        await _cache.SetAsync("persistent", "alive", TimeSpan.FromHours(1));
+        await _cache.SetAsync("persistent", "alive", TimeSpan.FromHours(1)).ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("persistent");
+        var result = await _cache.GetAsync<string>("persistent").ConfigureAwait(false);
 
         result.Should().Be("alive");
     }
@@ -60,20 +60,20 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task RemoveAsync_ExistingKey_MakesValueUnavailable()
     {
-        await _cache.SetAsync("toRemove", 42);
+        await _cache.SetAsync("toRemove", 42).ConfigureAwait(false);
 
-        await _cache.RemoveAsync("toRemove");
+        await _cache.RemoveAsync("toRemove").ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("toRemove");
+        var exists = await _cache.ExistsAsync("toRemove").ConfigureAwait(false);
         exists.Should().BeFalse();
     }
 
     [Fact]
     public async Task ExistsAsync_WhenKeyPresent_ReturnsTrue()
     {
-        await _cache.SetAsync("present", true);
+        await _cache.SetAsync("present", true).ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("present");
+        var exists = await _cache.ExistsAsync("present").ConfigureAwait(false);
 
         exists.Should().BeTrue();
     }
@@ -81,7 +81,7 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task ExistsAsync_WhenKeyNotPresent_ReturnsFalse()
     {
-        var exists = await _cache.ExistsAsync("not-there");
+        var exists = await _cache.ExistsAsync("not-there").ConfigureAwait(false);
 
         exists.Should().BeFalse();
     }
@@ -89,10 +89,10 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task ExistsAsync_WhenEntryExpired_ReturnsFalse()
     {
-        await _cache.SetAsync("gone-soon", "x", TimeSpan.FromMilliseconds(1));
-        await Task.Delay(50);
+        await _cache.SetAsync("gone-soon", "x", TimeSpan.FromMilliseconds(1)).ConfigureAwait(false);
+        await Task.Delay(50).ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("gone-soon");
+        var exists = await _cache.ExistsAsync("gone-soon").ConfigureAwait(false);
 
         exists.Should().BeFalse();
     }
@@ -111,13 +111,13 @@ public sealed class LocalCacheProviderTests
 
         value.Should().Be("created");
         callCount.Should().Be(1);
-        (await _cache.GetAsync<string>("new-key")).Should().Be("created");
+        (await _cache.GetAsync<string>("new-key")).Should().Be("created").ConfigureAwait(false);
     }
 
     [Fact]
     public async Task GetOrCreateAsync_WhenKeyExists_SkipsFactoryAndReturnsCached()
     {
-        await _cache.SetAsync("existing", "cached-value");
+        await _cache.SetAsync("existing", "cached-value").ConfigureAwait(false);
         int callCount = 0;
 
         var value = await _cache.GetOrCreateAsync("existing", async () =>
@@ -134,24 +134,24 @@ public sealed class LocalCacheProviderTests
     [Fact]
     public async Task FlushAsync_ClearsAllCachedEntries()
     {
-        await _cache.SetAsync("a", 1);
-        await _cache.SetAsync("b", 2);
-        await _cache.SetAsync("c", 3);
+        await _cache.SetAsync("a", 1).ConfigureAwait(false);
+        await _cache.SetAsync("b", 2).ConfigureAwait(false);
+        await _cache.SetAsync("c", 3).ConfigureAwait(false);
 
-        await _cache.FlushAsync();
+        await _cache.FlushAsync().ConfigureAwait(false);
 
-        var stats = await _cache.GetStatisticsAsync();
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
         stats.ItemCount.Should().Be(0);
     }
 
     [Fact]
     public async Task GetStatisticsAsync_TracksCacheHitsAndMisses()
     {
-        await _cache.SetAsync("tracked", "x");
-        await _cache.GetAsync<string>("tracked");
-        await _cache.GetAsync<string>("non-existent");
+        await _cache.SetAsync("tracked", "x").ConfigureAwait(false);
+        await _cache.GetAsync<string>("tracked").ConfigureAwait(false);
+        await _cache.GetAsync<string>("non-existent").ConfigureAwait(false);
 
-        var stats = await _cache.GetStatisticsAsync();
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
 
         stats.HitCount.Should().BeGreaterThanOrEqualTo(1);
         stats.MissCount.Should().BeGreaterThanOrEqualTo(1);
@@ -206,7 +206,7 @@ public sealed class EventBusTests
         _bus.Subscribe<MessageReceivedEvent>(handler);
         var evt = new MessageReceivedEvent(chatId: 100L, userId: 200L, messageText: "Hello");
 
-        await _bus.PublishAsync(evt);
+        await _bus.PublishAsync(evt).ConfigureAwait(false);
 
         handler.Received.Should().HaveCount(1);
         handler.Received[0].MessageText.Should().Be("Hello");
@@ -221,7 +221,7 @@ public sealed class EventBusTests
         _bus.Subscribe<MessageReceivedEvent>(handler1);
         _bus.Subscribe<MessageReceivedEvent>(handler2);
 
-        await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "broadcast"));
+        await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "broadcast")).ConfigureAwait(false);
 
         handler1.Received.Should().HaveCount(1);
         handler2.Received.Should().HaveCount(1);
@@ -230,9 +230,9 @@ public sealed class EventBusTests
     [Fact]
     public async Task PublishAsync_WithNoSubscribers_CompletesWithoutThrowing()
     {
-        var act = async () => await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "hi"));
+        var act = async () => await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "hi")).ConfigureAwait(false);
 
-        await act.Should().NotThrowAsync();
+        await act.Should().NotThrowAsync().ConfigureAwait(false);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public sealed class EventBusTests
     {
         _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
 
-        await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "log-test"));
+        await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "log-test")).ConfigureAwait(false);
 
         _mockLogger.Verify(
             l => l.Log(
@@ -472,7 +472,7 @@ public sealed class TokenBucketStrategyTests
         const string inputPrefix = "input_";
 
         // Start the flow
-        await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId);
+        await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
 
         var tasks = new List<Task>();
         for (int i = 0; i < numberOfConcurrentCalls; i++)
@@ -482,7 +482,7 @@ public sealed class TokenBucketStrategyTests
             {
                 try
                 {
-                    await _engine.ProcessInputAsync(TestUserId, input);
+                    await _engine.ProcessInputAsync(TestUserId, input).ConfigureAwait(false);
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("has no active conversation flow"))
                 {
@@ -493,10 +493,10 @@ public sealed class TokenBucketStrategyTests
             }));
         }
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
 
         // Retrieve the final state
-        var finalState = await _engine.GetActiveFlowStateAsync(TestUserId);
+        var finalState = await _engine.GetActiveFlowStateAsync(TestUserId).ConfigureAwait(false);
 
         // The flow might be completed or aborted by one of the concurrent calls.
         // We are mainly interested in the history not throwing exceptions due to race conditions.
@@ -504,7 +504,7 @@ public sealed class TokenBucketStrategyTests
         // If the flow terminated prematurely due to concurrent termination, the count will be less.
         // The crucial part is that the History list itself did not throw a concurrency exception during additions.
 
-        var history = (await _engine.GetFlowHistoryAsync(TestUserId, numberOfConcurrentCalls)).ToList();
+        var history = (await _engine.GetFlowHistoryAsync(TestUserId, numberOfConcurrentCalls)).ToList().ConfigureAwait(false);
 
         // The exact count depends on how many calls successfully added to history before flow termination
         // (if any) occurred due to concurrency. We mainly assert no exceptions and history integrity.

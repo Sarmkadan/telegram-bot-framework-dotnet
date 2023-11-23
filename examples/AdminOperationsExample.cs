@@ -35,9 +35,9 @@ public sealed class AdminOperationsExample
             try
             {
                 // Create multiple users with different scenarios
-                await DemonstrateUserRoleManagementAsync();
-                await DemonstrateBanAndSuspensionAsync();
-                await DemonstrateUserQueryingAsync();
+                await DemonstrateUserRoleManagementAsync().ConfigureAwait(false);
+                await DemonstrateBanAndSuspensionAsync().ConfigureAwait(false);
+                await DemonstrateUserQueryingAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -51,31 +51,31 @@ public sealed class AdminOperationsExample
             _logger.LogInformation("--- User Role Management ---");
 
             // Create a regular user
-            var user1 = await _userService.GetOrCreateUserAsync(111111111, "Alice", "Smith");
+            var user1 = await _userService.GetOrCreateUserAsync(111111111, "Alice", "Smith").ConfigureAwait(false);
             _logger.LogInformation("Created user: {UserId} ({FirstName}) with role {Role}",
                 user1.Id, user1.FirstName, user1.Role);
 
             // Create another user and promote to moderator
-            var user2 = await _userService.GetOrCreateUserAsync(222222222, "Bob", "Johnson");
-            await _userService.PromoteToModeratorAsync(user2.Id);
-            var updatedUser2 = await _userService.GetUserByIdAsync(user2.Id);
+            var user2 = await _userService.GetOrCreateUserAsync(222222222, "Bob", "Johnson").ConfigureAwait(false);
+            await _userService.PromoteToModeratorAsync(user2.Id).ConfigureAwait(false);
+            var updatedUser2 = await _userService.GetUserByIdAsync(user2.Id).ConfigureAwait(false);
             _logger.LogInformation("Promoted {UserId} to {Role}", user2.Id, updatedUser2?.Role);
 
             // Create another user and promote to admin
-            var user3 = await _userService.GetOrCreateUserAsync(333333333, "Charlie", "Brown");
-            await _userService.PromoteToAdminAsync(user3.Id);
-            var updatedUser3 = await _userService.GetUserByIdAsync(user3.Id);
+            var user3 = await _userService.GetOrCreateUserAsync(333333333, "Charlie", "Brown").ConfigureAwait(false);
+            await _userService.PromoteToAdminAsync(user3.Id).ConfigureAwait(false);
+            var updatedUser3 = await _userService.GetUserByIdAsync(user3.Id).ConfigureAwait(false);
             _logger.LogInformation("Promoted {UserId} to {Role}", user3.Id, updatedUser3?.Role);
 
             // Create owner user
-            var user4 = await _userService.GetOrCreateUserAsync(444444444, "Dave", "Wilson");
-            await _userService.PromoteToAdminAsync(user4.Id);
-            var updatedUser4 = await _userService.GetUserByIdAsync(user4.Id);
+            var user4 = await _userService.GetOrCreateUserAsync(444444444, "Dave", "Wilson").ConfigureAwait(false);
+            await _userService.PromoteToAdminAsync(user4.Id).ConfigureAwait(false);
+            var updatedUser4 = await _userService.GetUserByIdAsync(user4.Id).ConfigureAwait(false);
             _logger.LogInformation("Created {UserId} with {Role}", user4.Id, updatedUser4?.Role);
 
             // Demote admin back to moderator
-            await _userService.DemoteFromAdminAsync(updatedUser3.Id);
-            var demotedUser3 = await _userService.GetUserByIdAsync(user3.Id);
+            await _userService.DemoteFromAdminAsync(updatedUser3.Id).ConfigureAwait(false);
+            var demotedUser3 = await _userService.GetUserByIdAsync(user3.Id).ConfigureAwait(false);
             _logger.LogInformation("Demoted {UserId} to {Role}", user3.Id, demotedUser3?.Role);
         }
 
@@ -84,23 +84,23 @@ public sealed class AdminOperationsExample
             _logger.LogInformation("--- Ban and Suspension Management ---");
 
             // Create user to ban
-            var spamUser = await _userService.GetOrCreateUserAsync(555555555, "Spam", "Bot");
+            var spamUser = await _userService.GetOrCreateUserAsync(555555555, "Spam", "Bot").ConfigureAwait(false);
             _logger.LogInformation("Created potential spam user: {UserId}", spamUser.Id);
 
             // Ban the user
-            await _userService.BanUserAsync(spamUser.Id, "Spamming content");
-            var bannedUser = await _userService.GetUserByIdAsync(spamUser.Id);
+            await _userService.BanUserAsync(spamUser.Id, "Spamming content").ConfigureAwait(false);
+            var bannedUser = await _userService.GetUserByIdAsync(spamUser.Id).ConfigureAwait(false);
             _logger.LogInformation("Banned user {UserId}, Status: {Status}", spamUser.Id, bannedUser?.Status);
 
             // Unban the user
-            await _userService.UnbanUserAsync(spamUser.Id);
-            var unbannedUser = await _userService.GetUserByIdAsync(spamUser.Id);
+            await _userService.UnbanUserAsync(spamUser.Id).ConfigureAwait(false);
+            var unbannedUser = await _userService.GetUserByIdAsync(spamUser.Id).ConfigureAwait(false);
             _logger.LogInformation("Unbanned user {UserId}, Status: {Status}", spamUser.Id, unbannedUser?.Status);
 
             // Suspend user temporarily
-            var suspendUser = await _userService.GetOrCreateUserAsync(666666666, "Temp", "Ban");
-            await _userService.SuspendUserAsync(suspendUser.Id, TimeSpan.FromHours(24));
-            var suspendedUser = await _userService.GetUserByIdAsync(suspendUser.Id);
+            var suspendUser = await _userService.GetOrCreateUserAsync(666666666, "Temp", "Ban").ConfigureAwait(false);
+            await _userService.SuspendUserAsync(suspendUser.Id, TimeSpan.FromHours(24)).ConfigureAwait(false);
+            var suspendedUser = await _userService.GetUserByIdAsync(suspendUser.Id).ConfigureAwait(false);
             _logger.LogInformation("Suspended user {UserId}, Status: {Status}", suspendUser.Id, suspendedUser?.Status);
         }
 
@@ -112,11 +112,11 @@ public sealed class AdminOperationsExample
             var users = new List<long> { 777777777, 888888888, 999999999 };
             foreach (var userId in users)
             {
-                await _userService.GetOrCreateUserAsync(userId, "User", userId.ToString());
+                await _userService.GetOrCreateUserAsync(userId, "User", userId.ToString()).ConfigureAwait(false);
             }
 
             // Query user by telegram ID
-            var user = await _userService.GetUserByTelegramIdAsync(777777777);
+            var user = await _userService.GetUserByTelegramIdAsync(777777777).ConfigureAwait(false);
             if (user  is not null)
             {
                 _logger.LogInformation("Found user by Telegram ID: {FirstName} {LastName}",
@@ -129,12 +129,12 @@ public sealed class AdminOperationsExample
                 user.Username = "user_username";
                 user.PhoneNumber = "+1234567890";
                 user.Metadata["location"] = "New York";
-                await _userService.UpdateUserAsync(user);
+                await _userService.UpdateUserAsync(user).ConfigureAwait(false);
                 _logger.LogInformation("Updated user profile: {UserId}", user.Id);
             }
 
             // Get user with full details
-            var detailedUser = await _userService.GetUserByIdAsync(user!.Id);
+            var detailedUser = await _userService.GetUserByIdAsync(user!.Id).ConfigureAwait(false);
             if (detailedUser  is not null)
             {
                 _logger.LogInformation("User Details: ID={Id}, Telegram={TId}, Username={Username}, Status={Status}, Role={Role}",

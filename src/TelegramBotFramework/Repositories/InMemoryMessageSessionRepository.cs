@@ -17,7 +17,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<Models.Message?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.TryGetValue(id, out var msg) ? msg : null;
@@ -26,7 +26,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values.ToList();
@@ -35,7 +35,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<Models.Message> CreateAsync(Models.Message entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -47,7 +47,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<Models.Message> UpdateAsync(Models.Message entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -58,7 +58,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Remove(id);
@@ -67,7 +67,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.ContainsKey(id);
@@ -76,7 +76,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Count;
@@ -85,7 +85,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values.Where(m => m.UserId == userId).ToList();
@@ -94,7 +94,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetByChatIdAsync(long chatId, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values.Where(m => m.ChatId == chatId).ToList();
@@ -103,7 +103,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetByStatusAsync(Models.MessageStatus status, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values.Where(m => m.Status == status).ToList();
@@ -112,7 +112,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetByCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values.Where(m => m.CommandName == commandName).ToList();
@@ -121,7 +121,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values
@@ -132,7 +132,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository
 
     public async Task<IList<Models.Message>> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _messages.Values
@@ -154,7 +154,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.TryGetValue(id, out var session) ? session : null;
@@ -163,7 +163,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<IList<Models.UserSession>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Values.ToList();
@@ -172,7 +172,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession> CreateAsync(Models.UserSession entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -183,7 +183,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession> UpdateAsync(Models.UserSession entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -194,7 +194,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Remove(id);
@@ -203,7 +203,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.ContainsKey(id);
@@ -212,7 +212,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Count;
@@ -221,7 +221,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession?> GetActiveByUserIdAsync(long userId, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Values.FirstOrDefault(s => s.UserId == userId && s.State == Models.SessionState.Active);
@@ -230,7 +230,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<IList<Models.UserSession>> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Values.Where(s => s.UserId == userId).ToList();
@@ -239,7 +239,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<IList<Models.UserSession>> GetExpiredAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Values.Where(s => s.IsExpired()).ToList();
@@ -248,7 +248,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<IList<Models.UserSession>> GetByStateAsync(Models.SessionState state, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _sessions.Values.Where(s => s.State == state).ToList();
@@ -257,7 +257,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<int> CloseExpiredSessionsAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             var expiredSessions = _sessions.Values.Where(s => s.IsExpired()).ToList();
@@ -280,7 +280,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<Models.Menu?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.TryGetValue(id, out var menu) ? menu : null;
@@ -289,7 +289,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<IList<Models.Menu>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Values.ToList();
@@ -298,7 +298,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<Models.Menu> CreateAsync(Models.Menu entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -309,7 +309,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<Models.Menu> UpdateAsync(Models.Menu entity, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
         {
@@ -320,7 +320,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Remove(id);
@@ -329,7 +329,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.ContainsKey(id);
@@ -338,7 +338,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Count;
@@ -347,7 +347,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<IList<Models.Menu>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Values.Where(m => m.IsActive).ToList();
@@ -356,7 +356,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<IList<Models.Menu>> GetByTypeAsync(Models.MenuType type, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Values.Where(m => m.Type == type).ToList();
@@ -365,7 +365,7 @@ public sealed class InMemoryMenuRepository : IMenuRepository
 
     public async Task<IList<Models.Menu>> GetPaginatedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
             return _menus.Values
