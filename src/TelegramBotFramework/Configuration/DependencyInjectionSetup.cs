@@ -43,6 +43,16 @@ public static class DependencyInjectionSetup
         services.AddSingleton<Services.ISessionService, Services.SessionService>();
         services.AddSingleton<Services.IMenuService, Services.MenuService>();
         services.AddSingleton<Services.IMessageService, Services.MessageService>();
+        services.AddSingleton<Services.IBotOrchestrator, Services.BotOrchestrator>();
+
+        // Register rate limiting strategy
+        services.AddSingleton<Strategies.IRateLimitingStrategy, Strategies.InMemoryRateLimitingStrategy>();
+
+        // Register middleware components
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.ErrorHandlingMiddleware>();
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.LoggingMiddleware>();
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.AuthorizationMiddleware>();
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.RateLimitingMiddleware>();
 
         // Register logging
         services.AddLogging(config =>
