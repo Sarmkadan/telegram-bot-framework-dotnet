@@ -37,10 +37,10 @@ public sealed class ExternalApiIntegrationExample
             try
             {
                 // Demonstrate various API integration patterns
-                await FetchPublicApiDataAsync();
-                await HandleApiErrorsAsync();
-                await ImplementRetryLogicAsync();
-                await CacheApiResponsesAsync();
+                await FetchPublicApiDataAsync().ConfigureAwait(false);
+                await HandleApiErrorsAsync().ConfigureAwait(false);
+                await ImplementRetryLogicAsync().ConfigureAwait(false);
+                await CacheApiResponsesAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -60,11 +60,11 @@ public sealed class ExternalApiIntegrationExample
 
                 // Example API call (using JSONPlaceholder for testing)
                 var request = new HttpRequestMessage(HttpMethod.Get, "https://jsonplaceholder.typicode.com/users/1");
-                var response = await httpClient.SendAsync(request, TimeSpan.FromSeconds(10));
+                var response = await httpClient.SendAsync(request, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     _logger.LogInformation("API Response: {Content}", content);
 
                     // Parse JSON response
@@ -95,7 +95,7 @@ public sealed class ExternalApiIntegrationExample
                 var request = new HttpRequestMessage(HttpMethod.Get,
                     "https://jsonplaceholder.typicode.com/invalid-endpoint");
 
-                var response = await httpClient.SendAsync(request);
+                var response = await httpClient.SendAsync(request).ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -151,7 +151,7 @@ public sealed class ExternalApiIntegrationExample
                     var request = new HttpRequestMessage(HttpMethod.Get,
                         "https://jsonplaceholder.typicode.com/users/1");
 
-                    var response = await httpClient.SendAsync(request, TimeSpan.FromSeconds(5));
+                    var response = await httpClient.SendAsync(request, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -162,7 +162,7 @@ public sealed class ExternalApiIntegrationExample
                     {
                         _logger.LogWarning("API call failed, retrying after {Delay}ms",
                             retryDelay.TotalMilliseconds);
-                        await Task.Delay(retryDelay);
+                        await Task.Delay(retryDelay).ConfigureAwait(false);
                         retryDelay = TimeSpan.FromMilliseconds(retryDelay.TotalMilliseconds * 2);
                     }
                 }
@@ -173,7 +173,7 @@ public sealed class ExternalApiIntegrationExample
                     if (i < maxRetries - 1)
                     {
                         _logger.LogWarning("Retrying after {Delay}ms", retryDelay.TotalMilliseconds);
-                        await Task.Delay(retryDelay);
+                        await Task.Delay(retryDelay).ConfigureAwait(false);
                         retryDelay = TimeSpan.FromMilliseconds(retryDelay.TotalMilliseconds * 2);
                     }
                     else
@@ -194,7 +194,7 @@ public sealed class ExternalApiIntegrationExample
             var cacheExpiration = TimeSpan.FromMinutes(5);
 
             // Try to get from cache first
-            var cachedData = await cacheProvider.GetAsync(cacheKey);
+            var cachedData = await cacheProvider.GetAsync(cacheKey).ConfigureAwait(false);
 
             if (cachedData  is not null)
             {
@@ -210,14 +210,14 @@ public sealed class ExternalApiIntegrationExample
                     var request = new HttpRequestMessage(HttpMethod.Get,
                         "https://jsonplaceholder.typicode.com/users/1");
 
-                    var response = await httpClient.SendAsync(request);
+                    var response = await httpClient.SendAsync(request).ConfigureAwait(false);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var content = await response.Content.ReadAsStringAsync();
+                        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                         // Cache the response
-                        await cacheProvider.SetAsync(cacheKey, content, cacheExpiration);
+                        await cacheProvider.SetAsync(cacheKey, content, cacheExpiration).ConfigureAwait(false);
                         _logger.LogInformation("Cached API response with {Expiration} TTL",
                             cacheExpiration.TotalMinutes);
 

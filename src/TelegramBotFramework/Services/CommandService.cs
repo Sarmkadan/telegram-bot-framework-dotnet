@@ -33,13 +33,13 @@ public sealed class CommandService : ICommandService
     public async Task<Models.Command?> GetCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
         var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
-        return await _commandRepository.GetByNameAsync(normalized, cancellationToken);
+        return await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Models.Command> RegisterCommandAsync(Models.Command command, CancellationToken cancellationToken = default)
     {
         command.Validate();
-        var created = await _commandRepository.CreateAsync(command, cancellationToken);
+        var created = await _commandRepository.CreateAsync(command, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Command registered: {CommandName}", command.Name);
         return created;
     }
@@ -47,7 +47,7 @@ public sealed class CommandService : ICommandService
     public async Task<bool> UnregisterCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
         var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
-        var result = await _commandRepository.DeleteAsync(normalized, cancellationToken);
+        var result = await _commandRepository.DeleteAsync(normalized, cancellationToken).ConfigureAwait(false);
         if (result)
         {
             _logger.LogInformation("Command unregistered: {CommandName}", normalized);
@@ -59,7 +59,7 @@ public sealed class CommandService : ICommandService
         Models.UserRole userRole = Models.UserRole.User,
         CancellationToken cancellationToken = default)
     {
-        var allCommands = await _commandRepository.GetEnabledAsync(cancellationToken);
+        var allCommands = await _commandRepository.GetEnabledAsync(cancellationToken).ConfigureAwait(false);
         return allCommands
             .Where(c => !c.RequiresAdmin || userRole >= Models.UserRole.Administrator)
             .ToList();
@@ -95,7 +95,7 @@ public sealed class CommandService : ICommandService
             }
 
             context.Command.RecordExecution();
-            await _commandRepository.UpdateAsync(context.Command, cancellationToken);
+            await _commandRepository.UpdateAsync(context.Command, cancellationToken).ConfigureAwait(false);
 
             context.SetState("executed", true);
             context.SetState("execution_time_ms", context.GetDuration().TotalMilliseconds);
@@ -113,13 +113,13 @@ public sealed class CommandService : ICommandService
 
     public async Task<bool> CanUserExecuteCommandAsync(long userId, string commandName, CancellationToken cancellationToken = default)
     {
-        var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
+        var user = await _userService.GetUserByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is null || user.Status != Models.UserStatus.Active)
         {
             return false;
         }
 
-        var command = await GetCommandAsync(commandName, cancellationToken);
+        var command = await GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
         if (command  is null || !command.IsEnabled)
         {
             return false;
@@ -130,8 +130,8 @@ public sealed class CommandService : ICommandService
 
     public async Task<bool> IsCommandRateLimitedAsync(long userId, string commandName, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
-        var command = await GetCommandAsync(commandName, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
+        var command = await GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
         if (command?.RateLimitPerMinute  is null)
         {
             return false;
@@ -172,17 +172,17 @@ public sealed class CommandService : ICommandService
 
     public async Task RecordCommandExecutionAsync(string commandName, CancellationToken cancellationToken = default)
     {
-        var command = await GetCommandAsync(commandName, cancellationToken);
+        var command = await GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
         if (command  is not null)
         {
             command.RecordExecution();
-            await _commandRepository.UpdateAsync(command, cancellationToken);
+            await _commandRepository.UpdateAsync(command, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<int> GetCommandExecutionCountAsync(string commandName, CancellationToken cancellationToken = default)
     {
-        var command = await GetCommandAsync(commandName, cancellationToken);
+        var command = await GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
         return command?.ExecutionCount ?? 0;
     }
 }
