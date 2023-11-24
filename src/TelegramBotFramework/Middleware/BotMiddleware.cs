@@ -162,11 +162,11 @@ public sealed class RateLimitMiddleware : IBotMiddleware
 
         if (isRateLimited)
         {
-            context.AddError("Rate limit exceeded for this command");
             _logger.LogWarning(
                 "Rate limit exceeded - UserId: {UserId}, Command: {Command}",
                 context.UserId,
                 context.Command.Name);
+            context.RespondAndStop("Too many requests — please wait a moment before trying again.");
             return context;
         }
 
