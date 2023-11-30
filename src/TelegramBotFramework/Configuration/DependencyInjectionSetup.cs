@@ -52,8 +52,8 @@ public static class DependencyInjectionSetup
         services.AddSingleton<Strategies.IRateLimitingStrategy, Strategies.InMemoryRateLimitingStrategy>();
 
         // Register middleware components
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.ErrorHandlingMiddleware>();
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.LoggingMiddleware>();
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.BotErrorHandlingMiddleware>();
+        services.AddTransient<Middleware.IBotMiddleware, Middleware.BotLoggingMiddleware>();
         services.AddTransient<Middleware.IBotMiddleware, Middleware.AuthorizationMiddleware>();
         services.AddTransient<Middleware.IBotMiddleware, Middleware.RateLimitingMiddleware>();
 
@@ -88,6 +88,57 @@ public static class DependencyInjectionSetup
 }
 
 /// <summary>
+/// Extension methods for registering webhook mode in the dependency-injection container.
+/// </summary>
+public static class WebhookSetup
+{
+    /// <summary>
+    /// Registers webhook mode services and the <see cref="Integration.WebhookService"/> hosted service.
+    /// Call this after <c>AddTelegramBotFramework</c> in your startup code.
+    /// </summary>
+    /// <param name="services">The <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/> to configure.</param>
+    /// <param name="configure">Delegate that populates <see cref="Integration.WebhookOptions"/>.</param>
+    /// <returns>The same service collection for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services
+    ///     .AddTelegramBotFramework(config)
+    ///     .AddWebhookMode(opts =>
+    ///     {
+    ///         opts.Url        = "https://mybot.example.com/api/webhook/telegram";
+    ///         opts.SecretToken = "my-secret";
+    ///     });
+    /// </code>
+    /// </example>
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddWebhookMode(
+        this Microsoft.Extensions.DependencyInjection.IServiceCollection services,
+        Action<Integration.WebhookOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var options = new Integration.WebhookOptions();
+        configure(options);
+        options.Validate();
+
+        services.AddSingleton(options);
+        services.AddSingleton<Integration.TelegramApiClient>(sp =>
+        {
+            var config = sp.GetRequiredService<Models.BotConfiguration>();
+            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Integration.TelegramApiClient>>();
+            return new Integration.TelegramApiClient(config.BotToken, null, logger);
+        });
+        services.AddSingleton<Integration.WebhookService>();
+        services.AddSingleton<Integration.IWebhookService>(sp =>
+            sp.GetRequiredService<Integration.WebhookService>());
+        services.AddHostedService(sp =>
+            sp.GetRequiredService<Integration.WebhookService>());
+
+        return services;
+    }
+}
+
+/// <summary>
 /// Default configuration loader from appsettings.json.
 /// </summary>
 public sealed class ConfigurationLoader
@@ -109,8 +160,8 @@ public sealed class ConfigurationLoader
             BotToken = root.GetProperty("botToken").GetString() ?? string.Empty,
             BotUsername = root.GetProperty("botUsername").GetString() ?? string.Empty,
             DatabaseConnectionString = root.TryGetProperty("databaseConnectionString", out var dbProp)
-                ? dbProp.GetString()
-                : null,
+                ? dbProp.GetString() ?? string.Empty
+                : string.Empty,
             SessionTimeoutMinutes = root.TryGetProperty("sessionTimeoutMinutes", out var timeoutProp)
                 ? timeoutProp.GetInt32()
                 : Constants.BotConstants.DefaultSessionTimeoutMinutes,
@@ -147,7 +198,7 @@ public sealed class ConfigurationLoader
         {
             BotToken = botToken,
             BotUsername = botUsername,
-            DatabaseConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING"),
+            DatabaseConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING") ?? string.Empty,
             SessionTimeoutMinutes = int.TryParse(
                 Environment.GetEnvironmentVariable("SESSION_TIMEOUT_MINUTES"), out var timeout)
                 ? timeout
