@@ -35,9 +35,9 @@ public sealed class RateLimitingMiddleware : IBotMiddleware
 
     public int Priority => 20; // Rate limiting usually comes after authorization
 
-    public async Task<ExecutionContext> ProcessAsync(
-        ExecutionContext context,
-        Func<ExecutionContext, Task<ExecutionContext>> next,
+    public async Task<Models.ExecutionContext> ProcessAsync(
+        Models.ExecutionContext context,
+        Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
         CancellationToken cancellationToken)
     {
         if (!_configuration.EnableRateLimiting || !context.IsValid)
@@ -53,14 +53,14 @@ public sealed class RateLimitingMiddleware : IBotMiddleware
         }
 
         // Check if user is an admin or owner, bypass rate limiting for them
-        if (_configuration.IsAdmin(context.User.UserId))
+        if (_configuration.IsAdmin(context.User.TelegramId))
         {
-            _logger.LogDebug("RateLimitingMiddleware: User {UserId} is admin, bypassing rate limit.", context.User.UserId);
+            _logger.LogDebug("RateLimitingMiddleware: User {UserId} is admin, bypassing rate limit.", context.User.TelegramId);
             return await next(context).ConfigureAwait(false);
         }
 
-        var key = $"RateLimit:{context.User.UserId}";
-        var limit = _configuration.RateLimitPerMinute; // e.g., 30 requests per minute
+        var key = $"RateLimit:{context.User.TelegramId}";
+        var limit = _configuration.RateLimitPerMinute;
         var interval = TimeSpan.FromMinutes(1);
 
         var allowed = await _rateLimitingStrategy.IsActionAllowedAsync(key, limit, interval, cancellationToken)
@@ -68,10 +68,9 @@ public sealed class RateLimitingMiddleware : IBotMiddleware
 
         if (!allowed)
         {
-            context.AddError($"Rate limit exceeded for user {context.User.UserId}. Please try again later.");
-            _logger.LogWarning("RateLimitingMiddleware: User {UserId} exceeded rate limit.", context.User.UserId);
-            // Optionally, you could set a specific status code or type of error here
-            return context; // Stop processing if rate limit exceeded
+            context.AddError($"Rate limit exceeded for user {context.User.TelegramId}. Please try again later.");
+            _logger.LogWarning("RateLimitingMiddleware: User {UserId} exceeded rate limit.", context.User.TelegramId);
+            return context;
         }
 
         return await next(context).ConfigureAwait(false);

@@ -10,12 +10,12 @@ namespace TelegramBotFramework.Middleware;
 /// Global error handling middleware that catches all unhandled exceptions
 /// and returns consistent error responses to clients.
 /// </summary>
-public sealed class ErrorHandlingMiddleware
+public sealed class HttpErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ErrorHandlingMiddleware> _logger;
+    private readonly ILogger<HttpErrorHandlingMiddleware> _logger;
 
-    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+    public HttpErrorHandlingMiddleware(RequestDelegate next, ILogger<HttpErrorHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -42,7 +42,7 @@ public sealed class ErrorHandlingMiddleware
         var (statusCode, errorCode, message) = MapException(exception);
         context.Response.StatusCode = statusCode;
 
-        var response = new ErrorResponse
+        var response = new HttpErrorResponse
         {
             ErrorCode = errorCode,
             Message = message,
@@ -64,7 +64,7 @@ public sealed class ErrorHandlingMiddleware
             InvalidOperationException => (409, "INVALID_STATE", ex.Message),
             TimeoutException => (408, "REQUEST_TIMEOUT", "Request processing timed out"),
             NotImplementedException => (501, "NOT_IMPLEMENTED", "This feature is not yet implemented"),
-            Exceptions.BotFrameworkException bfe => (bfe.StatusCode, bfe.ErrorCode, bfe.Message),
+            Exceptions.BotFrameworkException bfe => (500, bfe.ErrorCode ?? "BOT_FRAMEWORK_ERROR", bfe.Message),
             _ => (500, "INTERNAL_ERROR", "An unexpected error occurred. Please try again later.")
         };
     }
@@ -73,7 +73,7 @@ public sealed class ErrorHandlingMiddleware
 /// <summary>
 /// Standard error response structure for API clients.
 /// </summary>
-public sealed class ErrorResponse
+public sealed class HttpErrorResponse
 {
     public string ErrorCode { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

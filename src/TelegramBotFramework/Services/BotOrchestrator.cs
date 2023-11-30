@@ -74,6 +74,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         _middleware = middleware?.OrderByDescending(m => m.Priority).ToList() ?? throw new ArgumentNullException(nameof(middleware));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     public async Task<Models.ExecutionContext> ProcessUserMessageAsync(
         long userId,

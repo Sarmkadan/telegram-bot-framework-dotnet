@@ -90,8 +90,6 @@ public sealed class PollingStrategy
 
     private async Task PollAsync(TimeSpan interval, CancellationToken cancellationToken)
     {
-        var handler = new WebhookHandler(_logger);
-
         while (!cancellationToken.IsCancellationRequested)
         {
             try

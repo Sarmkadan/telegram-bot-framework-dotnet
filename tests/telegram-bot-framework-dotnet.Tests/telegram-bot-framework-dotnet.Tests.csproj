@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
+    <NoWarn>xUnit1030</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

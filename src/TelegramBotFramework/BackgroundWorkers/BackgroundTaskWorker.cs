@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using TelegramBotFramework.Integration;
+
 namespace TelegramBotFramework.BackgroundWorkers;
 
 /// <summary>
@@ -155,6 +157,9 @@ public sealed class BackgroundTaskWorker : IDisposable
         {
             _logger.LogInformation("Executing background task: {TaskName} (ID: {TaskId})", task.Name, task.Id);
             task.StartedAt = DateTime.UtcNow;
+
+            if (task.TaskFunc is null)
+                throw new InvalidOperationException($"Background task '{task.Name}' does not have a task delegate.");
 
             await task.TaskFunc(cancellationToken).ConfigureAwait(false);
 

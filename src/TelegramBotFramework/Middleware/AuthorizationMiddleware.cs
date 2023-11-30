@@ -31,9 +31,9 @@ public sealed class AuthorizationMiddleware : IBotMiddleware
 
     public int Priority => 30; // Authorization usually comes after logging and error handling, before rate limiting
 
-    public async Task<ExecutionContext> ProcessAsync(
-        ExecutionContext context,
-        Func<ExecutionContext, Task<ExecutionContext>> next,
+    public async Task<Models.ExecutionContext> ProcessAsync(
+        Models.ExecutionContext context,
+        Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
         CancellationToken cancellationToken)
     {
         if (!context.IsValid)
@@ -48,28 +48,19 @@ public sealed class AuthorizationMiddleware : IBotMiddleware
             return await next(context).ConfigureAwait(false);
         }
 
-        // Check if a command is being executed and if the user has permission
         if (context.Command != null)
         {
-            var command = await _commandService.GetCommandAsync(context.Command.CommandName, cancellationToken)
+            var command = await _commandService.GetCommandAsync(context.Command.Name, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (command != null && command.RequiredRoles != null && command.RequiredRoles.Any())
+            if (command != null && command.RequiresAdmin && context.User.Role < Models.UserRole.Admin)
             {
-                var userRoles = await _userService.GetUserRolesAsync(context.User.UserId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (!command.RequiredRoles.Any(role => userRoles.Contains(role)))
-                {
-                    context.AddError($"User {context.User.UserId} is not authorized to execute command '{context.Command.CommandName}'.");
-                    _logger.LogWarning("AuthorizationMiddleware: User {UserId} denied access to command {CommandName}",
-                        context.User.UserId, context.Command.CommandName);
-                    return context; // Stop processing if not authorized
-                }
+                context.AddError($"User {context.User.TelegramId} is not authorized to execute command '{context.Command.Name}'.");
+                _logger.LogWarning("AuthorizationMiddleware: User {UserId} denied access to command {CommandName}",
+                    context.User.TelegramId, context.Command.Name);
+                return context;
             }
         }
-
-        // Add any other authorization checks here (e.g., specific user permissions based on message content)
 
         return await next(context).ConfigureAwait(false);
     }
