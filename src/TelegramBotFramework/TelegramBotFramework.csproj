@@ -8,9 +8,9 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>1591</NoWarn>
     <PackageId>Zaiets.telegram.bot.framework.dotnet</PackageId>
-    <Version>2.0.2</Version>
+    <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <Description>Opinionated Telegram bot framework for .NET - commands, menus, state machine, middleware</Description>
+    <Description>A robust and extensible framework for building Telegram bots in .NET, featuring conversation flow, middleware, and dependency injection support.</Description>
     <PackageTags>telegram bot framework dotnet csharp middleware state-machine commands menus</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</PackageProjectUrl>
