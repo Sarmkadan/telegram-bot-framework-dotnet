@@ -7,6 +7,7 @@
 namespace TelegramBotFramework.Caching;
 
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// In-memory cache provider using concurrent dictionaries.
@@ -16,10 +17,16 @@ using System.Collections.Concurrent;
 public sealed class LocalCacheProvider : ICacheProvider
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
+    private readonly ILogger<LocalCacheProvider>? _logger;
     private long _hitCount = 0;
     private long _missCount = 0;
     private long _setCount = 0;
     private long _removeCount = 0;
+
+    public LocalCacheProvider(ILogger<LocalCacheProvider>? logger = null)
+    {
+        _logger = logger;
+    }
 
     public Task<T?> GetAsync<T>(string key)
     {
@@ -67,6 +74,12 @@ public sealed class LocalCacheProvider : ICacheProvider
         _cache[key] = entry;
         Interlocked.Increment(ref _setCount);
 
+        if (_logger?.IsEnabled(LogLevel.Debug) == true)
+        {
+            _logger.LogDebug("Cache entry set - Key: {Key}, Expiration: {ExpirationMs}ms",
+                key, expiration?.TotalMilliseconds);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -78,6 +91,10 @@ public sealed class LocalCacheProvider : ICacheProvider
         if (_cache.TryRemove(key, out _))
         {
             Interlocked.Increment(ref _removeCount);
+            if (_logger?.IsEnabled(LogLevel.Debug) == true)
+            {
+                _logger.LogDebug("Cache entry removed - Key: {Key}", key);
+            }
         }
 
         return Task.CompletedTask;

@@ -90,3 +90,5 @@ logs/
 *.log
 dist/
 publish/
+BenchmarkDotNet.Artifacts/
+.aider*

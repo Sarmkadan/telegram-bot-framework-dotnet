@@ -12,7 +12,7 @@ namespace TelegramBotFramework.Controllers;
 /// <summary>
 /// ASP.NET Core controller that exposes the Telegram webhook endpoint.
 /// Telegram calls <c>POST /api/webhook/telegram</c> (or the path configured in
-/// <see cref="WebhookOptions.ListenPath"/>) with each incoming update.
+/// <see cref="WebhookOptions.ListenPath"/> ) with each incoming update.
 /// </summary>
 [ApiController]
 [Route("api/webhook")]
@@ -31,7 +31,7 @@ public sealed class WebhookController : ControllerBase
         ILogger<WebhookController> logger)
     {
         _webhookService = webhookService ?? throw new ArgumentNullException(nameof(webhookService));
-        _logger         = logger         ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -48,6 +48,8 @@ public sealed class WebhookController : ControllerBase
     [Consumes("application/json")]
     public async Task<IActionResult> ReceiveUpdate(CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Webhook endpoint called - Path: {Path}, Method: {Method}", Request.Path, Request.Method);
+
         string body;
         using (var reader = new System.IO.StreamReader(Request.Body))
         {
@@ -60,8 +62,12 @@ public sealed class WebhookController : ControllerBase
             return BadRequest("Request body is required.");
         }
 
+        _logger.LogDebug("Webhook request body received - Length: {BodyLength} bytes", body.Length);
+
         Request.Headers.TryGetValue(SecretTokenHeader, out var secretTokenValue);
         var secretToken = secretTokenValue.ToString();
+
+        _logger.LogDebug("Validating webhook request with secret token");
 
         var update = await _webhookService.ParseAndValidateAsync(body, secretToken)
             .ConfigureAwait(false);
@@ -69,10 +75,18 @@ public sealed class WebhookController : ControllerBase
         if (update is null)
         {
             // ParseAndValidateAsync already logged the reason (invalid signature or parse failure)
+            _logger.LogWarning("Webhook request validation failed - Invalid signature or parse error");
             return Unauthorized();
         }
 
+        _logger.LogInformation(
+            "Webhook request validated successfully - UpdateId: {UpdateId}, Type: {UpdateType}",
+            update.UpdateId,
+            update.MessageType);
+
         await _webhookService.DispatchUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+
+        _logger.LogDebug("Webhook update dispatched successfully - UpdateId: {UpdateId}", update.UpdateId);
 
         // Always return 200 OK so Telegram does not re-deliver
         return Ok();
