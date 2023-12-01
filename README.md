@@ -200,6 +200,22 @@ dotnet test
 
 The framework includes 189 tests across model validation, infrastructure, utility, and feature coverage.
 
+## Benchmarks
+
+To run the performance benchmarks:
+
+```bash
+dotnet run -c Release --project benchmarks/telegram-bot-framework-dotnet.Benchmarks/telegram-bot-framework-dotnet.Benchmarks.csproj
+```
+
+### Results
+
+| Method                  | Mean      | Error     | StdDev    | Median    | Allocated |
+|------------------------ |----------:|----------:|----------:|----------:|----------:|
+| ProcessMessageBenchmark | 39.104 us | 2.3661 us | 6.5957 us | 35.846 us |    3496 B |
+| GetUserSessionBenchmark |  6.042 us | 0.2968 us | 0.8610 us |  5.981 us |     416 B |
+| EndUserSessionBenchmark | 12.736 us | 0.6527 us | 1.9144 us | 12.688 us |     512 B |
+
 ## License
 
 MIT - see [LICENSE](LICENSE)
