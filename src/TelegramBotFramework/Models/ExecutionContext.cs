@@ -29,7 +29,7 @@ public sealed class ExecutionContext
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public Dictionary<string, object>? State { get; set; }
+    public Dictionary<string, object> States { get; set; } = new();
 
     public List<string>? Errors { get; set; }
 
@@ -61,7 +61,7 @@ public sealed class ExecutionContext
     /// </summary>
     public T? GetState<T>(string key)
     {
-        if (State?.TryGetValue(key, out var value) == true)
+        if (States.TryGetValue(key, out var value))
         {
             return value is T tValue ? tValue : default;
         }
@@ -71,10 +71,14 @@ public sealed class ExecutionContext
     /// <summary>
     /// Sets state value.
     /// </summary>
-    public void SetState(string key, object value)
+    public void SetState(string? key, object value)
     {
-        State ??= new Dictionary<string, object>();
-        State[key] = value;
+        if (string.IsNullOrEmpty(key))
+        {
+            return;
+        }
+
+        States[key] = value;
     }
 
     /// <summary>
@@ -102,6 +106,14 @@ public sealed class ExecutionContext
         PendingResponse = responseMessage;
         IsStopped = true;
         IsValid = false;
+    }
+
+    /// <summary>
+    /// Short-circuits the middleware pipeline without injecting a response message.
+    /// </summary>
+    public void StopProcessing()
+    {
+        IsStopped = true;
     }
 
     /// <summary>
