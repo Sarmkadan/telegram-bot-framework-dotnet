@@ -1,0 +1,340 @@
+#nullable enable
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Repositories;
+using TelegramBotFramework.Services;
+using Xunit;
+
+namespace TelegramBotFramework.Tests;
+
+public sealed class CommandServiceAdditionalTests
+{
+    private readonly Mock<ICommandRepository> _mockRepository = new();
+    private readonly Mock<IUserService> _mockUserService = new();
+    private readonly Mock<ILogger<CommandService>> _mockLogger = new();
+    private readonly CommandService _service;
+
+    public CommandServiceAdditionalTests()
+    {
+        _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockLogger.Object);
+    }
+
+    [Fact]
+    public async Task GetAvailableCommandsAsync_WithAdminRole_ReturnsAdminCommands()
+    {
+        // Arrange
+        var adminCommand = new Command { Name = "/admin", IsEnabled = true, RequiresAdmin = true };
+        var regularCommand = new Command { Name = "/help", IsEnabled = true, RequiresAdmin = false };
+        var disabledCommand = new Command { Name = "/disabled", IsEnabled = false, RequiresAdmin = false };
+
+        _mockRepository
+            .Setup(r => r.GetEnabledAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Command> { adminCommand, regularCommand, disabledCommand });
+
+        // Act
+        var result = await _service.GetAvailableCommandsAsync(UserRole.Administrator).ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().Contain(c => c.Name == "/admin");
+        result.Should().Contain(c => c.Name == "/help");
+    }
+
+    [Fact]
+    public async Task GetAvailableCommandsAsync_WithUserRole_ReturnsOnlyNonAdminCommands()
+    {
+        // Arrange
+        var adminCommand = new Command { Name = "/admin", IsEnabled = true, RequiresAdmin = true };
+        var regularCommand = new Command { Name = "/help", IsEnabled = true, RequiresAdmin = false };
+
+        _mockRepository
+            .Setup(r => r.GetEnabledAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Command> { adminCommand, regularCommand });
+
+        // Act
+        var result = await _service.GetAvailableCommandsAsync(UserRole.User).ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain(c => c.Name == "/help");
+        result.Should().NotContain(c => c.Name == "/admin");
+    }
+
+    [Fact]
+    public async Task GetAvailableCommandsAsync_WithModeratorRole_ReturnsCommandsForModeratorAndAbove()
+    {
+        // Arrange
+        var adminCommand = new Command { Name = "/admin", IsEnabled = true, RequiresAdmin = true };
+        var moderatorCommand = new Command { Name = "/moderate", IsEnabled = true, RequiresAdmin = false };
+        var userCommand = new Command { Name = "/help", IsEnabled = true, RequiresAdmin = false };
+
+        _mockRepository
+            .Setup(r => r.GetEnabledAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Command> { adminCommand, moderatorCommand, userCommand });
+
+        // Act
+        var result = await _service.GetAvailableCommandsAsync(UserRole.Moderator).ConfigureAwait(false);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().Contain(c => c.Name == "/moderate");
+        result.Should().Contain(c => c.Name == "/help");
+        result.Should().NotContain(c => c.Name == "/admin");
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_WithValidContext_ExecutesSuccessfully()
+    {
+        // Arrange
+        var command = new Command { Name = "/test", IsEnabled = true, HandlerType = "TestHandler" };
+        var user = new BotUser { UserId = 123, FirstName = "John", Role = UserRole.User };
+        var context = new ExecutionContext
+        {
+            UserId = 123,
+            ChatId = 456,
+            User = user,
+            Command = command,
+            Message = new Message { MessageId = 1, Content = "/test", Type = MessageType.Text }
+        };
+
+        _mockRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsValid.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
+        result.Command.Should().NotBeNull();
+        result.Command!.ExecutionCount.Should().Be(1);
+        _mockRepository.Verify(r => r.UpdateAsync(command, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_WithDisabledCommand_AddsErrorToContext()
+    {
+        // Arrange
+        var command = new Command { Name = "/disabled", IsEnabled = false, HandlerType = "TestHandler" };
+        var user = new BotUser { UserId = 123, FirstName = "John", Role = UserRole.Administrator };
+        var context = new ExecutionContext
+        {
+            UserId = 123,
+            ChatId = 456,
+            User = user,
+            Command = command,
+            Message = new Message { MessageId = 1, Content = "/disabled", Type = MessageType.Text }
+        };
+
+        // Act
+        var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("disabled"));
+        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext()
+    {
+        // Arrange
+        var command = new Command { Name = "/admin", IsEnabled = true, RequiresAdmin = true, HandlerType = "TestHandler" };
+        var user = new BotUser { UserId = 123, FirstName = "John", Role = UserRole.User };
+        var context = new ExecutionContext
+        {
+            UserId = 123,
+            ChatId = 456,
+            User = user,
+            Command = command,
+            Message = new Message { MessageId = 1, Content = "/admin", Type = MessageType.Text }
+        };
+
+        // Act
+        var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Contains("Insufficient permissions"));
+        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CanUserExecuteCommandAsync_WithInactiveUser_ReturnsFalse()
+    {
+        // Arrange
+        var user = new BotUser { UserId = 123, FirstName = "John", Status = UserStatus.Banned };
+        var command = new Command { Name = "/test", IsEnabled = true };
+
+        _mockUserService
+            .Setup(u => u.GetUserByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+
+        // Act
+        var result = await _service.CanUserExecuteCommandAsync(123, "test").ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CanUserExecuteCommandAsync_WithNonExistentCommand_ReturnsFalse()
+    {
+        // Arrange
+        var user = new BotUser { UserId = 123, FirstName = "John", Status = UserStatus.Active };
+
+        _mockUserService
+            .Setup(u => u.GetUserByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/nonexistent", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Command?)null);
+
+        // Act
+        var result = await _service.CanUserExecuteCommandAsync(123, "nonexistent").ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CanUserExecuteCommandAsync_WithDisabledCommand_ReturnsFalse()
+    {
+        // Arrange
+        var user = new BotUser { UserId = 123, FirstName = "John", Status = UserStatus.Active };
+        var command = new Command { Name = "/disabled", IsEnabled = false };
+
+        _mockUserService
+            .Setup(u => u.GetUserByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/disabled", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+
+        // Act
+        var result = await _service.CanUserExecuteCommandAsync(123, "disabled").ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RecordCommandExecutionAsync_WithValidCommand_IncrementsExecutionCount()
+    {
+        // Arrange
+        var command = new Command { Name = "/test", HandlerType = "TestHandler", ExecutionCount = 5 };
+
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+        _mockRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.RecordCommandExecutionAsync("test").ConfigureAwait(false);
+
+        // Assert
+        command.ExecutionCount.Should().Be(6);
+        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordCommandExecutionAsync_WithNonExistentCommand_DoesNotThrow()
+    {
+        // Arrange
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/nonexistent", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Command?)null);
+
+        // Act & Assert
+        await _service.Invoking(s => s.RecordCommandExecutionAsync("nonexistent"))
+            .Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task GetCommandExecutionCountAsync_WithExistingCommand_ReturnsCount()
+    {
+        // Arrange
+        var command = new Command { Name = "/test", ExecutionCount = 42 };
+
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+
+        // Act
+        var result = await _service.GetCommandExecutionCountAsync("test").ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be(42);
+    }
+
+    [Fact]
+    public async Task GetCommandExecutionCountAsync_WithNonExistentCommand_ReturnsZero()
+    {
+        // Arrange
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/nonexistent", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Command?)null);
+
+        // Act
+        var result = await _service.GetCommandExecutionCountAsync("nonexistent").ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task IsCommandRateLimitedAsync_WithNoRateLimitConfigured_ReturnsFalse()
+    {
+        // Arrange
+        var command = new Command { Name = "/test", RateLimitPerMinute = null };
+
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+
+        // Act
+        var result = await _service.IsCommandRateLimitedAsync(123, "test").ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser()
+    {
+        // Arrange
+        var command = new Command { Name = "/test", RateLimitPerMinute = 2 };
+
+        _mockRepository
+            .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(command);
+
+        // First user - should not be rate limited
+        var result1 = await _service.IsCommandRateLimitedAsync(100, "test").ConfigureAwait(false);
+        result1.Should().BeFalse();
+
+        // Second user - should not be rate limited (different user)
+        var result2 = await _service.IsCommandRateLimitedAsync(200, "test").ConfigureAwait(false);
+        result2.Should().BeFalse();
+
+        // First user again - should be rate limited now
+        var result3 = await _service.IsCommandRateLimitedAsync(100, "test").ConfigureAwait(false);
+        result3.Should().BeTrue();
+    }
+}
