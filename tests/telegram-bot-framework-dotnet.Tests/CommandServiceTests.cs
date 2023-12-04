@@ -14,6 +14,9 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Tests for the CommandService class.
+/// </summary>
 public sealed class CommandServiceTests
 {
     private readonly Mock<ICommandRepository> _mockRepository = new();
@@ -21,11 +24,17 @@ public sealed class CommandServiceTests
     private readonly Mock<ILogger<CommandService>> _mockLogger = new();
     private readonly CommandService _service;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandServiceTests"/> class.
+    /// </summary>
     public CommandServiceTests()
     {
         _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that GetCommandAsync returns a command when it exists.
+    /// </summary>
     [Fact]
     public async Task GetCommandAsync_WhenExists_ReturnsCommand()
     {
@@ -40,6 +49,9 @@ public sealed class CommandServiceTests
         result!.Name.Should().Be("/test");
     }
 
+    /// <summary>
+    /// Tests that GetCommandAsync returns null when the command does not exist.
+    /// </summary>
     [Fact]
     public async Task GetCommandAsync_WhenDoesNotExist_ReturnsNull()
     {
@@ -52,6 +64,9 @@ public sealed class CommandServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that ExecuteCommandAsync adds an error to the context when the command is disabled.
+    /// </summary>
     [Fact]
     public async Task ExecuteCommandAsync_WhenCommandIsDisabled_AddsErrorToContext()
     {
@@ -63,6 +78,9 @@ public sealed class CommandServiceTests
         result.Errors.Should().Contain(e => e.Contains("is disabled"));
     }
 
+    /// <summary>
+    /// Tests that ExecuteCommandAsync adds an error to the context when the user lacks sufficient permissions.
+    /// </summary>
     [Fact]
     public async Task ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext()
     {
@@ -75,6 +93,9 @@ public sealed class CommandServiceTests
         result.Errors.Should().Contain(e => e.Contains("Insufficient permissions"));
     }
 
+    /// <summary>
+    /// Tests that IsCommandRateLimitedAsync returns true when the command is rate limited.
+    /// </summary>
     [Fact]
     public async Task IsCommandRateLimitedAsync_WhenExceedsLimit_ReturnsTrue()
     {
@@ -93,6 +114,9 @@ public sealed class CommandServiceTests
         isLimited.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that IsCommandRateLimitedAsync returns false when the command is not rate limited.
+    /// </summary>
     [Fact]
     public async Task IsCommandRateLimitedAsync_WhenWithinLimit_ReturnsFalse()
     {
@@ -108,6 +132,9 @@ public sealed class CommandServiceTests
         isLimited.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that RegisterCommandAsync throws an exception when the command is invalid.
+    /// </summary>
     [Fact]
     public async Task RegisterCommandAsync_WithInvalidCommand_ThrowsException()
     {
