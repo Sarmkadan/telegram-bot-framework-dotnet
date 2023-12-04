@@ -1,0 +1,216 @@
+#nullable enable
+
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace TelegramBotFramework.Integration;
+
+/// <summary>
+/// Extension methods for <see cref="WebhookService"/> that provide common webhook management operations.
+/// </summary>
+public static class WebhookServiceExtensions
+{
+    /// <summary>
+    /// Ensures the webhook is registered, retrying if necessary.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <param name="maxRetries">Maximum number of retry attempts (default: 3).</param>
+    /// <param name="retryDelayMs">Delay between retries in milliseconds (default: 1000).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if registration succeeded, false otherwise.</returns>
+    public static async Task<bool> EnsureRegisteredAsync(
+        this WebhookService service,
+        int maxRetries = 3,
+        int retryDelayMs = 1000,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await service.RegisterAsync(cancellationToken).ConfigureAwait(false);
+
+                if (service.GetInfo().IsRegistered)
+                {
+                    return true;
+                }
+
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(retryDelayMs, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex) when (attempt < maxRetries)
+            {
+                service.GetLogger().LogWarning(ex,
+                    "Webhook registration attempt {Attempt} of {MaxRetries} failed, retrying...",
+                    attempt, maxRetries);
+                await Task.Delay(retryDelayMs, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Ensures the webhook is unregistered.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if unregistration succeeded or was already unregistered, false otherwise.</returns>
+    public static async Task<bool> EnsureUnregisteredAsync(
+        this WebhookService service,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        try
+        {
+            await service.UnregisterAsync(cancellationToken).ConfigureAwait(false);
+            return !service.GetInfo().IsRegistered;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Gets the logger associated with the webhook service.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <returns>The logger instance.</returns>
+    public static ILogger<WebhookService> GetLogger(this WebhookService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        var loggerField = typeof(WebhookService).GetField(
+            "_logger",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (loggerField?.GetValue(service) is ILogger<WebhookService> logger)
+        {
+            return logger;
+        }
+
+        throw new InvalidOperationException("Logger field not found or invalid.");
+    }
+
+    /// <summary>
+    /// Gets the API client associated with the webhook service.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <returns>The Telegram API client instance.</returns>
+    public static TelegramApiClient GetApiClient(this WebhookService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        var apiClientField = typeof(WebhookService).GetField(
+            "_apiClient",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (apiClientField?.GetValue(service) is TelegramApiClient apiClient)
+        {
+            return apiClient;
+        }
+
+        throw new InvalidOperationException("API client field not found or invalid.");
+    }
+
+    /// <summary>
+    /// Gets the webhook options associated with the webhook service.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <returns>The webhook options instance.</returns>
+    public static WebhookOptions GetOptions(this WebhookService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        var optionsField = typeof(WebhookService).GetField(
+            "_options",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (optionsField?.GetValue(service) is WebhookOptions options)
+        {
+            return options;
+        }
+
+        throw new InvalidOperationException("Options field not found or invalid.");
+    }
+
+    /// <summary>
+    /// Registers the webhook as a hosted service in the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">Action to configure webhook options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddWebhookService(
+        this IServiceCollection services,
+        Action<WebhookOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        services.AddSingleton<IWebhookService>(provider =>
+        {
+            var options = new WebhookOptions();
+            configure(options);
+            options.Validate();
+
+            var apiClient = provider.GetRequiredService<TelegramApiClient>();
+            var logger = provider.GetRequiredService<ILogger<WebhookService>>();
+
+            return new WebhookService(apiClient, options, logger);
+        })
+        .AddSingleton<IHostedService>(provider =>
+            provider.GetRequiredService<IWebhookService>() as IHostedService ?? throw new InvalidOperationException("WebhookService not found")
+        );
+
+        return services;
+    }
+
+    /// <summary>
+    /// Gets the number of updates dispatched by the webhook service.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <returns>The count of dispatched updates.</returns>
+    public static long GetUpdatesDispatchedCount(this WebhookService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        var updatesDispatchedField = typeof(WebhookService).GetField(
+            "_updatesDispatched",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (updatesDispatchedField?.GetValue(service) is long count)
+        {
+            return count;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Gets the registration timestamp of the webhook.
+    /// </summary>
+    /// <param name="service">The webhook service instance.</param>
+    /// <returns>The registration timestamp if registered, null otherwise.</returns>
+    public static DateTime? GetRegisteredAt(this WebhookService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        var registeredAtField = typeof(WebhookService).GetField(
+            "_registeredAt",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        return registeredAtField?.GetValue(service) as DateTime?;
+    }
+}
