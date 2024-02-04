@@ -30,16 +30,17 @@ public static class ConversationFlowExtensions
     /// When omitted, default option values are used.
     /// </param>
     /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
     /// <example>
     /// <code>
     /// services
-    ///     .AddTelegramBotFramework(config)
-    ///     .AddConversationFlows(opts =>
-    ///     {
-    ///         opts.DefaultFlowTimeout    = TimeSpan.FromMinutes(15);
-    ///         opts.EnableFlowEvents      = true;
-    ///         opts.AbortKeyword          = "/stop";
-    ///     });
+    ///   .AddTelegramBotFramework(config)
+    ///   .AddConversationFlows(opts =>
+    ///   {
+    ///     opts.DefaultFlowTimeout = TimeSpan.FromMinutes(15);
+    ///     opts.EnableFlowEvents = true;
+    ///     opts.AbortKeyword = "/stop";
+    ///   });
     /// </code>
     /// </example>
     public static IServiceCollection AddConversationFlows(
@@ -68,6 +69,10 @@ public static class ConversationFlowExtensions
     /// <param name="stateDirectory">Directory path where <c>{userId}.json</c> state files are stored.</param>
     /// <param name="configure">Optional delegate to configure <see cref="ConversationFlowOptions"/>.</param>
     /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="stateDirectory"/> is <see langword="null"/>, empty, or consists only of whitespace.
+    /// </exception>
     public static IServiceCollection AddConversationFlowsWithFileStore(
         this IServiceCollection services,
         string stateDirectory,
@@ -106,6 +111,12 @@ public static class ConversationFlowExtensions
     /// </param>
     /// <param name="name">The human-readable display name of the flow.</param>
     /// <returns>A new <see cref="IFlowDefinitionBuilder"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="flowId"/> or <paramref name="name"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="flowId"/> or <paramref name="name"/> is <see langword="null"/>, empty, or consists only of whitespace.
+    /// </exception>
     /// <example>
     /// <code>
     /// var flow = ConversationFlowExtensions
@@ -114,16 +125,16 @@ public static class ConversationFlowExtensions
     ///     .WithTimeout(TimeSpan.FromMinutes(10))
     ///     .AddStep(new FlowStep
     ///     {
-    ///         StepId       = "ask_name",
-    ///         Prompt       = "Welcome! What is your name?",
-    ///         InputType    = FlowInputType.Text,
+    ///         StepId = "ask_name",
+    ///         Prompt = "Welcome! What is your name?",
+    ///         InputType = FlowInputType.Text,
     ///         VariableName = "name",
     ///         DefaultNextStepId = "ask_email"
     ///     })
     ///     .AddStep(new FlowStep
     ///     {
-    ///         StepId    = "ask_email",
-    ///         Prompt    = "Great! What is your email address?",
+    ///         StepId = "ask_email",
+    ///         Prompt = "Great! What is your email address?",
     ///         InputType = FlowInputType.Email,
     ///         VariableName = "email",
     ///         IsTerminal = true
@@ -134,7 +145,14 @@ public static class ConversationFlowExtensions
     /// </code>
     /// </example>
     public static IFlowDefinitionBuilder CreateFlow(string flowId, string name)
-        => new FlowDefinitionBuilder(flowId, name);
+    {
+        ArgumentNullException.ThrowIfNull(flowId);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(flowId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return new FlowDefinitionBuilder(flowId, name);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -164,17 +182,20 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
             throw new ArgumentException("Name must not be empty.", nameof(name));
 
         _flowId = flowId;
-        _name   = name;
+        _name = name;
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="description"/> is <see langword="null"/>.</exception>
     public IFlowDefinitionBuilder WithDescription(string description)
     {
+        ArgumentNullException.ThrowIfNull(description);
         _description = description;
         return this;
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="timeout"/> is not positive.</exception>
     public IFlowDefinitionBuilder WithTimeout(TimeSpan timeout)
     {
         if (timeout <= TimeSpan.Zero)
@@ -185,11 +206,12 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="menuId"/> is <see langword="null"/>, empty, or consists only of whitespace.
+    /// </exception>
     public IFlowDefinitionBuilder OnCompletionNavigateTo(string menuId)
     {
-        if (string.IsNullOrWhiteSpace(menuId))
-            throw new ArgumentException("MenuId must not be empty.", nameof(menuId));
-
+        ArgumentException.ThrowIfNullOrWhiteSpace(menuId);
         _completionMenuId = menuId;
         return this;
     }
@@ -202,6 +224,13 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="step"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="step"/>.StepId is <see langword="null"/>, empty, or consists only of whitespace.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if a step with the same StepId has already been added to this flow.
+    /// </exception>
     public IFlowDefinitionBuilder AddStep(FlowStep step)
     {
         ArgumentNullException.ThrowIfNull(step);
@@ -220,11 +249,16 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     /// <inheritdoc/>
     public IFlowDefinitionBuilder WithMetadata(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
         _metadata[key] = value;
         return this;
     }
 
     /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the flow has no steps.
+    /// Thrown if any step references a non-existent step ID in transitions.
+    /// </exception>
     public FlowDefinition Build()
     {
         if (_steps.Count == 0)
@@ -245,7 +279,7 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
                         $"which does not exist in flow '{_flowId}'.");
             }
 
-            if (step.DefaultNextStepId  is not null && !stepIds.Contains(step.DefaultNextStepId))
+            if (step.DefaultNextStepId is not null && !stepIds.Contains(step.DefaultNextStepId))
                 throw new InvalidOperationException(
                     $"Step '{step.StepId}' references DefaultNextStepId '{step.DefaultNextStepId}' " +
                     $"which does not exist in flow '{_flowId}'.");
@@ -253,15 +287,15 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
 
         return new FlowDefinition
         {
-            FlowId           = _flowId,
-            Name             = _name,
-            Description      = _description,
-            InitialStepId    = initialStepId,
-            Steps            = _steps.AsReadOnly(),
-            Timeout          = _timeout,
-            AllowResume      = _allowResume,
+            FlowId = _flowId,
+            Name = _name,
+            Description = _description,
+            InitialStepId = initialStepId,
+            Steps = _steps.AsReadOnly(),
+            Timeout = _timeout,
+            AllowResume = _allowResume,
             CompletionMenuId = _completionMenuId,
-            Metadata         = new Dictionary<string, string>(_metadata)
+            Metadata = new Dictionary<string, string>(_metadata)
         };
     }
 }
