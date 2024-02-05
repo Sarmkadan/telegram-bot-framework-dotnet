@@ -12,8 +12,10 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="command">The command instance.</param>
     /// <returns>True if the command has parameters; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is null.</exception>
     public static bool HasParameters(this Command command)
     {
+        ArgumentNullException.ThrowIfNull(command);
         return command.Parameters is not null && command.Parameters.Count > 0;
     }
 
@@ -22,8 +24,10 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="command">The command instance.</param>
     /// <returns>The primary command pattern.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is null.</exception>
     public static string GetPrimaryPattern(this Command command)
     {
+        ArgumentNullException.ThrowIfNull(command);
         return command.Name;
     }
 
@@ -32,8 +36,10 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="command">The command instance.</param>
     /// <returns>True if the command is a standard slash command; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is null.</exception>
     public static bool IsStandardCommand(this Command command)
     {
+        ArgumentNullException.ThrowIfNull(command);
         return command.Type == CommandType.Standard;
     }
 
@@ -42,8 +48,11 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="command">The command instance.</param>
     /// <returns>A formatted string containing command details.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is null.</exception>
     public static string GetFormattedString(this Command command)
     {
+        ArgumentNullException.ThrowIfNull(command);
+
         var patterns = command.GetCommandPatterns().ToList();
         var patternText = patterns.Count > 0
             ? string.Join(", ", patterns.Select(p => $"'{p}'"))
