@@ -1,14 +1,16 @@
+#nullable enable
+
 using System.Text.Json;
 
 namespace TelegramBotFramework.Services
 {
     /// <summary>
-    /// JSON serialization helpers for <see cref="SessionService"/>.
+    /// Provides JSON serialization and deserialization extensions for <see cref="SessionService"/>.
     /// </summary>
     public static class SessionServiceJsonExtensions
     {
         // Cached serializer options – camelCase property names.
-        private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _options = new(JsonSerializerDefaults.Web)
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
@@ -19,8 +21,11 @@ namespace TelegramBotFramework.Services
         /// <param name="value">The instance to serialize.</param>
         /// <param name="indented">If <c>true</c>, the output will be formatted with indentation.</param>
         /// <returns>A JSON representation of the instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
         public static string ToJson(this SessionService value, bool indented = false)
         {
+            ArgumentNullException.ThrowIfNull(value);
+
             // Create a copy of the cached options with the desired indentation setting.
             var options = new JsonSerializerOptions(_options)
             {
@@ -33,24 +38,31 @@ namespace TelegramBotFramework.Services
         /// <summary>
         /// Deserializes a JSON string into a <see cref="SessionService"/> instance.
         /// </summary>
-        /// <param name="json">The JSON string.</param>
-        /// <returns>The deserialized <see cref="SessionService"/>, or <c>null</c> if the JSON is empty.</returns>
+        /// <param name="json">The JSON string to deserialize.</param>
+        /// <returns>The deserialized <see cref="SessionService"/>, or <c>null</c> if the JSON is empty or whitespace.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
+        /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
         public static SessionService? FromJson(string json)
         {
-            return JsonSerializer.Deserialize<SessionService>(json, _options);
+            ArgumentException.ThrowIfNullOrEmpty(json);
+
+            return JsonSerializer.Deserialize<SessionService>(json.Trim(), _options);
         }
 
         /// <summary>
         /// Attempts to deserialize a JSON string into a <see cref="SessionService"/> instance.
         /// </summary>
-        /// <param name="json">The JSON string.</param>
+        /// <param name="json">The JSON string to deserialize.</param>
         /// <param name="value">When this method returns, contains the deserialized value if the operation succeeded; otherwise, <c>null</c>.</param>
-        /// <returns><c>true</c> if deserialization succeeded; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if deserialization succeeds; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
         public static bool TryFromJson(string json, out SessionService? value)
         {
+            ArgumentException.ThrowIfNullOrEmpty(json);
+
             try
             {
-                value = JsonSerializer.Deserialize<SessionService>(json, _options);
+                value = JsonSerializer.Deserialize<SessionService>(json.Trim(), _options);
                 return true;
             }
             catch (JsonException)
