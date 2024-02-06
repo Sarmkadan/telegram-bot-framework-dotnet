@@ -2,7 +2,9 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TelegramBotFramework.Services;
 
@@ -19,11 +21,11 @@ public static class InlineQueryExtensions
     /// </summary>
     /// <param name="services">The service collection to extend.</param>
     /// <returns>The same <paramref name="services"/> instance for fluent chaining.</returns>
-    public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddInlineQueryHandling(
-        this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    public static IServiceCollection AddInlineQueryHandling(
+        this IServiceCollection services)
     {
-        if (services  is null)
-            throw new ArgumentNullException(nameof(services));
+        ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<IInlineQueryService, InlineQueryService>();
         return services;
@@ -36,11 +38,11 @@ public static class InlineQueryExtensions
     /// </summary>
     /// <param name="services">The service collection to extend.</param>
     /// <returns>The same <paramref name="services"/> instance for fluent chaining.</returns>
-    public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddInlineQueryHandlingWithLocalCache(
-        this Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    public static IServiceCollection AddInlineQueryHandlingWithLocalCache(
+        this IServiceCollection services)
     {
-        if (services  is null)
-            throw new ArgumentNullException(nameof(services));
+        ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<Caching.ICacheProvider, Caching.LocalCacheProvider>();
         services.AddSingleton<IInlineQueryService, InlineQueryService>();
