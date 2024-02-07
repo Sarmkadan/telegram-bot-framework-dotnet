@@ -8,10 +8,14 @@ using FluentAssertions;
 using TelegramBotFramework.Models;
 using Xunit;
 
-namespace TelegramBotFramework.Tests;
-
+/// <summary>
+/// Tests for the ExecutionContext class.
+/// </summary>
 public sealed class ExecutionContextTests
 {
+    /// <summary>
+    /// Tests that the ExecutionContext constructor initializes correctly with default values.
+    /// </summary>
     [Fact]
     public void Constructor_WithDefaultValues_InitializesCorrectly()
     {
@@ -26,6 +30,9 @@ public sealed class ExecutionContextTests
         context.States.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the ExecutionContext constructor stores references to user and session.
+    /// </summary>
     [Fact]
     public void Constructor_WithUserAndSession_StoresReferences()
     {
@@ -52,6 +59,9 @@ public sealed class ExecutionContextTests
         context.Message.Should().Be(message);
     }
 
+    /// <summary>
+    /// Tests that the AddError method adds an error to the Errors list.
+    /// </summary>
     [Fact]
     public void AddError_AddsErrorToErrorsList()
     {
@@ -68,6 +78,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain("Test error 2");
     }
 
+    /// <summary>
+    /// Tests that the AddError method does not add a null error.
+    /// </summary>
     [Fact]
     public void AddError_WithNullError_DoesNotAdd()
     {
@@ -83,6 +96,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain("Valid error");
     }
 
+    /// <summary>
+    /// Tests that the AddError method does not add an empty error.
+    /// </summary>
     [Fact]
     public void AddError_WithEmptyError_DoesNotAdd()
     {
@@ -98,6 +114,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain("Valid error");
     }
 
+    /// <summary>
+    /// Tests that the SetState method adds a state to the States dictionary.
+    /// </summary>
     [Fact]
     public void SetState_AddsStateToStatesDictionary()
     {
@@ -116,6 +135,9 @@ public sealed class ExecutionContextTests
         context.States.Should().ContainKey("key3").WhoseValue.Should().Be(true);
     }
 
+    /// <summary>
+    /// Tests that the SetState method overwrites an existing state.
+    /// </summary>
     [Fact]
     public void SetState_OverwritesExistingState()
     {
@@ -131,6 +153,9 @@ public sealed class ExecutionContextTests
         context.States["key"].Should().Be("new_value");
     }
 
+    /// <summary>
+    /// Tests that the SetState method does not add a state with a null key.
+    /// </summary>
     [Fact]
     public void SetState_WithNullKey_DoesNotAdd()
     {
@@ -146,6 +171,9 @@ public sealed class ExecutionContextTests
         context.States.Should().ContainKey("key");
     }
 
+    /// <summary>
+    /// Tests that the SetState method does not add a state with an empty key.
+    /// </summary>
     [Fact]
     public void SetState_WithEmptyKey_DoesNotAdd()
     {
@@ -161,6 +189,9 @@ public sealed class ExecutionContextTests
         context.States.Should().ContainKey("key");
     }
 
+    /// <summary>
+    /// Tests that the GetState method returns the value of an existing state.
+    /// </summary>
     [Fact]
     public void GetState_WithExistingKey_ReturnsValue()
     {
@@ -175,6 +206,9 @@ public sealed class ExecutionContextTests
         result.Should().Be("test_value");
     }
 
+    /// <summary>
+    /// Tests that the GetState method returns the default value for a non-existing key.
+    /// </summary>
     [Fact]
     public void GetState_WithNonExistingKey_ReturnsDefault()
     {
@@ -188,6 +222,9 @@ public sealed class ExecutionContextTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that the GetState method returns the default value for a key with a wrong type.
+    /// </summary>
     [Fact]
     public void GetState_WithWrongType_ReturnsDefault()
     {
@@ -202,6 +239,9 @@ public sealed class ExecutionContextTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns true for a valid context.
+    /// </summary>
     [Fact]
     public void Validate_WithValidContext_ReturnsTrue()
     {
@@ -223,6 +263,9 @@ public sealed class ExecutionContextTests
         context.IsValid.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns false and adds an error for a null user.
+    /// </summary>
     [Fact]
     public void Validate_WithNullUser_AddsErrorAndReturnsFalse()
     {
@@ -245,6 +288,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain(e => e.Contains("User"));
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns false and adds an error for a null session.
+    /// </summary>
     [Fact]
     public void Validate_WithNullSession_AddsErrorAndReturnsFalse()
     {
@@ -267,6 +313,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain(e => e.Contains("Session"));
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns false and adds an error for a null message.
+    /// </summary>
     [Fact]
     public void Validate_WithNullMessage_AddsErrorAndReturnsFalse()
     {
@@ -289,6 +338,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain(e => e.Contains("Message"));
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns false and adds an error for a zero user ID.
+    /// </summary>
     [Fact]
     public void Validate_WithZeroUserId_AddsErrorAndReturnsFalse()
     {
@@ -311,6 +363,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain(e => e.Contains("UserId"));
     }
 
+    /// <summary>
+    /// Tests that the Validate method returns false and adds an error for a zero chat ID.
+    /// </summary>
     [Fact]
     public void Validate_WithZeroChatId_AddsErrorAndReturnsFalse()
     {
@@ -333,6 +388,9 @@ public sealed class ExecutionContextTests
         context.Errors.Should().Contain(e => e.Contains("ChatId"));
     }
 
+    /// <summary>
+    /// Tests that the StopProcessing method sets IsStopped to true.
+    /// </summary>
     [Fact]
     public void StopProcessing_SetsIsStoppedToTrue()
     {
@@ -346,6 +404,9 @@ public sealed class ExecutionContextTests
         context.IsStopped.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the GetDuration method returns the time span since creation.
+    /// </summary>
     [Fact]
     public void GetDuration_ReturnsTimeSpanSinceCreation()
     {
@@ -364,6 +425,9 @@ public sealed class ExecutionContextTests
         duration.Should().BeGreaterThan(TimeSpan.Zero);
     }
 
+    /// <summary>
+    /// Tests that the IsValid property returns true when there are no errors.
+    /// </summary>
     [Fact]
     public void IsValid_WhenNoErrors_ReturnsTrue()
     {
@@ -378,6 +442,9 @@ public sealed class ExecutionContextTests
         context.IsValid.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the IsValid property returns false when there are errors.
+    /// </summary>
     [Fact]
     public void IsValid_WhenHasErrors_ReturnsFalse()
     {
