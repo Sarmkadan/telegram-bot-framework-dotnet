@@ -34,3 +34,9 @@ All configuration is done via `appsettings.json`. Here are the available setting
 | `rateLimitPerMinute`         | Max requests per minute                          | `30`                       |
 
 > ⚠️ Never commit actual secrets like `botToken` to version control.
+
+## WebhookServiceExtensions
+
+Provides extension methods for configuring and managing webhook services in Telegram bot applications. Includes methods for registering webhook services, checking registration status, and accessing webhook-related options and statistics.
+
+Example usage:
