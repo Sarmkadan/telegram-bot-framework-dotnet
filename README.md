@@ -37,6 +37,7 @@ All configuration is done via `appsettings.json`. Here are the available setting
 
 ## WebhookServiceExtensions
 
-Provides extension methods for configuring and managing webhook services in Telegram bot applications. Includes methods for registering webhook services, checking registration status, and accessing webhook-related options and statistics.
+Provides extension methods for configuring and managing webhook services in Telegram bot applications. Includes methods for registering webhook services, checking registration status, and accessing webhook‑related options and statistics.
 
-Example usage:
+**Example usage**
+
