@@ -41,3 +41,34 @@ Provides extension methods for configuring and managing webhook services in Tele
 
 **Example usage**
 
+```csharp
+// Example: Configure webhook service (see WebhookOptions for details)
+services.AddWebhookService(options => {
+    options.Url = "https://mybot.com/webhook";
+});
+```
+
+## ScheduledTaskManagerExtensions
+
+Provides fluent extension methods for managing scheduled tasks, allowing for flexible scheduling, querying, and monitoring of background operations. It simplifies the interaction with `ScheduledTaskManager`, enabling developers to easily schedule tasks, check for failures or overdue operations, and retrieve task statistics.
+
+**Example usage**
+
+```csharp
+// Example: Scheduling and querying tasks
+var manager = serviceProvider.GetRequiredService<IScheduledTaskManager>();
+
+// Schedule a daily task
+manager.ScheduleDailyAt("Cleanup", "03:00", () => Console.WriteLine("Cleanup started"));
+
+// Check for overdue tasks
+var overdue = manager.GetOverdueTasks();
+
+// Retrieve task statistics
+var stats = manager.GetStatistics();
+Console.WriteLine($"Total Tasks: {stats.TotalTasks}, Running: {stats.RunningTasks}");
+
+// Wait for a specific task completion
+await manager.WaitForCompletionAsync("Cleanup");
+```
+
