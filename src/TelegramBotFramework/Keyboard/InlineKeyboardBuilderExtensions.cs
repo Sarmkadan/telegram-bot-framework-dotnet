@@ -154,11 +154,11 @@ public static class InlineKeyboardBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a row with a single button that spans the full width (simulated by adding a disabled button placeholder).
+    /// Adds a row with a single callback button that spans the full width of the keyboard.
     /// </summary>
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="text">Button text.</param>
-    /// <param name="callbackData">Callback data (optional).</param>
+    /// <param name="callbackData">Callback data. Defaults to a no-op payload when omitted.</param>
     /// <returns>The builder for fluent chaining.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="text"/> is null or whitespace.</exception>
@@ -167,15 +167,7 @@ public static class InlineKeyboardBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
-        if (callbackData is not null)
-        {
-            builder.AddButton(text, callbackData);
-        }
-        else
-        {
-            // For URL buttons as full-width
-            builder.AddUrlButton(text, "#"); // Placeholder URL
-        }
+        builder.AddButton(text, callbackData ?? "noop");
 
         return builder.NewRow();
     }

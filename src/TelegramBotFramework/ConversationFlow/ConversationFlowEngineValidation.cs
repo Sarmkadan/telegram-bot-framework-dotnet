@@ -54,7 +54,7 @@ public static class ConversationFlowEngineValidation
         // Validate that flows collection is accessible and not corrupted
         try
         {
-            var flows = value.GetAllFlowsAsync().Result;
+            var flows = Task.Run(() => value.GetAllFlowsAsync()).GetAwaiter().GetResult();
             if (flows == null)
                 errors.Add("ConversationFlowEngine.GetAllFlowsAsync() returned null.");
         }
@@ -66,7 +66,7 @@ public static class ConversationFlowEngineValidation
         // Validate that active states collection is accessible
         try
         {
-            var state = value.GetActiveFlowStateAsync(12345).Result;
+            var state = Task.Run(() => value.GetActiveFlowStateAsync(12345)).GetAwaiter().GetResult();
             // null is acceptable for non-existent states
         }
         catch (AggregateException ae) when (ae.InnerException is not null)

@@ -21,11 +21,12 @@ namespace TelegramBotFramework.ConversationFlow;
 /// This implementation is suited for low-to-medium traffic bots running on a single host.
 /// For high-concurrency or multi-node deployments consider a database-backed store.
 /// </remarks>
-public sealed class FileConversationStateStore : IConversationStateStore
+public sealed class FileConversationStateStore : IConversationStateStore, IDisposable
 {
     private readonly string _directory;
     private readonly ILogger<FileConversationStateStore> _logger;
     private readonly SemaphoreSlim _fileLock = new(1, 1);
+    private bool _disposed;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -161,5 +162,17 @@ public sealed class FileConversationStateStore : IConversationStateStore
     {
         try { File.Delete(path); }
         catch { /* best-effort */ }
+    }
+
+    /// <summary>
+    /// Releases the internal synchronisation primitive used to guard file access.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _fileLock.Dispose();
+        _disposed = true;
     }
 }
