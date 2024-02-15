@@ -123,7 +123,6 @@ public sealed class BotOrchestrator : IBotOrchestrator
             CreatedAt = DateTime.UtcNow
         };
 
-        message.Validate();
         var processedMessage = await _messageService.ProcessIncomingMessageAsync(message, cancellationToken).ConfigureAwait(false);
 
         // Create context
@@ -250,10 +249,13 @@ public sealed class BotOrchestrator : IBotOrchestrator
             return false;
         }
 
+        var activeSession = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
+        var chatId = activeSession?.ChatId ?? 0;
+
         switch (button.Action)
         {
             case Models.ButtonAction.ExecuteCommand:
-                await ExecuteUserCommandAsync(userId, 0, buttonCallbackData, null, cancellationToken).ConfigureAwait(false);
+                await ExecuteUserCommandAsync(userId, chatId, buttonCallbackData.TrimStart('/'), null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case Models.ButtonAction.NavigateMenu:
@@ -338,7 +340,11 @@ public sealed class BotOrchestrator : IBotOrchestrator
     /// </summary>
     internal static string ExtractCommandName(string messageContent)
     {
-        var parts = messageContent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var trimmed = messageContent.Trim();
+        if (trimmed.Length == 0 || trimmed[0] != '/')
+            return string.Empty;
+
+        var parts = trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
         return parts.Length > 0 ? parts[0].TrimStart('/') : string.Empty;
     }
 }

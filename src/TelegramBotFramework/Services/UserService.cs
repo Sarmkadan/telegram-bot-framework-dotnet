@@ -57,7 +57,7 @@ public sealed class UserService : IUserService
         string? username,
         CancellationToken cancellationToken = default)
     {
-        var existingUser = await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken).ConfigureAwait(false);
+        var existingUser = await _userRepository.GetByIdAsync(telegramId, cancellationToken).ConfigureAwait(false);
         if (existingUser  is not null)
         {
             existingUser.FirstName = firstName;

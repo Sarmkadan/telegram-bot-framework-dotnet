@@ -31,7 +31,7 @@ public sealed class ExecutionContext
 
     public Dictionary<string, object> States { get; set; } = new();
 
-    public List<string>? Errors { get; set; }
+    public List<string>? Errors { get; set; } = new();
 
     public bool IsValid { get; set; } = true;
 
@@ -119,8 +119,11 @@ public sealed class ExecutionContext
     /// <summary>
     /// Adds an error message.
     /// </summary>
-    public void AddError(string errorMessage)
+    public void AddError(string? errorMessage)
     {
+        if (string.IsNullOrEmpty(errorMessage))
+            return;
+
         Errors ??= new List<string>();
         Errors.Add(errorMessage);
         IsValid = false;

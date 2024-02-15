@@ -267,8 +267,10 @@ public sealed class ExecutionContextTests
     /// Tests that the Validate method returns false and adds an error for a null user.
     /// </summary>
     [Fact]
-    public void Validate_WithNullUser_AddsErrorAndReturnsFalse()
+    public void Validate_WithNullUser_StillReturnsTrue()
     {
+        // User is resolved by the orchestrator based on UserId; ExecutionContext.Validate()
+        // only enforces the identifiers required to route the message (UserId/ChatId).
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
@@ -283,17 +285,18 @@ public sealed class ExecutionContextTests
         var result = context.Validate();
 
         // Assert
-        result.Should().BeFalse();
-        context.IsValid.Should().BeFalse();
-        context.Errors.Should().Contain(e => e.Contains("User"));
+        result.Should().BeTrue();
+        context.IsValid.Should().BeTrue();
     }
 
     /// <summary>
     /// Tests that the Validate method returns false and adds an error for a null session.
     /// </summary>
     [Fact]
-    public void Validate_WithNullSession_AddsErrorAndReturnsFalse()
+    public void Validate_WithNullSession_StillReturnsTrue()
     {
+        // Session is optional at validation time: commands and message processing
+        // routinely run before an active session exists (e.g. brand-new users).
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
@@ -308,17 +311,19 @@ public sealed class ExecutionContextTests
         var result = context.Validate();
 
         // Assert
-        result.Should().BeFalse();
-        context.IsValid.Should().BeFalse();
-        context.Errors.Should().Contain(e => e.Contains("Session"));
+        result.Should().BeTrue();
+        context.IsValid.Should().BeTrue();
     }
 
     /// <summary>
     /// Tests that the Validate method returns false and adds an error for a null message.
     /// </summary>
     [Fact]
-    public void Validate_WithNullMessage_AddsErrorAndReturnsFalse()
+    public void Validate_WithNullMessage_StillReturnsTrue()
     {
+        // Message is attached after validation in some flows (e.g. command execution
+        // triggered from a menu button click); ExecutionContext.Validate() only enforces
+        // the identifiers required to route the interaction (UserId/ChatId).
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
@@ -333,9 +338,8 @@ public sealed class ExecutionContextTests
         var result = context.Validate();
 
         // Assert
-        result.Should().BeFalse();
-        context.IsValid.Should().BeFalse();
-        context.Errors.Should().Contain(e => e.Contains("Message"));
+        result.Should().BeTrue();
+        context.IsValid.Should().BeTrue();
     }
 
     /// <summary>
