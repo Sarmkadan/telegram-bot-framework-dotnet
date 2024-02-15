@@ -13,6 +13,7 @@ namespace TelegramBotFramework.Integration;
 public sealed class PollingStrategy
 {
     private readonly TelegramApiClient _apiClient;
+    private readonly WebhookHandler _webhookHandler;
     private readonly ILogger<PollingStrategy> _logger;
     private long _lastUpdateId = 0;
     private CancellationTokenSource? _cancellationTokenSource;
@@ -22,6 +23,7 @@ public sealed class PollingStrategy
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _logger = logger ?? new ConsoleLogger<PollingStrategy>();
+        _webhookHandler = new WebhookHandler();
     }
 
     /// <summary>
@@ -94,15 +96,27 @@ public sealed class PollingStrategy
         {
             try
             {
-                // Fetch updates from Telegram
-                // Note: This is a simplified version. Real implementation would use GetUpdates API
                 LastPollTime = DateTime.UtcNow;
 
-                // Simulate fetching updates
                 _logger.LogDebug("Polling for updates, last update ID: {LastUpdateId}", _lastUpdateId);
 
-                // Small delay to avoid hammering the API
-                await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                var offset = _lastUpdateId > 0 ? _lastUpdateId + 1 : 0;
+                var updates = await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false);
+
+                foreach (var updateElement in updates)
+                {
+                    var update = await _webhookHandler.ProcessUpdateAsync(updateElement.GetRawText()).ConfigureAwait(false);
+                    if (update is not null)
+                    {
+                        await ProcessUpdateAsync(update).ConfigureAwait(false);
+                    }
+                }
+
+                if (updates.Count == 0)
+                {
+                    // Small delay to avoid hammering the API when there is nothing to fetch
+                    await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -118,10 +132,13 @@ public sealed class PollingStrategy
     }
 
     /// <summary>
-    /// Simulates processing an update received from polling.
+    /// Processes an update received from polling, advancing the last-seen update ID and
+    /// invoking <see cref="OnUpdateReceived"/>.
     /// </summary>
     public async Task ProcessUpdateAsync(TelegramUpdate update)
     {
+        ArgumentNullException.ThrowIfNull(update);
+
         try
         {
             _lastUpdateId = update.UpdateId;
