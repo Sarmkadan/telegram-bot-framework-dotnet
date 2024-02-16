@@ -94,3 +94,29 @@ builder
     .AddConfirmationRow("yes", "no");
 ```
 
+## LocalCacheProviderExtensions
+
+Provides additional utility methods for `LocalCacheProvider` to simplify common caching operations such as conditional retrieval, batch management, and atomic get-or-create patterns. These extensions improve code readability and efficiency when working with cached data in your bot services.
+
+**Example usage**
+
+```csharp
+// Assuming you have an instance of LocalCacheProvider
+var provider = serviceProvider.GetRequiredService<LocalCacheProvider>();
+
+// Get or create a value atomically
+var user = await provider.GetOrCreateAsync("user:123", () => new User("John Doe"), TimeSpan.FromMinutes(10));
+
+// Try to get a value
+var (success, cachedValue) = await provider.TryGetAsync<User>("user:123");
+
+// Get or set multiple values in batch
+var keys = new List<string> { "key1", "key2" };
+var results = await provider.GetManyAsync<string>(keys);
+
+await provider.SetManyAsync(new Dictionary<string, string> { { "key3", "val3" } });
+
+// Remove multiple items
+await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
+```
+
