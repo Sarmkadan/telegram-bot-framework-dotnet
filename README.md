@@ -124,6 +124,10 @@ await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
 
 Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
 
+## StateManagementExampleExtensions
+
+Provides extension methods for the `StateManagementExample` class that simplify state management operations, form validation, and survey data handling. These extensions offer convenient methods for validating registration forms and survey data, generating formatted summaries, and updating survey metrics asynchronously.
+
 **Example usage**
 
 ```csharp
