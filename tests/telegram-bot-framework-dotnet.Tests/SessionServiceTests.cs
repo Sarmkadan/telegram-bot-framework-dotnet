@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -14,17 +14,40 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="SessionService"/> which provides session management functionality
+/// for tracking user interactions and maintaining conversation state in a Telegram bot framework.
+/// </summary>
 public sealed class SessionServiceTests
 {
+    /// <summary>
+    /// Mock repository for testing session persistence operations.
+    /// </summary>
     private readonly Mock<ISessionRepository> _mockSessionRepository = new();
+
+    /// <summary>
+    /// Mock logger for verifying logging behavior during session operations.
+    /// </summary>
     private readonly Mock<ILogger<SessionService>> _mockLogger = new();
+
+    /// <summary>
+    /// Instance of the service under test with mocked dependencies.
+    /// </summary>
     private readonly SessionService _sessionService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SessionServiceTests"/> class.
+    /// Sets up the mocked dependencies and creates the service instance under test.
+    /// </summary>
     public SessionServiceTests()
     {
         _sessionService = new SessionService(_mockSessionRepository.Object, _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetActiveSessionAsync"/> returns an active session
+    /// when one exists for the specified user ID.
+    /// </summary>
     [Fact]
     public async Task GetActiveSessionAsync_WithExistingActiveSession_ReturnsSession()
     {
@@ -50,6 +73,10 @@ public sealed class SessionServiceTests
         result!.IsActive.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetActiveSessionAsync"/> returns null
+    /// when no active session exists for the specified user ID.
+    /// </summary>
     [Fact]
     public async Task GetActiveSessionAsync_WithNoActiveSession_ReturnsNull()
     {
@@ -65,6 +92,10 @@ public sealed class SessionServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.CreateSessionAsync"/> creates a new session
+    /// with the specified user ID and chat ID.
+    /// </summary>
     [Fact]
     public async Task CreateSessionAsync_CreatesNewSession()
     {
@@ -85,6 +116,10 @@ public sealed class SessionServiceTests
         _mockSessionRepository.Verify(r => r.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.CreateSessionAsync"/> with custom timeout
+    /// creates a session with the correct expiration time.
+    /// </summary>
     [Fact]
     public async Task CreateSessionAsync_WithCustomTimeout_CreatesSessionWithCorrectExpiration()
     {
@@ -110,6 +145,10 @@ public sealed class SessionServiceTests
         result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddHours(1), TimeSpan.FromSeconds(5));
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.RecordSessionActivityAsync"/> updates the last activity timestamp
+    /// and increments the interaction count for the specified session.
+    /// </summary>
     [Fact]
     public async Task RecordSessionActivityAsync_UpdatesLastActivityAndIncrementsInteractionCount()
     {
@@ -149,6 +188,10 @@ public sealed class SessionServiceTests
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.RecordSessionActivityAsync"/> does not throw
+    /// when attempting to record activity for a non-existent session.
+    /// </summary>
     [Fact]
     public async Task RecordSessionActivityAsync_WithNonExistingSession_DoesNotThrow()
     {
@@ -162,6 +205,10 @@ public sealed class SessionServiceTests
             .Should().NotThrowAsync();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.CloseSessionAsync"/> closes an active session and returns true
+    /// when the session exists and is active.
+    /// </summary>
     [Fact]
     public async Task CloseSessionAsync_WithActiveSession_ClosesSessionAndReturnsTrue()
     {
@@ -190,6 +237,10 @@ public sealed class SessionServiceTests
         _mockSessionRepository.Verify(r => r.UpdateAsync(It.Is<UserSession>(s => !s.IsActive), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.CloseSessionAsync"/> returns false
+    /// when attempting to close an already closed session.
+    /// </summary>
     [Fact]
     public async Task CloseSessionAsync_WithAlreadyClosedSession_ReturnsFalse()
     {
@@ -213,6 +264,10 @@ public sealed class SessionServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.CloseSessionAsync"/> returns false
+    /// when attempting to close a non-existent session.
+    /// </summary>
     [Fact]
     public async Task CloseSessionAsync_WithNonExistingSession_ReturnsFalse()
     {
@@ -228,6 +283,12 @@ public sealed class SessionServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.NavigateToMenuAsync"/> updates the CurrentMenuId
+    /// for the specified session to the new menu identifier.
+    /// </summary>
+    /// <param name="sessionId">The session identifier to update.</param>
+    /// <param name="menuId">The new menu identifier to set as current.</param>
     [Fact]
     public async Task NavigateToMenuAsync_UpdatesCurrentMenuId()
     {
@@ -265,6 +326,12 @@ public sealed class SessionServiceTests
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetSessionByIdAsync"/> returns the session
+    /// when a session with the specified identifier exists.
+    /// </summary>
+    /// <param name="sessionId">The session identifier to retrieve.</param>
+    /// <returns>The <see cref="UserSession"/> if found, otherwise null.</returns>
     [Fact]
     public async Task GetSessionByIdAsync_WithExistingSession_ReturnsSession()
     {
@@ -287,6 +354,12 @@ public sealed class SessionServiceTests
         result.Should().Be(session);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetSessionByIdAsync"/> returns null
+    /// when no session exists with the specified identifier.
+    /// </summary>
+    /// <param name="sessionId">The session identifier to search for.</param>
+    /// <returns>Null if the session does not exist.</returns>
     [Fact]
     public async Task GetSessionByIdAsync_WithNonExistingSession_ReturnsNull()
     {
@@ -302,6 +375,11 @@ public sealed class SessionServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetAllActiveSessionsAsync"/> returns all active sessions
+    /// from the repository.
+    /// </summary>
+    /// <returns>A collection of active <see cref="UserSession"/> objects.</returns>
     [Fact]
     public async Task GetAllActiveSessionsAsync_ReturnsActiveSessions()
     {
@@ -324,6 +402,12 @@ public sealed class SessionServiceTests
         result.Should().AllSatisfy(s => s.IsActive.Should().BeTrue());
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.GetSessionsByUserIdAsync"/> returns all sessions
+    /// for the specified user ID.
+    /// </summary>
+    /// <param name="userId">The user identifier to filter sessions by.</param>
+    /// <returns>A collection of <see cref="UserSession"/> objects for the specified user.</returns>
     [Fact]
     public async Task GetSessionsByUserIdAsync_ReturnsUserSessions()
     {
@@ -346,6 +430,12 @@ public sealed class SessionServiceTests
         result.Should().AllSatisfy(s => s.UserId.Should().Be(123));
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.DeleteSessionAsync"/> deletes the session and returns true
+    /// when the session exists and is successfully deleted.
+    /// </summary>
+    /// <param name="sessionId">The session identifier to delete.</param>
+    /// <returns>True if the session was deleted, otherwise false.</returns>
     [Fact]
     public async Task DeleteSessionAsync_WithExistingSession_DeletesAndReturnsTrue()
     {
@@ -362,6 +452,12 @@ public sealed class SessionServiceTests
         _mockSessionRepository.Verify(r => r.DeleteAsync("session-123", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.DeleteSessionAsync"/> returns false
+    /// when attempting to delete a non-existent session.
+    /// </summary>
+    /// <param name="sessionId">The session identifier that does not exist.</param>
+    /// <returns>False if the session does not exist.</returns>
     [Fact]
     public async Task DeleteSessionAsync_WithNonExistingSession_ReturnsFalse()
     {
@@ -377,6 +473,12 @@ public sealed class SessionServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="SessionService.ExpireInactiveSessionsAsync"/> closes and expires sessions
+    /// that have had no activity beyond the specified timeout period.
+    /// </summary>
+    /// <param name="timeout">The maximum inactivity period before a session should be expired.</param>
+    /// <returns>The number of sessions that were expired and closed.</returns>
     [Fact]
     public async Task ExpireInactiveSessionsAsync_WithInactiveSessions_ClosesThem()
     {
