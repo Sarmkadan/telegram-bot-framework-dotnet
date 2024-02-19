@@ -16,10 +16,22 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="LocalCacheProvider"/> which provides in-memory caching functionality
+/// for Telegram bot framework components.
+/// </summary>
+/// <remarks>
+/// Tests cover basic CRUD operations, expiration behavior, cache statistics tracking,
+/// and thread-safe operations on the cache provider.
+/// </remarks>
 public sealed class LocalCacheProviderTests
 {
     private readonly LocalCacheProvider _cache = new();
 
+    /// <summary>
+    /// Tests that a value stored with SetAsync can be retrieved with GetAsync and returns the expected value.
+    /// </summary>
+    /// <returns>The stored value from the cache.</returns>
     [Fact]
     public async Task SetAsync_ThenGetAsync_ReturnsStoredValue()
     {
@@ -30,6 +42,10 @@ public sealed class LocalCacheProviderTests
         result.Should().Be("hello");
     }
 
+    /// <summary>
+    /// Tests that GetAsync returns null when the requested key does not exist in the cache.
+    /// </summary>
+    /// <returns>The default value (null) when the key does not exist.</returns>
     [Fact]
     public async Task GetAsync_WhenKeyDoesNotExist_ReturnsDefault()
     {
@@ -38,6 +54,10 @@ public sealed class LocalCacheProviderTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that GetAsync returns null when the cache entry has expired based on the specified expiration time.
+    /// </summary>
+    /// <returns>The default value (null) when the cache entry has expired.</returns>
     [Fact]
     public async Task GetAsync_WhenEntryHasExpired_ReturnsDefault()
     {
@@ -49,6 +69,10 @@ public sealed class LocalCacheProviderTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that GetAsync returns the cached value when the entry has not yet expired.
+    /// </summary>
+    /// <returns>The cached value when the entry has not yet expired.</returns>
     [Fact]
     public async Task GetAsync_WhenEntryNotExpired_ReturnsValue()
     {
@@ -59,6 +83,10 @@ public sealed class LocalCacheProviderTests
         result.Should().Be("alive");
     }
 
+    /// <summary>
+    /// Tests that RemoveAsync removes the specified key from the cache, making it unavailable for subsequent operations.
+    /// </summary>
+    /// <returns>True if the key was successfully removed from the cache.</returns>
     [Fact]
     public async Task RemoveAsync_ExistingKey_MakesValueUnavailable()
     {
@@ -70,6 +98,10 @@ public sealed class LocalCacheProviderTests
         exists.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that ExistsAsync returns true when the specified key exists in the cache.
+    /// </summary>
+    /// <returns>True if the specified key exists in the cache.</returns>
     [Fact]
     public async Task ExistsAsync_WhenKeyPresent_ReturnsTrue()
     {
@@ -80,6 +112,10 @@ public sealed class LocalCacheProviderTests
         exists.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that ExistsAsync returns false when the specified key does not exist in the cache.
+    /// </summary>
+    /// <returns>False if the specified key does not exist in the cache.</returns>
     [Fact]
     public async Task ExistsAsync_WhenKeyNotPresent_ReturnsFalse()
     {
@@ -88,6 +124,10 @@ public sealed class LocalCacheProviderTests
         exists.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that ExistsAsync returns false when the cache entry has expired based on the specified expiration time.
+    /// </summary>
+    /// <returns>False if the cache entry has expired.</returns>
     [Fact]
     public async Task ExistsAsync_WhenEntryExpired_ReturnsFalse()
     {
@@ -99,6 +139,10 @@ public sealed class LocalCacheProviderTests
         exists.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateAsync invokes the factory function and persists the result when the key is missing from the cache.
+    /// </summary>
+    /// <returns>The value created by the factory function and persisted in the cache.</returns>
     [Fact]
     public async Task GetOrCreateAsync_WhenKeyMissing_InvokesFactoryAndPersistsResult()
     {
@@ -116,6 +160,10 @@ public sealed class LocalCacheProviderTests
         (await _cache.GetAsync<string>("new-key")).Should().Be("created");
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateAsync returns the cached value and skips invoking the factory function when the key already exists in the cache.
+    /// </summary>
+    /// <returns>The cached value without invoking the factory function.</returns>
     [Fact]
     public async Task GetOrCreateAsync_WhenKeyExists_SkipsFactoryAndReturnsCached()
     {
@@ -133,6 +181,10 @@ public sealed class LocalCacheProviderTests
         value.Should().Be("cached-value");
     }
 
+    /// <summary>
+    /// Tests that FlushAsync clears all cached entries from the cache storage.
+    /// </summary>
+    /// <returns>The updated cache statistics showing zero items after flushing.</returns>
     [Fact]
     public async Task FlushAsync_ClearsAllCachedEntries()
     {
@@ -146,6 +198,10 @@ public sealed class LocalCacheProviderTests
         stats.ItemCount.Should().Be(0);
     }
 
+    /// <summary>
+    /// Tests that GetStatisticsAsync tracks cache hits, misses, and set operations correctly.
+    /// </summary>
+    /// <returns>The cache statistics including hit count, miss count, and set count.</returns>
     [Fact]
     public async Task GetStatisticsAsync_TracksCacheHitsAndMisses()
     {
