@@ -10,8 +10,16 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Contains additional test cases for <see cref="BotConfiguration"/> class functionality.
+/// Focuses on edge cases, null handling, and validation scenarios not covered in main test classes.
+/// </summary>
 public sealed class BotConfigurationAdditionalTests
 {
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.AddAdmin(long)"/> properly initializes the AdminIds list when it's null.
+    /// Ensures the list is created and the admin is added successfully.
+    /// </summary>
     [Fact]
     public void BotConfiguration_WithNullAdminIds_ListIsInitialized()
     {
@@ -32,6 +40,10 @@ public sealed class BotConfigurationAdditionalTests
         config.AdminIds.Should().Contain(12345);
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.SetCustomSetting(string, string)"/> properly initializes the CustomSettings dictionary when it's null.
+    /// Ensures the dictionary is created and the custom setting is added successfully.
+    /// </summary>
     [Fact]
     public void BotConfiguration_WithNullCustomSettings_DictionaryIsInitialized()
     {
@@ -52,6 +64,10 @@ public sealed class BotConfigurationAdditionalTests
         config.CustomSettings.Should().ContainKey("key").WhoseValue.Should().Be("value");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.SetCustomSetting(string, string)"/> properly handles an empty CustomSettings dictionary.
+    /// Ensures the dictionary remains initialized and new settings can be added.
+    /// </summary>
     [Fact]
     public void BotConfiguration_WithEmptyCustomSettings_DictionaryIsInitialized()
     {
@@ -72,6 +88,10 @@ public sealed class BotConfigurationAdditionalTests
         config.CustomSettings.Should().ContainKey("key").WhoseValue.Should().Be("value");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.IsAdmin(long)"/> returns false when AdminIds list is empty.
+    /// Ensures the method correctly handles empty admin lists.
+    /// </summary>
     [Fact]
     public void IsAdmin_WithEmptyAdminIds_ReturnsFalse()
     {
@@ -90,6 +110,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.IsAdmin(long)"/> returns true for the owner ID even when AdminIds list is empty.
+    /// Ensures the owner ID is always considered an admin regardless of the admin list state.
+    /// </summary>
     [Fact]
     public void IsAdmin_WithEmptyAdminIdsAndOwnerId_ReturnsTrueForOwner()
     {
@@ -109,6 +133,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.GetSessionTimeout()"/> returns the default session timeout of 30 minutes when no custom value is set.
+    /// Ensures the method provides a sensible default value.
+    /// </summary>
     [Fact]
     public void GetSessionTimeout_WithDefaultValue_Returns30Minutes()
     {
@@ -126,6 +154,10 @@ public sealed class BotConfigurationAdditionalTests
         timeout.Should().Be(TimeSpan.FromMinutes(30));
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.GetSessionTimeout()"/> returns the correct custom session timeout when SessionTimeoutMinutes is set.
+    /// Ensures the method respects the configured session timeout value.
+    /// </summary>
     [Fact]
     public void GetSessionTimeout_WithCustomValue_ReturnsCorrectTimeSpan()
     {
@@ -144,6 +176,10 @@ public sealed class BotConfigurationAdditionalTests
         timeout.Should().Be(TimeSpan.FromMinutes(60));
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> throws an exception when BotUsername contains only whitespace.
+    /// Ensures validation correctly rejects invalid username values.
+    /// </summary>
     [Fact]
     public void Validate_WithWhitespaceBotUsername_ThrowsException()
     {
@@ -160,6 +196,10 @@ public sealed class BotConfigurationAdditionalTests
             .WithMessage("BotUsername is required");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> throws an exception when BotToken contains only whitespace.
+    /// Ensures validation correctly rejects invalid token values.
+    /// </summary>
     [Fact]
     public void Validate_WithWhitespaceBotToken_ThrowsException()
     {
@@ -176,6 +216,10 @@ public sealed class BotConfigurationAdditionalTests
             .WithMessage("BotToken is required");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> throws an exception when BotToken is a single character.
+    /// Ensures validation correctly rejects invalid token values that are too short.
+    /// </summary>
     [Fact]
     public void Validate_WithSingleCharacterBotToken_ThrowsException()
     {
@@ -192,6 +236,10 @@ public sealed class BotConfigurationAdditionalTests
             .WithMessage("BotToken is required");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> returns true when MaxConcurrentRequests is set to a valid maximum value (100).
+    /// Ensures validation accepts valid maximum concurrent request values.
+    /// </summary>
     [Fact]
     public void Validate_WithMaxConcurrentRequests_ReturnsTrue()
     {
@@ -210,6 +258,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> returns true when MaxConcurrentRequests is set to the minimum valid value (1).
+    /// Ensures validation accepts the minimum valid concurrent request value.
+    /// </summary>
     [Fact]
     public void Validate_WithOneMaxConcurrentRequests_ReturnsTrue()
     {
@@ -228,6 +280,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.Validate()"/> returns true when SessionTimeoutMinutes is set to the minimum valid value (1).
+    /// Ensures validation accepts the minimum valid session timeout value.
+    /// </summary>
     [Fact]
     public void Validate_WithOneSessionTimeout_ReturnsTrue()
     {
@@ -246,6 +302,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.SetCustomSetting(string, string)"/> overwrites an existing custom setting value with the new value.
+    /// Ensures the method correctly updates existing settings rather than creating duplicates.
+    /// </summary>
     [Fact]
     public void SetCustomSetting_OverwritesExistingValue()
     {
@@ -263,6 +323,10 @@ public sealed class BotConfigurationAdditionalTests
         config.CustomSettings["key"].Should().Be("new_value");
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.RemoveAdmin(long)"/> returns false when attempting to remove an admin from an empty AdminIds list.
+    /// Ensures the method correctly handles removal attempts on empty lists.
+    /// </summary>
     [Fact]
     public void RemoveAdmin_WithEmptyAdminIds_ReturnsFalse()
     {
@@ -281,6 +345,10 @@ public sealed class BotConfigurationAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="BotConfiguration.RemoveAdmin(long)"/> removes only the specified admin from the AdminIds list while preserving other admins.
+    /// Ensures the method correctly removes the target admin without affecting other entries.
+    /// </summary>
     [Fact]
     public void RemoveAdmin_RemovesOnlySpecifiedAdmin()
     {
