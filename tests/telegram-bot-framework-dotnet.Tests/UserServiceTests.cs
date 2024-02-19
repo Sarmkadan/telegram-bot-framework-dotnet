@@ -14,17 +14,40 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Unit tests for the <see cref="UserService"/> class.
+/// Tests the user management functionality including creation, retrieval, updating, and deletion.
+/// </summary>
 public sealed class UserServiceTests
 {
+    /// <summary>
+    /// Mock repository for testing user persistence operations.
+    /// </summary>
     private readonly Mock<IUserRepository> _mockUserRepository = new();
+
+    /// <summary>
+    /// Mock logger for testing logging behavior.
+    /// </summary>
     private readonly Mock<ILogger<UserService>> _mockLogger = new();
+
+    /// <summary>
+    /// Instance of UserService under test.
+    /// </summary>
     private readonly UserService _userService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserServiceTests"/> class.
+    /// Sets up the test dependencies including mock repositories and logger.
+    /// </summary>
     public UserServiceTests()
     {
         _userService = new UserService(_mockUserRepository.Object, _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateUserAsync returns existing user when user already exists in repository.
+    /// </summary>
+    /// <returns>Returns the existing user without creating a new one.</returns>
     [Fact]
     public async Task GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser()
     {
@@ -43,6 +66,10 @@ public sealed class UserServiceTests
         _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateUserAsync creates and returns a new user when user doesn't exist.
+    /// </summary>
+    /// <returns>Returns a newly created user with default properties.</returns>
     [Fact]
     public async Task GetOrCreateUserAsync_WithNonExistingUser_CreatesAndReturnsNewUser()
     {
@@ -69,6 +96,10 @@ public sealed class UserServiceTests
         _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateUserAsync handles null last name and username parameters correctly.
+    /// </summary>
+    /// <returns>Returns a user with null last name and username when null values are provided.</returns>
     [Fact]
     public async Task GetOrCreateUserAsync_WithNullLastName_CreatesUserWithoutLastName()
     {
@@ -90,6 +121,10 @@ public sealed class UserServiceTests
         result.Username.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that GetOrCreateUserAsync updates existing user details when user already exists.
+    /// </summary>
+    /// <returns>Returns the updated user with new details.</returns>
     [Fact]
     public async Task GetOrCreateUserAsync_WithExistingUserWithDifferentDetails_UpdatesUser()
     {
@@ -115,6 +150,10 @@ public sealed class UserServiceTests
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that GetUserByIdAsync returns the user when user exists in repository.
+    /// </summary>
+    /// <returns>Returns the existing user.</returns>
     [Fact]
     public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
     {
@@ -132,6 +171,10 @@ public sealed class UserServiceTests
         result.Should().Be(user);
     }
 
+    /// <summary>
+    /// Tests that GetUserByIdAsync returns null when user doesn't exist in repository.
+    /// </summary>
+    /// <returns>Returns null for non-existing user.</returns>
     [Fact]
     public async Task GetUserByIdAsync_WithNonExistingUser_ReturnsNull()
     {
@@ -147,6 +190,9 @@ public sealed class UserServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that RecordUserActivityAsync updates user's last activity timestamp and increments message count.
+    /// </summary>
     [Fact]
     public async Task RecordUserActivityAsync_UpdatesLastActivityAndIncrementsMessagesCount()
     {
@@ -172,6 +218,9 @@ public sealed class UserServiceTests
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that RecordUserActivityAsync doesn't throw exception when user doesn't exist.
+    /// </summary>
     [Fact]
     public async Task RecordUserActivityAsync_WithNonExistingUser_DoesNotThrow()
     {
@@ -185,6 +234,10 @@ public sealed class UserServiceTests
             .Should().NotThrowAsync();
     }
 
+    /// <summary>
+    /// Tests that UpdateUserAsync updates user properties with provided values.
+    /// </summary>
+    /// <returns>Returns the updated user with new properties.</returns>
     [Fact]
     public async Task UpdateUserAsync_UpdatesUserProperties()
     {
@@ -209,6 +262,10 @@ public sealed class UserServiceTests
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that UpdateUserAsync preserves unchanged values when partial updates are provided.
+    /// </summary>
+    /// <returns>Returns the user with unchanged values preserved.</returns>
     [Fact]
     public async Task UpdateUserAsync_WithPartialUpdates_PreservesUnchangedValues()
     {
@@ -231,6 +288,10 @@ public sealed class UserServiceTests
         result.Username.Should().Be("johndoe");
     }
 
+    /// <summary>
+    /// Tests that DeleteUserAsync deletes existing user and returns true.
+    /// </summary>
+    /// <returns>Returns true when user is successfully deleted.</returns>
     [Fact]
     public async Task DeleteUserAsync_WithExistingUser_DeletesAndReturnsTrue()
     {
@@ -247,6 +308,10 @@ public sealed class UserServiceTests
         _mockUserRepository.Verify(r => r.DeleteAsync(123, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that DeleteUserAsync returns false when user doesn't exist.
+    /// </summary>
+    /// <returns>Returns false when user doesn't exist.</returns>
     [Fact]
     public async Task DeleteUserAsync_WithNonExistingUser_ReturnsFalse()
     {
@@ -262,6 +327,10 @@ public sealed class UserServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that SearchUsersAsync filters users by first name using case-insensitive search.
+    /// </summary>
+    /// <returns>Returns filtered list of users matching the first name.</returns>
     [Fact]
     public async Task SearchUsersAsync_FiltersByFirstName()
     {
@@ -285,6 +354,10 @@ public sealed class UserServiceTests
         result.Should().AllSatisfy(u => u.FirstName.Should().ContainEquivalentOf("John"));
     }
 
+    /// <summary>
+    /// Tests that SearchUsersAsync returns all users when empty query is provided.
+    /// </summary>
+    /// <returns>Returns all users in the repository.</returns>
     [Fact]
     public async Task SearchUsersAsync_WithEmptyQuery_ReturnsAllUsers()
     {
@@ -306,6 +379,10 @@ public sealed class UserServiceTests
         result.Should().HaveCount(2);
     }
 
+    /// <summary>
+    /// Tests that GetUsersByStatusAsync returns users filtered by the specified status.
+    /// </summary>
+    /// <returns>Returns filtered list of users matching the specified status.</returns>
     [Fact]
     public async Task GetUsersByStatusAsync_ReturnsFilteredUsers()
     {
