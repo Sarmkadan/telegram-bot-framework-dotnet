@@ -17,17 +17,17 @@ namespace TelegramBotFramework.Tests;
 public sealed class BotOrchestratorTests
 {
     /// <summary>
-/// Mock implementation of <see cref="IUserService"/> for testing purposes.
-/// </summary>
-private readonly Mock<IUserService> _mockUserService = new();
+    /// Mock implementation of <see cref="IUserService"/> for testing purposes.
+    /// </summary>
+    private readonly Mock<IUserService> _mockUserService = new();
     /// <summary>
-/// Mock implementation of <see cref="ICommandService"/> for testing purposes.
-/// </summary>
-private readonly Mock<ICommandService> _mockCommandService = new();
+    /// Mock implementation of <see cref="ICommandService"/> for testing purposes.
+    /// </summary>
+    private readonly Mock<ICommandService> _mockCommandService = new();
     /// <summary>
-/// Mock implementation of <see cref="ISessionService"/> for testing purposes.
-/// </summary>
-private readonly Mock<ISessionService> _mockSessionService = new();
+    /// Mock implementation of <see cref="ISessionService"/> for testing purposes.
+    /// </summary>
+    private readonly Mock<ISessionService> _mockSessionService = new();
     private readonly Mock<IMessageService> _mockMessageService = new();
     private readonly Mock<IMenuService> _mockMenuService = new();
     private readonly Mock<ILogger<BotOrchestrator>> _mockLogger = new();
@@ -40,6 +40,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
     };
     private readonly BotOrchestrator _orchestrator;
 
+    /// <summary>
+    /// Initializes the test class, setting up mocked services and the <see cref="BotOrchestrator"/> instance.
+    /// </summary>
     public BotOrchestratorTests()
     {
         var middlewares = new List<Middleware.IBotMiddleware> { _mockMiddleware1.Object, _mockMiddleware2.Object };
@@ -55,6 +58,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
             _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>userService</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullUserService_ThrowsArgumentNullException()
     {
@@ -73,6 +79,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("userService");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>commandService</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullCommandService_ThrowsArgumentNullException()
     {
@@ -91,6 +100,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("commandService");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>sessionService</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullSessionService_ThrowsArgumentNullException()
     {
@@ -109,6 +121,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("sessionService");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>messageService</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullMessageService_ThrowsArgumentNullException()
     {
@@ -127,6 +142,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("messageService");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>menuService</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullMenuService_ThrowsArgumentNullException()
     {
@@ -145,6 +163,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("menuService");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when the middleware collection is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullMiddlewares_ThrowsArgumentNullException()
     {
@@ -161,6 +182,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("middleware");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>configuration</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullConfiguration_ThrowsArgumentNullException()
     {
@@ -179,6 +203,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("configuration");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws <see cref="ArgumentNullException"/> when <c>logger</c> is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
@@ -197,6 +224,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
     }
 
+    /// <summary>
+    /// Tests processing a valid user message and ensures a valid execution context is returned.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ProcessUserMessageAsync_WithValidMessage_ReturnsValidContext()
     {
@@ -241,6 +272,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockMessageService.Verify(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that a command message is correctly extracted and attached to the execution context.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ProcessUserMessageAsync_WithCommandMessage_ExtractsCommand()
     {
@@ -281,6 +316,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Command!.Name.Should().Be("/start");
     }
 
+    /// <summary>
+    /// Tests that an invalid message is marked as failed and the execution context reflects the error.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ProcessUserMessageAsync_WithInvalidMessage_MarksAsFailed()
     {
@@ -329,6 +368,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockMessageService.Verify(s => s.MarkAsFailedAsync(1, "Validation failed", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that a valid command execution returns a valid execution context and records the command execution.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ExecuteUserCommandAsync_WithValidCommand_ReturnsValidContext()
     {
@@ -362,6 +405,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockCommandService.Verify(s => s.RecordCommandExecutionAsync("test", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that attempting to execute a non‑existent command results in an invalid context with an appropriate error.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ExecuteUserCommandAsync_WithNonExistentCommand_ReturnsContextWithError()
     {
@@ -384,6 +431,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Errors.Should().Contain("Command 'nonexistent' not found");
     }
 
+    /// <summary>
+    /// Tests that displaying a valid menu returns the menu and navigates the session to that menu.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task DisplayMenuAsync_WithValidMenuId_ReturnsMenu()
     {
@@ -406,6 +457,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockSessionService.Verify(s => s.NavigateToMenuAsync("session-123", "main", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that attempting to display a non‑existent menu throws an <see cref="InvalidOperationException"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task DisplayMenuAsync_WithNonExistentMenu_ThrowsInvalidOperationException()
     {
@@ -418,6 +473,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
             .Should().ThrowAsync<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Tests that a menu button with <c>ExecuteCommand</c> action executes the corresponding command.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task HandleMenuButtonAsync_WithExecuteCommandButton_ExecutesCommand()
     {
@@ -451,6 +510,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockCommandService.Verify(s => s.RecordCommandExecutionAsync("start", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that a menu button with <c>NavigateMenu</c> action navigates the session to the target menu.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task HandleMenuButtonAsync_WithNavigateMenuButton_NavigatesToMenu()
     {
@@ -478,6 +541,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockSessionService.Verify(s => s.NavigateToMenuAsync("session-123", "submenu", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that an unknown button action results in a false return value.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task HandleMenuButtonAsync_WithUnknownButtonAction_ReturnsFalse()
     {
@@ -498,6 +565,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that retrieving an active user session returns the session.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task GetUserSessionAsync_WithActiveSession_ReturnsSession()
     {
@@ -514,6 +585,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().Be(session);
     }
 
+    /// <summary>
+    /// Tests that attempting to retrieve a session when none is active throws a <see cref="Exceptions.SessionException"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException()
     {
@@ -526,6 +601,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
             .Should().ThrowAsync<Exceptions.SessionException>();
     }
 
+    /// <summary>
+    /// Tests that ending an active user session closes the session and returns true.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task EndUserSessionAsync_WithActiveSession_ClosesSession()
     {
@@ -545,6 +624,10 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         _mockSessionService.Verify(s => s.CloseSessionAsync("session-123", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that ending a session when no active session exists returns false.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task EndUserSessionAsync_WithNoActiveSession_ReturnsFalse()
     {
@@ -559,6 +642,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that extracting a command name from a message with parameters returns the command name without the leading slash.
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithCommand_ReturnsCommandName()
     {
@@ -572,6 +658,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().Be("start");
     }
 
+    /// <summary>
+    /// Tests that extracting a command name from a message containing only the command returns the command name.
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithCommandOnly_ReturnsCommandName()
     {
@@ -585,6 +674,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().Be("start");
     }
 
+    /// <summary>
+    /// Tests that extracting a command name from an empty string returns an empty string.
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithEmptyString_ReturnsEmptyString()
     {
@@ -598,6 +690,9 @@ private readonly Mock<ISessionService> _mockSessionService = new();
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that extracting a command name from a string without a leading slash returns an empty string.
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithNoSlash_ReturnsEmptyString()
     {
