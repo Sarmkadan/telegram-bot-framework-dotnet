@@ -10,8 +10,17 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public sealed class StringExtensionTests
-{
+/// <summary>
+    /// Contains unit tests for string extension methods.
+    /// </summary>
+    public sealed class StringExtensionTests
+    {
+    /// <summary>
+    /// Tests that the Truncate method correctly truncates strings to the specified maximum length.
+    /// </summary>
+    /// <param name="input">The input string to truncate.</param>
+    /// <param name="maxLength">The maximum length to truncate to.</param>
+    /// <param name="expected">The expected truncated result.</param>
     [Theory]
     [InlineData("Hello World", 5, "Hell…")]
     [InlineData("Hi", 10, "Hi")]
@@ -21,6 +30,9 @@ public sealed class StringExtensionTests
         input.Truncate(maxLength).Should().Be(expected);
     }
 
+    /// <summary>
+    /// Tests that the Truncate method returns null when given a null input string.
+    /// </summary>
     [Fact]
     public void Truncate_NullInput_ReturnsNull()
     {
@@ -28,120 +40,180 @@ public sealed class StringExtensionTests
         value!.Truncate(10).Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that the IsValidEmail method returns true for a string with a valid email format.
+    /// </summary>
     [Fact]
     public void IsValidEmail_WithValidFormat_ReturnsTrue()
     {
         "user@example.com".IsValidEmail().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the IsValidEmail method returns false when the email is missing the @ sign.
+    /// </summary>
     [Fact]
     public void IsValidEmail_WithMissingAtSign_ReturnsFalse()
     {
         "userexample.com".IsValidEmail().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the IsValidEmail method returns false when given an empty string.
+    /// </summary>
     [Fact]
     public void IsValidEmail_WithEmptyString_ReturnsFalse()
     {
         "".IsValidEmail().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the IsValidEmail method returns false when the email is missing the domain part.
+    /// </summary>
     [Fact]
     public void IsValidEmail_WithMissingDomain_ReturnsFalse()
     {
         "user@".IsValidEmail().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the Repeat method produces the correct repeated string when given a positive count.
+    /// </summary>
     [Fact]
     public void Repeat_PositiveCount_ProducesRepeatedString()
     {
         "ab".Repeat(3).Should().Be("ababab");
     }
 
+    /// <summary>
+    /// Tests that the Repeat method returns an empty string when given a zero count.
+    /// </summary>
     [Fact]
     public void Repeat_ZeroCount_ReturnsEmpty()
     {
         "abc".Repeat(0).Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the Repeat method returns an empty string when given a negative count.
+    /// </summary>
     [Fact]
     public void Repeat_NegativeCount_ReturnsEmpty()
     {
         "abc".Repeat(-1).Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the ExtractNumbers method returns only the digits from a mixed string.
+    /// </summary>
     [Fact]
     public void ExtractNumbers_FromMixedString_ReturnsOnlyDigits()
     {
         "abc123def456".ExtractNumbers().Should().Be("123456");
     }
 
+    /// <summary>
+    /// Tests that the ExtractNumbers method returns an empty string when the input contains no digits.
+    /// </summary>
     [Fact]
     public void ExtractNumbers_FromStringWithNoDigits_ReturnsEmpty()
     {
         "abcdef".ExtractNumbers().Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the EnsureStartsWith method prepends the specified prefix when it's missing from the string.
+    /// </summary>
     [Fact]
     public void EnsureStartsWith_WhenPrefixMissing_PrependPrefix()
     {
         "example.com".EnsureStartsWith("https://").Should().Be("https://example.com");
     }
 
+    /// <summary>
+    /// Tests that the EnsureStartsWith method returns the string unchanged when it already has the specified prefix.
+    /// </summary>
     [Fact]
     public void EnsureStartsWith_WhenAlreadyHasPrefix_ReturnsUnchanged()
     {
         "https://example.com".EnsureStartsWith("https://").Should().Be("https://example.com");
     }
 
+    /// <summary>
+    /// Tests that the EnsureEndsWith method appends the specified suffix when it's missing from the string.
+    /// </summary>
     [Fact]
     public void EnsureEndsWith_WhenSuffixMissing_AppendsSuffix()
     {
         "hello".EnsureEndsWith("!").Should().Be("hello!");
     }
 
+    /// <summary>
+    /// Tests that the EnsureEndsWith method returns the string unchanged when it already has the specified suffix.
+    /// </summary>
     [Fact]
     public void EnsureEndsWith_WhenAlreadyHasSuffix_ReturnsUnchanged()
     {
         "hello!".EnsureEndsWith("!").Should().Be("hello!");
     }
 
+    /// <summary>
+    /// Tests that the Capitalize method capitalizes the first character of a string.
+    /// </summary>
     [Fact]
     public void Capitalize_WithLowercaseFirstChar_CapitalizesFirstChar()
     {
         "hello world".Capitalize().Should().Be("Hello world");
     }
 
+    /// <summary>
+    /// Tests that the Capitalize method returns the string unchanged when the first character is already capitalized.
+    /// </summary>
     [Fact]
     public void Capitalize_WithAlreadyCapitalized_ReturnsUnchanged()
     {
         "Hello".Capitalize().Should().Be("Hello");
     }
 
+    /// <summary>
+    /// Tests that the IsAlphanumeric method returns true for a string containing only alphanumeric characters.
+    /// </summary>
     [Fact]
     public void IsAlphanumeric_WithPureAlphanumericString_ReturnsTrue()
     {
         "abc123".IsAlphanumeric().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the IsAlphanumeric method returns false when the string contains special characters.
+    /// </summary>
     [Fact]
     public void IsAlphanumeric_WithSpecialCharacters_ReturnsFalse()
     {
         "abc!123".IsAlphanumeric().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the IsAlphanumeric method returns false when the string contains spaces.
+    /// </summary>
     [Fact]
     public void IsAlphanumeric_WithSpaces_ReturnsFalse()
     {
         "abc 123".IsAlphanumeric().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the Reverse method returns the same string when given a palindrome.
+    /// </summary>
     [Fact]
     public void Reverse_OfPalindrome_ReturnsSameString()
     {
         "racecar".Reverse().Should().Be("racecar");
     }
 
+    /// <summary>
+    /// Tests that the Reverse method returns the reversed string when given an asymmetric string.
+    /// </summary>
     [Fact]
     public void Reverse_OfAsymmetricString_ReturnsReversed()
     {
