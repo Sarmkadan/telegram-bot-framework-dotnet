@@ -15,6 +15,10 @@ using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Additional test suite for <see cref="CommandService"/> functionality covering advanced scenarios
+/// such as role-based command filtering, command execution tracking, and rate limiting.
+/// </summary>
 public sealed class CommandServiceAdditionalTests
 {
     private readonly Mock<ICommandRepository> _mockRepository = new();
@@ -22,11 +26,19 @@ public sealed class CommandServiceAdditionalTests
     private readonly Mock<ILogger<CommandService>> _mockLogger = new();
     private readonly CommandService _service;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandServiceAdditionalTests"/> class.
+    /// Sets up mock dependencies and creates a new <see cref="CommandService"/> instance for testing.
+    /// </summary>
     public CommandServiceAdditionalTests()
     {
         _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that users with Administrator role can access both admin and regular commands.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetAvailableCommandsAsync_WithAdminRole_ReturnsAdminCommands()
     {
@@ -48,6 +60,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().Contain(c => c.Name == "/help");
     }
 
+    /// <summary>
+    /// Tests that regular users can only access commands that don't require admin privileges.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetAvailableCommandsAsync_WithUserRole_ReturnsOnlyNonAdminCommands()
     {
@@ -68,6 +84,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().NotContain(c => c.Name == "/admin");
     }
 
+    /// <summary>
+    /// Tests that moderators can access commands for moderators and above (excluding admin-only commands).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetAvailableCommandsAsync_WithModeratorRole_ReturnsCommandsForModeratorAndAbove()
     {
@@ -90,6 +110,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().NotContain(c => c.Name == "/admin");
     }
 
+    /// <summary>
+    /// Tests that a valid command execution completes successfully and updates the command's execution count.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteCommandAsync_WithValidContext_ExecutesSuccessfully()
     {
@@ -121,6 +145,10 @@ public sealed class CommandServiceAdditionalTests
         _mockRepository.Verify(r => r.UpdateAsync(command, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that attempting to execute a disabled command results in an error and no execution count update.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteCommandAsync_WithDisabledCommand_AddsErrorToContext()
     {
@@ -146,6 +174,10 @@ public sealed class CommandServiceAdditionalTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests that users without sufficient permissions receive an error when attempting to execute admin-only commands.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext()
     {
@@ -171,6 +203,10 @@ public sealed class CommandServiceAdditionalTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    /// Tests that inactive users (e.g., banned) cannot execute any commands.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithInactiveUser_ReturnsFalse()
     {
@@ -192,6 +228,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that attempting to check permissions for a non-existent command returns false.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithNonExistentCommand_ReturnsFalse()
     {
@@ -212,6 +252,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that disabled commands cannot be executed even by authorized users.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithDisabledCommand_ReturnsFalse()
     {
@@ -233,6 +277,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that executing a command successfully increments its execution count in the repository.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task RecordCommandExecutionAsync_WithValidCommand_IncrementsExecutionCount()
     {
@@ -254,6 +302,10 @@ public sealed class CommandServiceAdditionalTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that attempting to record execution for a non-existent command doesn't throw an exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task RecordCommandExecutionAsync_WithNonExistentCommand_DoesNotThrow()
     {
@@ -267,6 +319,10 @@ public sealed class CommandServiceAdditionalTests
             .Should().NotThrowAsync();
     }
 
+    /// <summary>
+    /// Tests that retrieving the execution count for an existing command returns the correct value.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetCommandExecutionCountAsync_WithExistingCommand_ReturnsCount()
     {
@@ -284,6 +340,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().Be(42);
     }
 
+    /// <summary>
+    /// Tests that retrieving the execution count for a non-existent command returns zero.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetCommandExecutionCountAsync_WithNonExistentCommand_ReturnsZero()
     {
@@ -299,6 +359,10 @@ public sealed class CommandServiceAdditionalTests
         result.Should().Be(0);
     }
 
+    /// <summary>
+    /// Tests that commands without rate limiting configured are never considered rate limited.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task IsCommandRateLimitedAsync_WithNoRateLimitConfigured_ReturnsFalse()
     {
@@ -316,6 +380,11 @@ public sealed class CommandServiceAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that rate limiting is applied per user, allowing different users to execute commands
+    /// even when the same command has a rate limit configured.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser()
     {
