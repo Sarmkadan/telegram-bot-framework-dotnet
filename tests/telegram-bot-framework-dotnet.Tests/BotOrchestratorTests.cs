@@ -10,11 +10,24 @@ using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Provides unit tests for the <see cref="BotOrchestrator"/> class.
+/// Tests various scenarios including message processing, command execution, menu handling, and session management.
+/// </summary>
 public sealed class BotOrchestratorTests
 {
-    private readonly Mock<IUserService> _mockUserService = new();
-    private readonly Mock<ICommandService> _mockCommandService = new();
-    private readonly Mock<ISessionService> _mockSessionService = new();
+    /// <summary>
+/// Mock implementation of <see cref="IUserService"/> for testing purposes.
+/// </summary>
+private readonly Mock<IUserService> _mockUserService = new();
+    /// <summary>
+/// Mock implementation of <see cref="ICommandService"/> for testing purposes.
+/// </summary>
+private readonly Mock<ICommandService> _mockCommandService = new();
+    /// <summary>
+/// Mock implementation of <see cref="ISessionService"/> for testing purposes.
+/// </summary>
+private readonly Mock<ISessionService> _mockSessionService = new();
     private readonly Mock<IMessageService> _mockMessageService = new();
     private readonly Mock<IMenuService> _mockMenuService = new();
     private readonly Mock<ILogger<BotOrchestrator>> _mockLogger = new();
