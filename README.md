@@ -191,6 +191,75 @@ BotConfigurationTestsExtensions.ShouldThrowValidationException(() =>
 
 This section demonstrates how the test helpers can be combined to create expressive, readable unit tests for configuration validation logic.
 
+## EventBus
+
+The `EventBus` class provides an in-process publish-subscribe event bus implementation that enables decoupled communication between components in your Telegram bot application. It allows you to define custom event types and register handlers that respond to those events, making it ideal for scenarios like state changes, notifications, or triggering background operations without tight coupling.
+
+The event bus is thread-safe and supports concurrent subscription management and event publishing. You can query the number of subscribers for specific event types and retrieve all registered event types for diagnostic purposes.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Events;
+using TelegramBotFramework.Integration;
+
+// Define a custom event
+public class UserRegisteredEvent : IEvent
+{
+    public Guid CorrelationId { get; } = Guid.NewGuid();
+    public long UserId { get; set; }
+    public string Username { get; set; }
+}
+
+// Define an event handler
+public class UserRegistrationHandler : IEventHandler<UserRegisteredEvent>
+{
+    private readonly ILogger<UserRegistrationHandler> _logger;
+    
+    public UserRegistrationHandler(ILogger<UserRegistrationHandler> logger)
+    {
+        _logger = logger;
+    }
+    
+    public async Task HandleAsync(UserRegisteredEvent @event)
+    {
+        _logger.LogInformation("User {Username} (ID: {UserId}) registered successfully",
+            @event.Username, @event.UserId);
+        
+        // Perform registration logic here
+        await Task.CompletedTask;
+    }
+}
+
+// Usage in your application
+var eventBus = new EventBus();
+var handler = new UserRegistrationHandler(logger);
+
+// Subscribe the handler to events
+eventBus.Subscribe<UserRegisteredEvent>(handler);
+
+// Publish an event
+var userEvent = new UserRegisteredEvent
+{
+    UserId = 123456789,
+    Username = "newuser"
+};
+
+await eventBus.PublishAsync(userEvent);
+
+// Check subscriber count
+eventBus.GetSubscriberCount<UserRegisteredEvent>(); // Returns 1
+
+// Get all registered event types
+var registeredTypes = eventBus.GetRegisteredEventTypes();
+
+// Unsubscribe when no longer needed
+eventBus.Unsubscribe<UserRegisteredEvent>(handler);
+
+// Clear all subscriptions
+eventBus.Clear();
+```
+
 ## BotBenchmarks
 
 The `BotBenchmarks` class provides performance benchmarks for key framework operations using [BenchmarkDotNet](https://benchmarkdotnet.org/). It measures the execution time and memory allocation of message processing, session retrieval, and session termination operations to help identify performance bottlenecks and optimize the framework's efficiency.
