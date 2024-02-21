@@ -191,6 +191,76 @@ BotConfigurationTestsExtensions.ShouldThrowValidationException(() =>
 
 This section demonstrates how the test helpers can be combined to create expressive, readable unit tests for configuration validation logic.
 
+## IEventHandler
+
+The `IEventHandler<TEvent>` interface defines the contract for event handlers that process specific event types in the Telegram Bot Framework. Event handlers receive events published through the `EventBus` and execute corresponding business logic. The framework provides a base implementation `EventHandlerBase<TEvent>` that includes common logging functionality and error handling.
+
+Handlers are registered with the event bus and automatically invoked when their corresponding event type is published. This pattern enables clean separation of concerns and makes it easy to add new event-driven features to your bot.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Events;
+using TelegramBotFramework.Integration;
+
+// Define a custom event
+public class UserRegisteredEvent : IEvent
+{
+    public Guid CorrelationId { get; } = Guid.NewGuid();
+    public long UserId { get; set; }
+    public string Username { get; set; }
+}
+
+// Implement a handler for the custom event
+public class UserRegistrationHandler : EventHandlerBase<UserRegisteredEvent>
+{
+    private readonly ILogger<UserRegistrationHandler> _logger;
+
+    public UserRegistrationHandler(ILogger<UserRegistrationHandler> logger) : base(logger)
+    {
+        _logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(UserRegisteredEvent @event)
+    {
+        _logger.LogInformation("User {Username} (ID: {UserId}) registered successfully",
+            @event.Username, @event.UserId);
+
+        // Perform registration logic here
+        await Task.CompletedTask;
+    }
+}
+
+// Usage in your application
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var eventBus = serviceProvider.GetRequiredService<EventBus>();
+var handler = serviceProvider.GetRequiredService<UserRegistrationHandler>();
+
+// Subscribe the handler to events
+eventBus.Subscribe<UserRegisteredEvent>(handler);
+
+// Publish an event
+var userEvent = new UserRegisteredEvent
+{
+    UserId = 123456789,
+    Username = "newuser"
+};
+
+await eventBus.PublishAsync(userEvent);
+
+// Get handler information
+var handlerName = handler.GetHandlerName(); // "UserRegistrationHandler"
+```
+
 ## EventBus
 
 The `EventBus` class provides an in-process publish-subscribe event bus implementation that enables decoupled communication between components in your Telegram bot application. It allows you to define custom event types and register handlers that respond to those events, making it ideal for scenarios like state changes, notifications, or triggering background operations without tight coupling.
