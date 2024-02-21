@@ -163,3 +163,83 @@ BotConfigurationTestsExtensions.ShouldThrowValidationException(() =>
 ```
 
 This section demonstrates how the test helpers can be combined to create expressive, readable unit tests for configuration validation logic.
+
+## BotBenchmarks
+
+The `BotBenchmarks` class provides performance benchmarks for key framework operations using [BenchmarkDotNet](https://benchmarkdotnet.org/). It measures the execution time and memory allocation of message processing, session retrieval, and session termination operations to help identify performance bottlenecks and optimize the framework's efficiency.
+
+**Example usage**
+
+```csharp
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Configuration;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+namespace MyBotBenchmarks;
+
+[MemoryDiagnoser]
+public class MyBotBenchmarks
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IBotOrchestrator _botOrchestrator;
+    private readonly long _userId = 12345;
+    private readonly long _chatId = 67890;
+
+    public MyBotBenchmarks()
+    {
+        var services = new ServiceCollection();
+        var config = new BotConfiguration
+        {
+            BotToken = "test-token",
+            BotUsername = "test-bot"
+        };
+
+        services.AddTelegramBotFramework(config);
+        services.AddLogging(builder => builder.AddFilter("TelegramBotFramework", LogLevel.None));
+
+        _serviceProvider = services.BuildServiceProvider();
+        _botOrchestrator = _serviceProvider.GetRequiredService<IBotOrchestrator>();
+    }
+
+    [IterationSetup]
+    public void Setup()
+    {
+        // Ensure a session exists for benchmarking
+        try
+        {
+            _botOrchestrator.GetUserSessionAsync(_userId).GetAwaiter().GetResult();
+        }
+        catch
+        {
+            _botOrchestrator.ProcessUserMessageAsync(_userId, _chatId, "/start", "TestUser").GetAwaiter().GetResult();
+        }
+    }
+
+    [Benchmark]
+    public async Task<ExecutionContext> ProcessMessageBenchmark()
+    {
+        return await _botOrchestrator.ProcessUserMessageAsync(_userId, _chatId, "/echo", "TestUser");
+    }
+
+    [Benchmark]
+    public async Task<UserSession> GetUserSessionBenchmark()
+    {
+        return await _botOrchestrator.GetUserSessionAsync(_userId);
+    }
+
+    [Benchmark]
+    public async Task<bool> EndUserSessionBenchmark()
+    {
+        return await _botOrchestrator.EndUserSessionAsync(_userId);
+    }
+
+    public static void Main(string[] args)
+    {
+        BenchmarkRunner.Run<MyBotBenchmarks>();
+    }
+}
+```
