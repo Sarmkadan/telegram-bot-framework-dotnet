@@ -330,6 +330,66 @@ eventBus.Unsubscribe<UserRegisteredEvent>(handler);
 eventBus.Clear();
 ```
 
+## EventPublisher
+
+The `EventPublisher` class provides a convenient API for publishing standard framework events to the event bus. It offers strongly-typed methods for common scenarios like message handling, command execution, and state transitions, while supporting custom event types through a generic `PublishAsync<TEvent>` method. The publisher also enables correlation tracking across related events via the `WithCorrelationId` fluent method.
+
+This class is designed to be used as a service injected into your components, providing a clean abstraction over direct event bus interactions.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Events;
+using TelegramBotFramework.Integration;
+
+// Setup services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve dependencies
+var eventPublisher = serviceProvider.GetRequiredService<EventPublisher>();
+var eventBus = serviceProvider.GetRequiredService<IEventBus>();
+
+// Register example handlers
+services.AddSingleton<LoggingMessageEventHandler>();
+serviceProvider = services.BuildServiceProvider();
+eventBus.Subscribe<MessageReceivedEvent>(serviceProvider.GetRequiredService<LoggingMessageEventHandler>());
+
+// Publish standard events
+await eventPublisher
+    .WithCorrelationId(Guid.NewGuid().ToString())
+    .PublishMessageReceivedAsync(chatId: 123456789, userId: 987654321, messageText: "Hello world");
+
+await eventPublisher.PublishCommandExecutedAsync(
+    commandName: "start",
+    userId: 987654321,
+    arguments: null,
+    success: true
+);
+
+await eventPublisher.PublishBotStateChangedAsync(
+    previousState: "idle",
+    newState: "active",
+    reason: "User initiated conversation"
+);
+
+// Publish custom events
+var customEvent = new UserRegisteredEvent
+{
+    UserId = 987654321,
+    Username = "newuser"
+};
+
+await eventPublisher.PublishAsync(customEvent);
+```
+
 ## BotBenchmarks
 
 The `BotBenchmarks` class provides performance benchmarks for key framework operations using [BenchmarkDotNet](https://benchmarkdotnet.org/). It measures the execution time and memory allocation of message processing, session retrieval, and session termination operations to help identify performance bottlenecks and optimize the framework's efficiency.
