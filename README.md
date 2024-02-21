@@ -330,6 +330,59 @@ eventBus.Unsubscribe<UserRegisteredEvent>(handler);
 eventBus.Clear();
 ```
 
+## WebhookHandler
+
+The `WebhookHandler` class processes incoming webhook updates from Telegram, validates their authenticity, and extracts structured data for further processing. It handles various update types including messages, callback queries, edited messages, and inline queries, providing a clean interface for webhook-based Telegram bot integration.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Integration;
+
+// Create handler instance
+var handler = new WebhookHandler(logger);
+
+// Example webhook payload from Telegram (simplified)
+string webhookJson = """
+{
+  "update_id": 123456789,
+  "message": {
+    "message_id": 42,
+    "chat": { "id": 987654321 },
+    "from": { "id": 111111111 },
+    "date": 1234567890,
+    "text": "/start Hello world"
+  }
+}
+""";
+
+// Process the webhook update
+var update = await handler.ProcessUpdateAsync(webhookJson);
+
+if (update != null)
+{
+    Console.WriteLine($"Update ID: {update.UpdateId}");
+    Console.WriteLine($"Type: {update.MessageType}");
+    Console.WriteLine($"Timestamp: {update.Timestamp}");
+    
+    if (update.Message != null)
+    {
+        Console.WriteLine($"Message ID: {update.Message.MessageId}");
+        Console.WriteLine($"Chat ID: {update.Message.ChatId}");
+        Console.WriteLine($"User ID: {update.Message.UserId}");
+        Console.WriteLine($"Text: {update.Message.Text}");
+    }
+}
+
+// Validate webhook request authenticity (when using secret token)
+bool isValid = handler.ValidateWebhookRequest(
+    webhookJson,
+    signature: "sha256=...",
+    secretKey: "your-webhook-secret"
+);
+```
+
 ## EventPublisher
 
 The `EventPublisher` class provides a convenient API for publishing standard framework events to the event bus. It offers strongly-typed methods for common scenarios like message handling, command execution, and state transitions, while supporting custom event types through a generic `PublishAsync<TEvent>` method. The publisher also enables correlation tracking across related events via the `WithCorrelationId` fluent method.
