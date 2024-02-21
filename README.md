@@ -383,6 +383,68 @@ bool isValid = handler.ValidateWebhookRequest(
 );
 ```
 
+## TelegramApiClient
+
+The `TelegramApiClient` class provides a lightweight wrapper around the Telegram Bot API, enabling direct interaction with Telegram's API endpoints. It handles HTTP communication, authentication, error logging, and response parsing, offering a simple interface for sending messages, managing webhooks, and querying bot information.
+
+This client is particularly useful for custom API interactions beyond the framework's built-in capabilities or when you need fine-grained control over Telegram API calls.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Integration;
+
+// Initialize the client with your bot token
+var apiClient = new TelegramApiClient("123456789:ABC-DEF1234ghIkl-zyx57W2v1u123ew11");
+
+// Send a simple text message
+bool messageSent = await apiClient.SendMessageAsync(chatId: 987654321, text: "Hello from Telegram API Client!");
+
+// Send a message with inline keyboard buttons
+bool messageWithButtonsSent = await apiClient.SendMessageWithButtonsAsync(
+    chatId: 987654321,
+    text: "Choose an option:",
+    buttonLabels: new[]
+    {
+        new[] { "Option 1", "Option 2" },
+        new[] { "Option 3" }
+    }
+);
+
+// Edit an existing message
+bool messageEdited = await apiClient.EditMessageAsync(
+    chatId: 987654321,
+    messageId: 42,
+    newText: "Updated message text"
+);
+
+// Delete a message
+bool messageDeleted = await apiClient.DeleteMessageAsync(chatId: 987654321, messageId: 42);
+
+// Get information about the bot
+string? botInfo = await apiClient.GetMeAsync();
+Console.WriteLine(botInfo);
+
+// Answer a callback query from an inline button
+bool callbackAnswered = await apiClient.AnswerCallbackQueryAsync(
+    callbackQueryId: "abc123-def456",
+    notificationText: "Processing your request..."
+);
+
+// Configure webhook for receiving updates
+bool webhookSet = await apiClient.SetWebhookAsync("https://yourdomain.com/webhook");
+
+// Remove webhook to switch to polling mode
+bool webhookRemoved = await apiClient.RemoveWebhookAsync();
+
+// Check if the client is enabled (always true unless explicitly disabled)
+bool isEnabled = apiClient.IsEnabled;
+
+// Use the logging capability
+apiClient.Log(LogLevel.Information, new EventId(1), "API client initialized", null, (state, ex) => state?.ToString() ?? "No state");
+```
+
 ## EventPublisher
 
 The `EventPublisher` class provides a convenient API for publishing standard framework events to the event bus. It offers strongly-typed methods for common scenarios like message handling, command execution, and state transitions, while supporting custom event types through a generic `PublishAsync<TEvent>` method. The publisher also enables correlation tracking across related events via the `WithCorrelationId` fluent method.
