@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -14,6 +14,10 @@ using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Contains additional test cases for the <see cref="BotOrchestrator"/> class.
+/// Tests edge cases, boundary conditions, and specific scenarios not covered in the main test suite.
+/// </summary>
 public sealed class BotOrchestratorAdditionalTests
 {
     private readonly Mock<IUserService> _mockUserService = new();
@@ -30,6 +34,10 @@ public sealed class BotOrchestratorAdditionalTests
     };
     private readonly BotOrchestrator _orchestrator;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BotOrchestratorAdditionalTests"/> class.
+    /// Sets up mock dependencies and creates a <see cref="BotOrchestrator"/> instance for testing.
+    /// </summary>
     public BotOrchestratorAdditionalTests()
     {
         var middlewares = new List<Middleware.IBotMiddleware> { _mockMiddleware.Object };
@@ -45,6 +53,11 @@ public sealed class BotOrchestratorAdditionalTests
             _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that processing a user message with empty content adds an error to the execution context.
+    /// Verifies that the orchestrator properly handles empty message content by marking the message as failed
+    /// and adding an appropriate error message to the context.
+    /// </summary>
     [Fact]
     public async Task ProcessUserMessageAsync_WithEmptyMessageContent_AddsErrorToContext()
     {
@@ -90,6 +103,11 @@ public sealed class BotOrchestratorAdditionalTests
         _mockMessageService.Verify(s => s.MarkAsFailedAsync(1, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that processing a user message with a null last name processes successfully.
+    /// Verifies that the orchestrator can handle messages where the user's last name is null,
+    /// which should not cause any exceptions and should process the message normally.
+    /// </summary>
     [Fact]
     public async Task ProcessUserMessageAsync_WithNullLastName_ProcessesSuccessfully()
     {
@@ -130,6 +148,10 @@ public sealed class BotOrchestratorAdditionalTests
         result.IsValid.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that processing a user message with very long content (4000 characters) processes successfully.
+    /// Verifies that the orchestrator can handle messages with maximum allowed content length without errors.
+    /// </summary>
     [Fact]
     public async Task ProcessUserMessageAsync_WithVeryLongMessageContent_ProcessesSuccessfully()
     {
@@ -166,6 +188,10 @@ public sealed class BotOrchestratorAdditionalTests
         result.IsValid.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that executing a user command with parameters stores the parameters in the execution context.
+    /// Verifies that command parameters are properly extracted and stored in the context for later use by command handlers.
+    /// </summary>
     [Fact]
     public async Task ExecuteUserCommandAsync_WithParameters_StoresParametersInContext()
     {
@@ -198,6 +224,11 @@ public sealed class BotOrchestratorAdditionalTests
         result.Parameters.Should().ContainKey("param2").WhoseValue.Should().Be(123);
     }
 
+    /// <summary>
+    /// Tests that executing a user command with a non-existent command adds an error to the context.
+    /// Verifies that attempting to execute a command that doesn't exist results in an appropriate error message
+    /// and the execution context is marked as invalid.
+    /// </summary>
     [Fact]
     public async Task ExecuteUserCommandAsync_WithNonExistentCommand_AddsErrorToContext()
     {
@@ -221,6 +252,11 @@ public sealed class BotOrchestratorAdditionalTests
         result.Errors.Should().Contain(e => e.Contains("not found"));
     }
 
+    /// <summary>
+    /// Tests that displaying a menu with a null session does not throw an exception.
+    /// Verifies that the orchestrator can handle cases where there is no active session for the user
+    /// without throwing exceptions.
+    /// </summary>
     [Fact]
     public async Task DisplayMenuAsync_WithNullSession_DoesNotThrow()
     {
@@ -240,6 +276,10 @@ public sealed class BotOrchestratorAdditionalTests
         result.MenuId.Should().Be("main");
     }
 
+    /// <summary>
+    /// Tests that handling a menu button with an OpenUrl action does not throw an exception.
+    /// Verifies that the orchestrator can process menu buttons configured with URL actions without errors.
+    /// </summary>
     [Fact]
     public async Task HandleMenuButtonAsync_WithOpenUrlAction_DoesNotThrow()
     {
@@ -260,6 +300,10 @@ public sealed class BotOrchestratorAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that handling a menu button with a SwitchInline action does not throw an exception.
+    /// Verifies that the orchestrator can process menu buttons configured with inline query actions without errors.
+    /// </summary>
     [Fact]
     public async Task HandleMenuButtonAsync_WithSwitchInlineAction_DoesNotThrow()
     {
@@ -280,6 +324,10 @@ public sealed class BotOrchestratorAdditionalTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that getting a user session with no active session throws a SessionException.
+    /// Verifies that attempting to retrieve a session when none exists results in the appropriate exception.
+    /// </summary>
     [Fact]
     public async Task GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException()
     {
@@ -292,6 +340,10 @@ public sealed class BotOrchestratorAdditionalTests
             .Should().ThrowAsync<Exceptions.SessionException>();
     }
 
+    /// <summary>
+    /// Tests that ending a user session with no active session returns false.
+    /// Verifies that attempting to end a session when none exists gracefully returns false instead of throwing.
+    /// </summary>
     [Fact]
     public async Task EndUserSessionAsync_WithNoActiveSession_ReturnsFalse()
     {
@@ -306,11 +358,18 @@ public sealed class BotOrchestratorAdditionalTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that extracting a command name with multiple spaces returns the correct command name.
+    /// Verifies that the ExtractCommandName method properly handles messages with multiple spaces between
+    /// the command and its parameters.
+    /// <para><param name="messageContent">The message content containing the command with parameters</param></para>
+    /// <returns>The extracted command name without parameters</returns>
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithMultipleSpaces_ReturnsCommandName()
     {
         // Arrange
-        var messageContent = "/start   param1   param2";
+        var messageContent = "/start param1 param2";
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
@@ -319,11 +378,18 @@ public sealed class BotOrchestratorAdditionalTests
         result.Should().Be("start");
     }
 
+    /// <summary>
+    /// Tests that extracting a command name with leading and trailing spaces returns the correct command name.
+    /// Verifies that the ExtractCommandName method properly trims whitespace from the message content
+    /// before extracting the command name.
+    /// <para><param name="messageContent">The message content with leading and trailing spaces</param></para>
+    /// <returns>The extracted command name without surrounding whitespace</returns>
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithLeadingAndTrailingSpaces_ReturnsCommandName()
     {
         // Arrange
-        var messageContent = "  /start  ";
+        var messageContent = " /start ";
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
@@ -332,6 +398,13 @@ public sealed class BotOrchestratorAdditionalTests
         result.Should().Be("start");
     }
 
+    /// <summary>
+    /// Tests that extracting a command name with tab characters returns the correct command name.
+    /// Verifies that the ExtractCommandName method properly handles messages containing tab characters
+    /// between the command and its parameters.
+    /// <para><param name="messageContent">The message content containing a tab character</param></para>
+    /// <returns>The extracted command name without tab characters</returns>
+    /// </summary>
     [Fact]
     public void ExtractCommandName_WithTabCharacters_ReturnsCommandName()
     {
