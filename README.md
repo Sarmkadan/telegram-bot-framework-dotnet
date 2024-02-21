@@ -124,6 +124,33 @@ await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
 
 Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
 
+## BotFrameworkException
+
+Base exception class for all framework-specific errors. `BotFrameworkException` provides an `ErrorCode` property to categorize exceptions and includes constructors for both simple messages and detailed error scenarios with inner exceptions. This exception serves as the foundation for specialized exceptions like `CommandExecutionException`, `InsufficientPermissionException`, and `SessionException`.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Exceptions;
+
+// Basic exception with error code
+var exception = new BotFrameworkException("Something went wrong", "GENERIC_ERROR");
+Console.WriteLine(exception.ErrorCode); // "GENERIC_ERROR"
+
+// Exception with inner exception
+try
+{
+    // Some operation that might fail
+}
+catch (Exception ex)
+{
+    throw new BotFrameworkException("Failed to process command", "COMMAND_PROCESSING_FAILED", ex);
+}
+
+// Using specialized exception
+throw new InsufficientPermissionException(123456789, "admin");
+```
+
 ## StateManagementExampleExtensions
 
 Provides extension methods for the `StateManagementExample` class that simplify state management operations, form validation, and survey data handling. These extensions offer convenient methods for validating registration forms and survey data, generating formatted summaries, and updating survey metrics asynchronously.
