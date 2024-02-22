@@ -488,6 +488,67 @@ await pollingStrategy.ProcessUpdateAsync(testUpdate);
 await pollingStrategy.StopAsync();
 ```
 
+## HttpClientFactory
+
+The `HttpClientFactory` provides a centralized way to create and manage HTTP clients with consistent configuration for connection pooling, timeouts, and headers. It helps avoid the common pitfall of socket exhaustion while maintaining proper resource cleanup through connection lifecycle management.
+
+**Key features:**
+- Connection pooling with configurable timeouts and lifetimes
+- Automatic decompression support (GZip/Deflate)
+- Default headers for User-Agent and Accept
+- Caching of created clients for reuse
+- Support for custom headers and authentication
+- Thread-safe disposal of all cached clients
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var httpClientFactory = serviceProvider.GetRequiredService<HttpClientFactory>();
+
+// Get a generic HTTP client for a specific base URL
+var apiClient = httpClientFactory.GetClient("https://api.example.com", TimeSpan.FromSeconds(60));
+
+// Make a request
+var response = await apiClient.GetAsync("/endpoint");
+var content = await response.Content.ReadAsStringAsync();
+
+// Get a pre-configured Telegram API client (optimized for Telegram)
+var telegramClient = httpClientFactory.GetTelegramClient();
+var botInfo = await telegramClient.GetAsync("/bot123456789:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getMe");
+
+// Get a client with custom headers
+var clientWithHeaders = httpClientFactory.GetClientWithHeaders(
+    "https://api.example.com",
+    new Dictionary<string, string>
+    {
+        { "X-Custom-Header", "custom-value" },
+        { "X-Request-ID", Guid.NewGuid().ToString() }
+    }
+);
+
+// Get a client with authentication
+var authenticatedClient = httpClientFactory.GetClientWithAuth(
+    "https://api.example.com",
+    "your-auth-token",
+    "Bearer"
+);
+
+// Dispose all clients when done (typically handled by DI container)
+httpClientFactory.Dispose();
+```
+
 ## WebhookHandler
 
 The `WebhookHandler` class processes incoming webhook updates from Telegram, validates their authenticity, and extracts structured data for further processing. It handles various update types including messages, callback queries, edited messages, and inline queries, providing a clean interface for webhook-based Telegram bot integration.
