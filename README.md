@@ -400,6 +400,62 @@ eventBus.Unsubscribe<UserRegisteredEvent>(handler);
 eventBus.Clear();
 ```
 
+## PollingStrategy
+
+The `PollingStrategy` class implements a polling mechanism for fetching Telegram updates as an alternative to webhooks. It continuously requests updates from the Telegram API, tracks the last processed update ID, and provides status information about the polling process.
+
+**Key features:**
+- Continuous polling loop with configurable interval
+- Graceful start/stop control
+- Status monitoring with `PollingStatus`
+- Event-based update handling via `OnUpdateReceived`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+services.AddLogging(builder => builder.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve dependencies
+var apiClient = serviceProvider.GetRequiredService<TelegramApiClient>();
+var pollingStrategy = serviceProvider.GetRequiredService<PollingStrategy>();
+
+// Subscribe to update events
+pollingStrategy.OnUpdateReceived += async update =>
+{
+    Console.WriteLine($"Received update {update.UpdateId} of type {update.MessageType}");
+    // Handle the update here
+};
+
+// Start polling with 2-second interval
+pollingStrategy.Start(TimeSpan.FromSeconds(2));
+
+// Get current status
+var status = pollingStrategy.GetStatus();
+Console.WriteLine($"Polling running: {status.IsRunning}");
+Console.WriteLine($"Last update ID: {status.LastUpdateId}");
+Console.WriteLine($"Last poll time: {status.LastPollTime}");
+
+// Manually process an update (useful for testing)
+var testUpdate = new TelegramUpdate { UpdateId = 123 };
+await pollingStrategy.ProcessUpdateAsync(testUpdate);
+
+// Stop polling gracefully
+await pollingStrategy.StopAsync();
+```
+
 ## WebhookHandler
 
 The `WebhookHandler` class processes incoming webhook updates from Telegram, validates their authenticity, and extracts structured data for further processing. It handles various update types including messages, callback queries, edited messages, and inline queries, providing a clean interface for webhook-based Telegram bot integration.
