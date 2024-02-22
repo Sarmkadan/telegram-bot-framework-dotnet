@@ -400,6 +400,38 @@ eventBus.Unsubscribe<UserRegisteredEvent>(handler);
 eventBus.Clear();
 ```
 
+## WebhookOptions
+
+The `WebhookOptions` class provides configuration settings for Telegram webhook mode. It defines the URL, secret token, connection limits, and update filtering options that control how your bot receives updates from Telegram via HTTPS webhooks.
+
+**Key features:**
+- HTTPS endpoint configuration for receiving Telegram updates
+- Secret token validation for secure webhook endpoints
+- Connection throttling with configurable maximum simultaneous connections
+- Update type filtering to receive only specific update types
+- Pending updates management
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Integration;
+
+// Configure webhook options
+services.Configure<WebhookOptions>(options =>
+{
+    options.Url = "https://yourdomain.com/api/webhook";
+    options.SecretToken = "your-secret-token";
+    options.MaxConnections = 40;
+    options.AllowedUpdates = new[] { "message", "callback_query" };
+    options.ListenPath = "/api/webhook/telegram";
+    options.DropPendingUpdates = false;
+});
+
+// Register WebhookService as hosted service
+services.AddHostedService<WebhookService>();
+```
+
 ## PollingStrategy
 
 The `PollingStrategy` class implements a polling mechanism for fetching Telegram updates as an alternative to webhooks. It continuously requests updates from the Telegram API, tracks the last processed update ID, and provides status information about the polling process.
