@@ -48,6 +48,76 @@ services.AddWebhookService(options => {
 });
 ```
 
+## WebhookService
+
+The `WebhookService` is a production-ready hosted service that automatically registers and unregisters Telegram webhooks, and dispatches validated updates to subscribed handlers. It implements `IHostedService` for seamless integration with ASP.NET Core applications and provides methods for manual webhook management.
+
+**Key features:**
+- Automatic webhook registration on application startup
+- Automatic webhook removal on application shutdown
+- Secret token validation for secure webhook endpoints
+- Update dispatching to event handlers
+- Runtime statistics via `GetInfo()`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+// Configure webhook options
+services.Configure<WebhookOptions>(options =>
+{
+    options.Url = "https://yourdomain.com/api/webhook";
+    options.SecretToken = "your-secret-token";
+    options.MaxConnections = 40;
+});
+
+// Register WebhookService as hosted service
+services.AddHostedService<WebhookService>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve WebhookService
+var webhookService = serviceProvider.GetRequiredService<WebhookService>();
+
+// Subscribe to update events
+webhookService.OnUpdateReceived += async update =>
+{
+    Console.WriteLine($"Received update {update.UpdateId} of type {update.MessageType}");
+    // Handle the update here
+};
+
+// Get webhook information
+var info = webhookService.GetInfo();
+Console.WriteLine($"Webhook registered: {info.IsRegistered}");
+Console.WriteLine($"Updates dispatched: {info.UpdatesDispatched}");
+
+// Manually register/unregister (typically handled automatically by IHostedService)
+await webhookService.RegisterAsync();
+await webhookService.UnregisterAsync();
+
+// Parse and validate incoming webhook payload
+var update = await webhookService.ParseAndValidateAsync(
+    jsonBody: requestBody,
+    secretTokenHeader: request.Headers["X-Telegram-Bot-Api-Secret-Token"]
+);
+
+if (update != null)
+{
+    await webhookService.DispatchUpdateAsync(update);
+}
+```
+
 ## ScheduledTaskManagerExtensions
 
 Provides fluent extension methods for managing scheduled tasks, allowing for flexible scheduling, querying, and monitoring of background operations. It simplifies the interaction with `ScheduledTaskManager`, enabling developers to easily schedule tasks, check for failures or overdue operations, and retrieve task statistics.
