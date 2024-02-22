@@ -432,6 +432,77 @@ services.Configure<WebhookOptions>(options =>
 services.AddHostedService<WebhookService>();
 ```
 
+## ExternalApiIntegration
+
+The `ExternalApiIntegration` class provides a robust wrapper for making HTTP requests to external APIs with built-in retry logic, timeout handling, and response parsing capabilities. It simplifies integration with third-party services by handling common concerns like retry policies, error logging, and JSON serialization.
+
+**Key features:**
+- Automatic retry with exponential backoff for transient failures
+- Timeout and error handling with comprehensive logging
+- Support for GET and POST requests with custom headers
+- Built-in JSON response parsing and deserialization
+- Configurable retry count for handling rate limits and service unavailability
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var externalApi = serviceProvider.GetRequiredService<ExternalApiIntegration>();
+
+// Make a GET request to fetch data from an external API
+var weatherData = await externalApi.GetAsync<WeatherResponse>(
+    "https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=London"
+);
+
+if (weatherData != null)
+{
+    Console.WriteLine($"Current temperature in London: {weatherData.Current.TempC}°C");
+}
+
+// Make a POST request to send data to an external API
+var userData = new { name = "John Doe", email = "john@example.com" };
+bool postSuccess = await externalApi.PostAsync(
+    "https://api.example.com/users",
+    userData,
+    apiKey: "your-api-key"
+);
+
+if (postSuccess)
+{
+    Console.WriteLine("User data posted successfully");
+}
+
+// Make a request with custom headers
+var headers = new Dictionary<string, string>
+{
+    { "X-API-Version", "2.0" },
+    { "X-Request-ID", Guid.NewGuid().ToString() }
+};
+
+string? apiResponse = await externalApi.GetWithHeadersAsync(
+    "https://api.example.com/v2/data",
+    headers
+);
+
+if (apiResponse != null)
+{
+    // Parse the response manually if needed
+    var parsedResponse = ExternalApiIntegration.ParseResponse<ApiResponse>(apiResponse);
+    Console.WriteLine($"API response: {parsedResponse?.Status}");
+}
+```
+
 ## PollingStrategy
 
 The `PollingStrategy` class implements a polling mechanism for fetching Telegram updates as an alternative to webhooks. It continuously requests updates from the Telegram API, tracks the last processed update ID, and provides status information about the polling process.
