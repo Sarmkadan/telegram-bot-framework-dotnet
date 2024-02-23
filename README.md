@@ -650,6 +650,82 @@ await pollingStrategy.StopAsync();
 
 The `ConversationFlowOptions` class configures the behavior of the conversation flow engine, including timeouts, limits, eviction policies, and user notifications. It controls how conversation states are managed, restored, and cleaned up, enabling durable multi-step interactions with configurable timeouts and automatic session restoration.
 
+## FlowDefinition
+
+The `FlowDefinition` class represents a complete conversation flow definition in the framework. It defines the flow's identity, structure, behavior, and metadata, enabling the creation of multi-step conversations with input validation, transitions, and configurable timeouts. Each flow consists of a sequence of steps that guide users through a specific interaction pattern, such as surveys, registrations, or multi-step commands.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.ConversationFlow;
+
+// Define a conversation flow for a user registration survey
+var registrationFlow = new FlowDefinition
+{
+    FlowId = "user_registration",
+    Name = "User Registration Survey",
+    Description = "Multi-step registration process for new users",
+    InitialStepId = "welcome",
+    Steps = new List<FlowStep>
+    {
+        new FlowStep
+        {
+            StepId = "welcome",
+            Prompt = "Welcome to our bot! Let's get you registered. What's your name?",
+            InputType = FlowInputType.Text,
+            IsTerminal = false,
+            DefaultNextStepId = "email",
+            QuickReplies = new List<string> { "Skip registration" }
+        },
+        new FlowStep
+        {
+            StepId = "email",
+            Prompt = "Great! Now please enter your email address:",
+            InputType = FlowInputType.Email,
+            IsTerminal = false,
+            VariableName = "user_email",
+            Validation = new FlowValidation
+            {
+                Pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                ErrorMessage = "Please enter a valid email address"
+            },
+            DefaultNextStepId = "confirmation"
+        },
+        new FlowStep
+        {
+            StepId = "confirmation",
+            Prompt = "Thank you! Here's what we have:\n\nName: {{user_name}}\nEmail: {{user_email}}\n\nIs this correct?",
+            InputType = FlowInputType.Confirmation,
+            IsTerminal = true,
+            Transitions = new List<FlowTransition>
+            {
+                new FlowTransition { From = "yes", To = "complete" },
+                new FlowTransition { From = "no", To = "welcome" }
+            }
+        },
+        new FlowStep
+        {
+            StepId = "complete",
+            Prompt = "Registration complete! Thank you for signing up.",
+            InputType = FlowInputType.None,
+            IsTerminal = true
+        }
+    },
+    Timeout = TimeSpan.FromMinutes(5),
+    AllowResume = true,
+    CompletionMenuId = "main_menu",
+    Metadata = new Dictionary<string, string>
+    {
+        { "category", "registration" },
+        { "version", "1.0" }
+    }
+};
+
+// Register the flow with the conversation engine
+var flowEngine = serviceProvider.GetRequiredService<ConversationFlowEngine>();
+flowEngine.DefineFlow(registrationFlow);
+```
+
 **Key features:**
 - Configurable default flow timeout and cleanup intervals
 - Automatic session restoration for interrupted conversations
