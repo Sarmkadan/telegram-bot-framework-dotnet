@@ -507,6 +507,93 @@ if (apiResponse != null)
 
 The `PollingStrategy` class implements a polling mechanism for fetching Telegram updates as an alternative to webhooks. It continuously requests updates from the Telegram API, tracks the last processed update ID, and provides status information about the polling process.
 
+## FileConversationStateStore
+
+The `FileConversationStateStore` class provides a file-system-backed implementation of `IConversationStateStore` that persists conversation states to JSON files on disk. Each user's active flow state is serialized to a dedicated file named `{userId}.json` in a configurable directory, enabling state persistence across application restarts and enabling state sharing between multiple bot instances that share the same storage directory.
+
+This implementation is ideal for single-host deployments with low-to-medium traffic. For high-concurrency or multi-node scenarios, consider using a database-backed store instead.
+
+**Key features:**
+- Automatic directory creation on initialization
+- Thread-safe file operations with `SemaphoreSlim` synchronization
+- Automatic cleanup of corrupted state files
+- Support for loading all active states at once for recovery scenarios
+- Configurable JSON serialization with enum support
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.ConversationFlow;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+services.AddLogging(builder => builder.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Configure conversation flow options to use file-based state store
+services.Configure<ConversationFlowOptions>(options =>
+{
+    // Use file-based state store for conversation persistence
+    options.StateStoreFactory = (loggerFactory) => 
+    {
+        var logger = loggerFactory.CreateLogger<FileConversationStateStore>();
+        return new FileConversationStateStore(
+            directory: "/var/lib/telegram-bot/states",
+            logger: logger
+        );
+    };
+    
+    // Other conversation flow options...
+    options.DefaultFlowTimeout = TimeSpan.FromMinutes(15);
+    options.AutoResumeOnSessionRestore = true;
+});
+
+// Register conversation flow engine
+services.AddConversationFlows();
+
+var provider = services.BuildServiceProvider();
+
+// Resolve the state store
+var stateStore = provider.GetRequiredService<IConversationStateStore>()
+    as FileConversationStateStore;
+
+// Save a user's conversation state
+var userState = new UserFlowState
+{
+    UserId = 123456789,
+    FlowKey = "survey",
+    CurrentStep = "question1",
+    Status = FlowStateStatus.Active,
+    CreatedAt = DateTime.UtcNow,
+    LastUpdated = DateTime.UtcNow
+};
+
+await stateStore.SaveStateAsync(userState);
+
+// Load a user's conversation state
+var loadedState = await stateStore.LoadStateAsync(123456789);
+if (loadedState != null)
+{
+    Console.WriteLine($"Loaded state for user {loadedState.UserId}: {loadedState.CurrentStep}");
+}
+
+// Load all active states (e.g., during application startup for recovery)
+var activeStates = await stateStore.LoadAllActiveStatesAsync();
+Console.WriteLine($"Found {activeStates.Count} active conversation states");
+
+// Delete a user's state when conversation completes
+await stateStore.DeleteStateAsync(123456789);
+```
+
 **Key features:**
 - Continuous polling loop with configurable interval
 - Graceful start/stop control
