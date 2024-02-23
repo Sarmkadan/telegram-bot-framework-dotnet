@@ -559,6 +559,86 @@ await pollingStrategy.ProcessUpdateAsync(testUpdate);
 await pollingStrategy.StopAsync();
 ```
 
+## ConversationFlowOptions
+
+The `ConversationFlowOptions` class configures the behavior of the conversation flow engine, including timeouts, limits, eviction policies, and user notifications. It controls how conversation states are managed, restored, and cleaned up, enabling durable multi-step interactions with configurable timeouts and automatic session restoration.
+
+**Key features:**
+- Configurable default flow timeout and cleanup intervals
+- Automatic session restoration for interrupted conversations
+- Flow eviction policies (silent discard, notify user, or reset to initial step)
+- Customizable user messages for timeouts and cancellations
+- Event publishing for flow lifecycle tracking
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+// Configure conversation flow options
+services.Configure<ConversationFlowOptions>(options =>
+{
+  // Set default flow timeout to 15 minutes
+  options.DefaultFlowTimeout = TimeSpan.FromMinutes(15);
+  
+  // Enable automatic session restoration
+  options.AutoResumeOnSessionRestore = true;
+  
+  // Allow up to 3 historical flow states per user
+  options.MaxHistoryPerUser = 3;
+  
+  // Customize timeout messages
+  options.FlowTimeoutMessage = "Your conversation timed out. Please start again.";
+  options.FlowAbandonedMessage = "Your current conversation was interrupted.";
+  
+  // Notify users when their flow times out instead of silently discarding
+  options.TimeoutEvictionPolicy = FlowEvictionPolicy.NotifyUser;
+  
+  // Set cleanup to run every 30 minutes
+  options.CleanupIntervalMinutes = 30;
+  
+  // Customize abort behavior
+  options.AbortKeyword = "/cancel";
+  options.AbortAcknowledgementMessage = "Flow cancelled. Use /start to begin again.";
+  
+  // Enable flow events for tracking
+  options.EnableFlowEvents = true;
+});
+
+// Register conversation flow engine
+services.AddConversationFlows();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve conversation flow engine
+var flowEngine = serviceProvider.GetRequiredService<ConversationFlowEngine>();
+
+// Define a conversation flow (typically in your bot commands)
+// flowEngine.DefineFlow("survey", flow =>
+// {
+//   flow.AddStep("welcome", async (ctx, ct) => 
+//   {
+//     await ctx.SendTextMessageAsync("Welcome to the survey!");
+//   })
+//   .AddStep("question1", async (ctx, ct) => 
+//   {
+//     await ctx.SendTextMessageAsync("What's your name?");
+//   })
+//   // ... additional steps
+//   .SetTimeout(TimeSpan.FromMinutes(10));
+// });
+```
+
 ## HttpClientFactory
 
 The `HttpClientFactory` provides a centralized way to create and manage HTTP clients with consistent configuration for connection pooling, timeouts, and headers. It helps avoid the common pitfall of socket exhaustion while maintaining proper resource cleanup through connection lifecycle management.
