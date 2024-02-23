@@ -650,6 +650,162 @@ await pollingStrategy.StopAsync();
 
 The `ConversationFlowOptions` class configures the behavior of the conversation flow engine, including timeouts, limits, eviction policies, and user notifications. It controls how conversation states are managed, restored, and cleaned up, enabling durable multi-step interactions with configurable timeouts and automatic session restoration.
 
+## ConversationFlowEngine
+
+The `ConversationFlowEngine` manages durable conversation flows that guide users through multi-step interactions with configurable timeouts, state persistence, and automatic session restoration. It handles flow registration, execution, state tracking, and cleanup, enabling complex workflows like surveys, registrations, and multi-step commands with minimal boilerplate.
+
+**Key features:**
+- Flow registration and discovery via `RegisterFlowAsync`/`GetFlowAsync`
+- User flow state management with `StartFlowAsync`, `ProcessInputAsync`, `ResumeFlowAsync`
+- Active flow tracking via `GetActiveFlowStateAsync`, `IsUserInFlowAsync`
+- Flow state history and cleanup with `GetFlowHistoryAsync`, `CleanupExpiredFlowStatesAsync`
+- Graceful flow termination via `AbortFlowAsync`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+BotToken = "your-bot-token",
+BotUsername = "your-bot-username"
+});
+
+// Configure conversation flow options
+services.Configure<ConversationFlowOptions>(options =>
+{
+// Set default flow timeout to 10 minutes
+options.DefaultFlowTimeout = TimeSpan.FromMinutes(10);
+
+// Enable automatic session restoration
+options.AutoResumeOnSessionRestore = true;
+
+// Allow up to 5 historical flow states per user
+options.MaxHistoryPerUser = 5;
+
+// Customize timeout messages
+options.FlowTimeoutMessage = "Your conversation timed out. Please start again.";
+options.FlowAbandonedMessage = "Your current conversation was interrupted.";
+
+// Notify users when their flow times out instead of silently discarding
+options.TimeoutEvictionPolicy = FlowEvictionPolicy.NotifyUser;
+
+// Set cleanup to run every 30 minutes
+options.CleanupIntervalMinutes = 30;
+
+// Customize abort behavior
+options.AbortKeyword = "/cancel";
+options.AbortAcknowledgementMessage = "Flow cancelled. Use /start to begin again.";
+});
+
+// Register conversation flow engine
+services.AddConversationFlows();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve conversation flow engine
+var flowEngine = serviceProvider.GetRequiredService<ConversationFlowEngine>();
+
+// Define a simple survey flow
+var surveyFlow = new FlowDefinition
+{
+FlowId = "user_survey",
+Name = "User Feedback Survey",
+Description = "Collects user feedback through a multi-step survey",
+InitialStepId = "welcome",
+Steps = new List<FlowStep>
+{
+new FlowStep
+{
+StepId = "welcome",
+Prompt = "Welcome to our feedback survey! Let's take 2 minutes to improve. Ready to start?",
+InputType = FlowInputType.Confirmation,
+IsTerminal = false,
+DefaultNextStepId = "rating"
+},
+new FlowStep
+{
+StepId = "rating",
+Prompt = "On a scale of 1-5, how satisfied are you with our service?",
+InputType = FlowInputType.Number,
+IsTerminal = false,
+Validation = new FlowValidation
+{
+Min = 1,
+Max = 5,
+ErrorMessage = "Please enter a number between 1 and 5"
+},
+DefaultNextStepId = "comments"
+},
+new FlowStep
+{
+StepId = "comments",
+Prompt = "What would you like us to improve? (Optional)",
+InputType = FlowInputType.Text,
+IsTerminal = true
+}
+},
+Timeout = TimeSpan.FromMinutes(8),
+AllowResume = true,
+CompletionMenuId = "main_menu"
+};
+
+// Register the flow with the engine
+await flowEngine.RegisterFlowAsync(surveyFlow);
+
+// Later, when a user sends a message that should start the flow
+var userId = 123456789L;
+var chatId = 987654321L;
+
+// Check if user is already in a flow
+bool isInFlow = await flowEngine.IsUserInFlowAsync(userId);
+if (!isInFlow)
+{
+// Start the survey flow for this user
+var startResult = await flowEngine.StartFlowAsync(userId, chatId, "user_survey");
+Console.WriteLine($"Flow started: {startResult.Status}");
+}
+
+// Process user input through the flow
+var input = "4";
+var processResult = await flowEngine.ProcessInputAsync(userId, chatId, input);
+Console.WriteLine($"Step completed: {processResult.CurrentStepId}, Next: {processResult.NextStepId}");
+
+// Get the user's current active flow state
+var activeState = await flowEngine.GetActiveFlowStateAsync(userId);
+if (activeState != null)
+{
+Console.WriteLine($"User {userId} is in flow '{activeState.FlowKey}' at step '{activeState.CurrentStepId}'");
+}
+
+// List all registered flows
+var allFlows = await flowEngine.GetAllFlowsAsync();
+Console.WriteLine($"Registered flows: {allFlows.Count}");
+
+// Get a specific flow definition
+var flowDefinition = await flowEngine.GetFlowAsync("user_survey");
+if (flowDefinition != null)
+{
+Console.WriteLine($"Flow '{flowDefinition.Name}' has {flowDefinition.Steps.Count} steps");
+}
+
+// Abort the flow if user wants to cancel
+await flowEngine.AbortFlowAsync(userId);
+
+// Get flow history for a user
+var history = await flowEngine.GetFlowHistoryAsync(userId);
+Console.WriteLine($"User {userId} has {history.Count} historical flow states");
+
+// Cleanup expired flow states (typically called periodically)
+int expiredCount = await flowEngine.CleanupExpiredFlowStatesAsync();
+Console.WriteLine($"Cleaned up {expiredCount} expired flow states");
+```
+
 ## FlowDefinition
 
 The `FlowDefinition` class represents a complete conversation flow definition in the framework. It defines the flow's identity, structure, behavior, and metadata, enabling the creation of multi-step conversations with input validation, transitions, and configurable timeouts. Each flow consists of a sequence of steps that guide users through a specific interaction pattern, such as surveys, registrations, or multi-step commands.
