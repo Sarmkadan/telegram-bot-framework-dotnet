@@ -190,6 +190,107 @@ await provider.SetManyAsync(new Dictionary<string, string> { { "key3", "val3" } 
 await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
 ```
 
+## ConversationFlowExtensions
+
+Provides extension methods for registering conversation flow services in the dependency-injection container and for building `FlowDefinition` instances using a fluent API. Includes methods for both in-memory and file-based state persistence, enabling durable multi-step conversations that survive process restarts.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+using TelegramBotFramework.Integration;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+// Register conversation flow engine with in-memory state store
+services.AddConversationFlows(opts =>
+{
+    opts.DefaultFlowTimeout = TimeSpan.FromMinutes(15);
+    opts.EnableFlowEvents = true;
+    opts.AbortKeyword = "/stop";
+});
+
+// OR register with file-based state store for persistence across restarts
+services.AddConversationFlowsWithFileStore(
+    stateDirectory: "/var/lib/telegram-bot/conversation-states",
+    configure: opts => opts.DefaultFlowTimeout = TimeSpan.FromMinutes(10)
+);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve conversation flow engine
+var flowEngine = serviceProvider.GetRequiredService<ConversationFlowEngine>();
+
+// Create a conversation flow using the fluent builder API
+var onboardingFlow = ConversationFlowExtensions
+    .CreateFlow("user_onboarding", "User Onboarding Flow")
+    .WithDescription("Guides new users through the initial setup process")
+    .WithTimeout(TimeSpan.FromMinutes(5))
+    .AddStep(new FlowStep
+    {
+        StepId = "welcome",
+        Prompt = "Welcome! Let's get started. What's your name?",
+        InputType = FlowInputType.Text,
+        VariableName = "user_name",
+        DefaultNextStepId = "ask_email"
+    })
+    .AddStep(new FlowStep
+    {
+        StepId = "ask_email",
+        Prompt = "Great! What's your email address?",
+        InputType = FlowInputType.Email,
+        VariableName = "user_email",
+        IsTerminal = false,
+        DefaultNextStepId = "confirm_details"
+    })
+    .AddStep(new FlowStep
+    {
+        StepId = "confirm_details",
+        Prompt = "Please confirm your details:\n\nName: {{user_name}}\nEmail: {{user_email}}\n\nIs this correct?",
+        InputType = FlowInputType.Confirmation,
+        IsTerminal = true,
+        Transitions = new List<FlowTransition>
+        {
+            new FlowTransition { From = "yes", To = "complete" },
+            new FlowTransition { From = "no", To = "welcome" }
+        }
+    })
+    .AddStep(new FlowStep
+    {
+        StepId = "complete",
+        Prompt = "Onboarding complete! Thank you for signing up.",
+        InputType = FlowInputType.None,
+        IsTerminal = true
+    })
+    .OnCompletionNavigateTo("main_menu")
+    .AllowResume(true)
+    .WithMetadata("category", "onboarding")
+    .WithMetadata("priority", "high")
+    .Build();
+
+// Register the flow with the engine
+await flowEngine.RegisterFlowAsync(onboardingFlow);
+
+// Later, when a user starts the flow
+var userId = 123456789L;
+var chatId = 987654321L;
+
+// Start the flow for this user
+await flowEngine.StartFlowAsync(userId, chatId, "user_onboarding");
+
+// Process user input through the flow
+await flowEngine.ProcessInputAsync(userId, chatId, "John Doe");
+await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
+await flowEngine.ProcessInputAsync(userId, chatId, "yes");
+```
+
 ## BotConfigurationTestsExtensions
 
 Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
