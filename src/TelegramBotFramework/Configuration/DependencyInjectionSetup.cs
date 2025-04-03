@@ -1,0 +1,150 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+namespace TelegramBotFramework.Configuration;
+
+/// <summary>
+/// Dependency injection setup and service registration.
+/// </summary>
+public static class DependencyInjectionSetup
+{
+    /// <summary>
+    /// Registers all bot framework services in the DI container.
+    /// </summary>
+    public static Microsoft.Extensions.DependencyInjection.IServiceCollection
+        AddTelegramBotFramework(
+            this Microsoft.Extensions.DependencyInjection.IServiceCollection services,
+            Models.BotConfiguration botConfig)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        if (botConfig == null)
+            throw new ArgumentNullException(nameof(botConfig));
+
+        botConfig.Validate();
+
+        // Register configuration as singleton
+        services.AddSingleton(botConfig);
+
+        // Register repositories as singletons (in-memory for Phase 1)
+        services.AddSingleton<Repositories.IUserRepository, Repositories.InMemoryUserRepository>();
+        services.AddSingleton<Repositories.ICommandRepository, Repositories.InMemoryCommandRepository>();
+        services.AddSingleton<Repositories.IMessageRepository, Repositories.InMemoryMessageRepository>();
+        services.AddSingleton<Repositories.ISessionRepository, Repositories.InMemorySessionRepository>();
+        services.AddSingleton<Repositories.IMenuRepository, Repositories.InMemoryMenuRepository>();
+
+        // Register services as singletons
+        services.AddSingleton<Services.IUserService, Services.UserService>();
+        services.AddSingleton<Services.ICommandService, Services.CommandService>();
+        services.AddSingleton<Services.ISessionService, Services.SessionService>();
+        services.AddSingleton<Services.IMenuService, Services.MenuService>();
+        services.AddSingleton<Services.IMessageService, Services.MessageService>();
+
+        // Register logging
+        services.AddLogging(config =>
+        {
+            config.ClearProviders();
+            config.AddConsole();
+
+            var logLevel = MapLogLevel(botConfig.LogLevel);
+            config.SetMinimumLevel(logLevel);
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Maps BotConfiguration LogLevel to Microsoft.Extensions.Logging.LogLevel.
+    /// </summary>
+    private static Microsoft.Extensions.Logging.LogLevel MapLogLevel(Models.LogLevel configLevel)
+    {
+        return configLevel switch
+        {
+            Models.LogLevel.Debug => Microsoft.Extensions.Logging.LogLevel.Debug,
+            Models.LogLevel.Info => Microsoft.Extensions.Logging.LogLevel.Information,
+            Models.LogLevel.Warning => Microsoft.Extensions.Logging.LogLevel.Warning,
+            Models.LogLevel.Error => Microsoft.Extensions.Logging.LogLevel.Error,
+            Models.LogLevel.Critical => Microsoft.Extensions.Logging.LogLevel.Critical,
+            _ => Microsoft.Extensions.Logging.LogLevel.Information
+        };
+    }
+}
+
+/// <summary>
+/// Default configuration loader from appsettings.json.
+/// </summary>
+public class ConfigurationLoader
+{
+    /// <summary>
+    /// Loads bot configuration from JSON file.
+    /// </summary>
+    public static Models.BotConfiguration LoadFromJsonFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException($"Configuration file not found: {filePath}");
+
+        var json = File.ReadAllText(filePath);
+        var doc = System.Text.Json.JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        var config = new Models.BotConfiguration
+        {
+            BotToken = root.GetProperty("botToken").GetString() ?? string.Empty,
+            BotUsername = root.GetProperty("botUsername").GetString() ?? string.Empty,
+            DatabaseConnectionString = root.TryGetProperty("databaseConnectionString", out var dbProp)
+                ? dbProp.GetString()
+                : null,
+            SessionTimeoutMinutes = root.TryGetProperty("sessionTimeoutMinutes", out var timeoutProp)
+                ? timeoutProp.GetInt32()
+                : Constants.BotConstants.DefaultSessionTimeoutMinutes,
+            MessageProcessingTimeoutSeconds = root.TryGetProperty("messageProcessingTimeoutSeconds", out var msgTimeoutProp)
+                ? msgTimeoutProp.GetInt32()
+                : Constants.BotConstants.DefaultMessageTimeoutSeconds,
+            MaxConcurrentRequests = root.TryGetProperty("maxConcurrentRequests", out var concurrentProp)
+                ? concurrentProp.GetInt32()
+                : Constants.BotConstants.DefaultMaxConcurrentRequests,
+            EnableLogging = root.TryGetProperty("enableLogging", out var loggingProp)
+                ? loggingProp.GetBoolean()
+                : true,
+            EnableRateLimiting = root.TryGetProperty("enableRateLimiting", out var rateLimitProp)
+                ? rateLimitProp.GetBoolean()
+                : true,
+        };
+
+        config.Validate();
+        return config;
+    }
+
+    /// <summary>
+    /// Loads bot configuration from environment variables.
+    /// </summary>
+    public static Models.BotConfiguration LoadFromEnvironment()
+    {
+        var botToken = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN")
+            ?? throw new InvalidOperationException("TELEGRAM_BOT_TOKEN environment variable not set");
+
+        var botUsername = Environment.GetEnvironmentVariable("TELEGRAM_BOT_USERNAME")
+            ?? throw new InvalidOperationException("TELEGRAM_BOT_USERNAME environment variable not set");
+
+        var config = new Models.BotConfiguration
+        {
+            BotToken = botToken,
+            BotUsername = botUsername,
+            DatabaseConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING"),
+            SessionTimeoutMinutes = int.TryParse(
+                Environment.GetEnvironmentVariable("SESSION_TIMEOUT_MINUTES"), out var timeout)
+                ? timeout
+                : Constants.BotConstants.DefaultSessionTimeoutMinutes,
+            EnableLogging = bool.TryParse(
+                Environment.GetEnvironmentVariable("ENABLE_LOGGING"), out var logging)
+                ? logging
+                : true,
+        };
+
+        config.Validate();
+        return config;
+    }
+}
