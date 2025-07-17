@@ -1,0 +1,91 @@
+# Visual Studio
+.vs/
+.vscode/
+*.sln.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build results
+bin/
+obj/
+.nuget/
+
+# Test Results
+TestResults/
+coverage/
+*.trx
+
+# ReSharper
+.resharper
+.resharper.user
+_ReSharper*/
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+
+# IDE settings
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/NuGet.Config
+.nuget/NuGet.exe
+.nuget/packages/
+
+# Local environment files
+.env
+.env.local
+appsettings.Development.json
+appsettings.local.json
+secrets.json
+
+# Runtime files
+launchSettings.json
+
+# Node/npm (for potential frontend components)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+.vscode/launch.json
+.vscode/settings.json
+
+# Project specific
+logs/
+*.log
+dist/
+publish/
