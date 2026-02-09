@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Background task worker for executing long-running operations without blocking requests.
 /// Uses a queue to manage tasks and workers for execution.
 /// </summary>
-public class BackgroundTaskWorker : IDisposable
+public sealed class BackgroundTaskWorker : IDisposable
 {
     private readonly Queue<BackgroundTask> _taskQueue = new();
     private readonly SemaphoreSlim _taskAvailable;
@@ -32,7 +33,7 @@ public class BackgroundTaskWorker : IDisposable
     /// </summary>
     public void QueueTask(Func<CancellationToken, Task> taskFunc, string taskName = "UnnamedTask")
     {
-        if (taskFunc == null)
+        if (taskFunc  is null)
             throw new ArgumentNullException(nameof(taskFunc));
 
         var task = new BackgroundTask
@@ -57,7 +58,7 @@ public class BackgroundTaskWorker : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_workerTask != null && !_workerTask.IsCompleted)
+        if (_workerTask  is not null && !_workerTask.IsCompleted)
         {
             _logger.LogWarning("Background worker is already running");
             return;
@@ -77,7 +78,7 @@ public class BackgroundTaskWorker : IDisposable
         _logger.LogInformation("Stopping background task worker...");
         _cancellationTokenSource.Cancel();
 
-        if (_workerTask != null)
+        if (_workerTask  is not null)
         {
             try
             {
@@ -126,7 +127,7 @@ public class BackgroundTaskWorker : IDisposable
                     }
                 }
 
-                if (task != null && _runningTasks < _maxConcurrentTasks)
+                if (task  is not null && _runningTasks < _maxConcurrentTasks)
                 {
                     Interlocked.Increment(ref _runningTasks);
 
@@ -182,7 +183,7 @@ public class BackgroundTaskWorker : IDisposable
 /// <summary>
 /// Represents a background task to be executed.
 /// </summary>
-public class BackgroundTask
+public sealed class BackgroundTask
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -195,7 +196,7 @@ public class BackgroundTask
 /// <summary>
 /// Statistics about the background task worker.
 /// </summary>
-public class WorkerStatistics
+public sealed class WorkerStatistics
 {
     public int QueuedTaskCount { get; set; }
     public int RunningTaskCount { get; set; }

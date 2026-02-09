@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -125,7 +126,7 @@ public static class ValidationUtility
     /// </summary>
     public static bool IsValidLength(string? value, int minLength, int maxLength)
     {
-        if (value == null)
+        if (value  is null)
             return minLength == 0;
 
         return value.Length >= minLength && value.Length <= maxLength;

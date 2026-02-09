@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -26,7 +27,7 @@ public interface IRateLimitingStrategy
 /// Token bucket algorithm for rate limiting.
 /// Replenishes tokens at a fixed rate, allowing burst traffic.
 /// </summary>
-public class TokenBucketStrategy : IRateLimitingStrategy
+public sealed class TokenBucketStrategy : IRateLimitingStrategy
 {
     private readonly int _bucketCapacity;
     private readonly int _tokensPerSecond;
@@ -104,7 +105,7 @@ public class TokenBucketStrategy : IRateLimitingStrategy
 /// Sliding window rate limiting strategy.
 /// Tracks requests within a rolling time window.
 /// </summary>
-public class SlidingWindowStrategy : IRateLimitingStrategy
+public sealed class SlidingWindowStrategy : IRateLimitingStrategy
 {
     private readonly int _requestsPerWindow;
     private readonly TimeSpan _windowDuration;
@@ -167,7 +168,7 @@ public class SlidingWindowStrategy : IRateLimitingStrategy
 /// Fixed window rate limiting strategy.
 /// Simple approach that resets counter at fixed time intervals.
 /// </summary>
-public class FixedWindowStrategy : IRateLimitingStrategy
+public sealed class FixedWindowStrategy : IRateLimitingStrategy
 {
     private readonly int _requestsPerWindow;
     private readonly TimeSpan _windowDuration;

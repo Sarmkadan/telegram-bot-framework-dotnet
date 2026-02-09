@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ using Utilities;
 /// Client for interacting with Telegram Bot API.
 /// Provides methods for sending messages, managing updates, and querying bot state.
 /// </summary>
-public class TelegramApiClient
+public sealed class TelegramApiClient
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly string _botToken;
@@ -195,7 +196,7 @@ public class TelegramApiClient
 }
 
 // Dummy logger for demonstration when DI logger not available
-internal class ConsoleLogger<T> : ILogger<T>
+internal sealed class ConsoleLogger<T> : ILogger<T>
 {
     public IDisposable BeginScope<TState>(TState state) => new NullDisposable();
     public bool IsEnabled(LogLevel logLevel) => true;
@@ -205,4 +206,4 @@ internal class ConsoleLogger<T> : ILogger<T>
     }
 }
 
-internal class NullDisposable : IDisposable { public void Dispose() { } }
+internal sealed class NullDisposable : IDisposable { public void Dispose() { } }

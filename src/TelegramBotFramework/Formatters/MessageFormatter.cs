@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ using TelegramBotFramework.Models;
 /// Formats messages for display and logging with support for different output formats.
 /// Handles markdown, plain text, and HTML formatting.
 /// </summary>
-public class MessageFormatter
+public sealed class MessageFormatter
 {
     /// <summary>
     /// Formats a message as plain text suitable for logging.

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Examples
     /// Basic bot example demonstrating command registration and simple message handling.
     /// This example shows the fundamental patterns for building a Telegram bot using the framework.
     /// </summary>
-    public class BasicBotExample
+public sealed class BasicBotExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<BasicBotExample> _logger;

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class BotController : ControllerBase
+public sealed class BotController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly ICommandService _commandService;
@@ -54,7 +55,7 @@ public class BotController : ControllerBase
     [HttpPost("message")]
     public async Task<IActionResult> ProcessMessage([FromBody] ProcessMessageRequest request, CancellationToken cancellationToken = default)
     {
-        if (request == null)
+        if (request  is null)
         {
             return BadRequest("Request body is required");
         }
@@ -108,7 +109,7 @@ public class BotController : ControllerBase
                 var commandName = ExtractCommandName(request.Content);
                 var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
 
-                if (command != null)
+                if (command  is not null)
                 {
                     context.Command = command;
                     context = await _commandService.ExecuteCommandAsync(context, cancellationToken);
@@ -149,7 +150,7 @@ public class BotController : ControllerBase
         try
         {
             var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
-            if (user == null)
+            if (user  is null)
             {
                 return NotFound($"User {userId} not found");
             }
@@ -172,7 +173,7 @@ public class BotController : ControllerBase
         try
         {
             var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-            if (session == null)
+            if (session  is null)
             {
                 return NotFound($"No active session for user {userId}");
             }
@@ -213,7 +214,7 @@ public class BotController : ControllerBase
         try
         {
             var menu = await _menuService.GetMenuAsync(menuId, cancellationToken);
-            if (menu == null)
+            if (menu  is null)
             {
                 return NotFound($"Menu {menuId} not found");
             }
@@ -240,7 +241,7 @@ public class BotController : ControllerBase
 /// <summary>
 /// Request model for message processing.
 /// </summary>
-public class ProcessMessageRequest
+public sealed class ProcessMessageRequest
 {
     public long UserId { get; set; }
 

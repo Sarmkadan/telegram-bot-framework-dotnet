@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.Middleware;
 /// API key authentication middleware that validates requests against stored API keys.
 /// Supports per-endpoint authentication configuration and multiple key formats.
 /// </summary>
-public class AuthenticationMiddleware
+public sealed class AuthenticationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<AuthenticationMiddleware> _logger;
