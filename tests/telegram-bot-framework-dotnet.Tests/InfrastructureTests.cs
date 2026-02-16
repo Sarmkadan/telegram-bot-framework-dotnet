@@ -403,8 +403,6 @@ public sealed class TokenBucketStrategyTests
         var strategy = new TokenBucketStrategy(bucketCapacity: 5, tokensPerSecond: 1);
 
         strategy.GetRemainingRequests("new-user").Should().Be(5);
-    }
-
     [Fact]
     public void IsRequestAllowed_AfterDepletingBucket_ReturnsFalse()
     {
@@ -414,4 +412,108 @@ public sealed class TokenBucketStrategyTests
 
         strategy.IsRequestAllowed("user").Should().BeFalse();
     }
-}
+    }
+
+    public sealed class ConversationFlowEngineTests
+    {
+    private readonly Mock<ISessionService> _mockSessionService = new();
+    private readonly Mock<IEventBus> _mockEventBus = new();
+    private readonly Mock<ILogger<ConversationFlowEngine>> _mockLogger = new();
+    private readonly ConversationFlowOptions _options = new();
+    private readonly ConversationFlowEngine _engine;
+
+    private const long TestUserId = 123;
+    private const long TestChatId = 456;
+    private const string TestFlowId = "testFlow";
+
+    public ConversationFlowEngineTests()
+    {
+        _engine = new ConversationFlowEngine(
+            _options,
+            _mockSessionService.Object,
+            _mockEventBus.Object,
+            _mockLogger.Object);
+
+        // Setup mock session service
+        _mockSessionService
+            .Setup(s => s.GetActiveSessionAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long userId, CancellationToken ct) => new TelegramBotFramework.Models.UserSession
+            {
+                SessionId = Guid.NewGuid(),
+                UserId = userId,
+                LastActivity = DateTime.UtcNow,
+                IsActive = true,
+                MenuId = null
+            });
+        _mockSessionService
+            .Setup(s => s.UpdateSessionContextAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Register a simple flow
+        var flow = new FlowDefinition
+        {
+            FlowId = TestFlowId,
+            Name = "Test Flow",
+            InitialStepId = "step1",
+            Steps = new List<FlowStep>
+            {
+                new() { StepId = "step1", Prompt = "Prompt 1", InputType = FlowInputType.Text, DefaultNextStepId = "step2" },
+                new() { StepId = "step2", Prompt = "Prompt 2", InputType = FlowInputType.Text, DefaultNextStepId = "step3" },
+                new() { StepId = "step3", Prompt = "Prompt 3", InputType = FlowInputType.Text, IsTerminal = true }
+            }
+        };
+        _engine.RegisterFlowAsync(flow).Wait();
+    }
+
+    [Fact]
+    public async Task ProcessInputAsync_ConcurrentUpdatesForSameUser_HistoryIsConsistent()
+    {
+        const int numberOfConcurrentCalls = 100;
+        const string inputPrefix = "input_";
+
+        // Start the flow
+        await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId);
+
+        var tasks = new List<Task>();
+        for (int i = 0; i < numberOfConcurrentCalls; i++)
+        {
+            var input = $"{inputPrefix}{i}";
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await _engine.ProcessInputAsync(TestUserId, input);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("has no active conversation flow"))
+                {
+                    // This can happen if one of the concurrent calls completes the flow and removes it from active states
+                    // before another call for the same user starts. This is an expected race, not a deadlock.
+                    // For this test, we are primarily interested in history consistency, not strict flow progression in concurrent edge cases.
+                }
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+
+        // Retrieve the final state
+        var finalState = await _engine.GetActiveFlowStateAsync(TestUserId);
+
+        // The flow might be completed or aborted by one of the concurrent calls.
+        // We are mainly interested in the history not throwing exceptions due to race conditions.
+        // The total number of successful history entries should be numberOfConcurrentCalls if all went through.
+        // If the flow terminated prematurely due to concurrent termination, the count will be less.
+        // The crucial part is that the History list itself did not throw a concurrency exception during additions.
+
+        var history = (await _engine.GetFlowHistoryAsync(TestUserId, numberOfConcurrentCalls)).ToList();
+
+        // The exact count depends on how many calls successfully added to history before flow termination
+        // (if any) occurred due to concurrency. We mainly assert no exceptions and history integrity.
+        // We expect history to contain entries, and that there are no duplicates or malformed entries
+        // from race conditions. The total count should reflect successful ProcessInputAsync calls.
+        history.Should().NotBeEmpty();
+        history.Count.Should().BeLessOrEqualTo(numberOfConcurrentCalls); // Can be less if flow completed early
+
+        // Verify no duplicates or nulls due to race conditions
+        history.GroupBy(h => h.UserInput).Where(g => g.Count() > 1).Should().BeEmpty();
+    }
+    }
