@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ using System.Collections.Concurrent;
 /// Suitable for single-instance deployments and development.
 /// Automatically removes expired entries on access.
 /// </summary>
-public class LocalCacheProvider : ICacheProvider
+public sealed class LocalCacheProvider : ICacheProvider
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
     private long _hitCount = 0;
@@ -105,7 +106,7 @@ public class LocalCacheProvider : ICacheProvider
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
         var existing = await GetAsync<T>(key);
-        if (existing != null)
+        if (existing  is not null)
             return existing;
 
         var value = await factory();

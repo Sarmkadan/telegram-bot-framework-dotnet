@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Repositories;
 /// <summary>
 /// In-memory implementation of message repository.
 /// </summary>
-public class InMemoryMessageRepository : IMessageRepository
+public sealed class InMemoryMessageRepository : IMessageRepository
 {
     private readonly Dictionary<long, Models.Message> _messages = new();
     private long _messageIdCounter = 1;
@@ -146,7 +147,7 @@ public class InMemoryMessageRepository : IMessageRepository
 /// <summary>
 /// In-memory implementation of session repository.
 /// </summary>
-public class InMemorySessionRepository : ISessionRepository
+public sealed class InMemorySessionRepository : ISessionRepository
 {
     private readonly Dictionary<string, Models.UserSession> _sessions = new();
     private readonly object _lockObj = new();
@@ -272,7 +273,7 @@ public class InMemorySessionRepository : ISessionRepository
 /// <summary>
 /// In-memory implementation of menu repository.
 /// </summary>
-public class InMemoryMenuRepository : IMenuRepository
+public sealed class InMemoryMenuRepository : IMenuRepository
 {
     private readonly Dictionary<string, Models.Menu> _menus = new();
     private readonly object _lockObj = new();

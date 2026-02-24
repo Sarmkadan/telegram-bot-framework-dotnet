@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class LocalCacheProviderTests
+public sealed class LocalCacheProviderTests
 {
     private readonly LocalCacheProvider _cache = new();
 
@@ -158,7 +159,7 @@ public class LocalCacheProviderTests
     }
 }
 
-public class EventBusTests
+public sealed class EventBusTests
 {
     private readonly Mock<ILogger<EventBus>> _mockLogger = new();
     private readonly EventBus _bus;
@@ -286,7 +287,7 @@ public class EventBusTests
     }
 }
 
-public class SlidingWindowStrategyTests
+public sealed class SlidingWindowStrategyTests
 {
     [Fact]
     public void IsRequestAllowed_WhenFirstRequest_ReturnsTrue()
@@ -338,7 +339,7 @@ public class SlidingWindowStrategyTests
     }
 }
 
-public class FixedWindowStrategyTests
+public sealed class FixedWindowStrategyTests
 {
     [Fact]
     public void IsRequestAllowed_FirstRequest_ReturnsTrue()
@@ -386,7 +387,7 @@ public class FixedWindowStrategyTests
     }
 }
 
-public class TokenBucketStrategyTests
+public sealed class TokenBucketStrategyTests
 {
     [Fact]
     public void IsRequestAllowed_InitiallyWithFullBucket_ReturnsTrue()

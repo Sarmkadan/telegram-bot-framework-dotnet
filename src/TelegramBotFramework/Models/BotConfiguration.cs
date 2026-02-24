@@ -10,7 +10,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents the bot configuration settings.
 /// </summary>
-public class BotConfiguration
+public sealed class BotConfiguration
 {
     public string BotToken { get; set; } = string.Empty;
 

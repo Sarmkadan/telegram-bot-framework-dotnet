@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -10,7 +11,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class BotUserTests
+public sealed class BotUserTests
 {
     [Fact]
     public void GetDisplayName_WithFirstAndLastName_ReturnsFullName()
@@ -93,7 +94,7 @@ public class BotUserTests
     }
 }
 
-public class CommandTests
+public sealed class CommandTests
 {
     [Fact]
     public void CanExecuteBy_AdminCommandAndUserRole_ReturnsFalse()
@@ -216,7 +217,7 @@ public class CommandTests
     }
 }
 
-public class UserSessionTests
+public sealed class UserSessionTests
 {
     [Fact]
     public void IsExpired_WhenExpiresAtIsInThePast_ReturnsTrue()
@@ -332,7 +333,7 @@ public class UserSessionTests
     }
 }
 
-public class MenuTests
+public sealed class MenuTests
 {
     [Fact]
     public void AddButton_IncreasesButtonCount()
@@ -438,7 +439,7 @@ public class MenuTests
     }
 }
 
-public class InMemoryUserRepositoryTests
+public sealed class InMemoryUserRepositoryTests
 {
     private static BotUser CreateUser(long telegramId, string firstName, string? username = null,
         UserStatus status = UserStatus.Active) =>

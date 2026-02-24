@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ using TelegramBotFramework.Models;
 /// Formats data as XML output for exports and interoperability.
 /// Handles proper XML escaping and hierarchical structures.
 /// </summary>
-public class XmlFormatter : IOutputFormatter
+public sealed class XmlFormatter : IOutputFormatter
 {
     private readonly bool _pretty;
 
@@ -94,7 +95,7 @@ public class XmlFormatter : IOutputFormatter
     {
         var element = new XElement(elementName);
 
-        if (obj == null)
+        if (obj  is null)
             return element;
 
         var type = obj.GetType();
@@ -107,7 +108,7 @@ public class XmlFormatter : IOutputFormatter
 
             var value = prop.GetValue(obj);
 
-            if (value == null)
+            if (value  is null)
             {
                 element.Add(new XElement(prop.Name));
             }

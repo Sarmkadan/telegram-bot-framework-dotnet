@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.Events;
 /// Helper class for publishing events to the event bus.
 /// Provides convenience methods and ensures consistent event publishing.
 /// </summary>
-public class EventPublisher
+public sealed class EventPublisher
 {
     private readonly IEventBus _eventBus;
     private readonly ILogger<EventPublisher> _logger;
@@ -69,7 +70,7 @@ public class EventPublisher
 /// <summary>
 /// Example event handler for message received events.
 /// </summary>
-public class LoggingMessageEventHandler : EventHandlerBase<MessageReceivedEvent>
+public sealed class LoggingMessageEventHandler : EventHandlerBase<MessageReceivedEvent>
 {
     public LoggingMessageEventHandler(ILogger<LoggingMessageEventHandler>? logger = null) : base(logger) { }
 
@@ -85,7 +86,7 @@ public class LoggingMessageEventHandler : EventHandlerBase<MessageReceivedEvent>
 /// <summary>
 /// Example event handler for command executed events.
 /// </summary>
-public class LoggingCommandEventHandler : EventHandlerBase<CommandExecutedEvent>
+public sealed class LoggingCommandEventHandler : EventHandlerBase<CommandExecutedEvent>
 {
     public LoggingCommandEventHandler(ILogger<LoggingCommandEventHandler>? logger = null) : base(logger) { }
 
@@ -94,7 +95,7 @@ public class LoggingCommandEventHandler : EventHandlerBase<CommandExecutedEvent>
         var status = @event.Success ? "succeeded" : "failed";
         var message = $"Command {status}: /{@event.CommandName} by user {@event.UserId}";
 
-        if (@event.ErrorMessage != null)
+        if (@event.ErrorMessage  is not null)
             message += $" - Error: {@event.ErrorMessage}";
 
         _logger.LogInformation(message);

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -44,7 +45,7 @@ public interface IBotOrchestrator
 /// <summary>
 /// Implementation of bot orchestrator.
 /// </summary>
-public class BotOrchestrator : IBotOrchestrator
+public sealed class BotOrchestrator : IBotOrchestrator
 {
     private readonly IUserService _userService;
     private readonly ICommandService _commandService;
@@ -127,7 +128,7 @@ public class BotOrchestrator : IBotOrchestrator
         {
             var commandName = ExtractCommandName(content);
             var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
-            if (command != null)
+            if (command  is not null)
             {
                 context.Command = command;
             }
@@ -181,7 +182,7 @@ public class BotOrchestrator : IBotOrchestrator
 
         context.Validate();
 
-        if (context.Command == null)
+        if (context.Command  is null)
         {
             context.AddError($"Command '{commandName}' not found");
             return context;
@@ -207,13 +208,13 @@ public class BotOrchestrator : IBotOrchestrator
         CancellationToken cancellationToken = default)
     {
         var menu = await _menuService.GetMenuAsync(menuId, cancellationToken);
-        if (menu == null)
+        if (menu  is null)
         {
             throw new InvalidOperationException($"Menu '{menuId}' not found");
         }
 
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        if (session != null)
+        if (session  is not null)
         {
             await _sessionService.NavigateToMenuAsync(session.SessionId, menuId, cancellationToken);
         }
@@ -229,7 +230,7 @@ public class BotOrchestrator : IBotOrchestrator
         CancellationToken cancellationToken = default)
     {
         var button = await _menuService.GetButtonAsync(menuId, buttonCallbackData, cancellationToken);
-        if (button == null)
+        if (button  is null)
         {
             _logger.LogWarning("Button not found - MenuId: {MenuId}, CallbackData: {CallbackData}", menuId, buttonCallbackData);
             return false;
@@ -265,7 +266,7 @@ public class BotOrchestrator : IBotOrchestrator
     public async Task<Models.UserSession> GetUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        if (session == null)
+        if (session  is null)
         {
             throw new Exceptions.SessionException($"No active session for user {userId}");
         }
@@ -276,7 +277,7 @@ public class BotOrchestrator : IBotOrchestrator
     public async Task<bool> EndUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        if (session == null)
+        if (session  is null)
         {
             return false;
         }

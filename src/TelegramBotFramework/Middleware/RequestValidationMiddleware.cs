@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ using System.Text;
 /// Middleware that validates incoming request bodies against expected schemas.
 /// Provides early validation before reaching controllers, improving error handling.
 /// </summary>
-public class RequestValidationMiddleware
+public sealed class RequestValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestValidationMiddleware> _logger;
