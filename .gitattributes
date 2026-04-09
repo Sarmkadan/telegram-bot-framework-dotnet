@@ -1,0 +1,36 @@
+# Normalize line endings for all files
+* text=auto
+
+# C# files
+*.cs text eol=lf charset=utf-8
+*.csproj text eol=lf charset=utf-8
+
+# JSON files
+*.json text eol=lf charset=utf-8
+*.jsonc text eol=lf charset=utf-8
+
+# YAML files
+*.yml text eol=lf charset=utf-8
+*.yaml text eol=lf charset=utf-8
+
+# Markdown files
+*.md text eol=lf charset=utf-8
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.dll binary
+*.exe binary
+*.so binary
+*.dylib binary
+
+# Documentation
+LICENSE text eol=lf charset=utf-8
+README.md text eol=lf charset=utf-8
+CONTRIBUTING.md text eol=lf charset=utf-8
