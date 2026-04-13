@@ -1,0 +1,232 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.ConversationFlow.Middleware;
+
+namespace TelegramBotFramework.ConversationFlow;
+
+/// <summary>
+/// Extension methods for registering conversation flow services in the dependency-injection
+/// container and for building <see cref="FlowDefinition"/> instances using a fluent API.
+/// </summary>
+public static class ConversationFlowExtensions
+{
+    // -------------------------------------------------------------------------
+    // DI Registration
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Adds the conversation flow engine and its dependencies to the service collection.
+    /// Call this after <c>AddTelegramBotFramework</c> in your startup configuration.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to configure.</param>
+    /// <param name="configure">
+    /// An optional delegate used to configure <see cref="ConversationFlowOptions"/>.
+    /// When omitted, default option values are used.
+    /// </param>
+    /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services
+    ///     .AddTelegramBotFramework(config)
+    ///     .AddConversationFlows(opts =>
+    ///     {
+    ///         opts.DefaultFlowTimeout    = TimeSpan.FromMinutes(15);
+    ///         opts.EnableFlowEvents      = true;
+    ///         opts.AbortKeyword          = "/stop";
+    ///     });
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddConversationFlows(
+        this IServiceCollection services,
+        Action<ConversationFlowOptions>? configure = null)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var options = new ConversationFlowOptions();
+        configure?.Invoke(options);
+
+        services.AddSingleton(options);
+        services.AddSingleton<IConversationFlowEngine, ConversationFlowEngine>();
+        services.AddSingleton<ConversationFlowMiddleware>();
+
+        return services;
+    }
+
+    // -------------------------------------------------------------------------
+    // Fluent Builder Factory
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Creates a new <see cref="IFlowDefinitionBuilder"/> for constructing a
+    /// <see cref="FlowDefinition"/> using a fluent API.
+    /// </summary>
+    /// <param name="flowId">
+    /// The unique identifier for the flow. Must match the value passed to
+    /// <see cref="IConversationFlowEngine.RegisterFlowAsync"/>.
+    /// </param>
+    /// <param name="name">The human-readable display name of the flow.</param>
+    /// <returns>A new <see cref="IFlowDefinitionBuilder"/> instance.</returns>
+    /// <example>
+    /// <code>
+    /// var flow = ConversationFlowExtensions
+    ///     .CreateFlow("onboarding", "User Onboarding")
+    ///     .WithDescription("Collects name and contact details during first use.")
+    ///     .WithTimeout(TimeSpan.FromMinutes(10))
+    ///     .AddStep(new FlowStep
+    ///     {
+    ///         StepId       = "ask_name",
+    ///         Prompt       = "Welcome! What is your name?",
+    ///         InputType    = FlowInputType.Text,
+    ///         VariableName = "name",
+    ///         DefaultNextStepId = "ask_email"
+    ///     })
+    ///     .AddStep(new FlowStep
+    ///     {
+    ///         StepId    = "ask_email",
+    ///         Prompt    = "Great! What is your email address?",
+    ///         InputType = FlowInputType.Email,
+    ///         VariableName = "email",
+    ///         IsTerminal = true
+    ///     })
+    ///     .Build();
+    ///
+    /// await engine.RegisterFlowAsync(flow);
+    /// </code>
+    /// </example>
+    public static IFlowDefinitionBuilder CreateFlow(string flowId, string name)
+        => new FlowDefinitionBuilder(flowId, name);
+}
+
+// ---------------------------------------------------------------------------
+// Builder Implementation
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Default implementation of <see cref="IFlowDefinitionBuilder"/> returned by
+/// <see cref="ConversationFlowExtensions.CreateFlow"/>.
+/// </summary>
+internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
+{
+    private readonly string _flowId;
+    private readonly string _name;
+    private string? _description;
+    private TimeSpan? _timeout;
+    private string? _completionMenuId;
+    private bool _allowResume = true;
+    private readonly List<FlowStep> _steps = [];
+    private readonly Dictionary<string, string> _metadata = new();
+
+    internal FlowDefinitionBuilder(string flowId, string name)
+    {
+        if (string.IsNullOrWhiteSpace(flowId))
+            throw new ArgumentException("FlowId must not be empty.", nameof(flowId));
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name must not be empty.", nameof(name));
+
+        _flowId = flowId;
+        _name   = name;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder WithDescription(string description)
+    {
+        _description = description;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder WithTimeout(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive.");
+
+        _timeout = timeout;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder OnCompletionNavigateTo(string menuId)
+    {
+        if (string.IsNullOrWhiteSpace(menuId))
+            throw new ArgumentException("MenuId must not be empty.", nameof(menuId));
+
+        _completionMenuId = menuId;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder AllowResume(bool allow = true)
+    {
+        _allowResume = allow;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder AddStep(FlowStep step)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+
+        if (string.IsNullOrWhiteSpace(step.StepId))
+            throw new ArgumentException("Step.StepId must not be empty.", nameof(step));
+
+        if (_steps.Any(s => s.StepId == step.StepId))
+            throw new InvalidOperationException(
+                $"A step with StepId '{step.StepId}' has already been added to this flow.");
+
+        _steps.Add(step);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IFlowDefinitionBuilder WithMetadata(string key, string value)
+    {
+        _metadata[key] = value;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public FlowDefinition Build()
+    {
+        if (_steps.Count == 0)
+            throw new InvalidOperationException(
+                $"Flow '{_flowId}' must have at least one step before building.");
+
+        var initialStepId = _steps[0].StepId;
+
+        // Validate all transition targets reference existing steps
+        var stepIds = _steps.Select(s => s.StepId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var step in _steps)
+        {
+            foreach (var transition in step.Transitions)
+            {
+                if (!stepIds.Contains(transition.TargetStepId))
+                    throw new InvalidOperationException(
+                        $"Step '{step.StepId}' has a transition to '{transition.TargetStepId}' " +
+                        $"which does not exist in flow '{_flowId}'.");
+            }
+
+            if (step.DefaultNextStepId != null && !stepIds.Contains(step.DefaultNextStepId))
+                throw new InvalidOperationException(
+                    $"Step '{step.StepId}' references DefaultNextStepId '{step.DefaultNextStepId}' " +
+                    $"which does not exist in flow '{_flowId}'.");
+        }
+
+        return new FlowDefinition
+        {
+            FlowId           = _flowId,
+            Name             = _name,
+            Description      = _description,
+            InitialStepId    = initialStepId,
+            Steps            = _steps.AsReadOnly(),
+            Timeout          = _timeout,
+            AllowResume      = _allowResume,
+            CompletionMenuId = _completionMenuId,
+            Metadata         = new Dictionary<string, string>(_metadata)
+        };
+    }
+}
