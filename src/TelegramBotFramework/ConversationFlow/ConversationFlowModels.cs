@@ -298,6 +298,9 @@ public sealed class UserFlowState
     /// <summary>Gets the ordered chronological record of steps visited during this execution.</summary>
     public List<FlowStepHistory> History { get; init; } = [];
 
+    // Hotfix: Object used for locking access to the History list to prevent race conditions.
+    internal readonly object HistorySyncRoot = new();
+
     /// <summary>
     /// Gets or sets a human-readable reason when <see cref="Status"/> is
     /// <see cref="FlowStateStatus.Aborted"/> or <see cref="FlowStateStatus.TimedOut"/>.

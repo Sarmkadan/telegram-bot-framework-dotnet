@@ -221,14 +221,18 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         var nextStepId = ResolveNextStep(step, state.Variables);
 
         // --- Record history ---
-        state.History.Add(new FlowStepHistory
+        // Hotfix: Ensure thread-safe access to state.History to prevent race conditions during concurrent updates.
+        lock (state.HistorySyncRoot)
         {
-            StepId      = step.StepId,
-            EnteredAt   = stepEnteredAt,
-            CompletedAt = state.LastActivityAt,
-            UserInput   = input,
-            NextStepId  = nextStepId
-        });
+            state.History.Add(new FlowStepHistory
+            {
+                StepId      = step.StepId,
+                EnteredAt   = stepEnteredAt,
+                CompletedAt = state.LastActivityAt,
+                UserInput   = input,
+                NextStepId  = nextStepId
+            });
+        }
 
         if (_options.EnableFlowEvents)
             await _eventBus.PublishAsync(
