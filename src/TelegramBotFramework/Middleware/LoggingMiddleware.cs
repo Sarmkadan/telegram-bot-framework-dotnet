@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.Middleware;
 /// Middleware for structured logging of HTTP requests and responses.
 /// Logs request/response metadata including duration, status codes, and user context.
 /// </summary>
-public class LoggingMiddleware
+public sealed class LoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<LoggingMiddleware> _logger;

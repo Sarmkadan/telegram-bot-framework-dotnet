@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Implementation of session management service.
 /// </summary>
-public class SessionService : ISessionService
+public sealed class SessionService : ISessionService
 {
     private readonly Repositories.ISessionRepository _sessionRepository;
     private readonly Microsoft.Extensions.Logging.ILogger<SessionService> _logger;
@@ -63,7 +64,7 @@ public class SessionService : ISessionService
         CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
+        if (session  is null)
         {
             return false;
         }
@@ -83,7 +84,7 @@ public class SessionService : ISessionService
     public async Task<bool> CloseSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
+        if (session  is null)
         {
             return false;
         }
@@ -107,7 +108,7 @@ public class SessionService : ISessionService
         CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
+        if (session  is null)
         {
             throw new Exceptions.SessionException($"Session {sessionId} not found", sessionId);
         }
@@ -122,7 +123,7 @@ public class SessionService : ISessionService
     public async Task RecordSessionActivityAsync(string sessionId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session != null && !session.IsExpired())
+        if (session  is not null && !session.IsExpired())
         {
             session.UpdateActivity();
             await _sessionRepository.UpdateAsync(session, cancellationToken);
@@ -133,7 +134,7 @@ public class SessionService : ISessionService
 /// <summary>
 /// Implementation of menu management service.
 /// </summary>
-public class MenuService : IMenuService
+public sealed class MenuService : IMenuService
 {
     private readonly Repositories.IMenuRepository _menuRepository;
     private readonly Microsoft.Extensions.Logging.ILogger<MenuService> _logger;
@@ -186,7 +187,7 @@ public class MenuService : IMenuService
     public async Task<Models.Menu> AddButtonAsync(string menuId, Models.MenuButton button, CancellationToken cancellationToken = default)
     {
         var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
-        if (menu == null)
+        if (menu  is null)
         {
             throw new InvalidOperationException($"Menu {menuId} not found");
         }
@@ -198,7 +199,7 @@ public class MenuService : IMenuService
     public async Task<bool> RemoveButtonAsync(string menuId, string callbackData, CancellationToken cancellationToken = default)
     {
         var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
-        if (menu == null)
+        if (menu  is null)
         {
             return false;
         }
@@ -219,7 +220,7 @@ public class MenuService : IMenuService
     public async Task<List<List<Models.MenuButton>>> GetArrangedButtonsAsync(string menuId, CancellationToken cancellationToken = default)
     {
         var menu = await _menuRepository.GetByIdAsync(menuId, cancellationToken);
-        if (menu == null)
+        if (menu  is null)
         {
             return new List<List<Models.MenuButton>>();
         }

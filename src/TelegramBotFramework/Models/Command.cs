@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a bot command that can be executed by users.
 /// </summary>
-public class Command
+public sealed class Command
 {
     public string Name { get; set; } = string.Empty;
 
@@ -99,7 +100,7 @@ public enum CommandType
     Callback = 3
 }
 
-public class CommandParameter
+public sealed class CommandParameter
 {
     public string Name { get; set; } = string.Empty;
 

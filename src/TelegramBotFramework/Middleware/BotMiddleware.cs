@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -25,7 +26,7 @@ public interface IBotMiddleware
 /// <summary>
 /// Middleware for logging execution details.
 /// </summary>
-public class LoggingMiddleware : IBotMiddleware
+public sealed class LoggingMiddleware : IBotMiddleware
 {
     public int Priority => 100;
 
@@ -76,7 +77,7 @@ public class LoggingMiddleware : IBotMiddleware
 /// <summary>
 /// Middleware for authorization checks.
 /// </summary>
-public class AuthorizationMiddleware : IBotMiddleware
+public sealed class AuthorizationMiddleware : IBotMiddleware
 {
     public int Priority => 90;
 
@@ -99,7 +100,7 @@ public class AuthorizationMiddleware : IBotMiddleware
         Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
         CancellationToken cancellationToken = default)
     {
-        if (context.Command == null)
+        if (context.Command  is null)
         {
             return await next(context);
         }
@@ -126,7 +127,7 @@ public class AuthorizationMiddleware : IBotMiddleware
 /// <summary>
 /// Middleware for rate limiting.
 /// </summary>
-public class RateLimitMiddleware : IBotMiddleware
+public sealed class RateLimitMiddleware : IBotMiddleware
 {
     public int Priority => 95;
 
@@ -149,7 +150,7 @@ public class RateLimitMiddleware : IBotMiddleware
         Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
         CancellationToken cancellationToken = default)
     {
-        if (!_configuration.EnableRateLimiting || context.Command == null)
+        if (!_configuration.EnableRateLimiting || context.Command  is null)
         {
             return await next(context);
         }
@@ -176,7 +177,7 @@ public class RateLimitMiddleware : IBotMiddleware
 /// <summary>
 /// Middleware for error handling and recovery.
 /// </summary>
-public class ErrorHandlingMiddleware : IBotMiddleware
+public sealed class ErrorHandlingMiddleware : IBotMiddleware
 {
     public int Priority => 10;
 

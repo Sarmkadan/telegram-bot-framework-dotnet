@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an inline query received from a Telegram user.
 /// </summary>
-public class InlineQuery
+public sealed class InlineQuery
 {
     /// <summary>Unique identifier supplied by Telegram for this query.</summary>
     public string QueryId { get; set; } = string.Empty;
@@ -69,7 +70,7 @@ public class InlineQuery
 /// <summary>
 /// A single result item returned in response to an inline query.
 /// </summary>
-public class InlineQueryResult
+public sealed class InlineQueryResult
 {
     /// <summary>Unique 16-character identifier within the result set.</summary>
     public string ResultId { get; set; } = Guid.NewGuid().ToString("N")[..16];
@@ -113,7 +114,7 @@ public class InlineQueryResult
 /// <summary>
 /// A paginated slice of inline query results, ready to be forwarded to the Telegram API.
 /// </summary>
-public class PagedInlineQueryResult
+public sealed class PagedInlineQueryResult
 {
     /// <summary>Results on the current page.</summary>
     public IList<InlineQueryResult> Results { get; set; } = new List<InlineQueryResult>();
