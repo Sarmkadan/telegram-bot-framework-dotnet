@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -64,7 +65,7 @@ public abstract class EventHandlerBase<TEvent> : IEventHandler<TEvent> where TEv
 /// <summary>
 /// Example: Message received event
 /// </summary>
-public class MessageReceivedEvent : EventBase
+public sealed class MessageReceivedEvent : EventBase
 {
     public long ChatId { get; set; }
     public long UserId { get; set; }
@@ -84,7 +85,7 @@ public class MessageReceivedEvent : EventBase
 /// <summary>
 /// Example: User command executed event
 /// </summary>
-public class CommandExecutedEvent : EventBase
+public sealed class CommandExecutedEvent : EventBase
 {
     public string CommandName { get; set; }
     public long UserId { get; set; }
@@ -106,7 +107,7 @@ public class CommandExecutedEvent : EventBase
 /// <summary>
 /// Example: Bot state changed event
 /// </summary>
-public class BotStateChangedEvent : EventBase
+public sealed class BotStateChangedEvent : EventBase
 {
     public string PreviousState { get; set; }
     public string NewState { get; set; }

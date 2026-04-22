@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -15,7 +16,7 @@ namespace TelegramBotFramework.Examples
     /// Event-driven architecture example demonstrating pub-sub pattern for decoupled communication.
     /// Shows how to publish and subscribe to framework events.
     /// </summary>
-    public class EventDrivenExample
+public sealed class EventDrivenExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<EventDrivenExample> _logger;

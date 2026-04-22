@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Implementation of command management service.
 /// </summary>
-public class CommandService : ICommandService
+public sealed class CommandService : ICommandService
 {
     private readonly Repositories.ICommandRepository _commandRepository;
     private readonly IUserService _userService;
@@ -70,7 +71,7 @@ public class CommandService : ICommandService
             return context;
         }
 
-        if (context.Command == null)
+        if (context.Command  is null)
         {
             context.AddError("Command not specified in context");
             return context;
@@ -110,13 +111,13 @@ public class CommandService : ICommandService
     public async Task<bool> CanUserExecuteCommandAsync(long userId, string commandName, CancellationToken cancellationToken = default)
     {
         var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
-        if (user == null || user.Status != Models.UserStatus.Active)
+        if (user  is null || user.Status != Models.UserStatus.Active)
         {
             return false;
         }
 
         var command = await GetCommandAsync(commandName, cancellationToken);
-        if (command == null || !command.IsEnabled)
+        if (command  is null || !command.IsEnabled)
         {
             return false;
         }
@@ -128,7 +129,7 @@ public class CommandService : ICommandService
     {
         await Task.Delay(0, cancellationToken);
         var command = await GetCommandAsync(commandName, cancellationToken);
-        if (command?.RateLimitPerMinute == null)
+        if (command?.RateLimitPerMinute  is null)
         {
             return false;
         }
@@ -155,7 +156,7 @@ public class CommandService : ICommandService
     public async Task RecordCommandExecutionAsync(string commandName, CancellationToken cancellationToken = default)
     {
         var command = await GetCommandAsync(commandName, cancellationToken);
-        if (command != null)
+        if (command  is not null)
         {
             command.RecordExecution();
             await _commandRepository.UpdateAsync(command, cancellationToken);

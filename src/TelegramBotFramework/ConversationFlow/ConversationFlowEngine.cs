@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -130,7 +131,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
 
         // Mirror flow context into the session layer so the middleware can detect active flows.
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        if (session != null)
+        if (session  is not null)
         {
             await _sessionService.UpdateSessionContextAsync(
                 session.SessionId, SessionKeys.FlowId, flowId, cancellationToken);
@@ -234,7 +235,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
                 new FlowStepCompletedEvent(userId, state.FlowId, step.StepId, nextStepId));
 
         // --- Terminal step or no outgoing path ---
-        if (step.IsTerminal || nextStepId == null)
+        if (step.IsTerminal || nextStepId  is null)
         {
             await TerminateAsync(state, FlowStateStatus.Completed, null);
 
@@ -321,7 +322,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
 
         // Attempt to detect a flow that was in progress before the engine restarted.
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        if (session == null) return null;
+        if (session  is null) return null;
 
         var restoredFlowId = await _sessionService.GetSessionContextAsync(
             session.SessionId, SessionKeys.FlowId, cancellationToken);
@@ -459,7 +460,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
                 break;
         }
 
-        if (v == null) return (true, null);
+        if (v  is null) return (true, null);
 
         // Text length constraints
         if (v.MinLength.HasValue && input.Length < v.MinLength.Value)
@@ -484,7 +485,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     {
         foreach (var transition in step.Transitions)
         {
-            if (transition.Condition == null || EvaluateCondition(transition.Condition, variables))
+            if (transition.Condition  is null || EvaluateCondition(transition.Condition, variables))
                 return transition.TargetStepId;
         }
 

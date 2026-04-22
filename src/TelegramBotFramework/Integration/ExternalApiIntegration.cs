@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ using Utilities;
 /// Handles integration with external APIs for data enrichment and service calls.
 /// Provides retry logic, timeout handling, and response parsing.
 /// </summary>
-public class ExternalApiIntegration
+public sealed class ExternalApiIntegration
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly ILogger<ExternalApiIntegration> _logger;

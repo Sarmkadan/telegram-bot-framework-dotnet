@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ using System.Text.Json;
 /// Handles incoming webhook updates from Telegram and processes them.
 /// Validates update authenticity and dispatches to appropriate handlers.
 /// </summary>
-public class WebhookHandler
+public sealed class WebhookHandler
 {
     private readonly ILogger<WebhookHandler> _logger;
 
@@ -149,7 +150,7 @@ public class WebhookHandler
 /// <summary>
 /// Represents a Telegram bot update received via webhook.
 /// </summary>
-public class TelegramUpdate
+public sealed class TelegramUpdate
 {
     public long UpdateId { get; set; }
     public UpdateType MessageType { get; set; }
@@ -163,7 +164,7 @@ public class TelegramUpdate
 /// <summary>
 /// Represents a Telegram message.
 /// </summary>
-public class TelegramMessage
+public sealed class TelegramMessage
 {
     public long MessageId { get; set; }
     public long ChatId { get; set; }

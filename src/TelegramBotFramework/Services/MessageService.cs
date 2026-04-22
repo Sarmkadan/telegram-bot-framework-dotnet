@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Implementation of message processing service.
 /// </summary>
-public class MessageService : IMessageService
+public sealed class MessageService : IMessageService
 {
     private readonly Repositories.IMessageRepository _messageRepository;
     private readonly Microsoft.Extensions.Logging.ILogger<MessageService> _logger;
@@ -63,7 +64,7 @@ public class MessageService : IMessageService
     public async Task<bool> MarkAsProcessedAsync(long messageId, CancellationToken cancellationToken = default)
     {
         var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken);
-        if (message == null)
+        if (message  is null)
         {
             return false;
         }
@@ -77,7 +78,7 @@ public class MessageService : IMessageService
     public async Task<bool> MarkAsFailedAsync(long messageId, string errorMessage, CancellationToken cancellationToken = default)
     {
         var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken);
-        if (message == null)
+        if (message  is null)
         {
             return false;
         }

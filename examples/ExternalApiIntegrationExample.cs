@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace TelegramBotFramework.Examples
     /// External API integration example demonstrating how to call third-party APIs,
     /// handle responses, implement retry logic, and manage timeouts.
     /// </summary>
-    public class ExternalApiIntegrationExample
+public sealed class ExternalApiIntegrationExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ExternalApiIntegrationExample> _logger;
@@ -195,7 +196,7 @@ namespace TelegramBotFramework.Examples
             // Try to get from cache first
             var cachedData = await cacheProvider.GetAsync(cacheKey);
 
-            if (cachedData != null)
+            if (cachedData  is not null)
             {
                 _logger.LogInformation("Retrieved from cache: {Data}", cachedData);
             }

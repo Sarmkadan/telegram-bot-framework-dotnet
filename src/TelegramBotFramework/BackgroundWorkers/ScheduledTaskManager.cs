@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Manages scheduled and recurring background tasks using timers.
 /// Supports one-time execution and recurring schedules with customizable intervals.
 /// </summary>
-public class ScheduledTaskManager : IDisposable
+public sealed class ScheduledTaskManager : IDisposable
 {
     private readonly Dictionary<string, ScheduledTask> _scheduledTasks = new();
     private readonly ILogger<ScheduledTaskManager> _logger;
@@ -175,7 +176,7 @@ public class ScheduledTaskManager : IDisposable
             _logger.LogDebug("Executing scheduled task: {TaskName} (ID: {TaskId}, Execution #{Count})",
                 task.Name, task.Id, task.ExecutionCount);
 
-            if (task.TaskFunc != null)
+            if (task.TaskFunc  is not null)
             {
                 await task.TaskFunc();
             }
@@ -213,7 +214,7 @@ public class ScheduledTaskManager : IDisposable
 /// <summary>
 /// Represents a scheduled task.
 /// </summary>
-public class ScheduledTask
+public sealed class ScheduledTask
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

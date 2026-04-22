@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -29,7 +30,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
         try
         {
             var value = await GetValueAsync(key);
-            if (value == null)
+            if (value  is null)
                 return default;
 
             return JsonSerializer.Deserialize<T>(value);
@@ -91,7 +92,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
     public virtual async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
         var existing = await GetAsync<T>(key);
-        if (existing != null)
+        if (existing  is not null)
             return existing;
 
         var value = await factory();
@@ -162,7 +163,7 @@ public abstract class DistributedCacheProvider : ICacheProvider
 /// No-operation distributed cache provider for testing/fallback scenarios.
 /// Useful as a fallback when distributed cache is unavailable.
 /// </summary>
-public class NoOpCacheProvider : ICacheProvider
+public sealed class NoOpCacheProvider : ICacheProvider
 {
     public Task<T?> GetAsync<T>(string key) => Task.FromResult<T?>(default);
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) => Task.CompletedTask;

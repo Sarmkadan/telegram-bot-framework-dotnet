@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Exceptions;
 /// <summary>
 /// Base exception for all bot framework errors.
 /// </summary>
-public class BotFrameworkException : Exception
+public sealed class BotFrameworkException : Exception
 {
     public string? ErrorCode { get; set; }
 
@@ -37,7 +38,7 @@ public class BotFrameworkException : Exception
 /// <summary>
 /// Thrown when a command execution fails.
 /// </summary>
-public class CommandExecutionException : BotFrameworkException
+public sealed class CommandExecutionException : BotFrameworkException
 {
     public string? CommandName { get; set; }
 
@@ -57,7 +58,7 @@ public class CommandExecutionException : BotFrameworkException
 /// <summary>
 /// Thrown when a command is not found.
 /// </summary>
-public class CommandNotFoundException : BotFrameworkException
+public sealed class CommandNotFoundException : BotFrameworkException
 {
     public string? CommandName { get; set; }
 
@@ -71,7 +72,7 @@ public class CommandNotFoundException : BotFrameworkException
 /// <summary>
 /// Thrown when user lacks permission to execute a command.
 /// </summary>
-public class InsufficientPermissionException : BotFrameworkException
+public sealed class InsufficientPermissionException : BotFrameworkException
 {
     public long? UserId { get; set; }
 
@@ -88,7 +89,7 @@ public class InsufficientPermissionException : BotFrameworkException
 /// <summary>
 /// Thrown when a session operation fails.
 /// </summary>
-public class SessionException : BotFrameworkException
+public sealed class SessionException : BotFrameworkException
 {
     public string? SessionId { get; set; }
 
@@ -108,7 +109,7 @@ public class SessionException : BotFrameworkException
 /// <summary>
 /// Thrown when a user operation fails.
 /// </summary>
-public class UserException : BotFrameworkException
+public sealed class UserException : BotFrameworkException
 {
     public long? UserId { get; set; }
 
@@ -128,7 +129,7 @@ public class UserException : BotFrameworkException
 /// <summary>
 /// Thrown when a rate limit is exceeded.
 /// </summary>
-public class RateLimitExceededException : BotFrameworkException
+public sealed class RateLimitExceededException : BotFrameworkException
 {
     public long? UserId { get; set; }
 
@@ -145,7 +146,7 @@ public class RateLimitExceededException : BotFrameworkException
 /// <summary>
 /// Thrown when a configuration error occurs.
 /// </summary>
-public class ConfigurationException : BotFrameworkException
+public sealed class ConfigurationException : BotFrameworkException
 {
     public ConfigurationException(string message)
         : base(message, "CONFIGURATION_ERROR")

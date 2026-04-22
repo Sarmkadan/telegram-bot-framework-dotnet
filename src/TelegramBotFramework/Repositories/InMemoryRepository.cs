@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace TelegramBotFramework.Repositories;
 /// <summary>
 /// In-memory implementation of user repository.
 /// </summary>
-public class InMemoryUserRepository : IUserRepository
+public sealed class InMemoryUserRepository : IUserRepository
 {
     private readonly Dictionary<long, Models.BotUser> _users = new();
     private readonly object _lockObj = new();
@@ -147,7 +148,7 @@ public class InMemoryUserRepository : IUserRepository
 /// <summary>
 /// In-memory implementation of command repository.
 /// </summary>
-public class InMemoryCommandRepository : ICommandRepository
+public sealed class InMemoryCommandRepository : ICommandRepository
 {
     private readonly Dictionary<string, Models.Command> _commands = new();
     private readonly object _lockObj = new();
