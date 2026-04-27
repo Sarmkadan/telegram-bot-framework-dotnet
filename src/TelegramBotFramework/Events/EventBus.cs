@@ -109,7 +109,7 @@ public sealed class EventBus : IEventBus
         // Wait for all handlers to complete
         try
         {
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
             _logger.LogInformation("Event {EventType} published to {Count} handlers successfully",
                 eventType.Name, handlersCopy.Count);
         }
