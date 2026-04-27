@@ -42,11 +42,11 @@ public sealed class ExternalApiIntegration
         {
             try
             {
-                var response = await client.GetAsync(uri.PathAndQuery);
+                var response = await client.GetAsync(uri.PathAndQuery).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return JsonUtility.Deserialize<T>(content);
                 }
 
@@ -54,7 +54,7 @@ public sealed class ExternalApiIntegration
                     response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                 {
                     // Retry with exponential backoff
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1))).ConfigureAwait(false);
                     continue;
                 }
 
@@ -64,7 +64,7 @@ public sealed class ExternalApiIntegration
             catch (HttpRequestException ex) when (attempt < maxRetries)
             {
                 _logger.LogWarning(ex, "Attempt {Attempt} failed for external API call, retrying...", attempt);
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
+                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1))).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -98,7 +98,7 @@ public sealed class ExternalApiIntegration
             var json = JsonUtility.Serialize(payload);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(uri.PathAndQuery, content);
+            var response = await client.PostAsync(uri.PathAndQuery, content).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -128,10 +128,10 @@ public sealed class ExternalApiIntegration
         {
             var uri = new Uri(url);
             var client = _httpClientFactory.GetClientWithHeaders(uri.Scheme + "://" + uri.Host, headers);
-            var response = await client.GetAsync(uri.PathAndQuery);
+            var response = await client.GetAsync(uri.PathAndQuery).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             return null;
         }

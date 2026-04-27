@@ -105,7 +105,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         {
             _logger.LogDebug(
                 "Aborting existing flow for UserId {UserId} before starting '{FlowId}'", userId, flowId);
-            await AbortFlowAsync(userId, "Superseded by a new flow", cancellationToken);
+            await AbortFlowAsync(userId, "Superseded by a new flow", cancellationToken).ConfigureAwait(false);
         }
 
         var state = new UserFlowState
@@ -130,7 +130,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         AppendHistory(userId, state);
 
         // Mirror flow context into the session layer so the middleware can detect active flows.
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is not null)
         {
             await _sessionService.UpdateSessionContextAsync(
@@ -140,7 +140,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         }
 
         if (_options.EnableFlowEvents)
-            await _eventBus.PublishAsync(new FlowStartedEvent(userId, chatId, flowId, state.StateId));
+            await _eventBus.PublishAsync(new FlowStartedEvent(userId, chatId, flowId, state.StateId)).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Flow started — UserId: {UserId}, FlowId: {FlowId}, StateId: {StateId}",
@@ -175,7 +175,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         if (!string.IsNullOrEmpty(_options.AbortKeyword) &&
             string.Equals(input.Trim(), _options.AbortKeyword, StringComparison.OrdinalIgnoreCase))
         {
-            await AbortFlowAsync(userId, "User triggered abort keyword", cancellationToken);
+            await AbortFlowAsync(userId, "User triggered abort keyword", cancellationToken).ConfigureAwait(false);
             return BuildTerminalResult(state, _options.AbortAcknowledgementMessage);
         }
 
@@ -183,7 +183,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         var effectiveTimeout = flow.Timeout ?? _options.DefaultFlowTimeout;
         if (DateTime.UtcNow - state.LastActivityAt > effectiveTimeout)
         {
-            await TerminateAsync(state, FlowStateStatus.TimedOut, "Inactivity timeout");
+            await TerminateAsync(state, FlowStateStatus.TimedOut, "Inactivity timeout").ConfigureAwait(false);
             return BuildTerminalResult(state, _options.FlowTimeoutMessage);
         }
 
@@ -241,7 +241,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         // --- Terminal step or no outgoing path ---
         if (step.IsTerminal || nextStepId  is null)
         {
-            await TerminateAsync(state, FlowStateStatus.Completed, null);
+            await TerminateAsync(state, FlowStateStatus.Completed, null).ConfigureAwait(false);
 
             if (_options.EnableFlowEvents)
                 await _eventBus.PublishAsync(
@@ -295,10 +295,10 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         if (!_activeStates.TryGetValue(userId, out var state))
             return;
 
-        await TerminateAsync(state, FlowStateStatus.Aborted, reason);
+        await TerminateAsync(state, FlowStateStatus.Aborted, reason).ConfigureAwait(false);
 
         if (_options.EnableFlowEvents)
-            await _eventBus.PublishAsync(new FlowAbortedEvent(userId, state.FlowId, reason));
+            await _eventBus.PublishAsync(new FlowAbortedEvent(userId, state.FlowId, reason)).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Flow aborted — UserId: {UserId}, FlowId: {FlowId}, Reason: {Reason}",
@@ -325,7 +325,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
             return null;
 
         // Attempt to detect a flow that was in progress before the engine restarted.
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is null) return null;
 
         var restoredFlowId = await _sessionService.GetSessionContextAsync(
