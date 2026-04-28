@@ -117,23 +117,23 @@ public sealed class InlineQueryService : IInlineQueryService
         int pageNumber = 1,
         CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
-        var allResults = await _cache.GetAsync<IList<Models.InlineQueryResult>>(BuildCacheKey(queryText));
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
+        var allResults = await _cache.GetAsync<IList<Models.InlineQueryResult>>(BuildCacheKey(queryText)).ConfigureAwait(false);
         return allResults  is null ? null : Paginate(allResults, pageNumber, DefaultPageSize);
     }
 
     /// <inheritdoc/>
     public async Task InvalidateCacheAsync(string queryText, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
-        await _cache.RemoveAsync(BuildCacheKey(queryText));
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
+        await _cache.RemoveAsync(BuildCacheKey(queryText)).ConfigureAwait(false);
         _logger.LogDebug("Cache invalidated for inline query '{Query}'", queryText);
     }
 
     /// <inheritdoc/>
     public async Task RecordQueryAsync(Models.InlineQuery query, int resultCount, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(0, cancellationToken);
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation(
             "Inline query recorded: user={UserId} query='{Query}' results={Count} duration={Duration}ms",
             query.UserId, query.Query, resultCount, query.GetProcessingDurationMs());

@@ -45,7 +45,7 @@ public sealed class ScheduledTaskManager : IDisposable
             Enabled = true
         };
 
-        timer.Elapsed += async (_, _) => await ExecuteTaskAsync(task, timer);
+        timer.Elapsed += async (_, _) => await ExecuteTaskAsync(task, timer).ConfigureAwait(false);
 
         lock (_lockObj)
         {
@@ -89,7 +89,7 @@ public sealed class ScheduledTaskManager : IDisposable
             Enabled = true
         };
 
-        timer.Elapsed += async (_, _) => await ExecuteTaskAsync(task, timer);
+        timer.Elapsed += async (_, _) => await ExecuteTaskAsync(task, timer).ConfigureAwait(false);
 
         lock (_lockObj)
         {
@@ -178,7 +178,7 @@ public sealed class ScheduledTaskManager : IDisposable
 
             if (task.TaskFunc  is not null)
             {
-                await task.TaskFunc();
+                await task.TaskFunc().ConfigureAwait(false);
             }
 
             task.LastSuccessAt = DateTime.UtcNow;

@@ -37,7 +37,7 @@ public sealed class EventPublisher
     public async Task PublishMessageReceivedAsync(long chatId, long userId, string? messageText)
     {
         var @event = new MessageReceivedEvent(chatId, userId, messageText, _correlationId);
-        await _eventBus.PublishAsync(@event);
+        await _eventBus.PublishAsync(@event).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public sealed class EventPublisher
     public async Task PublishCommandExecutedAsync(string commandName, long userId, string? arguments, bool success, string? errorMessage = null)
     {
         var @event = new CommandExecutedEvent(commandName, userId, arguments, success, errorMessage, _correlationId);
-        await _eventBus.PublishAsync(@event);
+        await _eventBus.PublishAsync(@event).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public sealed class EventPublisher
     public async Task PublishBotStateChangedAsync(string previousState, string newState, string? reason = null)
     {
         var @event = new BotStateChangedEvent(previousState, newState, reason, _correlationId);
-        await _eventBus.PublishAsync(@event);
+        await _eventBus.PublishAsync(@event).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public sealed class EventPublisher
     /// </summary>
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class, IEvent
     {
-        await _eventBus.PublishAsync(@event);
+        await _eventBus.PublishAsync(@event).ConfigureAwait(false);
     }
 }
 

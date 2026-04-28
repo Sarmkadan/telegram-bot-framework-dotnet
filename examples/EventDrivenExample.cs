@@ -38,10 +38,10 @@ public sealed class EventDrivenExample
             try
             {
                 // Subscribe to events
-                await SubscribeToEventsAsync();
+                await SubscribeToEventsAsync().ConfigureAwait(false);
 
                 // Simulate events
-                await SimulateMessageFlowAsync();
+                await SimulateMessageFlowAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ public sealed class EventDrivenExample
                 _logger.LogInformation("📨 Event: Message received from user {UserId}: {Content}",
                     evt.UserId, evt.MessageContent);
 
-                await HandleMessageReceivedAsync(evt);
+                await HandleMessageReceivedAsync(evt).ConfigureAwait(false);
             });
 
             // Subscribe to command executed events
@@ -69,7 +69,7 @@ public sealed class EventDrivenExample
                 _logger.LogInformation("⚡ Event: Command executed - {CommandName} by user {UserId}, Success: {Success}",
                     evt.CommandName, evt.UserId, evt.Success);
 
-                await HandleCommandExecutedAsync(evt);
+                await HandleCommandExecutedAsync(evt).ConfigureAwait(false);
             });
 
             // Subscribe to bot state changed events
@@ -78,7 +78,7 @@ public sealed class EventDrivenExample
                 _logger.LogInformation("🔄 Event: Bot state changed from {OldState} to {NewState}",
                     evt.OldState, evt.NewState);
 
-                await HandleBotStateChangedAsync(evt);
+                await HandleBotStateChangedAsync(evt).ConfigureAwait(false);
             });
 
             _logger.LogInformation("Event subscriptions registered");
@@ -103,7 +103,7 @@ public sealed class EventDrivenExample
             _logger.LogInformation("Processing message: {Content}", message.Content);
 
             // This will trigger MessageReceivedEvent
-            var processed = await _messageService.ProcessIncomingMessageAsync(message);
+            var processed = await _messageService.ProcessIncomingMessageAsync(message).ConfigureAwait(false);
 
             _logger.LogInformation("Message processing complete");
 
@@ -116,12 +116,12 @@ public sealed class EventDrivenExample
                 Type = MessageType.Command
             };
 
-            var commandProcessed = await _messageService.ProcessIncomingMessageAsync(commandMessage);
+            var commandProcessed = await _messageService.ProcessIncomingMessageAsync(commandMessage).ConfigureAwait(false);
 
             // Simulate bot state change
-            await PublishBotStateChangeAsync("Idle", "Processing");
-            await Task.Delay(500);
-            await PublishBotStateChangeAsync("Processing", "Ready");
+            await PublishBotStateChangeAsync("Idle", "Processing").ConfigureAwait(false);
+            await Task.Delay(500).ConfigureAwait(false);
+            await PublishBotStateChangeAsync("Processing", "Ready").ConfigureAwait(false);
         }
 
         private async Task HandleMessageReceivedAsync(MessageReceivedEvent evt)
@@ -129,7 +129,7 @@ public sealed class EventDrivenExample
             _logger.LogInformation("Handler: Processing message from user {UserId}", evt.UserId);
 
             // Custom logic for handling received messages
-            await Task.Delay(50);
+            await Task.Delay(50).ConfigureAwait(false);
 
             _logger.LogInformation("Handler: Message processing complete");
         }
@@ -139,7 +139,7 @@ public sealed class EventDrivenExample
             _logger.LogInformation("Handler: Recording command execution - {CommandName}", evt.CommandName);
 
             // Custom logic for command tracking, logging, etc.
-            await Task.Delay(50);
+            await Task.Delay(50).ConfigureAwait(false);
 
             if (evt.Success)
             {
@@ -156,7 +156,7 @@ public sealed class EventDrivenExample
             _logger.LogInformation("Handler: Notified of state change");
 
             // Custom logic for state change handling
-            await Task.Delay(50);
+            await Task.Delay(50).ConfigureAwait(false);
 
             _logger.LogInformation("Handler: State change handled");
         }
@@ -171,7 +171,7 @@ public sealed class EventDrivenExample
                 Timestamp = DateTime.UtcNow
             };
 
-            await _eventBus.PublishAsync(evt);
+            await _eventBus.PublishAsync(evt).ConfigureAwait(false);
         }
     }
 }
