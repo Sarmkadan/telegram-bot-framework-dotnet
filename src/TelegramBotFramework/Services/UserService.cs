@@ -28,7 +28,7 @@ public sealed class UserService : IUserService
         string? lastName = null,
         CancellationToken cancellationToken = default)
     {
-        var existingUser = await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken);
+        var existingUser = await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken).ConfigureAwait(false);
         if (existingUser  is not null)
         {
             return existingUser;
@@ -45,33 +45,33 @@ public sealed class UserService : IUserService
         };
 
         newUser.Validate();
-        var created = await _userRepository.CreateAsync(newUser, cancellationToken);
+        var created = await _userRepository.CreateAsync(newUser, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("New user created: {UserId} ({UserName})", telegramId, firstName);
         return created;
     }
 
     public async Task<Models.BotUser?> GetUserByIdAsync(long userId, CancellationToken cancellationToken = default)
     {
-        return await _userRepository.GetByIdAsync(userId, cancellationToken);
+        return await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Models.BotUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default)
     {
-        return await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken);
+        return await _userRepository.GetByTelegramIdAsync(telegramId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Models.BotUser> UpdateUserAsync(Models.BotUser user, CancellationToken cancellationToken = default)
     {
         user.Validate();
         user.UpdatedAt = DateTime.UtcNow;
-        var updated = await _userRepository.UpdateAsync(user, cancellationToken);
+        var updated = await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("User updated: {UserId}", user.TelegramId);
         return updated;
     }
 
     public async Task<bool> BanUserAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is null)
         {
             return false;
@@ -79,14 +79,14 @@ public sealed class UserService : IUserService
 
         user.Status = Models.UserStatus.Banned;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         _logger.LogWarning("User banned: {UserId}", userId);
         return true;
     }
 
     public async Task<bool> UnbanUserAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is null)
         {
             return false;
@@ -94,19 +94,19 @@ public sealed class UserService : IUserService
 
         user.Status = Models.UserStatus.Active;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("User unbanned: {UserId}", userId);
         return true;
     }
 
     public async Task<IList<Models.BotUser>> GetAdministratorsAsync(CancellationToken cancellationToken = default)
     {
-        return await _userRepository.GetByRoleAsync(Models.UserRole.Administrator, cancellationToken);
+        return await _userRepository.GetByRoleAsync(Models.UserRole.Administrator, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> PromoteToAdminAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is null)
         {
             return false;
@@ -114,14 +114,14 @@ public sealed class UserService : IUserService
 
         user.Role = Models.UserRole.Administrator;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("User promoted to admin: {UserId}", userId);
         return true;
     }
 
     public async Task<bool> DemoteAdminAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is null || user.Role != Models.UserRole.Administrator)
         {
             return false;
@@ -129,29 +129,29 @@ public sealed class UserService : IUserService
 
         user.Role = Models.UserRole.User;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("User demoted from admin: {UserId}", userId);
         return true;
     }
 
     public async Task<int> GetTotalUsersCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _userRepository.CountAsync(cancellationToken);
+        return await _userRepository.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> GetActiveUsersCountAsync(CancellationToken cancellationToken = default)
     {
-        var activeUsers = await _userRepository.GetByStatusAsync(Models.UserStatus.Active, cancellationToken);
+        var activeUsers = await _userRepository.GetByStatusAsync(Models.UserStatus.Active, cancellationToken).ConfigureAwait(false);
         return activeUsers.Count;
     }
 
     public async Task RecordUserActivityAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user  is not null)
         {
             user.UpdateActivity();
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            await _userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         }
     }
 }

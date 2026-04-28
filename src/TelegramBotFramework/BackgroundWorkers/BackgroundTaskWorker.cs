@@ -82,7 +82,7 @@ public sealed class BackgroundTaskWorker : IDisposable
         {
             try
             {
-                await _workerTask.WaitAsync(timeout.Value);
+                await _workerTask.WaitAsync(timeout.Value).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
@@ -116,7 +116,7 @@ public sealed class BackgroundTaskWorker : IDisposable
             try
             {
                 // Wait for a task to be available
-                await _taskAvailable.WaitAsync(cancellationToken);
+                await _taskAvailable.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 BackgroundTask? task = null;
                 lock (_taskQueue)
@@ -156,7 +156,7 @@ public sealed class BackgroundTaskWorker : IDisposable
             _logger.LogInformation("Executing background task: {TaskName} (ID: {TaskId})", task.Name, task.Id);
             task.StartedAt = DateTime.UtcNow;
 
-            await task.TaskFunc(cancellationToken);
+            await task.TaskFunc(cancellationToken).ConfigureAwait(false);
 
             task.CompletedAt = DateTime.UtcNow;
             _logger.LogInformation("Background task completed: {TaskName} (ID: {TaskId}, Duration: {DurationMs}ms)",

@@ -40,24 +40,24 @@ public sealed class MenuNavigationExample
                 var chatId = 123456789L;
 
                 // Create user
-                var user = await _userService.GetOrCreateUserAsync(userId, "John", "Doe");
+                var user = await _userService.GetOrCreateUserAsync(userId, "John", "Doe").ConfigureAwait(false);
 
                 // Create session for user
-                var session = await _sessionService.CreateSessionAsync(userId, chatId);
+                var session = await _sessionService.CreateSessionAsync(userId, chatId).ConfigureAwait(false);
                 _logger.LogInformation("Session created: {SessionId}", session.SessionId);
 
                 // Build main menu
-                var mainMenu = await CreateMainMenuAsync();
+                var mainMenu = await CreateMainMenuAsync().ConfigureAwait(false);
                 session.CurrentMenuId = mainMenu.Id;
-                await _sessionService.UpdateSessionAsync(session);
+                await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
                 _logger.LogInformation("Main menu created and set as current menu");
 
                 // Simulate menu navigation
-                await SimulateMenuNavigationAsync(session, mainMenu);
+                await SimulateMenuNavigationAsync(session, mainMenu).ConfigureAwait(false);
 
                 // Close session
-                await _sessionService.CloseSessionAsync(session.SessionId);
+                await _sessionService.CloseSessionAsync(session.SessionId).ConfigureAwait(false);
                 _logger.LogInformation("Session closed");
             }
             catch (Exception ex)
@@ -115,7 +115,7 @@ public sealed class MenuNavigationExample
                 Action = ButtonAction.CloseMenu
             });
 
-            await _sessionService.CreateMenuAsync(menu);
+            await _sessionService.CreateMenuAsync(menu).ConfigureAwait(false);
             return menu;
         }
 
@@ -159,7 +159,7 @@ public sealed class MenuNavigationExample
                 Action = ButtonAction.NavigateMenu
             });
 
-            await _sessionService.CreateMenuAsync(menu);
+            await _sessionService.CreateMenuAsync(menu).ConfigureAwait(false);
             return menu;
         }
 
@@ -203,7 +203,7 @@ public sealed class MenuNavigationExample
                 Action = ButtonAction.NavigateMenu
             });
 
-            await _sessionService.CreateMenuAsync(menu);
+            await _sessionService.CreateMenuAsync(menu).ConfigureAwait(false);
             return menu;
         }
 
@@ -212,23 +212,23 @@ public sealed class MenuNavigationExample
             _logger.LogInformation("Simulating menu navigation");
 
             // Update session to settings menu
-            var settingsMenu = await CreateSettingsMenuAsync();
+            var settingsMenu = await CreateSettingsMenuAsync().ConfigureAwait(false);
             session.CurrentMenuId = settingsMenu.Id;
             session.SetContextData("menu_history", "main_menu,settings_menu");
-            await _sessionService.UpdateSessionAsync(session);
+            await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated to settings menu");
 
             // Back to main menu
             session.CurrentMenuId = mainMenu.Id;
             session.SetContextData("menu_history", "main_menu");
-            await _sessionService.UpdateSessionAsync(session);
+            await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated back to main menu");
 
             // Navigate to profile menu
-            var profileMenu = await CreateProfileMenuAsync();
+            var profileMenu = await CreateProfileMenuAsync().ConfigureAwait(false);
             session.CurrentMenuId = profileMenu.Id;
             session.SetContextData("menu_history", "main_menu,profile_menu");
-            await _sessionService.UpdateSessionAsync(session);
+            await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated to profile menu");
         }
     }

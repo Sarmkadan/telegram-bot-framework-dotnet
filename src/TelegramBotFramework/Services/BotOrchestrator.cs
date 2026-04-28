@@ -89,15 +89,15 @@ public sealed class BotOrchestrator : IBotOrchestrator
         CancellationToken cancellationToken = default)
     {
         // Get or create user
-        var user = await _userService.GetOrCreateUserAsync(userId, firstName, lastName, cancellationToken);
+        var user = await _userService.GetOrCreateUserAsync(userId, firstName, lastName, cancellationToken).ConfigureAwait(false);
 
         // Get or create session
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        session ??= await _sessionService.CreateSessionAsync(userId, chatId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
+        session ??= await _sessionService.CreateSessionAsync(userId, chatId, cancellationToken).ConfigureAwait(false);
 
         // Record activity
-        await _userService.RecordUserActivityAsync(userId, cancellationToken);
-        await _sessionService.RecordSessionActivityAsync(session.SessionId, cancellationToken);
+        await _userService.RecordUserActivityAsync(userId, cancellationToken).ConfigureAwait(false);
+        await _sessionService.RecordSessionActivityAsync(session.SessionId, cancellationToken).ConfigureAwait(false);
 
         // Process message
         var message = new Models.Message
@@ -110,7 +110,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         };
 
         message.Validate();
-        var processedMessage = await _messageService.ProcessIncomingMessageAsync(message, cancellationToken);
+        var processedMessage = await _messageService.ProcessIncomingMessageAsync(message, cancellationToken).ConfigureAwait(false);
 
         // Create context
         var context = new Models.ExecutionContext
@@ -127,7 +127,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         if (content.StartsWith(Constants.BotConstants.CommandPrefix))
         {
             var commandName = ExtractCommandName(content);
-            var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
+            var command = await _commandService.GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
             if (command  is not null)
             {
                 context.Command = command;
@@ -137,11 +137,11 @@ public sealed class BotOrchestrator : IBotOrchestrator
         context.Validate();
 
         // Process through middleware pipeline
-        var finalContext = await ExecuteMiddlewarePipelineAsync(context, cancellationToken);
+        var finalContext = await ExecuteMiddlewarePipelineAsync(context, cancellationToken).ConfigureAwait(false);
 
         if (finalContext.IsValid)
         {
-            await _messageService.MarkAsProcessedAsync(processedMessage.MessageId, cancellationToken);
+            await _messageService.MarkAsProcessedAsync(processedMessage.MessageId, cancellationToken).ConfigureAwait(false);
         }
         else if (finalContext.Errors?.Count > 0)
         {
@@ -165,9 +165,9 @@ public sealed class BotOrchestrator : IBotOrchestrator
         Dictionary<string, object>? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
-        var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
+        var user = await _userService.GetUserByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
+        var command = await _commandService.GetCommandAsync(commandName, cancellationToken).ConfigureAwait(false);
 
         var context = new Models.ExecutionContext
         {
@@ -188,11 +188,11 @@ public sealed class BotOrchestrator : IBotOrchestrator
             return context;
         }
 
-        context = await ExecuteMiddlewarePipelineAsync(context, cancellationToken);
+        context = await ExecuteMiddlewarePipelineAsync(context, cancellationToken).ConfigureAwait(false);
 
         if (context.IsValid)
         {
-            await _commandService.RecordCommandExecutionAsync(commandName, cancellationToken);
+            await _commandService.RecordCommandExecutionAsync(commandName, cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogInformation(
@@ -207,16 +207,16 @@ public sealed class BotOrchestrator : IBotOrchestrator
         string menuId,
         CancellationToken cancellationToken = default)
     {
-        var menu = await _menuService.GetMenuAsync(menuId, cancellationToken);
+        var menu = await _menuService.GetMenuAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (menu  is null)
         {
             throw new InvalidOperationException($"Menu '{menuId}' not found");
         }
 
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is not null)
         {
-            await _sessionService.NavigateToMenuAsync(session.SessionId, menuId, cancellationToken);
+            await _sessionService.NavigateToMenuAsync(session.SessionId, menuId, cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogInformation("Menu displayed - UserId: {UserId}, MenuId: {MenuId}", userId, menuId);
@@ -229,7 +229,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         string buttonCallbackData,
         CancellationToken cancellationToken = default)
     {
-        var button = await _menuService.GetButtonAsync(menuId, buttonCallbackData, cancellationToken);
+        var button = await _menuService.GetButtonAsync(menuId, buttonCallbackData, cancellationToken).ConfigureAwait(false);
         if (button  is null)
         {
             _logger.LogWarning("Button not found - MenuId: {MenuId}, CallbackData: {CallbackData}", menuId, buttonCallbackData);
@@ -239,11 +239,11 @@ public sealed class BotOrchestrator : IBotOrchestrator
         switch (button.Action)
         {
             case Models.ButtonAction.ExecuteCommand:
-                await ExecuteUserCommandAsync(userId, 0, buttonCallbackData, null, cancellationToken);
+                await ExecuteUserCommandAsync(userId, 0, buttonCallbackData, null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case Models.ButtonAction.NavigateMenu:
-                await DisplayMenuAsync(userId, buttonCallbackData, cancellationToken);
+                await DisplayMenuAsync(userId, buttonCallbackData, cancellationToken).ConfigureAwait(false);
                 break;
 
             case Models.ButtonAction.OpenUrl:
@@ -265,7 +265,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
 
     public async Task<Models.UserSession> GetUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
             throw new Exceptions.SessionException($"No active session for user {userId}");
@@ -276,13 +276,13 @@ public sealed class BotOrchestrator : IBotOrchestrator
 
     public async Task<bool> EndUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken);
+        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
             return false;
         }
 
-        var result = await _sessionService.CloseSessionAsync(session.SessionId, cancellationToken);
+        var result = await _sessionService.CloseSessionAsync(session.SessionId, cancellationToken).ConfigureAwait(false);
         if (result)
         {
             _logger.LogInformation("Session ended - UserId: {UserId}, SessionId: {SessionId}", userId, session.SessionId);
@@ -308,10 +308,10 @@ public sealed class BotOrchestrator : IBotOrchestrator
 
             var middleware = sortedMiddleware.First();
             sortedMiddleware.RemoveAt(0);
-            return await middleware.ProcessAsync(ctx, executeNext, cancellationToken);
+            return await middleware.ProcessAsync(ctx, executeNext, cancellationToken).ConfigureAwait(false);
         };
 
-        return await executeNext(context);
+        return await executeNext(context).ConfigureAwait(false);
     }
 
     /// <summary>
