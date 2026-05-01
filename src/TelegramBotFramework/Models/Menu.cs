@@ -36,6 +36,11 @@ public sealed class Menu
     public int MaxButtonsPerRow { get; set; } = 2;
 
     /// <summary>
+    /// Maximum byte length of Telegram callback_data (Telegram API limit).
+    /// </summary>
+    public const int MaxCallbackDataBytes = 64;
+
+    /// <summary>
     /// Validates the menu structure.
     /// </summary>
     public bool Validate()
@@ -53,6 +58,8 @@ public sealed class Menu
         {
             if (string.IsNullOrWhiteSpace(button.Label))
                 throw new InvalidOperationException("Button label cannot be empty");
+
+            ValidateCallbackData(button.CallbackData);
         }
 
         return true;
@@ -61,10 +68,30 @@ public sealed class Menu
     /// <summary>
     /// Adds a button to the menu.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the button's callback data exceeds Telegram's 64-byte limit.
+    /// </exception>
     public void AddButton(MenuButton button)
     {
+        ValidateCallbackData(button.CallbackData);
         Buttons.Add(button);
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Validates that callback data does not exceed Telegram's 64-byte UTF-8 limit.
+    /// </summary>
+    private static void ValidateCallbackData(string callbackData)
+    {
+        if (string.IsNullOrEmpty(callbackData))
+            return;
+
+        var byteLength = System.Text.Encoding.UTF8.GetByteCount(callbackData);
+        if (byteLength > MaxCallbackDataBytes)
+            throw new InvalidOperationException(
+                $"Callback data '{callbackData}' is {byteLength} bytes, which exceeds Telegram's " +
+                $"{MaxCallbackDataBytes}-byte limit. Shorten the command prefix or payload to avoid " +
+                "duplicate handler registrations caused by silent truncation.");
     }
 
     /// <summary>
