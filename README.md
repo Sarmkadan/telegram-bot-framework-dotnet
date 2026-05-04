@@ -604,6 +604,75 @@ if (apiResponse != null)
 }
 ```
 
+## ExecutionContext
+
+The `ExecutionContext` class represents the execution context for a command or operation within the Telegram Bot Framework. It encapsulates all relevant information about the current execution flow, including user and chat identifiers, session data, command context, message content, and state management. The context is passed through the middleware pipeline, allowing each middleware component to read, modify, or extend the execution environment.
+
+**Key features:**
+- Context identification with unique `ContextId`
+- User and chat metadata (UserId, ChatId, BotUser, UserSession)
+- Command and message context tracking
+- Parameter and state management via `GetParameter`/`SetParameter` and `GetState`/`SetState`
+- Pipeline control with `RespondAndStop` and `StopProcessing`
+- Error tracking and validation
+- Execution timing via `CreatedAt` and `GetDuration()`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Integration;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve dependencies
+var orchestrator = serviceProvider.GetRequiredService<IBotOrchestrator>();
+
+// Process a user message to create an execution context
+var userId = 123456789L;
+var chatId = 987654321L;
+var context = await orchestrator.ProcessUserMessageAsync(userId, chatId, "/start", "TestUser");
+
+// Access context properties
+Console.WriteLine($"Context ID: {context.ContextId}");
+Console.WriteLine($"User ID: {context.UserId}");
+Console.WriteLine($"Chat ID: {context.ChatId}");
+Console.WriteLine($"Created at: {context.CreatedAt}");
+Console.WriteLine($"Is valid: {context.IsValid}");
+
+// Use parameter storage for custom data
+context.SetParameter("request_id", Guid.NewGuid().ToString());
+var requestId = context.GetParameter<string>("request_id");
+Console.WriteLine($"Request ID: {requestId}");
+
+// Use state management
+context.SetState("conversation_step", "welcome");
+var currentStep = context.GetState<string>("conversation_step");
+Console.WriteLine($"Current step: {currentStep}");
+
+// Check for errors
+if (!context.IsValid)
+{
+    foreach (var error in context.Errors ?? new List<string>()) 
+    {
+        Console.WriteLine($"Error: {error}");
+    }
+}
+
+// Get execution duration
+var duration = context.GetDuration();
+Console.WriteLine($"Execution took: {duration.TotalMilliseconds}ms");
+```
+
 ## PollingStrategy
 
 The `PollingStrategy` class implements a polling mechanism for fetching Telegram updates as an alternative to webhooks. It continuously requests updates from the Telegram API, tracks the last processed update ID, and provides status information about the polling process.
