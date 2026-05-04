@@ -329,7 +329,10 @@ public enum FlowStateStatus
     Aborted,
 
     /// <summary>Flow was automatically terminated because the inactivity timeout elapsed.</summary>
-    TimedOut
+    TimedOut,
+
+    /// <summary>Flow was terminated because an unhandled exception occurred during step processing.</summary>
+    Failed
 }
 
 // ---------------------------------------------------------------------------
