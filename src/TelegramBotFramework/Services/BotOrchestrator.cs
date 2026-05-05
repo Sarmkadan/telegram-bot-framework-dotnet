@@ -299,6 +299,9 @@ public sealed class BotOrchestrator : IBotOrchestrator
         Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next = null!;
         next = async (ctx) =>
         {
+            if (ctx.IsStopped)
+                return ctx; // A middleware called RespondAndStop — skip remaining middleware.
+
             if (index < middlewareList.Count)
             {
                 var currentMiddleware = middlewareList[index];
