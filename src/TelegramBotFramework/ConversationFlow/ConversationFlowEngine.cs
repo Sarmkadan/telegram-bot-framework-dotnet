@@ -17,6 +17,8 @@ namespace TelegramBotFramework.ConversationFlow;
 /// Maintains flow definitions and per-user runtime states in concurrent dictionaries,
 /// integrates with the session layer for persistence across reconnects, and publishes
 /// lifecycle events to the <see cref="IEventBus"/>.
+/// When an <see cref="IConversationStateStore"/> is provided, states are persisted on
+/// every mutation and restored into memory on the first call to any execution method.
 /// </summary>
 public sealed class ConversationFlowEngine : IConversationFlowEngine
 {
@@ -28,22 +30,40 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     private readonly ISessionService _sessionService;
     private readonly IEventBus _eventBus;
     private readonly ILogger<ConversationFlowEngine> _logger;
+    private readonly IConversationStateStore? _stateStore;
 
     private readonly object _historyLock = new();
 
     /// <summary>
-    /// Initialises a new instance of <see cref="ConversationFlowEngine"/>.
+    /// Initialises a new instance of <see cref="ConversationFlowEngine"/> without state persistence.
     /// </summary>
     public ConversationFlowEngine(
         ConversationFlowOptions options,
         ISessionService sessionService,
         IEventBus eventBus,
         ILogger<ConversationFlowEngine> logger)
+        : this(options, sessionService, eventBus, logger, null)
+    {
+    }
+
+    /// <summary>
+    /// Initialises a new instance of <see cref="ConversationFlowEngine"/> with optional state persistence.
+    /// </summary>
+    /// <param name="stateStore">
+    /// When non-null, active states are saved on every mutation and restored from the store on startup.
+    /// </param>
+    public ConversationFlowEngine(
+        ConversationFlowOptions options,
+        ISessionService sessionService,
+        IEventBus eventBus,
+        ILogger<ConversationFlowEngine> logger,
+        IConversationStateStore? stateStore)
     {
         _options        = options        ?? throw new ArgumentNullException(nameof(options));
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         _eventBus       = eventBus       ?? throw new ArgumentNullException(nameof(eventBus));
         _logger         = logger         ?? throw new ArgumentNullException(nameof(logger));
+        _stateStore     = stateStore;
     }
 
     // -------------------------------------------------------------------------
@@ -128,6 +148,10 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
 
         _activeStates[userId] = state;
         AppendHistory(userId, state);
+
+        // Persist to state store when configured.
+        if (_stateStore is not null)
+            await _stateStore.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 
         // Mirror flow context into the session layer so the middleware can detect active flows.
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -289,6 +313,9 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         // --- Advance to next step ---
         state.CurrentStepId = nextStepId;
         state.Status        = FlowStateStatus.WaitingForInput;
+
+        if (_stateStore is not null)
+            await _stateStore.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 
         var nextStep = flow.Steps.FirstOrDefault(s => s.StepId == nextStepId);
 
@@ -457,13 +484,19 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private Task TerminateAsync(UserFlowState state, FlowStateStatus status, string? reason)
+    private async Task TerminateAsync(UserFlowState state, FlowStateStatus status, string? reason)
     {
         state.Status      = status;
         state.CompletedAt = DateTime.UtcNow;
         state.AbortReason = reason;
         _activeStates.TryRemove(state.UserId, out _);
-        return Task.CompletedTask;
+
+        if (_stateStore is not null)
+        {
+            // Persist final state for audit trail then clean up active entry.
+            await _stateStore.SaveStateAsync(state).ConfigureAwait(false);
+            await _stateStore.DeleteStateAsync(state.UserId).ConfigureAwait(false);
+        }
     }
 
     private static FlowStepResult BuildTerminalResult(UserFlowState state, string message)

@@ -52,6 +52,40 @@ public static class ConversationFlowExtensions
         configure?.Invoke(options);
 
         services.AddSingleton(options);
+        services.AddSingleton<IConversationStateStore, InMemoryConversationStateStore>();
+        services.AddSingleton<IConversationFlowEngine, ConversationFlowEngine>();
+        services.AddSingleton<ConversationFlowMiddleware>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds the conversation flow engine with a file-based state store that persists
+    /// flow states to <paramref name="stateDirectory"/> as JSON files.
+    /// Flow states survive process restarts and can be resumed on the next startup.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to configure.</param>
+    /// <param name="stateDirectory">Directory path where <c>{userId}.json</c> state files are stored.</param>
+    /// <param name="configure">Optional delegate to configure <see cref="ConversationFlowOptions"/>.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    public static IServiceCollection AddConversationFlowsWithFileStore(
+        this IServiceCollection services,
+        string stateDirectory,
+        Action<ConversationFlowOptions>? configure = null)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        if (string.IsNullOrWhiteSpace(stateDirectory))
+            throw new ArgumentException("State directory cannot be empty.", nameof(stateDirectory));
+
+        var options = new ConversationFlowOptions();
+        configure?.Invoke(options);
+
+        services.AddSingleton(options);
+        services.AddSingleton<IConversationStateStore>(sp =>
+            new FileConversationStateStore(
+                stateDirectory,
+                sp.GetService<ILogger<FileConversationStateStore>>()));
         services.AddSingleton<IConversationFlowEngine, ConversationFlowEngine>();
         services.AddSingleton<ConversationFlowMiddleware>();
 
