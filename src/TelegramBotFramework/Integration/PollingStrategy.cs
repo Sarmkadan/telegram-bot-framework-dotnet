@@ -104,7 +104,7 @@ public sealed class PollingStrategy
                 _logger.LogDebug("Polling for updates, last update ID: {LastUpdateId}", _lastUpdateId);
 
                 // Small delay to avoid hammering the API
-                await Task.Delay(interval, cancellationToken);
+                await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -114,7 +114,7 @@ public sealed class PollingStrategy
             {
                 _logger.LogError(ex, "Error during polling");
                 // Continue polling even on error, but with backoff
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -130,7 +130,7 @@ public sealed class PollingStrategy
 
             if (OnUpdateReceived  is not null)
             {
-                await OnUpdateReceived.Invoke(update);
+                await OnUpdateReceived.Invoke(update).ConfigureAwait(false);
             }
         }
         catch (Exception ex)

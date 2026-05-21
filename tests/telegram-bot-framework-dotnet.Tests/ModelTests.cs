@@ -457,7 +457,7 @@ public sealed class InMemoryUserRepositoryTests
         var repo = new InMemoryUserRepository();
         var user = CreateUser(1001, "Alice");
 
-        var result = await repo.CreateAsync(user);
+        var result = await repo.CreateAsync(user).ConfigureAwait(false);
 
         result.Should().NotBeNull();
         result.TelegramId.Should().Be(1001);
@@ -467,9 +467,9 @@ public sealed class InMemoryUserRepositoryTests
     public async Task GetByIdAsync_WhenUserExists_ReturnsUser()
     {
         var repo = new InMemoryUserRepository();
-        await repo.CreateAsync(CreateUser(2002, "Bob"));
+        await repo.CreateAsync(CreateUser(2002, "Bob")).ConfigureAwait(false);
 
-        var result = await repo.GetByIdAsync(2002);
+        var result = await repo.GetByIdAsync(2002).ConfigureAwait(false);
 
         result.Should().NotBeNull();
         result!.FirstName.Should().Be("Bob");
@@ -480,7 +480,7 @@ public sealed class InMemoryUserRepositoryTests
     {
         var repo = new InMemoryUserRepository();
 
-        var result = await repo.GetByIdAsync(9999);
+        var result = await repo.GetByIdAsync(9999).ConfigureAwait(false);
 
         result.Should().BeNull();
     }
@@ -489,12 +489,12 @@ public sealed class InMemoryUserRepositoryTests
     public async Task DeleteAsync_WhenUserExists_ReturnsTrueAndRemovesEntry()
     {
         var repo = new InMemoryUserRepository();
-        await repo.CreateAsync(CreateUser(3003, "Carol"));
+        await repo.CreateAsync(CreateUser(3003, "Carol")).ConfigureAwait(false);
 
-        var deleted = await repo.DeleteAsync(3003);
+        var deleted = await repo.DeleteAsync(3003).ConfigureAwait(false);
 
         deleted.Should().BeTrue();
-        (await repo.GetByIdAsync(3003)).Should().BeNull();
+        (await repo.GetByIdAsync(3003)).Should().BeNull().ConfigureAwait(false);
     }
 
     [Fact]
@@ -502,7 +502,7 @@ public sealed class InMemoryUserRepositoryTests
     {
         var repo = new InMemoryUserRepository();
 
-        var deleted = await repo.DeleteAsync(99999);
+        var deleted = await repo.DeleteAsync(99999).ConfigureAwait(false);
 
         deleted.Should().BeFalse();
     }
@@ -511,11 +511,11 @@ public sealed class InMemoryUserRepositoryTests
     public async Task GetByStatusAsync_FiltersUsersByStatus()
     {
         var repo = new InMemoryUserRepository();
-        await repo.CreateAsync(CreateUser(1, "Active1"));
-        await repo.CreateAsync(CreateUser(2, "Banned", status: UserStatus.Banned));
-        await repo.CreateAsync(CreateUser(3, "Active2"));
+        await repo.CreateAsync(CreateUser(1, "Active1")).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(2, "Banned", status: UserStatus.Banned)).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(3, "Active2")).ConfigureAwait(false);
 
-        var banned = await repo.GetByStatusAsync(UserStatus.Banned);
+        var banned = await repo.GetByStatusAsync(UserStatus.Banned).ConfigureAwait(false);
 
         banned.Should().HaveCount(1);
         banned[0].FirstName.Should().Be("Banned");
@@ -525,11 +525,11 @@ public sealed class InMemoryUserRepositoryTests
     public async Task SearchAsync_ByPartialFirstName_ReturnsAllMatches()
     {
         var repo = new InMemoryUserRepository();
-        await repo.CreateAsync(CreateUser(1, "Alexander"));
-        await repo.CreateAsync(CreateUser(2, "Alex"));
-        await repo.CreateAsync(CreateUser(3, "Bobby"));
+        await repo.CreateAsync(CreateUser(1, "Alexander")).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(2, "Alex")).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(3, "Bobby")).ConfigureAwait(false);
 
-        var results = await repo.SearchAsync("alex");
+        var results = await repo.SearchAsync("alex").ConfigureAwait(false);
 
         results.Should().HaveCount(2);
     }
@@ -538,11 +538,11 @@ public sealed class InMemoryUserRepositoryTests
     public async Task CountAsync_ReturnsCorrectUserCount()
     {
         var repo = new InMemoryUserRepository();
-        await repo.CreateAsync(CreateUser(1, "One"));
-        await repo.CreateAsync(CreateUser(2, "Two"));
-        await repo.CreateAsync(CreateUser(3, "Three"));
+        await repo.CreateAsync(CreateUser(1, "One")).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(2, "Two")).ConfigureAwait(false);
+        await repo.CreateAsync(CreateUser(3, "Three")).ConfigureAwait(false);
 
-        var count = await repo.CountAsync();
+        var count = await repo.CountAsync().ConfigureAwait(false);
 
         count.Should().Be(3);
     }

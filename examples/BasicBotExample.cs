@@ -39,16 +39,16 @@ public sealed class BasicBotExample
             try
             {
                 // Register basic commands
-                await RegisterStartCommandAsync();
-                await RegisterHelpCommandAsync();
-                await RegisterEchoCommandAsync();
+                await RegisterStartCommandAsync().ConfigureAwait(false);
+                await RegisterHelpCommandAsync().ConfigureAwait(false);
+                await RegisterEchoCommandAsync().ConfigureAwait(false);
 
                 _logger.LogInformation("Bot is running. Commands registered: /start, /help, /echo");
 
                 // Simulate incoming message
-                await HandleIncomingMessageAsync(123456789, 123456789, "/start");
-                await HandleIncomingMessageAsync(123456789, 123456789, "Hello bot!");
-                await HandleIncomingMessageAsync(123456789, 123456789, "/echo Test message");
+                await HandleIncomingMessageAsync(123456789, 123456789, "/start").ConfigureAwait(false);
+                await HandleIncomingMessageAsync(123456789, 123456789, "Hello bot!").ConfigureAwait(false);
+                await HandleIncomingMessageAsync(123456789, 123456789, "/echo Test message").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -71,7 +71,7 @@ public sealed class BasicBotExample
                 Parameters = new List<CommandParameter>()
             };
 
-            await _commandService.RegisterCommandAsync(command);
+            await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
             _logger.LogInformation("Registered /start command");
         }
 
@@ -89,7 +89,7 @@ public sealed class BasicBotExample
                 Parameters = new List<CommandParameter>()
             };
 
-            await _commandService.RegisterCommandAsync(command);
+            await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
             _logger.LogInformation("Registered /help command");
         }
 
@@ -116,7 +116,7 @@ public sealed class BasicBotExample
                 }
             };
 
-            await _commandService.RegisterCommandAsync(command);
+            await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
             _logger.LogInformation("Registered /echo command");
         }
 
@@ -127,7 +127,7 @@ public sealed class BasicBotExample
             try
             {
                 // Get or create user
-                var user = await _userService.GetOrCreateUserAsync(userId, "User", "Test");
+                var user = await _userService.GetOrCreateUserAsync(userId, "User", "Test").ConfigureAwait(false);
                 _logger.LogInformation("User {UserId} retrieved/created", user.Id);
 
                 // Process message
@@ -143,7 +143,7 @@ public sealed class BasicBotExample
                     }
                 };
 
-                var result = await _messageService.ProcessIncomingMessageAsync(message);
+                var result = await _messageService.ProcessIncomingMessageAsync(message).ConfigureAwait(false);
                 _logger.LogInformation("Message processed with status: {Status}", result.Status);
             }
             catch (Exception ex)
