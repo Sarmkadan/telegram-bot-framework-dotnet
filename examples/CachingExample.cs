@@ -36,9 +36,9 @@ public sealed class CachingExample
 
             try
             {
-                await DemonstrateCacheOperationsAsync();
-                await DemonstrateCacheExpirationAsync();
-                await DemonstrateCachingPatterns();
+                await DemonstrateCacheOperationsAsync().ConfigureAwait(false);
+                await DemonstrateCacheExpirationAsync().ConfigureAwait(false);
+                await DemonstrateCachingPatterns().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -55,26 +55,26 @@ public sealed class CachingExample
             var userData = new { Id = 123, Name = "John", Email = "john@example.com" };
 
             // Set value in cache
-            await _cacheProvider.SetAsync(userKey, userData, TimeSpan.FromHours(1));
+            await _cacheProvider.SetAsync(userKey, userData, TimeSpan.FromHours(1)).ConfigureAwait(false);
             _logger.LogInformation("Set value in cache: {Key}", userKey);
 
             // Get value from cache
-            var cachedUser = await _cacheProvider.GetAsync(userKey);
+            var cachedUser = await _cacheProvider.GetAsync(userKey).ConfigureAwait(false);
             if (cachedUser  is not null)
             {
                 _logger.LogInformation("Retrieved from cache: {Value}", cachedUser);
             }
 
             // Check if key exists
-            var exists = await _cacheProvider.ExistsAsync(userKey);
+            var exists = await _cacheProvider.ExistsAsync(userKey).ConfigureAwait(false);
             _logger.LogInformation("Key exists in cache: {Exists}", exists);
 
             // Remove value from cache
-            await _cacheProvider.RemoveAsync(userKey);
+            await _cacheProvider.RemoveAsync(userKey).ConfigureAwait(false);
             _logger.LogInformation("Removed value from cache: {Key}", userKey);
 
             // Verify removal
-            var afterRemoval = await _cacheProvider.GetAsync(userKey);
+            var afterRemoval = await _cacheProvider.GetAsync(userKey).ConfigureAwait(false);
             _logger.LogInformation("After removal, cache contains value: {HasValue}", afterRemoval  is not null);
         }
 
@@ -86,16 +86,16 @@ public sealed class CachingExample
             var sessionData = new { SessionId = "456", CreatedAt = DateTime.UtcNow };
 
             // Set with short TTL
-            await _cacheProvider.SetAsync(tempKey, sessionData, TimeSpan.FromSeconds(2));
+            await _cacheProvider.SetAsync(tempKey, sessionData, TimeSpan.FromSeconds(2)).ConfigureAwait(false);
             _logger.LogInformation("Set temporary cache with 2 second TTL: {Key}", tempKey);
 
             // Verify exists
-            var exists1 = await _cacheProvider.ExistsAsync(tempKey);
+            var exists1 = await _cacheProvider.ExistsAsync(tempKey).ConfigureAwait(false);
             _logger.LogInformation("Immediately after set, cache exists: {Exists}", exists1);
 
             // Wait for expiration
-            await Task.Delay(3000);
-            var exists2 = await _cacheProvider.ExistsAsync(tempKey);
+            await Task.Delay(3000).ConfigureAwait(false);
+            var exists2 = await _cacheProvider.ExistsAsync(tempKey).ConfigureAwait(false);
             _logger.LogInformation("After 3 seconds (past TTL), cache exists: {Exists}", exists2);
         }
 
@@ -104,13 +104,13 @@ public sealed class CachingExample
             _logger.LogInformation("--- Caching Patterns ---");
 
             // Pattern 1: Cache-Aside (Get or Create)
-            await DemonstrateCacheAsidePatternAsync();
+            await DemonstrateCacheAsidePatternAsync().ConfigureAwait(false);
 
             // Pattern 2: Bulk cache operations
-            await DemonstrateBulkCacheOperationsAsync();
+            await DemonstrateBulkCacheOperationsAsync().ConfigureAwait(false);
 
             // Pattern 3: Cache invalidation
-            await DemonstrateCacheInvalidationAsync();
+            await DemonstrateCacheInvalidationAsync().ConfigureAwait(false);
         }
 
         private async Task DemonstrateCacheAsidePatternAsync()
@@ -124,7 +124,7 @@ public sealed class CachingExample
             async Task<object> GetUserFromDatabaseAsync()
             {
                 _logger.LogInformation("  [DB] Fetching user {UserId} from database", userId);
-                await Task.Delay(100); // Simulate DB latency
+                await Task.Delay(100).ConfigureAwait(false); // Simulate DB latency
                 return new { Id = userId, Name = "Jane Doe", Email = "jane@example.com" };
             }
 
@@ -159,21 +159,21 @@ public sealed class CachingExample
             // Set multiple values
             foreach (var kvp in cacheData)
             {
-                await _cacheProvider.SetAsync(kvp.Key, kvp.Value, TimeSpan.FromHours(24));
+                await _cacheProvider.SetAsync(kvp.Key, kvp.Value, TimeSpan.FromHours(24)).ConfigureAwait(false);
             }
             _logger.LogInformation("  Set {Count} values in cache", cacheData.Count);
 
             // Retrieve multiple values
             foreach (var key in cacheData.Keys)
             {
-                var value = await _cacheProvider.GetAsync(key);
+                var value = await _cacheProvider.GetAsync(key).ConfigureAwait(false);
                 _logger.LogInformation("  {Key}: {Value}", key, value);
             }
 
             // Clear all
             foreach (var key in cacheData.Keys)
             {
-                await _cacheProvider.RemoveAsync(key);
+                await _cacheProvider.RemoveAsync(key).ConfigureAwait(false);
             }
             _logger.LogInformation("  Cleared {Count} values from cache", cacheData.Count);
         }
@@ -186,19 +186,19 @@ public sealed class CachingExample
             var stats = new { Views = 100, Clicks = 50, Conversions = 10 };
 
             // Set initial value
-            await _cacheProvider.SetAsync(userCacheKey, stats, TimeSpan.FromHours(1));
+            await _cacheProvider.SetAsync(userCacheKey, stats, TimeSpan.FromHours(1)).ConfigureAwait(false);
             _logger.LogInformation("  Cached user stats: {Stats}", stats);
 
             // Simulate update
             _logger.LogInformation("  [Updating stats in database...]");
-            await Task.Delay(50);
+            await Task.Delay(50).ConfigureAwait(false);
 
             // Invalidate cache to reflect new data
-            await _cacheProvider.RemoveAsync(userCacheKey);
+            await _cacheProvider.RemoveAsync(userCacheKey).ConfigureAwait(false);
             _logger.LogInformation("  Invalidated cache after update");
 
             // Next access will reload from source
-            var exists = await _cacheProvider.ExistsAsync(userCacheKey);
+            var exists = await _cacheProvider.ExistsAsync(userCacheKey).ConfigureAwait(false);
             _logger.LogInformation("  Cache exists after invalidation: {Exists}", exists);
         }
     }
