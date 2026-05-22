@@ -494,7 +494,7 @@ public sealed class InMemoryUserRepositoryTests
         var deleted = await repo.DeleteAsync(3003).ConfigureAwait(false);
 
         deleted.Should().BeTrue();
-        (await repo.GetByIdAsync(3003)).Should().BeNull().ConfigureAwait(false);
+        (await repo.GetByIdAsync(3003)).Should().BeNull();
     }
 
     [Fact]

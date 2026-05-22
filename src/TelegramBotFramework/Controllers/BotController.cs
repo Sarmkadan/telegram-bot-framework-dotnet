@@ -91,7 +91,7 @@ public sealed class BotController : ControllerBase
             var processedMessage = await _messageService.ProcessIncomingMessageAsync(message, cancellationToken);
 
             // Create execution context
-            var context = new ExecutionContext
+            var context = new TelegramBotFramework.Models.ExecutionContext
             {
                 UserId = request.UserId,
                 ChatId = request.ChatId,

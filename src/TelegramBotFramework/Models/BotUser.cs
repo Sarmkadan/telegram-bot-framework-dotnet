@@ -99,6 +99,7 @@ public enum UserRole
 {
     User = 0,
     Moderator = 1,
-    Administrator = 2,
+    Admin = 2,
+    Administrator = Admin,
     Owner = 3
 }

@@ -61,13 +61,13 @@ public sealed class JsonFormatter : IOutputFormatter
     {
         var formatted = new
         {
-            id = message.Id,
-            text = message.Text,
-            senderId = message.SenderId,
+            id = message.MessageId,
+            content = message.Content,
+            userId = message.UserId,
             chatId = message.ChatId,
-            timestamp = message.Timestamp,
-            editedTimestamp = message.EditedTimestamp,
-            type = message.MessageType.ToString()
+            createdAt = message.CreatedAt,
+            isEdited = message.IsEdited,
+            type = message.Type.ToString()
         };
 
         return JsonSerializer.Serialize(formatted, _options);
@@ -77,12 +77,13 @@ public sealed class JsonFormatter : IOutputFormatter
     {
         var formattedMessages = messages.Select(m => new
         {
-            id = m.Id,
-            text = m.Text,
-            senderId = m.SenderId,
+            id = m.MessageId,
+            content = m.Content,
+            userId = m.UserId,
             chatId = m.ChatId,
-            timestamp = m.Timestamp,
-            type = m.MessageType.ToString()
+            createdAt = m.CreatedAt,
+            isEdited = m.IsEdited,
+            type = m.Type.ToString()
         }).ToList();
 
         var wrapper = new { messages = formattedMessages, count = formattedMessages.Count };

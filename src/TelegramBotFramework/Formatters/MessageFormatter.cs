@@ -21,11 +21,11 @@ public sealed class MessageFormatter
     public static string FormatAsPlainText(Message message)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"[{message.Timestamp:yyyy-MM-dd HH:mm:ss}] {message.SenderId}:");
-        sb.AppendLine(message.Text);
+        sb.AppendLine($"[{message.CreatedAt:yyyy-MM-dd HH:mm:ss}] {message.UserId}:");
+        sb.AppendLine(message.Content);
 
-        if (message.EditedTimestamp.HasValue)
-            sb.AppendLine($"(Edited: {message.EditedTimestamp:yyyy-MM-dd HH:mm:ss})");
+        if (message.IsEdited)
+            sb.AppendLine("(Edited)");
 
         return sb.ToString();
     }
@@ -36,12 +36,12 @@ public sealed class MessageFormatter
     public static string FormatAsMarkdown(Message message)
     {
         var sb = new StringBuilder();
-        sb.Append($"**[{message.Timestamp:HH:mm}]** ");
-        sb.Append($"_{EscapeMarkdown(message.SenderId)}_: ");
-        sb.Append(EscapeMarkdown(message.Text));
+        sb.Append($"**[{message.CreatedAt:HH:mm}]** ");
+        sb.Append($"_{EscapeMarkdown(message.UserId.ToString())}_: ");
+        sb.Append(EscapeMarkdown(message.Content));
 
-        if (message.EditedTimestamp.HasValue)
-            sb.Append($" _(edited)_");
+        if (message.IsEdited)
+            sb.Append(" _(edited)_");
 
         return sb.ToString();
     }
@@ -53,11 +53,11 @@ public sealed class MessageFormatter
     {
         var sb = new StringBuilder();
         sb.Append("<div class='message'>");
-        sb.Append($"<span class='timestamp'>[{message.Timestamp:HH:mm}]</span> ");
-        sb.Append($"<strong>{EscapeHtml(message.SenderId)}</strong>: ");
-        sb.Append($"<span class='text'>{EscapeHtml(message.Text)}</span>");
+        sb.Append($"<span class='timestamp'>[{message.CreatedAt:HH:mm}]</span> ");
+        sb.Append($"<strong>{EscapeHtml(message.UserId.ToString())}</strong>: ");
+        sb.Append($"<span class='text'>{EscapeHtml(message.Content)}</span>");
 
-        if (message.EditedTimestamp.HasValue)
+        if (message.IsEdited)
             sb.Append("<span class='edited'>(edited)</span>");
 
         sb.Append("</div>");
@@ -86,10 +86,7 @@ public sealed class MessageFormatter
     /// </summary>
     public static string TruncateForPreview(Message message, int maxLength = 100)
     {
-        var text = message.Text;
-
-        // Remove newlines for preview
-        text = text.Replace("\r\n", " ").Replace("\n", " ");
+        var text = message.Content.Replace("\r\n", " ").Replace("\n", " ");
 
         if (text.Length > maxLength)
             text = text[..maxLength] + "…";
@@ -104,14 +101,14 @@ public sealed class MessageFormatter
     {
         var sb = new StringBuilder();
         sb.AppendLine("=== Message Debug Info ===");
-        sb.AppendLine($"ID: {message.Id}");
-        sb.AppendLine($"Type: {message.MessageType}");
-        sb.AppendLine($"Sender ID: {message.SenderId}");
+        sb.AppendLine($"ID: {message.MessageId}");
+        sb.AppendLine($"Type: {message.Type}");
+        sb.AppendLine($"Sender ID: {message.UserId}");
         sb.AppendLine($"Chat ID: {message.ChatId}");
-        sb.AppendLine($"Timestamp: {message.Timestamp:O}");
-        sb.AppendLine($"Edited: {(message.EditedTimestamp?.ToString("O") ?? "No")}");
-        sb.AppendLine($"Length: {message.Text?.Length ?? 0} chars");
-        sb.AppendLine($"Content: {message.Text}");
+        sb.AppendLine($"Timestamp: {message.CreatedAt:O}");
+        sb.AppendLine($"Edited: {(message.IsEdited ? "Yes" : "No")}");
+        sb.AppendLine($"Length: {message.Content.Length} chars");
+        sb.AppendLine($"Content: {message.Content}");
         return sb.ToString();
     }
 
