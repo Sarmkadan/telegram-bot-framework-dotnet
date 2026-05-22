@@ -7,6 +7,7 @@
 namespace TelegramBotFramework.Events;
 
 using System.Collections.Concurrent;
+using TelegramBotFramework.Integration;
 
 /// <summary>
 /// In-process publish-subscribe event bus implementation.

@@ -10,12 +10,12 @@ namespace TelegramBotFramework.Middleware;
 /// Middleware for structured logging of HTTP requests and responses.
 /// Logs request/response metadata including duration, status codes, and user context.
 /// </summary>
-public sealed class LoggingMiddleware
+public sealed class HttpLoggingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<LoggingMiddleware> _logger;
+    private readonly ILogger<HttpLoggingMiddleware> _logger;
 
-    public LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> logger)
+    public HttpLoggingMiddleware(RequestDelegate next, ILogger<HttpLoggingMiddleware> logger)
     {
         _next = next;
         _logger = logger;

@@ -57,12 +57,12 @@ public sealed class XmlFormatter : IOutputFormatter
     public string FormatMessage(Message message)
     {
         var element = new XElement("message",
-            new XElement("id", message.Id),
-            new XElement("text", message.Text),
-            new XElement("senderId", message.SenderId),
+            new XElement("id", message.MessageId),
+            new XElement("content", message.Content),
+            new XElement("userId", message.UserId),
             new XElement("chatId", message.ChatId),
-            new XElement("timestamp", message.Timestamp.ToString("O")),
-            new XElement("type", message.MessageType.ToString())
+            new XElement("createdAt", message.CreatedAt.ToString("O")),
+            new XElement("type", message.Type.ToString())
         );
 
         return element.ToString(GetSaveOptions());
@@ -75,12 +75,12 @@ public sealed class XmlFormatter : IOutputFormatter
         foreach (var msg in messages)
         {
             root.Add(new XElement("message",
-                new XElement("id", msg.Id),
-                new XElement("text", msg.Text),
-                new XElement("senderId", msg.SenderId),
+                new XElement("id", msg.MessageId),
+                new XElement("content", msg.Content),
+                new XElement("userId", msg.UserId),
                 new XElement("chatId", msg.ChatId),
-                new XElement("timestamp", msg.Timestamp.ToString("O")),
-                new XElement("type", msg.MessageType.ToString())
+                new XElement("createdAt", msg.CreatedAt.ToString("O")),
+                new XElement("type", msg.Type.ToString())
             ));
         }
 

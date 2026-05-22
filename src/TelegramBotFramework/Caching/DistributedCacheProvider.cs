@@ -7,6 +7,7 @@
 namespace TelegramBotFramework.Caching;
 
 using System.Text.Json;
+using TelegramBotFramework.Integration;
 
 /// <summary>
 /// Abstract base for distributed cache providers (Redis, Memcached, etc).

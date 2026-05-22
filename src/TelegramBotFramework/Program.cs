@@ -29,38 +29,13 @@ builder.Services.AddTelegramBotFramework(botConfig);
 // Add controllers
 builder.Services.AddControllers();
 
-// Add Swagger for development
+// Add endpoint metadata for development diagnostics
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
-    {
-        options.SwaggerDoc("v1", new()
-        {
-            Title = "Telegram Bot Framework",
-            Version = "v1",
-            Description = "Opinionated Telegram bot framework for .NET",
-            Contact = new()
-            {
-                Name = "Vladyslav Zaiets",
-                Url = new Uri("https://sarmkadan.com")
-            },
-            License = new()
-            {
-                Name = "MIT",
-                Url = new Uri("https://opensource.org/licenses/MIT")
-            }
-        });
-    });
 }
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Telegram Bot Framework v1"));
-}
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

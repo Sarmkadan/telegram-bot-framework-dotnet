@@ -32,6 +32,8 @@ public sealed class BotConfiguration
 
     public bool EnableWebhook { get; set; }
 
+    public string? ApiKey { get; set; }
+
     public string? WebhookUrl { get; set; }
 
     public string? WebhookSecret { get; set; }

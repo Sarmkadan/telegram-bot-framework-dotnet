@@ -27,7 +27,9 @@ An opinionated, production-ready framework for building Telegram bots with C# an
 
 - **Command System**: Automatic command routing with parameter validation and permission checks
 - **Interactive Menus**: Inline keyboards with nested navigation and callback handling
+- **Inline Keyboard Builder**: Fluent API for building Telegram inline keyboards with URL, callback, and switch-to-inline buttons
 - **Session Management**: User session tracking with configurable timeout and state persistence
+- **Conversation State Persistence**: Durable flow state storage across bot restarts using in-memory or file-based stores
 - **State Machine**: Built-in finite state machine for complex user flows and conversations
 - **Middleware Pipeline**: Extensible pipeline for logging, authorization, rate limiting, and validation
 - **User Management**: Role-based access control (User, Moderator, Admin, Owner) with ban/suspend functionality
@@ -39,6 +41,7 @@ An opinionated, production-ready framework for building Telegram bots with C# an
 - **REST API**: Complete API for bot management, user interaction, and admin operations
 - **Error Handling**: Global exception handling with structured error responses
 - **Integration**: Built-in Telegram API client, webhook support, and polling strategies
+- **Webhook Mode**: Hosted webhook service with secret-token validation and automatic registration/deregistration
 - **Formatters**: Multi-format output (JSON, CSV, XML, Telegram markdown)
 
 ---
@@ -570,6 +573,96 @@ await scheduledManager.ScheduleRecurringAsync(
     async () => await sessionService.CloseExpiredSessionsAsync(),
     TimeSpan.FromMinutes(5)
 );
+```
+
+### Example 11: Inline Keyboard Builder
+
+Build Telegram inline keyboards using a fluent API and optionally bridge to the existing `Menu` model.
+
+```csharp
+using TelegramBotFramework.Keyboard;
+
+// Fluent builder — each row is started with AddRow()
+var markup = new InlineKeyboardBuilder()
+    .AddRow()
+        .AddCallbackButton("✅ Accept", "action:accept")
+        .AddCallbackButton("❌ Decline", "action:decline")
+    .AddRow()
+        .AddUrlButton("📖 Documentation", "https://example.com/docs")
+    .AddRow()
+        .AddSwitchInlineButton("🔍 Search inline", "query prefix")
+    .Build();
+
+// markup.Rows contains IReadOnlyList<IReadOnlyList<InlineKeyboardButton>>
+// Bridge to the existing Menu model for persistence/rendering
+var menu = new InlineKeyboardBuilder()
+    .WithTitle("Main Menu")
+    .AddRow()
+        .AddCallbackButton("Settings", "nav:settings")
+        .AddCallbackButton("Help", "nav:help")
+    .ToMenu();
+```
+
+**`InlineButtonType` values:** `Callback`, `Url`, `SwitchInline`, `SwitchInlineCurrent`, `Pay`.
+
+### Example 12: Conversation State Persistence
+
+Persist active conversation flow states so they survive bot restarts.
+
+```csharp
+// Register DI — in-memory store (default)
+services.AddConversationFlows(options =>
+{
+    options.InactivityTimeoutMinutes = 30;
+});
+
+// File-based store — survives restarts; stored as JSON per user
+services.AddConversationFlowsWithFileStore(
+    storageDirectory: "/var/bot/flow-states",
+    options =>
+    {
+        options.InactivityTimeoutMinutes = 60;
+    }
+);
+
+// Implement a custom store
+public class RedisConversationStateStore : IConversationStateStore
+{
+    public Task SaveStateAsync(UserFlowState state, CancellationToken ct = default) { ... }
+    public Task<UserFlowState?> LoadStateAsync(long userId, CancellationToken ct = default) { ... }
+    public Task DeleteStateAsync(long userId, CancellationToken ct = default) { ... }
+    public Task<IReadOnlyList<UserFlowState>> LoadAllActiveStatesAsync(CancellationToken ct = default) { ... }
+}
+
+services.AddSingleton<IConversationStateStore, RedisConversationStateStore>();
+services.AddConversationFlows(options => { ... });
+```
+
+### Example 13: Webhook Mode
+
+Register the bot with Telegram's webhook API and receive updates over HTTPS.
+
+```csharp
+// appsettings.json
+{
+  "WebhookOptions": {
+    "WebhookUrl": "https://your-domain.com/api/webhook/telegram",
+    "SecretToken": "your-secret-token-32-chars-min",
+    "MaxConnections": 40,
+    "AllowedUpdates": ["message", "callback_query", "inline_query"],
+    "DropPendingUpdates": false
+  }
+}
+
+// Program.cs / Startup.cs
+builder.Services.AddWebhookMode(builder.Configuration);
+
+// WebhookService automatically registers the webhook on startup and
+// deregisters it on graceful shutdown.
+
+// The following HTTP endpoints are registered automatically:
+//   POST /api/webhook/telegram  — receives Telegram updates (validates X-Telegram-Bot-Api-Secret-Token)
+//   GET  /api/webhook/info      — returns current webhook registration info
 ```
 
 ---
