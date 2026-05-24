@@ -78,6 +78,33 @@ public sealed class ExecutionContext
     }
 
     /// <summary>
+    /// Gets the response message injected by a middleware that called <see cref="RespondAndStop"/>.
+    /// <c>null</c> when no middleware requested a short-circuit response.
+    /// </summary>
+    public string? PendingResponse { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether a middleware has short-circuited the pipeline via
+    /// <see cref="RespondAndStop"/>. When <c>true</c>, the pipeline executor skips all
+    /// remaining middleware and returns the context immediately.
+    /// </summary>
+    public bool IsStopped { get; private set; }
+
+    /// <summary>
+    /// Short-circuits the middleware pipeline and injects a response message that the
+    /// presentation layer should send to the user. Call this inside a middleware to both
+    /// provide feedback (e.g., "Too many requests, please wait") and halt further processing
+    /// without needing direct access to <c>ITelegramBotClient</c>.
+    /// </summary>
+    /// <param name="responseMessage">The message text to deliver to the user.</param>
+    public void RespondAndStop(string responseMessage)
+    {
+        PendingResponse = responseMessage;
+        IsStopped = true;
+        IsValid = false;
+    }
+
+    /// <summary>
     /// Adds an error message.
     /// </summary>
     public void AddError(string errorMessage)
