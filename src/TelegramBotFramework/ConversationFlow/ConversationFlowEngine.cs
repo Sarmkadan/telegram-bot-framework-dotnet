@@ -163,6 +163,31 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
             throw new InvalidOperationException(
                 $"User {userId} has no active conversation flow. Call StartFlowAsync first.");
 
+        try
+        {
+            return await ProcessInputCoreAsync(userId, state, input, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Terminate the flow so the user is not permanently stuck in a broken state.
+            await TerminateAsync(state, FlowStateStatus.Failed, ex.Message).ConfigureAwait(false);
+
+            _logger.LogError(ex,
+                "Unhandled exception during flow step processing — UserId: {UserId}, FlowId: {FlowId}, " +
+                "StepId: {StepId}. Flow has been terminated to prevent inconsistent state.",
+                userId, state.FlowId, state.CurrentStepId);
+
+            // Re-throw so the global middleware error handler receives the exception.
+            throw;
+        }
+    }
+
+    private async Task<FlowStepResult> ProcessInputCoreAsync(
+        long userId,
+        UserFlowState state,
+        string input,
+        CancellationToken cancellationToken)
+    {
         if (!_flows.TryGetValue(state.FlowId, out var flow))
             throw new InvalidOperationException(
                 $"Flow definition '{state.FlowId}' is no longer registered.");
