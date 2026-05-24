@@ -7,6 +7,31 @@
 namespace TelegramBotFramework.ConversationFlow;
 
 /// <summary>
+/// Defines the action taken when an idle conversation flow state is evicted
+/// due to inactivity timeout during a cleanup sweep.
+/// </summary>
+public enum FlowEvictionPolicy
+{
+    /// <summary>
+    /// Silently removes the timed-out state without notifying the user.
+    /// The user's next interaction will begin a fresh flow.
+    /// </summary>
+    SilentDiscard,
+
+    /// <summary>
+    /// Invokes the <see cref="ConversationFlowOptions.OnEviction"/> callback before discarding
+    /// the state, allowing the host application to send a notification message to the user.
+    /// </summary>
+    NotifyUser,
+
+    /// <summary>
+    /// Resets the flow state back to the initial step instead of removing it, so the user
+    /// can continue from the beginning without explicitly restarting the flow.
+    /// </summary>
+    ResetToInitialStep
+}
+
+/// <summary>
 /// Configuration options for the <see cref="ConversationFlowEngine"/>.
 /// Bind this class from <c>appsettings.json</c> under the <c>ConversationFlow</c> section
 /// or configure it inline via <see cref="ConversationFlowExtensions.AddConversationFlows"/>.
@@ -84,4 +109,19 @@ public sealed class ConversationFlowOptions
     /// </summary>
     public string AbortAcknowledgementMessage { get; set; } =
         "Conversation cancelled. Use the menu to start again.";
+
+    /// <summary>
+    /// Gets or sets the action taken when a cleanup sweep finds a timed-out flow state.
+    /// Defaults to <see cref="FlowEvictionPolicy.SilentDiscard"/>.
+    /// </summary>
+    public FlowEvictionPolicy TimeoutEvictionPolicy { get; set; } = FlowEvictionPolicy.SilentDiscard;
+
+    /// <summary>
+    /// Gets or sets an optional callback invoked for each evicted <see cref="UserFlowState"/>
+    /// during a cleanup sweep. Use this to send a timeout notification to the user or persist
+    /// collected variables before the state is discarded.
+    /// Invoked when <see cref="TimeoutEvictionPolicy"/> is <see cref="FlowEvictionPolicy.NotifyUser"/>
+    /// or as a general eviction hook for the other policies.
+    /// </summary>
+    public Func<UserFlowState, CancellationToken, Task>? OnEviction { get; set; }
 }
