@@ -102,7 +102,9 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(value))
             return value;
 
-        return new string(value.Reverse().ToArray());
+        var chars = value.ToCharArray();
+        Array.Reverse(chars);
+        return new string(chars);
     }
 
     /// <summary>
