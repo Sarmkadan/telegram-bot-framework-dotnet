@@ -25,11 +25,11 @@ WORKDIR /app
 
 COPY --from=publish /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:5001
+ENV ASPNETCORE_URLS=http://+:8080
 
-EXPOSE 5001
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5001/api/bot/health || exit 1
+    CMD curl -f http://localhost:8080/api/bot/health || exit 1
 
 ENTRYPOINT ["dotnet", "TelegramBotFramework.dll"]
