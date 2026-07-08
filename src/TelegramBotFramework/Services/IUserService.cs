@@ -13,11 +13,36 @@ public interface IUserService
 {
     Task<Models.BotUser> GetOrCreateUserAsync(long telegramId, string firstName, string? lastName = null, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets an existing user by Telegram ID or creates a new one, also recording the username.
+    /// </summary>
+    Task<Models.BotUser> GetOrCreateUserAsync(long telegramId, string firstName, string? lastName, string? username, CancellationToken cancellationToken = default);
+
     Task<Models.BotUser?> GetUserByIdAsync(long userId, CancellationToken cancellationToken = default);
 
     Task<Models.BotUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default);
 
     Task<Models.BotUser> UpdateUserAsync(Models.BotUser user, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates a user's profile fields by ID.
+    /// </summary>
+    Task<Models.BotUser> UpdateUserAsync(long userId, string firstName, string? lastName, string? username, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a user by ID.
+    /// </summary>
+    Task<bool> DeleteUserAsync(long userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Searches users by first name, last name, or username. An empty query returns all users.
+    /// </summary>
+    Task<IList<Models.BotUser>> SearchUsersAsync(string query, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets users filtered by status.
+    /// </summary>
+    Task<IList<Models.BotUser>> GetUsersByStatusAsync(Models.UserStatus status, CancellationToken cancellationToken = default);
 
     Task<bool> BanUserAsync(long userId, CancellationToken cancellationToken = default);
 
@@ -82,6 +107,32 @@ public interface ISessionService
     Task<Models.UserSession> NavigateToMenuAsync(string sessionId, string menuId, CancellationToken cancellationToken = default);
 
     Task RecordSessionActivityAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a session by its ID. Equivalent to <see cref="GetSessionAsync"/>.
+    /// </summary>
+    Task<Models.UserSession?> GetSessionByIdAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all sessions currently in the active state.
+    /// </summary>
+    Task<IList<Models.UserSession>> GetAllActiveSessionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all sessions belonging to a given user.
+    /// </summary>
+    Task<IList<Models.UserSession>> GetSessionsByUserIdAsync(long userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Permanently deletes a session by ID.
+    /// </summary>
+    Task<bool> DeleteSessionAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Closes any active session whose last activity is older than <paramref name="inactivityThreshold"/>.
+    /// </summary>
+    /// <returns>The number of sessions that were expired.</returns>
+    Task<int> ExpireInactiveSessionsAsync(TimeSpan inactivityThreshold, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

@@ -10,6 +10,7 @@ using Moq;
 using TelegramBotFramework.Models;
 using TelegramBotFramework.Services;
 using Xunit;
+using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Tests;
 
@@ -66,10 +67,10 @@ public sealed class BotOrchestratorAdditionalTests
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
         _mockMessageService.Setup(s => s.MarkAsFailedAsync(1, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         _mockMiddleware.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) =>
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) =>
             {
                 if (!string.IsNullOrEmpty(ctx.Message?.Content))
                 {
@@ -111,10 +112,10 @@ public sealed class BotOrchestratorAdditionalTests
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
         _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         _mockMiddleware.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "Hello", "John").ConfigureAwait(false);
@@ -152,10 +153,10 @@ public sealed class BotOrchestratorAdditionalTests
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
         _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
 
         _mockMiddleware.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ProcessUserMessageAsync(123, 456, longMessage, "John", "Doe").ConfigureAwait(false);
@@ -184,7 +185,7 @@ public sealed class BotOrchestratorAdditionalTests
             .Returns(Task.CompletedTask);
 
         _mockMiddleware.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
+            .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
         var result = await _orchestrator.ExecuteUserCommandAsync(123, 456, "test", parameters).ConfigureAwait(false);

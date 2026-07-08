@@ -85,11 +85,21 @@ public interface ISessionRepository : IRepository<Models.UserSession, string>
 {
     Task<Models.UserSession?> GetActiveByUserIdAsync(long userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the active session for a user. Equivalent to <see cref="GetActiveByUserIdAsync"/>.
+    /// </summary>
+    Task<Models.UserSession?> GetActiveSessionAsync(long userId, CancellationToken cancellationToken = default);
+
     Task<IList<Models.UserSession>> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default);
 
     Task<IList<Models.UserSession>> GetExpiredAsync(CancellationToken cancellationToken = default);
 
     Task<IList<Models.UserSession>> GetByStateAsync(Models.SessionState state, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all sessions currently in the active state.
+    /// </summary>
+    Task<IList<Models.UserSession>> GetAllActiveAsync(CancellationToken cancellationToken = default);
 
     Task<int> CloseExpiredSessionsAsync(CancellationToken cancellationToken = default);
 }

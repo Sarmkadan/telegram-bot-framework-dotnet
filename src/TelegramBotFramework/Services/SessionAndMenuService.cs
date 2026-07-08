@@ -25,6 +25,16 @@ public sealed class SessionService : ISessionService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Convenience constructor that uses a default <see cref="Models.BotConfiguration"/>.
+    /// </summary>
+    public SessionService(
+        Repositories.ISessionRepository sessionRepository,
+        Microsoft.Extensions.Logging.ILogger<SessionService> logger)
+        : this(sessionRepository, new Models.BotConfiguration(), logger)
+    {
+    }
+
     public async Task<Models.UserSession> CreateSessionAsync(
         long userId,
         long chatId,
@@ -49,7 +59,70 @@ public sealed class SessionService : ISessionService
 
     public async Task<Models.UserSession?> GetActiveSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
-        return await _sessionRepository.GetActiveByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        return await _sessionRepository.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Creates a new session with a custom timeout instead of the configured default.
+    /// </summary>
+    public async Task<Models.UserSession> CreateSessionAsync(
+        long userId,
+        long chatId,
+        TimeSpan sessionTimeout,
+        CancellationToken cancellationToken = default)
+    {
+        var session = new Models.UserSession
+        {
+            SessionId = Guid.NewGuid().ToString(),
+            UserId = userId,
+            ChatId = chatId,
+            State = Models.SessionState.Active,
+            CreatedAt = DateTime.UtcNow,
+            LastActivityAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.Add(sessionTimeout)
+        };
+
+        session.Validate();
+        var created = await _sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
+        _logger.LogInformation("Session created: {SessionId} for user {UserId}", session.SessionId, userId);
+        return created;
+    }
+
+    public Task<Models.UserSession?> GetSessionByIdAsync(string sessionId, CancellationToken cancellationToken = default) =>
+        GetSessionAsync(sessionId, cancellationToken);
+
+    public async Task<IList<Models.UserSession>> GetAllActiveSessionsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _sessionRepository.GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IList<Models.UserSession>> GetSessionsByUserIdAsync(long userId, CancellationToken cancellationToken = default)
+    {
+        return await _sessionRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<bool> DeleteSessionAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        return await _sessionRepository.DeleteAsync(sessionId, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<int> ExpireInactiveSessionsAsync(TimeSpan inactivityThreshold, CancellationToken cancellationToken = default)
+    {
+        var allSessions = await _sessionRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        var cutoff = DateTime.UtcNow - inactivityThreshold;
+        var count = 0;
+
+        foreach (var session in allSessions)
+        {
+            if (session.IsActive && session.LastActivityAt.HasValue && session.LastActivityAt.Value < cutoff)
+            {
+                session.State = Models.SessionState.Expired;
+                await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+                count++;
+            }
+        }
+
+        return count;
     }
 
     public async Task<Models.UserSession?> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)

@@ -13,6 +13,16 @@ public sealed class BotUser
 {
     public long TelegramId { get; set; }
 
+    /// <summary>
+    /// Alias for <see cref="TelegramId"/> used by consumers that model the user
+    /// identifier as "UserId" rather than the Telegram-specific term.
+    /// </summary>
+    public long UserId
+    {
+        get => TelegramId;
+        set => TelegramId = value;
+    }
+
     public string? FirstName { get; set; }
 
     public string? LastName { get; set; }
@@ -28,6 +38,12 @@ public sealed class BotUser
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Timestamp of the user's last recorded activity. <c>null</c> until the
+    /// first activity is recorded.
+    /// </summary>
+    public DateTime? LastActivityAt { get; set; }
 
     public bool IsBot { get; set; }
 
@@ -68,6 +84,7 @@ public sealed class BotUser
     public void UpdateActivity()
     {
         UpdatedAt = DateTime.UtcNow;
+        LastActivityAt = DateTime.UtcNow;
         MessagesCount++;
     }
 

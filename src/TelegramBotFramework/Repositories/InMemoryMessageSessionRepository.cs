@@ -228,6 +228,18 @@ public sealed class InMemorySessionRepository : ISessionRepository
         }
     }
 
+    public Task<Models.UserSession?> GetActiveSessionAsync(long userId, CancellationToken cancellationToken = default) =>
+        GetActiveByUserIdAsync(userId, cancellationToken);
+
+    public async Task<IList<Models.UserSession>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Delay(0, cancellationToken).ConfigureAwait(false);
+        lock (_lockObj)
+        {
+            return _sessions.Values.Where(s => s.State == Models.SessionState.Active).ToList();
+        }
+    }
+
     public async Task<IList<Models.UserSession>> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default)
     {
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);

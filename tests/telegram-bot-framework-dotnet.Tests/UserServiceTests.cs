@@ -102,7 +102,7 @@ public sealed class UserServiceTests
             .ReturnsAsync(existingUser);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(existingUser);
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe").ConfigureAwait(false);
@@ -159,7 +159,7 @@ public sealed class UserServiceTests
             .ReturnsAsync(user);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(user);
 
         // Act
         await _userService.RecordUserActivityAsync(123).ConfigureAwait(false);
@@ -282,7 +282,7 @@ public sealed class UserServiceTests
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().AllSatisfy(u => u.FirstName.Should().Contain("John", StringComparison.OrdinalIgnoreCase));
+        result.Should().AllSatisfy(u => u.FirstName.Should().ContainEquivalentOf("John"));
     }
 
     [Fact]

@@ -13,6 +13,16 @@ public sealed class Menu
 {
     public string Id { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Alias for <see cref="Id"/> used by consumers that model the menu
+    /// identifier as "MenuId".
+    /// </summary>
+    public string MenuId
+    {
+        get => Id;
+        set => Id = value;
+    }
+
     public string Title { get; set; } = string.Empty;
 
     public string? Description { get; set; }
