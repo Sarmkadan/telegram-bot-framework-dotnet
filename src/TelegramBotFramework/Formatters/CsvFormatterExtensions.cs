@@ -6,6 +6,8 @@
 
 namespace TelegramBotFramework.Formatters;
 
+using System.Globalization;
+
 /// <summary>
 /// Extension methods for <see cref="CsvFormatter"/> to provide additional formatting capabilities.
 /// </summary>
@@ -23,10 +25,12 @@ public static class CsvFormatterExtensions
     /// <param name="data">The collection of objects to format.</param>
     /// <param name="propertyNames">Names of properties to include in the output.</param>
     /// <returns>CSV formatted string with only the specified properties.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="propertyNames"/> is <see langword="null"/>.</exception>
     public static string FormatWithProperties<T>(this CsvFormatter formatter, IEnumerable<T> data, params string[] propertyNames)
     {
-        if (formatter is null)
-            throw new ArgumentNullException(nameof(formatter));
+        ArgumentNullException.ThrowIfNull(formatter);
+        ArgumentNullException.ThrowIfNull(propertyNames);
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
@@ -71,10 +75,14 @@ public static class CsvFormatterExtensions
     /// <param name="data">The object to format.</param>
     /// <param name="propertyNames">Names of properties to include in the output.</param>
     /// <returns>CSV formatted string with only the specified properties.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="propertyNames"/> is <see langword="null"/>.</exception>
     public static string FormatWithProperties<T>(this CsvFormatter formatter, T data, params string[] propertyNames)
     {
-        if (formatter is null)
-            throw new ArgumentNullException(nameof(formatter));
+        ArgumentNullException.ThrowIfNull(formatter);
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentNullException.ThrowIfNull(propertyNames);
 
         var items = new[] { data };
         return formatter.FormatWithProperties((IEnumerable<T>)items, propertyNames);
@@ -88,16 +96,19 @@ public static class CsvFormatterExtensions
     /// <param name="data">The collection of objects to format.</param>
     /// <param name="headers">Custom header names to use instead of property names.</param>
     /// <returns>CSV formatted string with custom headers.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="headers"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="headers"/> is empty.</exception>
     public static string FormatWithHeaders<T>(this CsvFormatter formatter, IEnumerable<T> data, params string[] headers)
     {
-        if (formatter is null)
-            throw new ArgumentNullException(nameof(formatter));
+        ArgumentNullException.ThrowIfNull(formatter);
+        ArgumentNullException.ThrowIfNull(headers);
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
             return string.Empty;
 
-        if (headers == null || headers.Length == 0)
+        if (headers.Length == 0)
             throw new ArgumentException("At least one header must be provided", nameof(headers));
 
         var type = typeof(T);
@@ -138,10 +149,10 @@ public static class CsvFormatterExtensions
     /// <param name="data">The collection of objects to format.</param>
     /// <param name="delimiter">The delimiter character to use instead of comma.</param>
     /// <returns>CSV formatted string with custom delimiter.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
     public static string FormatWithDelimiter<T>(this CsvFormatter formatter, IEnumerable<T> data, char delimiter = ';')
     {
-        if (formatter is null)
-            throw new ArgumentNullException(nameof(formatter));
+        ArgumentNullException.ThrowIfNull(formatter);
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
