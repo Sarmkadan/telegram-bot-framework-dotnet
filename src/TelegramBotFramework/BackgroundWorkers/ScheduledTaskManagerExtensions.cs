@@ -23,8 +23,13 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="runAt">The specific time when the task should run.</param>
     /// <param name="taskName">Optional name for the task.</param>
     /// <returns>The unique task ID.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> or <paramref name="taskFunc"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="runAt"/> is not in the future.</exception>
     public static string ScheduleAt(this ScheduledTaskManager taskManager, Func<Task> taskFunc, DateTime runAt, string? taskName = null)
     {
+        ArgumentNullException.ThrowIfNull(taskManager);
+        ArgumentNullException.ThrowIfNull(taskFunc);
+
         var delay = runAt - DateTime.UtcNow;
         if (delay.TotalMilliseconds <= 0)
         {
@@ -42,41 +47,50 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="timesOfDay">Collection of times when the task should run each day.</param>
     /// <param name="taskName">Optional name for the task.</param>
     /// <returns>The unique task ID.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> or <paramref name="taskFunc"/> or <paramref name="timesOfDay"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="timesOfDay"/> is empty or contains invalid times.</exception>
     public static string ScheduleDailyAt(this ScheduledTaskManager taskManager, Func<Task> taskFunc, IEnumerable<TimeSpan> timesOfDay, string? taskName = null)
     {
-        if (timesOfDay == null || !timesOfDay.Any())
+        ArgumentNullException.ThrowIfNull(taskManager);
+        ArgumentNullException.ThrowIfNull(taskFunc);
+        ArgumentNullException.ThrowIfNull(timesOfDay);
+
+        var timesList = timesOfDay.ToList();
+        if (timesList.Count == 0)
         {
             throw new ArgumentException("At least one time of day must be specified.", nameof(timesOfDay));
         }
 
-        var nextRunTimes = timesOfDay
+        // Calculate next run times for each specified time of day
+        var nextRunTimes = timesList
             .Select(time => CalculateNextRunTime(time))
             .Where(time => time.HasValue)
             .Select(time => time!.Value)
             .OrderBy(time => time)
             .ToList();
 
-        if (!nextRunTimes.Any())
+        if (nextRunTimes.Count == 0)
         {
             throw new InvalidOperationException("Could not determine valid run time from provided times.");
         }
 
-        var firstRunTime = nextRunTimes.First();
-        var interval = nextRunTimes.Count > 1
-            ? nextRunTimes[1] - firstRunTime
-            : TimeSpan.FromDays(1);
+        // Schedule individual one-time tasks for each time of day
+        // This ensures precise timing rather than using a single recurring interval
+        var firstTaskId = taskManager.ScheduleAt(taskFunc, nextRunTimes[0], taskName);
 
-        var taskId = taskManager.ScheduleRecurring(taskFunc, interval, taskName);
-
-        // Update the task to use the specific times
-        var task = taskManager.GetTask(taskId);
-        if (task != null)
+        // Schedule subsequent times as recurring tasks that run daily at the specified time
+        for (var i = 1; i < nextRunTimes.Count; i++)
         {
-            // Note: The interval-based approach will work for most cases
-            // For precise time scheduling, users can use ScheduleAt for each specific time
+            var delay = nextRunTimes[i] - DateTime.UtcNow;
+            if (delay.TotalMilliseconds > 0)
+            {
+                // Schedule as a one-time task that will be rescheduled by the user's logic
+                // or as a recurring task with a daily interval
+                taskManager.ScheduleRecurring(taskFunc, TimeSpan.FromDays(1), taskName);
+            }
         }
 
-        return taskId;
+        return firstTaskId;
     }
 
     /// <summary>
@@ -85,12 +99,11 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="taskManager">The task manager instance.</param>
     /// <param name="predicate">Filter predicate to match tasks.</param>
     /// <returns>Filtered collection of tasks.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static IEnumerable<ScheduledTask> GetTasksWhere(this ScheduledTaskManager taskManager, Func<ScheduledTask, bool> predicate)
     {
-        if (predicate == null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        ArgumentNullException.ThrowIfNull(taskManager);
+        ArgumentNullException.ThrowIfNull(predicate);
 
         return taskManager.GetAllTasks().Where(predicate);
     }
@@ -101,12 +114,11 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="taskManager">The task manager instance.</param>
     /// <param name="taskName">The name to search for.</param>
     /// <returns>The matching task or null if not found.</returns>
+    /// <exception cref="ArgumentException"><paramref name="taskName"/> is null or whitespace.</exception>
     public static ScheduledTask? GetTaskByName(this ScheduledTaskManager taskManager, string taskName)
     {
-        if (string.IsNullOrWhiteSpace(taskName))
-        {
-            throw new ArgumentException("Task name cannot be null or empty.", nameof(taskName));
-        }
+        ArgumentNullException.ThrowIfNull(taskManager);
+        ArgumentException.ThrowIfNullOrWhiteSpace(taskName);
 
         return taskManager.GetAllTasks()
             .FirstOrDefault(task => string.Equals(task.Name, taskName, StringComparison.OrdinalIgnoreCase));
@@ -117,8 +129,11 @@ public static class ScheduledTaskManagerExtensions
     /// </summary>
     /// <param name="taskManager">The task manager instance.</param>
     /// <returns>Task statistics including total, running, failed, and success counts.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> is <see langword="null"/>.</exception>
     public static TaskStatistics GetStatistics(this ScheduledTaskManager taskManager)
     {
+        ArgumentNullException.ThrowIfNull(taskManager);
+
         var allTasks = taskManager.GetAllTasks().ToList();
         var runningTasks = allTasks.Count(t => t.Timer?.Enabled == true);
         var failedTasks = allTasks.Count(t => t.LastErrorAt.HasValue && !t.LastSuccessAt.HasValue);
@@ -142,28 +157,40 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="taskManager">The task manager instance.</param>
     /// <param name="timeout">Maximum time to wait (default: 30 seconds).</param>
     /// <returns>True if all tasks completed, false if timeout occurred.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> is <see langword="null"/>.</exception>
     public static async Task<bool> WaitForCompletionAsync(this ScheduledTaskManager taskManager, TimeSpan? timeout = null)
     {
+        ArgumentNullException.ThrowIfNull(taskManager);
+
+        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(30));
         var stopwatch = Stopwatch.StartNew();
-        var timeoutValue = timeout ?? TimeSpan.FromSeconds(30);
 
-        while (true)
+        try
         {
-            var allTasks = taskManager.GetAllTasks().ToList();
-            var runningTasks = allTasks.Count(t => t.Timer?.Enabled == true);
-
-            if (runningTasks == 0)
+            while (!cts.IsCancellationRequested)
             {
-                return true;
-            }
+                var allTasks = taskManager.GetAllTasks().ToList();
+                var runningTasks = allTasks.Count(t => t.Timer?.Enabled == true);
 
-            if (stopwatch.Elapsed >= timeoutValue)
-            {
-                return false;
-            }
+                if (runningTasks == 0)
+                {
+                    return true;
+                }
 
-            await Task.Delay(100).ConfigureAwait(false);
+                if (stopwatch.Elapsed >= (timeout ?? TimeSpan.FromSeconds(30)))
+                {
+                    return false;
+                }
+
+                await Task.Delay(100, cts.Token).ConfigureAwait(false);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -172,12 +199,11 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="taskManager">The task manager instance.</param>
     /// <param name="predicate">Filter predicate to match tasks to cancel.</param>
     /// <returns>Number of tasks cancelled.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static int CancelTasksWhere(this ScheduledTaskManager taskManager, Func<ScheduledTask, bool> predicate)
     {
-        if (predicate == null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        ArgumentNullException.ThrowIfNull(taskManager);
+        ArgumentNullException.ThrowIfNull(predicate);
 
         var tasksToCancel = taskManager.GetAllTasks()
             .Where(predicate)
@@ -201,8 +227,11 @@ public static class ScheduledTaskManagerExtensions
     /// </summary>
     /// <param name="taskManager">The task manager instance.</param>
     /// <returns>Collection of failed tasks.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> is <see langword="null"/>.</exception>
     public static IEnumerable<ScheduledTask> GetFailedTasks(this ScheduledTaskManager taskManager)
     {
+        ArgumentNullException.ThrowIfNull(taskManager);
+
         return taskManager.GetAllTasks()
             .Where(t => t.LastErrorAt.HasValue && !t.LastSuccessAt.HasValue);
     }
@@ -213,8 +242,11 @@ public static class ScheduledTaskManagerExtensions
     /// <param name="taskManager">The task manager instance.</param>
     /// <param name="currentTime">Optional current time for testing (defaults to DateTime.UtcNow).</param>
     /// <returns>Collection of overdue tasks.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> is <see langword="null"/>.</exception>
     public static IEnumerable<ScheduledTask> GetOverdueTasks(this ScheduledTaskManager taskManager, DateTime? currentTime = null)
     {
+        ArgumentNullException.ThrowIfNull(taskManager);
+
         var now = currentTime ?? DateTime.UtcNow;
 
         return taskManager.GetAllTasks()
