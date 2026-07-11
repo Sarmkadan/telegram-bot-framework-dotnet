@@ -13,8 +13,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="buttons">Collection of (text, callbackData) pairs.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> or <paramref name="buttons"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddButtons(this InlineKeyboardBuilder builder, IEnumerable<(string Text, string CallbackData)> buttons)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(buttons);
+
         foreach (var (text, callbackData) in buttons)
         {
             builder.AddButton(text, callbackData);
@@ -28,8 +32,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="buttons">Collection of (text, url) pairs.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> or <paramref name="buttons"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddUrlButtons(this InlineKeyboardBuilder builder, IEnumerable<(string Text, string Url)> buttons)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(buttons);
+
         foreach (var (text, url) in buttons)
         {
             builder.AddUrlButton(text, url);
@@ -43,8 +51,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="buttons">Collection of (text, callbackData) pairs for the row.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddButtonRow(this InlineKeyboardBuilder builder, params (string Text, string CallbackData)[] buttons)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(buttons);
+
         foreach (var (text, callbackData) in buttons)
         {
             builder.AddButton(text, callbackData);
@@ -58,8 +70,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="buttons">Collection of (text, url) pairs for the row.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddUrlButtonRow(this InlineKeyboardBuilder builder, params (string Text, string Url)[] buttons)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(buttons);
+
         foreach (var (text, url) in buttons)
         {
             builder.AddUrlButton(text, url);
@@ -74,8 +90,11 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="confirmCallbackData">Callback data for the confirm button.</param>
     /// <param name="cancelCallbackData">Callback data for the cancel button.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddConfirmationRow(this InlineKeyboardBuilder builder, string confirmCallbackData = "confirm", string cancelCallbackData = "cancel")
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         return builder
             .AddButton("✅ Confirm", confirmCallbackData)
             .AddButton("❌ Cancel", cancelCallbackData);
@@ -90,6 +109,7 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="pageNumber">Current page number (displayed in the center).</param>
     /// <param name="baseCallbackData">Base callback data for pagination (e.g., "page_").</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddPaginationRow(
         this InlineKeyboardBuilder builder,
         bool hasPrevious,
@@ -97,6 +117,8 @@ public static class InlineKeyboardBuilderExtensions
         int pageNumber,
         string baseCallbackData = "page")
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         if (hasPrevious)
         {
             builder.AddButton("⬅️ Previous", $"{baseCallbackData}_{pageNumber - 1}");
@@ -118,8 +140,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="buttons">Collection of (text, query) pairs.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddSwitchInlineButtons(this InlineKeyboardBuilder builder, params (string Text, string Query)[] buttons)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(buttons);
+
         foreach (var (text, query) in buttons)
         {
             builder.AddSwitchInlineButton(text, query);
@@ -134,8 +160,13 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="text">Button text.</param>
     /// <param name="callbackData">Callback data (optional).</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="text"/> is null or whitespace.</exception>
     public static InlineKeyboardBuilder AddFullWidthButton(this InlineKeyboardBuilder builder, string text, string? callbackData = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+
         if (callbackData is not null)
         {
             builder.AddButton(text, callbackData);
@@ -145,6 +176,7 @@ public static class InlineKeyboardBuilderExtensions
             // For URL buttons as full-width
             builder.AddUrlButton(text, "#"); // Placeholder URL
         }
+
         return builder.NewRow();
     }
 
@@ -154,8 +186,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="grid">2D array where each cell is (text, callbackData) or null for empty cell.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddButtonGrid(this InlineKeyboardBuilder builder, (string Text, string CallbackData)?[,] grid)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(grid);
+
         int rows = grid.GetLength(0);
         int cols = grid.GetLength(1);
 
@@ -183,8 +219,12 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="builder">The keyboard builder.</param>
     /// <param name="grid">2D array where each cell is (text, url) or null for empty cell.</param>
     /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     public static InlineKeyboardBuilder AddUrlButtonGrid(this InlineKeyboardBuilder builder, (string Text, string Url)?[,] grid)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(grid);
+
         int rows = grid.GetLength(0);
         int cols = grid.GetLength(1);
 
