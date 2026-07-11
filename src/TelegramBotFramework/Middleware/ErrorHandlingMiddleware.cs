@@ -21,6 +21,12 @@ public sealed class HttpErrorHandlingMiddleware
         _logger = logger;
     }
 
+    public string ErrorCode { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public string Path { get; set; } = string.Empty;
+    public string TraceId { get; set; } = string.Empty;
+
     public async Task InvokeAsync(HttpContext context)
     {
         try
