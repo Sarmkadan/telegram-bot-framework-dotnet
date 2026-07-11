@@ -11,14 +11,11 @@ namespace TelegramBotFramework.Models
         /// Validates the essential configuration properties to ensure the bot can function correctly.
         /// </summary>
         /// <param name="options">The options instance to validate.</param>
-        /// <exception cref="ArgumentNullException">Thrown if options is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if BotToken or BotUsername is null or empty.</exception>
         public static void Validate(this TelegramBotFrameworkDotnetOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             if (string.IsNullOrWhiteSpace(options.BotToken))
             {
@@ -36,13 +33,10 @@ namespace TelegramBotFramework.Models
         /// </summary>
         /// <param name="options">The options instance.</param>
         /// <returns>A TimeSpan representing the session timeout duration.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if options is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         public static TimeSpan GetSessionTimeout(this TelegramBotFrameworkDotnetOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return TimeSpan.FromMinutes(options.SessionTimeoutMinutes);
         }
@@ -52,13 +46,10 @@ namespace TelegramBotFramework.Models
         /// </summary>
         /// <param name="options">The options instance.</param>
         /// <returns>A TimeSpan representing the message processing timeout duration.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if options is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         public static TimeSpan GetMessageProcessingTimeout(this TelegramBotFrameworkDotnetOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return TimeSpan.FromSeconds(options.MessageProcessingTimeoutSeconds);
         }
@@ -68,13 +59,10 @@ namespace TelegramBotFramework.Models
         /// </summary>
         /// <param name="options">The options instance.</param>
         /// <returns>True if a database connection string is present; otherwise, false.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if options is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         public static bool HasDatabaseConfigured(this TelegramBotFrameworkDotnetOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return !string.IsNullOrWhiteSpace(options.DatabaseConnectionString);
         }
