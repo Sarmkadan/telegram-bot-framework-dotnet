@@ -6,6 +6,7 @@
 
 namespace TelegramBotFramework.Integration;
 
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Utilities;
@@ -135,6 +136,40 @@ public sealed class TelegramApiClient
     public async Task<bool> RemoveWebhookAsync()
     {
         return await SendApiRequestAsync("setWebhook", new { url = string.Empty }).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Fetches pending updates from Telegram using long polling.
+    /// </summary>
+    /// <param name="offset">Identifier of the first update to return; pass the last processed update ID + 1 to avoid duplicates.</param>
+    /// <param name="timeoutSeconds">Long-polling timeout in seconds.</param>
+    /// <returns>The raw update objects returned by Telegram, or an empty list if the call failed.</returns>
+    public async Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = 30)
+    {
+        var method = $"getUpdates?offset={offset.ToString(CultureInfo.InvariantCulture)}&timeout={timeoutSeconds.ToString(CultureInfo.InvariantCulture)}";
+        var json = await GetApiRequestAsync(method).ConfigureAwait(false);
+
+        if (string.IsNullOrWhiteSpace(json))
+            return Array.Empty<JsonElement>();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("ok", out var okElement) || !okElement.GetBoolean())
+                return Array.Empty<JsonElement>();
+
+            if (!root.TryGetProperty("result", out var resultElement) || resultElement.ValueKind != JsonValueKind.Array)
+                return Array.Empty<JsonElement>();
+
+            return resultElement.EnumerateArray().Select(static element => element.Clone()).ToArray();
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse getUpdates response");
+            return Array.Empty<JsonElement>();
+        }
     }
 
     private async Task<bool> SendApiRequestAsync<T>(string method, T payload) where T : class
