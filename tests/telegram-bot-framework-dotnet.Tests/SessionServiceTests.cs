@@ -69,19 +69,9 @@ public sealed class SessionServiceTests
     public async Task CreateSessionAsync_CreatesNewSession()
     {
         // Arrange
-        var newSession = new UserSession
-        {
-            SessionId = "new-session-123",
-            UserId = 123,
-            ChatId = 456,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(30)
-        };
-
         _mockSessionRepository
             .Setup(r => r.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(newSession);
+            .ReturnsAsync((UserSession s, CancellationToken _) => s);
 
         // Act
         var result = await _sessionService.CreateSessionAsync(123, 456).ConfigureAwait(false);
@@ -403,7 +393,7 @@ public sealed class SessionServiceTests
             .ReturnsAsync(sessions);
         _mockSessionRepository
             .Setup(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserSession s) => s);
+            .ReturnsAsync((UserSession s, CancellationToken _) => s);
 
         // Act
         var result = await _sessionService.ExpireInactiveSessionsAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);

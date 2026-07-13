@@ -57,7 +57,7 @@ public sealed class BotConfiguration
     /// </summary>
     public bool Validate()
     {
-        if (string.IsNullOrWhiteSpace(BotToken))
+        if (string.IsNullOrWhiteSpace(BotToken) || BotToken.Trim().Length < 2)
             throw new InvalidOperationException("BotToken is required");
 
         if (string.IsNullOrWhiteSpace(BotUsername))

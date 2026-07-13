@@ -35,12 +35,9 @@ public static class CollectionExtensions
     /// </summary>
     /// <param name="source">The collection to check.</param>
     /// <returns><see langword="true"/> if the collection is null or empty; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/></exception>
     public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
     {
-        ArgumentNullException.ThrowIfNull(source);
-
-        return !source.Any();
+        return source is null || !source.Any();
     }
 
     /// <summary>
@@ -48,10 +45,9 @@ public static class CollectionExtensions
     /// </summary>
     /// <param name="source">The collection to check.</param>
     /// <returns><see langword="true"/> if the collection is not null and has at least one item; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/></exception>
     public static bool HasItems<T>(this IEnumerable<T>? source)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        if (source is null) return false;
 
         return source.Any();
     }

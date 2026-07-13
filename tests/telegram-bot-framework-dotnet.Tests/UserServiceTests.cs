@@ -52,7 +52,7 @@ public sealed class UserServiceTests
             .ReturnsAsync((BotUser?)null);
         _mockUserRepository
             .Setup(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((BotUser user) => user);
+            .ReturnsAsync((BotUser user, CancellationToken _) => user);
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe").ConfigureAwait(false);
@@ -78,7 +78,7 @@ public sealed class UserServiceTests
             .ReturnsAsync((BotUser?)null);
         _mockUserRepository
             .Setup(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((BotUser user) => user);
+            .ReturnsAsync((BotUser user, CancellationToken _) => user);
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(123, "John", null, null).ConfigureAwait(false);

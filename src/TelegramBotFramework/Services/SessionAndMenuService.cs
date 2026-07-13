@@ -42,7 +42,7 @@ public sealed class SessionService : ISessionService
     {
         var session = new Models.UserSession
         {
-            SessionId = Guid.NewGuid().ToString(),
+            SessionId = $"session_{Guid.NewGuid():N}",
             UserId = userId,
             ChatId = chatId,
             State = Models.SessionState.Active,
@@ -73,7 +73,7 @@ public sealed class SessionService : ISessionService
     {
         var session = new Models.UserSession
         {
-            SessionId = Guid.NewGuid().ToString(),
+            SessionId = $"session_{Guid.NewGuid():N}",
             UserId = userId,
             ChatId = chatId,
             State = Models.SessionState.Active,
@@ -157,7 +157,7 @@ public sealed class SessionService : ISessionService
     public async Task<bool> CloseSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
-        if (session  is null)
+        if (session  is null || !session.IsActive)
         {
             return false;
         }

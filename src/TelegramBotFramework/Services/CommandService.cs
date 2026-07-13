@@ -61,7 +61,7 @@ public sealed class CommandService : ICommandService
     {
         var allCommands = await _commandRepository.GetEnabledAsync(cancellationToken).ConfigureAwait(false);
         return allCommands
-            .Where(c => !c.RequiresAdmin || userRole >= Models.UserRole.Administrator)
+            .Where(c => c.IsEnabled && (!c.RequiresAdmin || userRole >= Models.UserRole.Administrator))
             .ToList();
     }
 

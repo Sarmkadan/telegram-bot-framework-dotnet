@@ -320,7 +320,7 @@ public sealed class CommandServiceAdditionalTests
     public async Task IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser()
     {
         // Arrange
-        var command = new Command { Name = "/test", RateLimitPerMinute = 2 };
+        var command = new Command { Name = "/test", RateLimitPerMinute = 1 };
 
         _mockRepository
             .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))

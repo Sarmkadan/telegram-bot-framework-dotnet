@@ -136,15 +136,13 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to repeat.</param>
     /// <param name="count">The number of times to repeat the string.</param>
-    /// <returns>The repeated string, or empty string if count is zero or value is empty.</returns>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is negative.</exception>
+    /// <returns>The repeated string, or empty string if count is zero, negative, or value is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static string Repeat(this string value, int count)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentNullException.ThrowIfNull(value);
 
-        if (count == 0 || string.IsNullOrEmpty(value))
+        if (count <= 0 || string.IsNullOrEmpty(value))
             return string.Empty;
 
         return string.Create(value.Length * count, value, (span, state) =>
