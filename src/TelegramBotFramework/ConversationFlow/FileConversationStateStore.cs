@@ -154,7 +154,7 @@ public sealed class FileConversationStateStore : IConversationStateStore
         return result.AsReadOnly();
     }
 
-    private string GetFilePath(long userId) =>
+    public string GetFilePath(long userId) =>
         Path.Combine(_directory, $"{userId}.json");
 
     private static void TryDeleteFile(string path)
