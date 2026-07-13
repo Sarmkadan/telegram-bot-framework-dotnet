@@ -72,26 +72,25 @@ Console.WriteLine($"Total Tasks: {stats.TotalTasks}, Running: {stats.RunningTask
 await manager.WaitForCompletionAsync("Cleanup");
 ```
 
-## MessageServiceExtensions
+## InlineKeyboardBuilderExtensions
 
-Provides extension methods for managing message lifecycle operations including message creation, retrieval by content/user, status tracking, and bulk updates. Useful for implementing message queues, processing pipelines, and status tracking systems.
+Provides fluent, helper extension methods for building complex Telegram inline keyboards using `InlineKeyboardBuilder`. These methods simplify row management, grid layout creation, and common button patterns like confirmation and pagination.
 
 **Example usage**
 
 ```csharp
-// Example: Schedule and retrieve messages
-var messageService = serviceProvider.GetRequiredService<IMessageService>();
+// Assuming you have an instance of InlineKeyboardBuilder
+var builder = new InlineKeyboardBuilder();
 
-// Create and process a new message
-var newMessage = await messageService.CreateAndProcessMessageAsync(
-    new Message { Content = "Daily report", UserId = 12345 }
-);
-
-// Get all messages containing "report" for user 12345
-var reports = await messageService.GetUserMessagesByContentAsync(12345, "report");
-
-// Mark all unprocessed messages as processed
-var updated = await messageService.MarkMessagesAsProcessedAsync(
-    messages => messages.Any(m => m.Status == MessageStatus.Pending)
-);
+builder
+    .AddButtonRow(
+        ("Button 1", "callback_1"),
+        ("Button 2", "callback_2")
+    )
+    .AddUrlButtonRow(
+        ("GitHub", "https://github.com")
+    )
+    .AddPaginationRow(hasPrevious: false, hasNext: true, pageNumber: 1)
+    .AddConfirmationRow("yes", "no");
 ```
+
