@@ -120,3 +120,42 @@ await provider.SetManyAsync(new Dictionary<string, string> { { "key3", "val3" } 
 await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
 ```
 
+## BotConfigurationTestsExtensions
+
+Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Tests; // Namespace where BotConfigurationTestsExtensions lives
+
+// Start from a known‑good configuration and customize it for a specific test case
+var config = BotConfigurationTestsExtensions.CreateValidConfiguration()
+    .WithOwnerId(123456789)
+    .WithAdminIds(new[] { 111111111, 222222222 })
+    .WithCustomSettings(settings => {
+        // Example of adjusting any custom property on the configuration
+        settings.EnableLogging = true;
+    })
+    .WithWebhookEnabled()
+    .WithRateLimitingDisabled()
+    .WithSessionTimeout(TimeSpan.FromMinutes(20))
+    .WithMaxConcurrentRequests(15)
+    .WithLoggingDisabled()
+    .WithLocalizationLanguage("en");
+
+// Validate the configuration using the provided assertions
+config.ShouldBeValid();
+config.ShouldBeAdmin(123456789);
+config.ShouldNotBeAdmin(333333333);
+config.SessionTimeoutShouldBe(TimeSpan.FromMinutes(20));
+
+// Example of expecting a validation failure
+BotConfigurationTestsExtensions.ShouldThrowValidationException(() =>
+    BotConfigurationTestsExtensions.CreateValidConfiguration()
+        .WithOwnerId(0) // Invalid owner ID triggers validation error
+);
+```
+
+This section demonstrates how the test helpers can be combined to create expressive, readable unit tests for configuration validation logic.
