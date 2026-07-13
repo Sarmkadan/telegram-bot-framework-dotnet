@@ -1,7 +1,0 @@
-
-## UserSessionExtensions
-
-`UserSessionExtensions` provides a set of helper methods that make it easy to inspect and manipulate a user's session state. They let you check whether a session is idle or about to expire, retrieve the remaining time until expiration, store and retrieve typed context data, and query session‑related statistics such as the number of active sessions for a user.
-
-**Example usage**
-
