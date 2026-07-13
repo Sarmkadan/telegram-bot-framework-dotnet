@@ -1,0 +1,2 @@
+
+The example demonstrates typical scenarios: checking session health, working with per‑session context data, and obtaining user‑level session metrics—all using the static extension methods defined in `UserSessionExtensions`.
