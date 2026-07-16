@@ -1099,20 +1099,78 @@ int age = birthDate.GetAge();
 Console.WriteLine($"Age: {age} years");
 ```
 
-## CollectionExtensions
+## ReflectionHelper
 
-Provides extension methods for working with collections, lists, enumerables, and dictionaries. Includes utilities for safe access, batch operations, random shuffling, and dictionary conversion with duplicate key handling.
+The `ReflectionHelper` class provides utility methods for reflection operations, enabling dynamic type inspection, instantiation, and property manipulation at runtime. It simplifies common reflection patterns used throughout the framework for plugin architectures, dependency injection, and metadata-driven development.
+
+**Key features:**
+- Type discovery with `GetTypesImplementing<T>` and `GetTypesWithAttribute<T>`
+- Dynamic object creation via `CreateInstance<T>` overloads
+- Property inspection and manipulation with `GetProperties<T>`, `GetPropertyValue`, and `SetPropertyValue`
+- Type hierarchy analysis with `IsSubclassOfGeneric`
+- Display name generation for complex types including generics and nullable types
+- Method inspection via `GetPublicMethods`
+- Constant enumeration with `GetConstants`
 
 **Example usage**
 
 ```csharp
 using TelegramBotFramework.Utilities;
 
-// Example 1: Safe list access with GetOrDefault
-var users = new List<string> { "Alice", "Bob", "Charlie" };
-var firstUser = users.GetOrDefault(0); // "Alice"
-var invalidUser = users.GetOrDefault(10); // null
-var defaultUser = users.GetOrDefault(10, "Unknown"); // "Unknown"
+// Example 1: Discover all types implementing an interface
+var commandHandlers = ReflectionHelper.GetTypesImplementing<ICommandHandler>()
+    .Where(t => !t.IsAbstract);
+foreach (var handlerType in commandHandlers)
+{
+    Console.WriteLine($"Found command handler: {handlerType.Name}");
+}
+
+// Example 2: Find types with a specific attribute
+var commandTypes = ReflectionHelper.GetTypesWithAttribute<CommandAttribute>();
+foreach (var commandType in commandTypes)
+{
+    Console.WriteLine($"Found command type: {commandType.Name}");
+}
+
+// Example 3: Create an instance dynamically
+var botConfigType = typeof(TelegramBotFrameworkDotnetOptions);
+var botConfig = ReflectionHelper.CreateInstance<TelegramBotFrameworkDotnetOptions>(botConfigType);
+if (botConfig != null)
+{
+    Console.WriteLine("Configuration created successfully");
+}
+
+// Example 4: Get properties with a specific attribute
+var properties = ReflectionHelper.GetProperties<InjectAttribute>(typeof(LocalCacheProvider));
+foreach (var prop in properties)
+{
+    Console.WriteLine($"Injected property: {prop.Name}");
+}
+
+// Example 5: Get and set property values dynamically
+var settings = new TelegramBotFrameworkDotnetOptions();
+ReflectionHelper.SetPropertyValue(settings, "BotToken", "test_token_12345");
+var token = ReflectionHelper.GetPropertyValue(settings, "BotToken") as string;
+Console.WriteLine($"Token set to: {token}");
+
+// Example 6: Check if type is a subclass of a generic type
+bool isGenericList = ReflectionHelper.IsSubclassOfGeneric(typeof(CustomList<>), typeof(List<>));
+Console.WriteLine($"Is CustomList<T> a List<T>: {isGenericList}");
+
+// Example 7: Get display name for complex types
+var displayName = ReflectionHelper.GetDisplayName(typeof(List<string>));
+Console.WriteLine($"Display name: {displayName}"); // "List<String>"
+
+// Example 8: Get all public methods of a type
+var methods = ReflectionHelper.GetPublicMethods(typeof(StringBuilder));
+Console.WriteLine($"StringBuilder has {methods.Count()} public methods");
+
+// Example 9: Get all constants from a type
+var constants = ReflectionHelper.GetConstants(typeof(HttpStatusCode));
+foreach (var constant in constants)
+{
+    Console.WriteLine($"Constant: {constant.Name} = {constant.GetValue(null)}");
+}
 
 // Example 2: Check if collection is null or empty
 List<string>? nullList = null;
