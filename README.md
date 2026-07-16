@@ -1099,6 +1099,74 @@ int age = birthDate.GetAge();
 Console.WriteLine($"Age: {age} years");
 ```
 
+## CryptoUtility
+
+The `CryptoUtility` class provides cryptographic operations including hashing, password management, and encoding utilities. It offers secure methods for generating hashes, creating and verifying password hashes, generating random tokens, and encoding/decoding Base64 strings. These utilities are essential for implementing secure authentication, data integrity checks, and token-based systems in your bot applications.
+
+**Key features:**
+- Secure password hashing with PBKDF2 and salt
+- SHA256 and MD5 hashing algorithms
+- HMAC-SHA256 for message authentication
+- Cryptographically secure random string and token generation
+- Base64 encoding and decoding
+- Password verification with hash comparison
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Generate SHA256 hash
+string input = "Hello World!";
+string sha256Hash = CryptoUtility.HashSHA256(input);
+Console.WriteLine($"SHA256 hash: {sha256Hash}");
+
+// Example 2: Generate MD5 hash (for non-security purposes only)
+string md5Hash = CryptoUtility.HashMD5(input);
+Console.WriteLine($"MD5 hash: {md5Hash}");
+
+// Example 3: Hash and verify a password
+string password = "SecurePassword123!";
+string hashedPassword = CryptoUtility.HashPassword(password);
+Console.WriteLine($"Hashed password: {hashedPassword}");
+
+// Verify the password
+bool isValid = CryptoUtility.VerifyPassword(password, hashedPassword);
+Console.WriteLine($"Password valid: {isValid}"); // true
+
+// Verify wrong password
+bool isInvalid = CryptoUtility.VerifyPassword("WrongPassword", hashedPassword);
+Console.WriteLine($"Wrong password valid: {isInvalid}"); // false
+
+// Example 4: Generate a random string
+string randomString = CryptoUtility.GenerateRandomString(16);
+Console.WriteLine($"Random string: {randomString}"); // e.g., "xK9pLm2qR4sT7vW"
+
+// Example 5: Generate a random token
+string token = CryptoUtility.GenerateRandomToken(32);
+Console.WriteLine($"Random token: {token}"); // e.g., "a3f7c9b2e1d8f0e4a9b6c3d2e5f8a7b"
+
+// Example 6: Compute HMAC-SHA256 for message authentication
+string secretKey = "my-secret-key";
+string hmacHash = CryptoUtility.ComputeHmacSHA256(input, secretKey);
+Console.WriteLine($"HMAC-SHA256: {hmacHash}");
+
+// Example 7: Encode and decode Base64
+string originalText = "Hello Telegram Bot!";
+string encoded = CryptoUtility.EncodeBase64(originalText);
+Console.WriteLine($"Base64 encoded: {encoded}"); // "SGVsbG8gVGVsZWdyYW0gQm90IQ=="
+
+string? decoded = CryptoUtility.DecodeBase64(encoded);
+Console.WriteLine($"Base64 decoded: {decoded}"); // "Hello Telegram Bot!"
+
+// Example 8: Safe Base64 decoding with error handling
+string? invalidBase64 = CryptoUtility.DecodeBase64("invalid==base64");
+if (invalidBase64 == null)
+{
+    Console.WriteLine("Failed to decode invalid Base64");
+}
+```
+
 ## ReflectionHelper
 
 The `ReflectionHelper` class provides utility methods for reflection operations, enabling dynamic type inspection, instantiation, and property manipulation at runtime. It simplifies common reflection patterns used throughout the framework for plugin architectures, dependency injection, and metadata-driven development.
