@@ -17,6 +17,55 @@ A modern, opinionated framework for building scalable Telegram bots with .NET 10
 - Webhook mode with secret-token validation and auto-registration
 - In-memory cache provider with TTL support
 
+## IRateLimitingStrategy
+
+The `IRateLimitingStrategy` interface defines the contract for implementing rate limiting algorithms in the Telegram Bot Framework. It provides a consistent API for checking if requests are allowed and tracking remaining request capacity. The framework includes three built-in implementations: `TokenBucketStrategy`, `SlidingWindowStrategy`, and `FixedWindowStrategy`, each suitable for different traffic patterns and consistency requirements.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Strategies;
+
+// Create a token bucket strategy with capacity of 100 tokens and refill rate of 10 tokens per second
+var tokenBucketStrategy = new TokenBucketStrategy(bucketCapacity: 100, tokensPerSecond: 10);
+
+// Check if a request from a specific user is allowed
+string userIdentifier = "user_12345";
+bool isAllowed = tokenBucketStrategy.IsRequestAllowed(userIdentifier);
+
+if (isAllowed)
+{
+    Console.WriteLine("Request allowed - processing user request");
+    // Process the request...
+}
+else
+{
+    Console.WriteLine("Rate limit exceeded - request denied");
+}
+
+// Get remaining requests for this user
+int remainingRequests = tokenBucketStrategy.GetRemainingRequests(userIdentifier);
+Console.WriteLine($"Remaining requests: {remainingRequests}");
+
+// Create a sliding window strategy with 30 requests per 1-minute window
+var slidingWindowStrategy = new SlidingWindowStrategy(
+    requestsPerWindow: 30,
+    windowDuration: TimeSpan.FromMinutes(1)
+);
+
+// Check if request is allowed
+bool isSlidingAllowed = slidingWindowStrategy.IsRequestAllowed(userIdentifier);
+
+// Create a fixed window strategy with 60 requests per minute
+var fixedWindowStrategy = new FixedWindowStrategy(
+    requestsPerWindow: 60,
+    windowDuration: TimeSpan.FromMinutes(1)
+);
+
+// Check if request is allowed
+bool isFixedAllowed = fixedWindowStrategy.IsRequestAllowed(userIdentifier);
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
