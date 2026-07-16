@@ -1482,6 +1482,72 @@ bool hasWrite = permissions.HasFlag(PermissionFlags.Write);
 Console.WriteLine($"Has write permission: {hasWrite}"); // true
 ```
 
+## MessageFormatter
+
+The `MessageFormatter` class provides utility methods for formatting Telegram messages into different output formats including plain text, markdown, HTML, and conversation threads. It's particularly useful for logging, debugging, and displaying messages in various contexts within your bot application.
+
+**Key features:**
+- Format messages as plain text for logging purposes
+- Generate Telegram-compatible markdown formatting for message display
+- Create HTML-formatted messages for web interfaces
+- Format message collections as conversation threads
+- Truncate messages for preview displays
+- Generate detailed debug information for troubleshooting
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Formatters;
+using TelegramBotFramework.Models;
+
+// Create a sample message
+var message = new Message
+{
+    MessageId = 123,
+    UserId = 456,
+    ChatId = 789,
+    Content = "Hello! This is a test message with _special_ characters.",
+    Type = MessageType.Text,
+    CreatedAt = DateTime.UtcNow,
+    IsEdited = false
+};
+
+// Format as plain text for logging
+string plainText = MessageFormatter.FormatAsPlainText(message);
+Console.WriteLine(plainText);
+/* Output:
+[2024-07-16 14:30:00] 456:
+Hello! This is a test message with _special_ characters.
+*/
+
+// Format as Telegram markdown for sending to users
+string markdown = MessageFormatter.FormatAsMarkdown(message);
+Console.WriteLine(markdown);
+/* Output:
+**[14:30]** _456_: Hello! This is a test message with \_special\_ characters.
+*/
+
+// Format as HTML for web interfaces
+string html = MessageFormatter.FormatAsHtml(message);
+Console.WriteLine(html);
+/* Output:
+<div class='message'><span class='timestamp'>[14:30]</span> <strong>456</strong>: <span class='text'>Hello! This is a test message with _special_ characters.</span></div>
+*/
+
+// Format multiple messages as a conversation thread
+var messages = new List<Message> { message };
+string conversation = MessageFormatter.FormatAsConversation(messages);
+Console.WriteLine(conversation);
+
+// Truncate message for preview display
+string preview = MessageFormatter.TruncateForPreview(message, 50);
+Console.WriteLine(preview); // "Hello! This is a test message with _special_ charact…"
+
+// Get detailed debug information
+string debugInfo = MessageFormatter.FormatForDebug(message);
+Console.WriteLine(debugInfo);
+```
+
 ## UserSession
 
 The `UserSession` class represents an active user session that tracks conversation state, context data, and interaction history. Sessions store user-specific data across multiple interactions, enabling stateful conversations, menu navigation, and persistent context between messages. The class provides methods for managing session state, context data, command history, and session lifecycle tracking.
