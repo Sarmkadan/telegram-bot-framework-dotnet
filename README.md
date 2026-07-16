@@ -2243,6 +2243,69 @@ string errorCsv = csvFormatter.FormatError(
 );
 ```
 
+## ExecutionContextTests
+
+The `ExecutionContextTests` class provides unit tests for the `ExecutionContext` class, verifying the behavior of context initialization, state management, error handling, validation, and lifecycle tracking. It uses xUnit for test execution and FluentAssertions for readable assertions, ensuring that execution contexts maintain proper state throughout message processing pipelines and command execution flows.
+
+**Key test scenarios:**
+- Context initialization with `Constructor_WithDefaultValues_InitializesCorrectly` and `Constructor_WithUserAndSession_StoresReferences`
+- State management with `SetState_AddsStateToStatesDictionary`, `SetState_OverwritesExistingState`, and `GetState_*` methods
+- Error handling with `AddError_AddsErrorToErrorsList`, `AddError_WithNullError_DoesNotAdd`, and `AddError_WithEmptyError_DoesNotAdd`
+- Validation logic with `Validate_*` methods for various validation scenarios
+- Processing control with `StopProcessing_SetsIsStoppedToTrue`
+- Lifecycle tracking with `GetDuration_ReturnsTimeSpanSinceCreation`
+
+**Example usage:**
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Models;
+using Xunit;
+
+// Create a new execution context with default values
+var context = new ExecutionContext();
+
+// Context is automatically initialized with:
+// - ContextId: unique identifier for the execution context
+// - CreatedAt: timestamp when context was created
+// - IsValid: true when no errors are present
+// - Errors: empty list for collecting validation errors
+// - States: empty dictionary for storing execution state
+
+context.ContextId.Should().NotBeEmpty();
+context.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+context.IsValid.Should().BeTrue();
+context.Errors.Should().BeEmpty();
+context.States.Should().BeEmpty();
+
+// Set execution state for command processing
+context.SetState("current_command", "/start");
+context.SetState("user_language", "en");
+context.SetState("attempt_count", 0);
+
+// Retrieve execution state
+string? currentCommand = context.GetState<string>("current_command");
+int attemptCount = context.GetState<int>("attempt_count");
+
+// Add validation errors
+context.AddError("UserId is required");
+context.AddError("ChatId is required");
+
+// Check if context is valid
+bool isValid = context.IsValid;
+bool hasErrors = context.Errors.Any();
+
+// Stop processing if validation fails
+if (!context.IsValid)
+{
+    context.StopProcessing();
+}
+
+// Track execution duration
+var duration = context.GetDuration();
+Console.WriteLine($"Execution took: {duration.TotalMilliseconds}ms");
+```
+
 ## CommandServiceTests
 
 The `CommandServiceTests` class provides unit tests for the `CommandService` class, verifying command retrieval, execution, rate limiting, and permission validation logic. It uses Moq for mocking dependencies and FluentAssertions for readable test assertions, ensuring that command handling behaves correctly under various scenarios including disabled commands, insufficient permissions, and rate limiting constraints.
