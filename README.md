@@ -1740,6 +1740,123 @@ if (menuResult is OkObjectResult okMenuResult)
 }
 ```
 
+## AdminController
+
+The `AdminController` class provides administrative endpoints for managing bot configuration, users, commands, menus, and sessions. It exposes RESTful API methods for administrative operations that require elevated privileges, including user management (promotion/demotion, banning/unbanning), command lifecycle management, menu operations, and session cleanup.
+
+This controller is essential for building admin dashboards, management UIs, and automated administration tools that need to control bot behavior programmatically.
+
+
+
+**Key features:**
+- Bot configuration retrieval and monitoring
+- User administration (promote/demote administrators, ban/unban users)
+- Command management (register, retrieve, and delete commands)
+- Menu operations (list active menus)
+- Session management (close expired sessions)
+- Statistics and monitoring endpoints
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Controllers;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the AdminController
+var adminController = serviceProvider.GetRequiredService<AdminController>();
+
+// Example 1: Get bot configuration
+var configResult = adminController.GetConfiguration();
+if (configResult is OkObjectResult okConfigResult)
+{
+  var config = okConfigResult.Value;
+  Console.WriteLine($"Bot username: {config.botUsername}");
+  Console.WriteLine($"Session timeout: {config.sessionTimeoutMinutes} minutes");
+}
+
+// Example 2: Get statistics
+var statsResult = await adminController.GetStatistics();
+if (statsResult is OkObjectResult okStatsResult)
+{
+  var stats = okStatsResult.Value;
+  Console.WriteLine($"Total users: {stats.totalUsers}");
+  Console.WriteLine($"Active users: {stats.activeUsers}");
+  Console.WriteLine($"Admin count: {stats.adminCount}");
+}
+
+// Example 3: Get all administrators
+var adminsResult = await adminController.GetAdministrators();
+if (adminsResult is OkObjectResult okAdminsResult)
+{
+  var admins = okAdminsResult.Value as List<BotUser>;
+  Console.WriteLine($"Found {admins?.Count} administrators");
+}
+
+// Example 4: Promote user to administrator
+var promoteResult = await adminController.PromoteToAdmin(123456789);
+if (promoteResult is OkObjectResult okPromoteResult)
+{
+  Console.WriteLine("User promoted to admin successfully");
+}
+
+// Example 5: Ban user
+var banResult = await adminController.BanUser(987654321);
+if (banResult is OkObjectResult okBanResult)
+{
+  Console.WriteLine("User banned successfully");
+}
+
+// Example 6: Register a new command
+var newCommand = new Command
+{
+  Name = "/announce",
+  Description = "Send announcement to all users",
+  HandlerType = "AnnouncementCommandHandler",
+  IsActive = true,
+  RequiresAdmin = true
+};
+var registerResult = await adminController.RegisterCommand(newCommand);
+if (registerResult is CreatedResult createdResult)
+{
+  Console.WriteLine($"Command registered at: {createdResult.Location}");
+}
+
+// Example 7: Get a specific command
+var getCommandResult = await adminController.GetCommand("/announce");
+if (getCommandResult is OkObjectResult okGetCommandResult)
+{
+  var command = okGetCommandResult.Value as Command;
+  Console.WriteLine($"Command found: {command?.Name}");
+}
+
+// Example 8: Get all active menus
+var menusResult = await adminController.GetMenus();
+if (menusResult is OkObjectResult okMenusResult)
+{
+  var menus = okMenusResult.Value as List<Menu>;
+  Console.WriteLine($"Found {menus?.Count} active menus");
+}
+
+// Example 9: Close expired sessions
+var closeSessionsResult = await adminController.CloseExpiredSessions();
+if (closeSessionsResult is OkObjectResult okCloseResult)
+{
+  var result = okCloseResult.Value;
+  Console.WriteLine($"Closed {result.message}");
+}
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
