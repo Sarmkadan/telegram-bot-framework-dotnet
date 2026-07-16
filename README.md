@@ -481,6 +481,126 @@ Console.WriteLine($"Created: {botUser.CreatedAt}");
 Console.WriteLine($"Last activity: {botUser.LastActivityAt}");
 ```
 
+## Menu
+
+The `Menu` class represents an interactive menu interface that can be rendered as inline or reply keyboard buttons in Telegram. Menus organize bot commands and navigation options into structured layouts, supporting dynamic button arrangements, variable substitution, and callback-based interactions. The class provides methods for menu validation, button management, and state tracking.
+
+**Key features:**
+- Menu identification with unique `Id` and `MenuId` properties
+- Support for inline and reply keyboard menu types via `MenuType` enum
+- Dynamic button arrangement with configurable `MaxButtonsPerRow`
+- Variable substitution for dynamic menu content using `Variables` dictionary
+- Menu navigation with `BackMenuId` for hierarchical structures
+- Button management methods: `AddButton`, `RemoveButton`, `GetButton`
+- Variable management methods: `SetVariable`, `GetVariable`
+- Automatic layout arrangement via `GetArrangedButtons`
+- Menu validation with `Validate()` method
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create a main menu with inline buttons
+var mainMenu = new Menu
+{
+  Id = "main_menu",
+  Title = "Main Menu",
+  Description = "Welcome to the bot! Choose an option below:",
+  Type = MenuType.Inline,
+  IsActive = true,
+  DisplayOrder = 1,
+  MaxButtonsPerRow = 2,
+  BackMenuId = null, // No parent menu
+  Variables = new Dictionary<string, string>
+  {
+    { "bot_name", "My Awesome Bot" },
+    { "user_count", "1250" }
+  }
+};
+
+// Add buttons to the menu
+mainMenu.AddButton(new MenuButton
+{
+  Label = "📊 Dashboard",
+  CallbackData = "/dashboard",
+  Action = ButtonAction.Callback,
+  DisplayOrder = 1,
+  Icon = "📊"
+});
+
+mainMenu.AddButton(new MenuButton
+{
+  Label = "🔧 Settings",
+  CallbackData = "/settings",
+  Action = ButtonAction.Callback,
+  DisplayOrder = 2,
+  Icon = "⚙️"
+});
+
+mainMenu.AddButton(new MenuButton
+{
+  Label = "📈 Analytics",
+  CallbackData = "/analytics",
+  Action = ButtonAction.Callback,
+  DisplayOrder = 3,
+  Icon = "📈"
+});
+
+mainMenu.AddButton(new MenuButton
+{
+  Label = "🔗 Open Website",
+  Url = "https://example.com",
+  Action = ButtonAction.OpenUrl,
+  DisplayOrder = 4
+});
+
+// Validate the menu structure
+mainMenu.Validate();
+
+// Get buttons arranged by rows (respecting MaxButtonsPerRow)
+var arrangedButtons = mainMenu.GetArrangedButtons();
+Console.WriteLine($"Menu has {arrangedButtons.Count} rows of buttons");
+
+// Set a variable for dynamic content
+mainMenu.SetVariable("user_count", "1320");
+
+// Get a variable value
+string? botName = mainMenu.GetVariable("bot_name");
+Console.WriteLine($"Bot name: {botName}");
+
+// Get a specific button
+var settingsButton = mainMenu.GetButton("/settings");
+if (settingsButton != null)
+{
+  Console.WriteLine($"Found button: {settingsButton.Label}");
+}
+
+// Remove a button by callback data
+bool removed = mainMenu.RemoveButton("/old_command");
+Console.WriteLine($"Button removed: {removed}");
+
+// Access menu properties
+Console.WriteLine($"Menu ID: {mainMenu.Id}");
+Console.WriteLine($"Title: {mainMenu.Title}");
+Console.WriteLine($"Type: {mainMenu.Type}");
+Console.WriteLine($"Is Active: {mainMenu.IsActive}");
+Console.WriteLine($"Created: {mainMenu.CreatedAt}");
+Console.WriteLine($"Updated: {mainMenu.UpdatedAt}");
+Console.WriteLine($"Max Buttons Per Row: {mainMenu.MaxButtonsPerRow}");
+```
+
 ## Command
 
 The `Command` class represents a bot command that can be executed by users. It defines the command's metadata, behavior, and execution constraints including name, description, access control, rate limiting, and parameter definitions. Commands are the primary mechanism for handling user input in Telegram bots built with this framework.
