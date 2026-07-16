@@ -291,6 +291,88 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## BotUser
+
+The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
+
+**Key features:**
+- User profile management with first/last name, username, and phone number
+- Activity tracking with timestamps for last activity and message count
+- Role-based access control with `UserRole` enum (User, Moderator, Admin, Owner)
+- User status management with `UserStatus` enum (Active, Inactive, Banned, Suspended)
+- Metadata storage for custom user properties and preferences
+- Validation and display name generation
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create a new bot user
+var botUser = new BotUser
+{
+    TelegramId = 123456789,
+    FirstName = "John",
+    LastName = "Doe",
+    Username = "johndoe",
+    PhoneNumber = "+1234567890",
+    Status = BotUser.UserStatus.Active,
+    Role = BotUser.UserRole.Admin,
+    IsPremium = true,
+    IsBot = false,
+    Metadata = new Dictionary<string, string>
+    {
+        { "preferred_language", "en" },
+        { "timezone", "UTC-5" }
+    }
+};
+
+// Validate user data
+botUser.Validate();
+
+// Get user's display name
+string displayName = botUser.GetDisplayName();
+Console.WriteLine($"User: {displayName}"); // "John Doe"
+
+// Update user activity (automatically increments message count)
+botUser.UpdateActivity();
+Console.WriteLine($"Messages sent: {botUser.MessagesCount}"); // 1
+
+// Set custom metadata
+botUser.SetMetadata("last_command", "/admin");
+botUser.SetMetadata("theme", "dark");
+
+// Retrieve metadata
+string? lastCommand = botUser.GetMetadata("last_command");
+Console.WriteLine($"Last command: {lastCommand}"); // "/admin"
+
+// Check user permissions
+bool isAdmin = botUser.Role == BotUser.UserRole.Admin || botUser.Role == BotUser.UserRole.Administrator;
+Console.WriteLine($"Is admin: {isAdmin}"); // true
+
+// Check if user is premium
+bool isPremium = botUser.IsPremium;
+Console.WriteLine($"Is premium: {isPremium}"); // true
+
+// Access user properties
+Console.WriteLine($"User ID: {botUser.TelegramId}");
+Console.WriteLine($"Username: @{botUser.Username}");
+Console.WriteLine($"Status: {botUser.Status}");
+Console.WriteLine($"Created: {botUser.CreatedAt}");
+Console.WriteLine($"Last activity: {botUser.LastActivityAt}");
+```
+
 ## Command
 
 The `Command` class represents a bot command that can be executed by users. It defines the command's metadata, behavior, and execution constraints including name, description, access control, rate limiting, and parameter definitions. Commands are the primary mechanism for handling user input in Telegram bots built with this framework.
