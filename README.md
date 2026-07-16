@@ -1310,6 +1310,116 @@ bool deleted = await userRepository.DeleteAsync(123456789);
 Console.WriteLine($"User deleted: {deleted}");
 ```
 
+## InMemoryMessageRepository
+
+The `InMemoryMessageRepository` class provides an in-memory implementation of the `IMessageRepository` interface for storing and managing Telegram message data. This repository stores `Message` entities in memory with thread-safe operations, making it ideal for development, testing, and lightweight production scenarios where persistence isn't required.
+
+**Key features:**
+- Thread-safe operations using `lock` synchronization
+- Fast in-memory storage with O(1) average complexity for most operations
+- Comprehensive message lookup methods (by ID, user, chat, status, command, date range)
+- Pagination support for large message collections
+- Async API with cancellation support
+- Automatic message ID generation
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Repositories;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the in-memory message repository
+var messageRepository = serviceProvider.GetRequiredService<IMessageRepository>()
+    as InMemoryMessageRepository;
+
+// Create a new message
+var newMessage = new Message
+{
+    UserId = 123456789,
+    ChatId = 987654321,
+    Content = "/start Welcome to the bot!",
+    Type = MessageType.Text,
+    Status = MessageStatus.Processed,
+    CommandName = "/start",
+    CreatedAt = DateTime.UtcNow,
+    Metadata = new Dictionary<string, object>
+    {
+        { "user_language", "en" },
+        { "message_source", "web" }
+    }
+};
+
+// Add the message to the repository (automatically assigns MessageId)
+var createdMessage = await messageRepository.CreateAsync(newMessage);
+Console.WriteLine($"Message created with ID: {createdMessage.MessageId}");
+
+// Retrieve a message by ID
+var retrievedMessage = await messageRepository.GetByIdAsync(createdMessage.MessageId);
+if (retrievedMessage != null)
+{
+    Console.WriteLine($"Found message: {retrievedMessage.Content}");
+}
+
+// Get all messages
+var allMessages = await messageRepository.GetAllAsync();
+Console.WriteLine($"Total messages: {allMessages.Count}");
+
+// Get messages by user
+var userMessages = await messageRepository.GetByUserIdAsync(123456789);
+Console.WriteLine($"User has {userMessages.Count} messages");
+
+// Get messages by chat
+var chatMessages = await messageRepository.GetByChatIdAsync(987654321);
+Console.WriteLine($"Chat has {chatMessages.Count} messages");
+
+// Get messages by status
+var processedMessages = await messageRepository.GetByStatusAsync(MessageStatus.Processed);
+Console.WriteLine($"Processed messages: {processedMessages.Count}");
+
+// Get messages by command
+var startMessages = await messageRepository.GetByCommandAsync("/start");
+Console.WriteLine($"Start command messages: {startMessages.Count}");
+
+// Get messages within a date range
+var recentMessages = await messageRepository.GetByDateRangeAsync(
+    DateTime.UtcNow.AddDays(-1),
+    DateTime.UtcNow
+);
+Console.WriteLine($"Messages from last 24 hours: {recentMessages.Count}");
+
+// Get paginated results (latest messages first)
+var page1 = await messageRepository.GetPaginatedAsync(1, 10);
+Console.WriteLine($"Page 1 messages: {page1.Count}");
+
+// Check if message exists
+bool exists = await messageRepository.ExistsAsync(createdMessage.MessageId);
+Console.WriteLine($"Message exists: {exists}");
+
+// Count messages
+int messageCount = await messageRepository.CountAsync();
+Console.WriteLine($"Total message count: {messageCount}");
+
+// Update a message
+retrievedMessage!.Status = MessageStatus.Processed;
+var updatedMessage = await messageRepository.UpdateAsync(retrievedMessage);
+Console.WriteLine($"Message updated: {updatedMessage.Status}");
+
+// Delete a message
+bool deleted = await messageRepository.DeleteAsync(createdMessage.MessageId);
+Console.WriteLine($"Message deleted: {deleted}");
+```
+
 ## MessageService
 
 The `MessageService` class provides centralized message processing, storage, and lifecycle management for Telegram bot applications. It handles incoming message processing, retrieval, status tracking, and archiving operations, enabling reliable message handling and monitoring capabilities.
