@@ -247,6 +247,44 @@ Console.WriteLine($"Task cancelled: {cancelled}");
 // taskManager.Dispose();
 ```
 
+## InlineKeyboardBuilder
+
+The `InlineKeyboardBuilder` class provides a fluent API for constructing inline keyboards with buttons in Telegram. It enables programmatic creation of complex keyboard layouts with callback buttons, URL buttons, and switch inline query buttons, supporting dynamic row management and easy conversion to Telegram's `InlineKeyboardMarkup` format.
+
+**Key features:**
+- Fluent API for building inline keyboards with method chaining
+- Support for callback buttons, URL buttons, and switch inline query buttons
+- Row-based layout management with `NewRow()` for organizing buttons into rows
+- Conversion methods to generate Telegram-compatible `InlineKeyboardMarkup`
+- Access to button properties for customization
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Keyboard;
+
+// Create a new inline keyboard builder
+var builder = InlineKeyboardBuilder.Create()
+    .AddButton("📊 Dashboard", "dashboard")
+    .AddButton("🔧 Settings", "settings")
+    .NewRow()
+    .AddUrlButton("🌐 Visit Website", "https://example.com")
+    .AddButton("📈 Analytics", "analytics")
+    .NewRow()
+    .AddButton("✅ Confirm", "confirm_yes", "yes")
+    .AddButton("❌ Cancel", "confirm_no", "no");
+
+// Build the inline keyboard markup
+var keyboardMarkup = builder.Build();
+
+// Use with Telegram Bot API
+// await botClient.SendTextMessageAsync(
+//     chatId: message.Chat.Id,
+//     text: "Please choose an option:",
+//     replyMarkup: keyboardMarkup
+// );
+```
+
 ## InlineKeyboardBuilderExtensions
 
 Provides fluent, helper extension methods for building complex Telegram inline keyboards using `InlineKeyboardBuilder`. These methods simplify row management, grid layout creation, and common button patterns like confirmation and pagination.
