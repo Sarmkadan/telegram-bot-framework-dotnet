@@ -2243,6 +2243,71 @@ string errorCsv = csvFormatter.FormatError(
 );
 ```
 
+## CommandServiceTests
+
+The `CommandServiceTests` class provides unit tests for the `CommandService` class, verifying command retrieval, execution, rate limiting, and permission validation logic. It uses Moq for mocking dependencies and FluentAssertions for readable test assertions, ensuring that command handling behaves correctly under various scenarios including disabled commands, insufficient permissions, and rate limiting constraints.
+
+**Key test scenarios:**
+- Command retrieval with `GetCommandAsync` for both existing and non-existent commands
+- Command execution validation with `ExecuteCommandAsync` for disabled commands and permission checks
+- Rate limiting verification with `IsCommandRateLimitedAsync` for both exceeded and within-limit scenarios
+- Command registration validation with `RegisterCommandAsync` for invalid commands
+
+**Example usage:**
+
+```csharp
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Repositories;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Tests;
+
+// Setup test dependencies
+var mockRepository = new Mock<ICommandRepository>();
+var mockUserService = new Mock<IUserService>();
+var mockLogger = new Mock<ILogger<CommandService>>();
+var commandService = new CommandService(mockRepository.Object, mockUserService.Object, mockLogger.Object);
+
+// Test 1: GetCommandAsync returns command when it exists
+var existingCommand = new Models.Command { Name = "/test" };
+mockRepository
+    .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(existingCommand);
+
+var result = await commandService.GetCommandAsync("test");
+result.Should().NotBeNull();
+result!.Name.Should().Be("/test");
+
+// Test 2: GetCommandAsync returns null when command doesn't exist
+Models.Command? nullResult = await commandService.GetCommandAsync("unknown");
+nullResult.Should().BeNull();
+
+// Test 3: ExecuteCommandAsync validates disabled commands
+var disabledCommand = new Models.Command { Name = "/disabled", IsEnabled = false };
+var context = new Models.ExecutionContext { Command = disabledCommand, UserId = 1, ChatId = 1 };
+var executionResult = await commandService.ExecuteCommandAsync(context);
+executionResult.Errors.Should().Contain(e => e.Contains("is disabled"));
+
+// Test 4: ExecuteCommandAsync validates permissions
+var adminCommand = new Models.Command { Name = "/admin", RequiresAdmin = true };
+var user = new Models.BotUser { Role = Models.UserRole.User };
+var permissionContext = new Models.ExecutionContext { Command = adminCommand, User = user, UserId = 1, ChatId = 1 };
+var permissionResult = await commandService.ExecuteCommandAsync(permissionContext);
+permissionResult.Errors.Should().Contain(e => e.Contains("Insufficient permissions"));
+
+// Test 5: IsCommandRateLimitedAsync checks rate limits
+var rateLimitedCommand = new Models.Command { Name = "/test", RateLimitPerMinute = 1 };
+mockRepository
+    .Setup(r => r.GetByNameAsync("/test", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(rateLimitedCommand);
+
+bool firstRequestAllowed = await commandService.IsCommandRateLimitedAsync(1L, "/test");
+bool secondRequestLimited = await commandService.IsCommandRateLimitedAsync(1L, "/test");
+secondRequestLimited.Should().BeTrue();
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
