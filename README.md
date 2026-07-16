@@ -396,6 +396,64 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## UserService
+
+The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
+
+### Key Features:
+- User registration with automatic ID generation and configurable timeouts
+- Active user retrieval and management
+- Context data storage and retrieval for custom user properties
+- User status management (Active, Inactive, Banned, Suspended)
+- User role management (User, Moderator, Admin, Owner)
+- Metadata storage for custom user preferences
+- Validation and display name generation
+
+### Example Usage:
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+// ... add other services ...
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var userService = serviceProvider.GetRequiredService<IUserService>();
+
+// Create a new user
+var newUser = new BotUser
+{
+    TelegramId = 123456789,
+    FirstName = "John",
+    LastName = "Doe",
+    Username = "johndoe",
+    PhoneNumber = "+1234567890",
+    Status = UserStatus.Active,
+    Role = UserRole.User,
+    IsPremium = true,
+    IsBot = false,
+    Metadata = new Dictionary<string, string>
+    {
+        { "preferred_language", "en" },
+        { "timezone", "UTC-5" }
+    }
+};
+
+// Validate user data
+newUser.Validate();
+
+// Register the user
+var createdUser = await userService.UpdateUserAsync(newUser);
+Console.WriteLine($"User created: {createdUser.TelegramId}");
+```
+
 ## SessionService
 
 The `SessionService` class provides centralized session management for Telegram bot applications, handling creation, retrieval, updating, and cleanup of user sessions. Sessions track conversation state, context data, and interaction history, enabling stateful conversations, menu navigation, and persistent context between messages across multiple interactions.
