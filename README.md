@@ -171,6 +171,82 @@ Console.WriteLine($"Total Tasks: {stats.TotalTasks}, Running: {stats.RunningTask
 await manager.WaitForCompletionAsync("Cleanup");
 ```
 
+## ScheduledTaskManager
+
+The `ScheduledTaskManager` class manages scheduled and recurring background tasks using timers. It provides functionality for scheduling one-time tasks that execute after a delay, as well as recurring tasks that run at regular intervals. The manager tracks task execution, maintains statistics, and handles errors gracefully.
+
+**Key features:**
+- Schedule one-time tasks with `ScheduleOnce()` for delayed execution
+- Schedule recurring tasks with `ScheduleRecurring()` for periodic execution
+- Cancel tasks with `CancelTask()`
+- Query task status with `GetAllTasks()` and `GetTask()`
+- Monitor task execution with properties like `LastExecutedAt`, `LastSuccessAt`, `LastErrorAt`, and `ExecutionCount`
+- Graceful shutdown with `StopAll()` and `Dispose()`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.BackgroundWorkers;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+var taskManager = serviceProvider.GetRequiredService<ScheduledTaskManager>();
+
+// Schedule a one-time task to run after 5 minutes
+var oneTimeTaskId = taskManager.ScheduleOnce(
+    async () => 
+    {
+        Console.WriteLine("One-time task executed!");
+        await Task.CompletedTask;
+    },
+    TimeSpan.FromMinutes(5),
+    "OneTimeCleanup"
+);
+
+// Schedule a recurring task to run every 30 minutes
+var recurringTaskId = taskManager.ScheduleRecurring(
+    async () => 
+    {
+        Console.WriteLine("Recurring cleanup task executed at: {0}", DateTime.UtcNow);
+        await Task.CompletedTask;
+    },
+    TimeSpan.FromMinutes(30),
+    "RecurringCleanup"
+);
+
+// Get all scheduled tasks
+var allTasks = taskManager.GetAllTasks();
+foreach (var task in allTasks)
+{
+    Console.WriteLine($"Task: {task.Name}, ID: {task.Id}");
+    Console.WriteLine($"  - IsRecurring: {task.IsRecurring}");
+    Console.WriteLine($"  - Interval: {task.Interval}");
+    Console.WriteLine($"  - Created: {task.CreatedAt}");
+    Console.WriteLine($"  - LastExecuted: {task.LastExecutedAt}");
+    Console.WriteLine($"  - ExecutionCount: {task.ExecutionCount}");
+}
+
+// Get a specific task
+var specificTask = taskManager.GetTask(recurringTaskId);
+if (specificTask != null)
+{
+    Console.WriteLine($"Found task: {specificTask.Name}");
+}
+
+// Cancel a task
+bool cancelled = taskManager.CancelTask(oneTimeTaskId);
+Console.WriteLine($"Task cancelled: {cancelled}");
+
+// Stop all tasks when shutting down
+// taskManager.StopAll();
+// taskManager.Dispose();
+```
+
 ## InlineKeyboardBuilderExtensions
 
 Provides fluent, helper extension methods for building complex Telegram inline keyboards using `InlineKeyboardBuilder`. These methods simplify row management, grid layout creation, and common button patterns like confirmation and pagination.
