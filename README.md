@@ -1416,6 +1416,60 @@ string capitalized = name.Capitalize(); // "John doe"
 Console.WriteLine(capitalized);
 ```
 
+## BotConfigurationTests
+
+The `BotConfigurationTests` class contains unit tests for the `BotConfiguration` class. It verifies configuration validation, default values, and various helper methods including admin management, custom settings, and session timeout calculations.
+
+**Example usage**
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Models;
+using Xunit;
+
+public class BotConfigurationTestsExample
+{
+    [Fact]
+    public void ValidateConfiguration()
+    {
+        // Create a valid configuration
+        var config = new BotConfiguration
+        {
+            BotToken = "123456789:ABCDEFghijklmnopqrstuvwxyz",
+            BotUsername = "MyTestBot",
+            SessionTimeoutMinutes = 30,
+            MaxConcurrentRequests = 20,
+            OwnerId = 123456789
+        };
+        
+        // Validate configuration
+        bool isValid = config.Validate();
+        Assert.True(isValid);
+        
+        // Check if user is admin
+        bool isAdmin = config.IsAdmin(123456789);
+        Assert.True(isAdmin);
+        
+        // Get session timeout
+        TimeSpan timeout = config.GetSessionTimeout();
+        Assert.Equal(TimeSpan.FromMinutes(30), timeout);
+        
+        // Add admin
+        config.AddAdmin(987654321);
+        Assert.Contains(987654321, config.AdminIds);
+        
+        // Remove admin
+        bool removed = config.RemoveAdmin(987654321);
+        Assert.True(removed);
+        
+        // Set custom settings
+        config.SetCustomSetting("api_endpoint", "https://api.example.com");
+        string? endpoint = config.GetCustomSetting("api_endpoint");
+        Assert.Equal("https://api.example.com", endpoint);
+    }
+}
+```
+
 ## StringExtensionTests
 
 Contains unit tests for the `StringExtensions` class, verifying the functionality of various string manipulation and validation extension methods. The test suite covers truncation, email validation, alphanumeric checks, string repetition, text reversal, number extraction, prefix/suffix operations, and capitalization.
