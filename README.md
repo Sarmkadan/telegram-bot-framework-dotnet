@@ -380,6 +380,127 @@ Console.WriteLine($"Cache hit rate: {stats.HitRate:F2}%");
 // await cacheProvider.FlushAsync();
 ```
 
+## DistributedCacheProvider
+
+The `DistributedCacheProvider` class is an abstract base class for implementing distributed cache providers (Redis, Memcached, etc.) within the Telegram Bot Framework. It provides serialization/deserialization, common cache operations, and serves as the foundation for creating distributed cache implementations. Subclass this to create specific distributed cache providers for your caching backend.
+
+**Key features:**
+- Abstract base class for distributed cache implementations
+- JSON serialization/deserialization for type-safe caching
+- TTL-based expiration support
+- Atomic get-or-create operations via `GetOrCreateAsync`
+- Statistics tracking via `GetStatisticsAsync`
+- Thread-safe operations with built-in error handling
+- Fallback to `NoOpCacheProvider` when distributed cache is unavailable
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Caching;
+
+// Example: Implementing a RedisCacheProvider
+public class RedisCacheProvider : DistributedCacheProvider
+{
+    private readonly IDatabase _redis;
+    
+    public RedisCacheProvider(IDatabase redis, ILogger<RedisCacheProvider> logger) 
+        : base(logger)
+    {
+        _redis = redis;
+    }
+    
+    protected override async Task<string?> GetValueAsync(string key)
+    {
+        return await _redis.StringGetAsync(key);
+    }
+    
+    protected override async Task SetValueAsync(string key, string value, TimeSpan? expiration)
+    {
+        var options = expiration.HasValue 
+            ? new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration }
+            : null;
+        await _redis.StringSetAsync(key, value, expiration);
+    }
+    
+    protected override async Task RemoveValueAsync(string key)
+    {
+        await _redis.KeyDeleteAsync(key);
+    }
+    
+    protected override async Task<bool> KeyExistsAsync(string key)
+    {
+        return await _redis.KeyExistsAsync(key);
+    }
+    
+    protected override async Task FlushAllAsync()
+    {
+        // Redis-specific flush implementation
+        await _redis.ExecuteAsync("FLUSHALL");
+    }
+    
+    protected override async Task<CacheStatistics> GetStatsAsync()
+    {
+        // Implement Redis-specific statistics
+        var info = await _redis.ExecuteAsync("INFO");
+        // Parse Redis info and return CacheStatistics
+        return new CacheStatistics();
+    }
+}
+
+// Setup your services with distributed cache
+var services = new ServiceCollection();
+services.AddLogging();
+
+// Register your Redis implementation
+services.AddSingleton<ICacheProvider, RedisCacheProvider>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the cache provider
+var cacheProvider = serviceProvider.GetRequiredService<ICacheProvider>() as RedisCacheProvider;
+
+// Example 1: Basic get/set operations with distributed cache
+await cacheProvider.SetAsync("user:123:profile", 
+    new { Name = "John Doe", Email = "john@example.com" }, 
+    TimeSpan.FromMinutes(30));
+
+var cachedProfile = await cacheProvider.GetAsync<object>("user:123:profile");
+if (cachedProfile != null)
+{
+    Console.WriteLine("Profile retrieved from distributed cache!");
+}
+
+// Example 2: Atomic get-or-create pattern
+var userData = await cacheProvider.GetOrCreateAsync(
+    "user:456:data",
+    async () => 
+    {
+        // This factory is only called if the key doesn't exist
+        await Task.Delay(100); // Simulate expensive operation
+        return new { LastAccessed = DateTime.UtcNow, Count = 1 };
+    },
+    TimeSpan.FromHours(1)
+);
+
+Console.WriteLine($"User data: {userData.LastAccessed}");
+
+// Example 3: Check if key exists in distributed cache
+bool exists = await cacheProvider.ExistsAsync("user:123:profile");
+Console.WriteLine($"Key exists: {exists}");
+
+// Example 4: Remove a cached item from distributed cache
+await cacheProvider.RemoveAsync("user:123:profile");
+
+// Example 5: Get cache statistics from distributed cache
+var stats = await cacheProvider.GetStatisticsAsync();
+Console.WriteLine($"Cache stats - Hits: {stats.HitCount}, Misses: {stats.MissCount}, Items: {stats.ItemCount}");
+
+// Example 6: Clear all cache entries (use with caution in production)
+// await cacheProvider.FlushAsync();
+```
+
 ## LocalCacheProviderExtensions
 
 Provides additional utility methods for `LocalCacheProvider` to simplify common caching operations such as conditional retrieval, batch management, and atomic get-or-create patterns. These extensions improve code readability and efficiency when working with cached data in your bot services.
