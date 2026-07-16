@@ -1652,6 +1652,94 @@ bool sessionEnded = await orchestrator.EndUserSessionAsync(userId);
 Console.WriteLine($"Session ended: {sessionEnded}");
 ```
 
+## BotController
+
+The `BotController` class serves as the main API controller for handling incoming Telegram bot updates and commands. It provides REST endpoints for processing messages, retrieving user information, managing sessions, and accessing bot commands and menus. The controller integrates with the framework's core services (user management, command processing, session handling, and message processing) to provide a complete bot API interface.
+
+The controller handles the complete lifecycle of user interactions: from initial message processing through command execution, session management, and user information retrieval, returning appropriate HTTP responses for each operation.
+
+**Key features:**
+- RESTful API endpoints for bot operations
+- Integration with core framework services
+- Health check endpoint for monitoring
+- Error handling and logging
+- Support for both command and non-command messages
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Controllers;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the BotController
+var botController = serviceProvider.GetRequiredService<BotController>();
+
+// Example 1: Health check
+var healthResult = botController.Health();
+Console.WriteLine($"Health status: {healthResult.StatusCode}");
+
+// Example 2: Process a user message
+var messageRequest = new BotController.ProcessMessageRequest
+{
+    UserId = 123456789,
+    ChatId = 987654321,
+    FirstName = "John",
+    LastName = "Doe",
+    Content = "/start Welcome to the bot!",
+    MessageType = MessageType.Text
+};
+
+var messageResult = await botController.ProcessMessage(messageRequest);
+if (messageResult is OkObjectResult okResult)
+{
+    var response = okResult.Value as dynamic;
+    Console.WriteLine($"Message processed successfully! Context ID: {response.contextId}");
+}
+
+// Example 3: Get user information
+var userResult = await botController.GetUser(123456789);
+if (userResult is OkObjectResult okUserResult)
+{
+    var user = okUserResult.Value;
+    Console.WriteLine($"User found: {user}");
+}
+
+// Example 4: Get active session
+var sessionResult = await botController.GetSession(123456789);
+if (sessionResult is OkObjectResult okSessionResult)
+{
+    var session = okSessionResult.Value;
+    Console.WriteLine($"Session found: {session}");
+}
+
+// Example 5: Get available commands
+var commandsResult = await botController.GetCommands();
+if (commandsResult is OkObjectResult okCommandsResult)
+{
+    var commands = okCommandsResult.Value;
+    Console.WriteLine($"Available commands: {commands}");
+}
+
+// Example 6: Get menu
+var menuResult = await botController.GetMenu("main_menu");
+if (menuResult is OkObjectResult okMenuResult)
+{
+    var menu = okMenuResult.Value;
+    Console.WriteLine($"Menu found: {menu}");
+}
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
