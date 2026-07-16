@@ -876,6 +876,64 @@ int closedExpiredCount = await sessionService.CloseExpiredSessionsAsync();
 Console.WriteLine($"Closed {closedExpiredCount} expired sessions");
 ```
 
+## CollectionExtensions
+
+Provides extension methods for working with collections, lists, enumerables, and dictionaries. Includes utilities for safe access, batch operations, random shuffling, and dictionary conversion with duplicate key handling.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Safe list access with GetOrDefault
+var users = new List<string> { "Alice", "Bob", "Charlie" };
+var firstUser = users.GetOrDefault(0); // "Alice"
+var invalidUser = users.GetOrDefault(10); // null
+var defaultUser = users.GetOrDefault(10, "Unknown"); // "Unknown"
+
+// Example 2: Check if collection is null or empty
+List<string>? nullList = null;
+IEnumerable<int> emptyList = Enumerable.Empty<int>();
+
+bool isNullOrEmpty1 = nullList.IsNullOrEmpty(); // true
+bool isNullOrEmpty2 = emptyList.IsNullOrEmpty(); // true
+bool isNullOrEmpty3 = users.IsNullOrEmpty(); // false
+
+// Example 3: Check if collection has items
+bool hasItems1 = nullList.HasItems(); // false
+bool hasItems2 = emptyList.HasItems(); // false
+bool hasItems3 = users.HasItems(); // true
+
+// Example 4: Shuffle a collection randomly
+var shuffledNumbers = Enumerable.Range(1, 10).Shuffle();
+Console.WriteLine("Shuffled: " + string.Join(", ", shuffledNumbers));
+
+// Example 5: Add multiple items to a collection at once
+var tags = new HashSet<string>();
+tags.AddRange(new[] { "csharp", "dotnet", "telegram", "bot" });
+Console.WriteLine("Tags count: " + tags.Count); // 4
+
+// Example 6: Convert to dictionary safely (keeps first occurrence on duplicates)
+var people = new[] {
+    new { Id = 1, Name = "Alice" },
+    new { Id = 2, Name = "Bob" },
+    new { Id = 1, Name = "Alice Duplicate" } // Duplicate key - first is kept
+};
+
+var peopleDict = people.ToDictionarySafe(p => p.Id, p => p.Name);
+Console.WriteLine("Person with ID 1: " + peopleDict[1]); // "Alice"
+
+// Example 7: Execute action for each item in collection (useful in LINQ chains)
+var numbers = new List<int> { 1, 2, 3, 4, 5 };
+var processedNumbers = numbers
+    .ForEach(n => Console.WriteLine($"Processing {n}"))
+    .Select(n => n * 2)
+    .ToList();
+
+// Output: Processing 1, Processing 2, Processing 3, Processing 4, Processing 5
+// Result: [2, 4, 6, 8, 10]
+```
+
 ## UserSession
 
 The `UserSession` class represents an active user session that tracks conversation state, context data, and interaction history. Sessions store user-specific data across multiple interactions, enabling stateful conversations, menu navigation, and persistent context between messages. The class provides methods for managing session state, context data, command history, and session lifecycle tracking.
