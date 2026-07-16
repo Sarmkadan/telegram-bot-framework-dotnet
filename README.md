@@ -1923,6 +1923,81 @@ if (closeSessionsResult is OkObjectResult okCloseResult)
 }
 ```
 
+## JsonFormatter
+
+The `JsonFormatter` class provides utility methods for converting objects, collections, and Telegram messages into JSON format. It handles proper JSON serialization with camelCase property naming, case-insensitive matching, and null value handling. This formatter is particularly useful for API responses, logging message history, and generating structured JSON reports for interoperability with other systems.
+
+**Key features:**
+- Convert single objects to JSON with automatic property detection and recursive serialization
+- Format collections of any type to JSON with a root `items` object containing the collection and `count` property
+- Format Telegram `Message` objects into standardized JSON structure
+- Format error messages as JSON for logging and monitoring systems
+- Support for both pretty-printed (default) and compact JSON output via constructor parameter
+- Automatic JSON escaping for special characters in content
+- Recursive serialization of complex object graphs
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Formatters;
+using TelegramBotFramework.Models;
+
+// Create a JSON formatter with pretty printing (default)
+var jsonFormatter = new JsonFormatter();
+
+// Format a single object to JSON
+var user = new { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" };
+string userJson = jsonFormatter.Format(user);
+
+// Output: {"id":1,"name":"John Doe","email":"john@example.com","role":"Admin"}
+
+// Format a collection to JSON
+var users = new List<object>
+{
+    new { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" },
+    new { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Role = "User" }
+};
+
+string usersJson = jsonFormatter.Format(users);
+
+// Output: {"items":[{"id":1,"name":"John Doe","email":"john@example.com","role":"Admin"},{"id":2,"name":"Jane Smith","email":"jane@example.com","role":"User"}],"count":2}
+
+// Format a Telegram Message to JSON
+var message = new Message
+{
+    MessageId = 123,
+    Content = "Hello World!",
+    UserId = 456,
+    ChatId = 789,
+    CreatedAt = DateTime.UtcNow,
+    Type = MessageType.Text
+};
+
+string messageJson = jsonFormatter.FormatMessage(message);
+
+// Output: {"id":123,"content":"Hello World!","userId":456,"chatId":789,"createdAt":"2024-07-16T14:30:00Z","isEdited":false,"type":"Text"}
+
+// Format multiple messages to JSON
+var messages = new List<Message> { message };
+string messagesJson = jsonFormatter.FormatMessages(messages);
+
+// Output: {"messages":[{"id":123,"content":"Hello World!","userId":456,"chatId":789,"createdAt":"2024-07-16T14:30:00Z","isEdited":false,"type":"Text"}],"count":1}
+
+// Format an error message as JSON for logging
+string errorJson = jsonFormatter.FormatError(
+    "API_TIMEOUT",
+    "Telegram API request timed out",
+    "The request to getUpdates exceeded 30 seconds"
+);
+
+// Output: {"error":"API_TIMEOUT","message":"Telegram API request timed out","details":"The request to getUpdates exceeded 30 seconds","timestamp":"2024-07-16T14:30:00Z"}
+
+// Create a formatter with compact JSON output (no pretty printing)
+var compactFormatter = new JsonFormatter(pretty: false);
+string compactJson = compactFormatter.Format(user);
+// Output: {"id":1,"name":"John Doe","email":"john@example.com","role":"Admin"}
+```
+
 ## XmlFormatter
 
 The `XmlFormatter` class provides utility methods for converting objects, collections, and Telegram messages into XML format. It handles proper XML escaping, hierarchical structures, and supports both pretty-printed and compact XML output. This formatter is particularly useful for exporting bot data, logging message history, and generating structured XML reports for interoperability with other systems.
