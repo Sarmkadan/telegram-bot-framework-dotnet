@@ -1025,6 +1025,80 @@ string capitalized = name.Capitalize(); // "John doe"
 Console.WriteLine(capitalized);
 ```
 
+## DateTimeExtensions
+
+Provides extension methods for common DateTime operations including Unix timestamp conversions, temporal comparisons, and calendar calculations. Useful for working with timestamps, scheduling, and date-based calculations in bot applications.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Convert DateTime to Unix timestamp
+var now = DateTime.UtcNow;
+long unixTimestamp = now.ToUnixTimestamp();
+Console.WriteLine($"Unix timestamp: {unixTimestamp}");
+
+// Example 2: Convert Unix timestamp back to DateTime
+var dateFromTimestamp = DateTimeExtensions.FromUnixTimestamp(unixTimestamp);
+Console.WriteLine($"Date from timestamp: {dateFromTimestamp}");
+
+// Example 3: Check if date is in the past or future
+var pastDate = DateTime.UtcNow.AddDays(-1);
+var futureDate = DateTime.UtcNow.AddDays(1);
+
+Console.WriteLine($"Past date is past: {pastDate.IsPast()}"); // true
+Console.WriteLine($"Future date is future: {futureDate.IsFuture()}"); // true
+
+// Example 4: Get start and end of day
+var today = DateTime.Today;
+var startOfDay = today.StartOfDay();
+var endOfDay = today.EndOfDay();
+
+Console.WriteLine($"Start of day: {startOfDay}");
+Console.WriteLine($"End of day: {endOfDay}");
+
+// Example 5: Get start and end of week (Monday to Sunday)
+var thisWeekStart = DateTime.UtcNow.StartOfWeek();
+var thisWeekEnd = DateTime.UtcNow.EndOfWeek();
+
+Console.WriteLine($"Week starts: {thisWeekStart:yyyy-MM-dd}");
+Console.WriteLine($"Week ends: {thisWeekEnd:yyyy-MM-dd}");
+
+// Example 6: Get start and end of month
+var thisMonthStart = DateTime.UtcNow.StartOfMonth();
+var thisMonthEnd = DateTime.UtcNow.EndOfMonth();
+
+Console.WriteLine($"Month starts: {thisMonthStart:yyyy-MM-dd}");
+Console.WriteLine($"Month ends: {thisMonthEnd:yyyy-MM-dd}");
+
+// Example 7: Convert to human-readable relative time
+var oneHourAgo = DateTime.UtcNow.AddHours(-1);
+var twoDaysAgo = DateTime.UtcNow.AddDays(-2);
+
+Console.WriteLine($"One hour ago: {oneHourAgo.ToRelativeTimeString()}"); // "1h ago"
+Console.WriteLine($"Two days ago: {twoDaysAgo.ToRelativeTimeString()}"); // "2d ago"
+
+// Example 8: Check if date is between two dates
+var startDate = DateTime.UtcNow.AddDays(-7);
+var endDate = DateTime.UtcNow.AddDays(7);
+var testDate = DateTime.UtcNow.AddDays(-3);
+
+Console.WriteLine($"Is test date between: {testDate.IsBetween(startDate, endDate)}"); // true
+
+// Example 9: Add business days (skips weekends)
+var monday = new DateTime(2024, 7, 15); // Monday
+var nextMonday = monday.AddBusinessDays(5); // 5 business days later
+
+Console.WriteLine($"Monday + 5 business days: {nextMonday:yyyy-MM-dd (dddd)}"); // "2024-07-22 (Monday)"
+
+// Example 10: Calculate age from birth date
+var birthDate = new DateTime(1990, 5, 15);
+int age = birthDate.GetAge();
+
+Console.WriteLine($"Age: {age} years");
+```
+
 ## CollectionExtensions
 
 Provides extension methods for working with collections, lists, enumerables, and dictionaries. Includes utilities for safe access, batch operations, random shuffling, and dictionary conversion with duplicate key handling.
