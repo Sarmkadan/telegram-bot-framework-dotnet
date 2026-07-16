@@ -658,6 +658,88 @@ Console.WriteLine($"Updated: {mainMenu.UpdatedAt}");
 Console.WriteLine($"Max Buttons Per Row: {mainMenu.MaxButtonsPerRow}");
 ```
 
+## Message
+
+The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create a new message instance
+var message = new Message
+{
+    MessageId = 42,
+    UserId = 123456789,
+    ChatId = 987654321,
+    Content = "/start Hello world!",
+    Type = MessageType.Text,
+    CreatedAt = DateTime.UtcNow,
+    IsEdited = false,
+    Metadata = new Dictionary<string, object>
+    {
+        { "user_language", "en" },
+        { "message_source", "web" }
+    }
+};
+
+// Validate the message
+message.Validate();
+
+// Add attachments (e.g., photos, documents)
+message.AddAttachment("https://example.com/image.jpg");
+message.AddAttachment("https://example.com/document.pdf");
+
+// Track processing state
+message.Status = MessageStatus.Processing;
+
+// After processing completes
+message.MarkAsProcessed();
+Console.WriteLine($"Processing took: {message.GetProcessingDurationMs()}ms");
+
+// Set error metadata if processing failed
+try
+{
+    // Process message...
+}
+catch (Exception ex)
+{
+    message.MarkAsFailed(ex.Message);
+}
+
+// Access metadata
+string? language = message.GetMetadata("user_language") as string;
+Console.WriteLine($"User language: {language}");
+
+// Store additional metadata
+message.SetMetadata("processed_by", "message_handler_v2");
+message.SetMetadata("priority", 1);
+
+// Check message properties
+Console.WriteLine($"Message ID: {message.MessageId}");
+Console.WriteLine($"User ID: {message.UserId}");
+Console.WriteLine($"Chat ID: {message.ChatId}");
+Console.WriteLine($"Content: {message.Content}");
+Console.WriteLine($"Type: {message.Type}");
+Console.WriteLine($"Status: {message.Status}");
+Console.WriteLine($"Created: {message.CreatedAt}");
+Console.WriteLine($"Processed: {message.ProcessedAt}");
+Console.WriteLine($"Is Edited: {message.IsEdited}");
+Console.WriteLine($"Attachments: {message.AttachmentUrls?.Count ?? 0}");
+```
+
 ## Command
 
 The `Command` class represents a bot command that can be executed by users. It defines the command's metadata, behavior, and execution constraints including name, description, access control, rate limiting, and parameter definitions. Commands are the primary mechanism for handling user input in Telegram bots built with this framework.
