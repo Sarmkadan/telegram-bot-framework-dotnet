@@ -396,6 +396,121 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## SessionService
+
+The `SessionService` class provides centralized session management for Telegram bot applications, handling creation, retrieval, updating, and cleanup of user sessions. Sessions track conversation state, context data, and interaction history, enabling stateful conversations, menu navigation, and persistent context between messages across multiple interactions.
+
+**Key features:**
+- Session creation with automatic ID generation and configurable timeouts
+- Active session retrieval and management
+- Context data storage and retrieval for custom session properties
+- Session state management (Active, Expired, Closed)
+- Session expiration and cleanup operations
+- Menu navigation tracking within sessions
+- Activity recording for session management
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username",
+  SessionTimeoutMinutes = 30
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the session service
+var sessionService = serviceProvider.GetRequiredService<SessionService>();
+
+// Create a new session for a user
+var userId = 123456789L;
+var chatId = 987654321L;
+
+var session = await sessionService.CreateSessionAsync(userId, chatId);
+Console.WriteLine($"Session created: {session.SessionId} for user {userId}");
+
+// Create a session with custom timeout
+var customTimeoutSession = await sessionService.CreateSessionAsync(
+    userId, 
+    chatId, 
+    TimeSpan.FromMinutes(15)
+);
+Console.WriteLine($"Custom timeout session created: {customTimeoutSession.SessionId}");
+
+// Get active session for a user
+var activeSession = await sessionService.GetActiveSessionAsync(userId);
+if (activeSession != null)
+{
+    Console.WriteLine($"Active session found: {activeSession.SessionId}");
+}
+
+// Get session by ID
+var retrievedSession = await sessionService.GetSessionByIdAsync(session.SessionId);
+if (retrievedSession != null)
+{
+    Console.WriteLine($"Retrieved session: {retrievedSession.SessionId}");
+}
+
+// Get all active sessions
+var allActiveSessions = await sessionService.GetAllActiveSessionsAsync();
+Console.WriteLine($"Found {allActiveSessions.Count} active sessions");
+
+// Get sessions by user ID
+var userSessions = await sessionService.GetSessionsByUserIdAsync(userId);
+Console.WriteLine($"User {userId} has {userSessions.Count} sessions");
+
+// Update session context data
+bool contextUpdated = await sessionService.UpdateSessionContextAsync(
+    session.SessionId, 
+    "user_preferences.theme", 
+    "dark"
+);
+Console.WriteLine($"Context updated: {contextUpdated}");
+
+// Retrieve session context data
+string? themePreference = await sessionService.GetSessionContextAsync(
+    session.SessionId, 
+    "user_preferences.theme"
+);
+Console.WriteLine($"Theme preference: {themePreference}"); // "dark"
+
+// Navigate to a specific menu within the session
+var updatedSession = await sessionService.NavigateToMenuAsync(
+    session.SessionId, 
+    "main_menu"
+);
+Console.WriteLine($"Navigated to menu: {updatedSession.CurrentMenuId}");
+
+// Record session activity (updates LastActivityAt)
+await sessionService.RecordSessionActivityAsync(session.SessionId);
+
+// Close a session when done
+bool sessionClosed = await sessionService.CloseSessionAsync(session.SessionId);
+Console.WriteLine($"Session closed: {sessionClosed}");
+
+// Delete a session
+bool sessionDeleted = await sessionService.DeleteSessionAsync(session.SessionId);
+Console.WriteLine($"Session deleted: {sessionDeleted}");
+
+// Expire inactive sessions (older than 24 hours)
+int expiredCount = await sessionService.ExpireInactiveSessionsAsync(
+    TimeSpan.FromHours(24)
+);
+Console.WriteLine($"Expired {expiredCount} inactive sessions");
+
+// Close all expired sessions
+int closedExpiredCount = await sessionService.CloseExpiredSessionsAsync();
+Console.WriteLine($"Closed {closedExpiredCount} expired sessions");
+```
+
 ## UserSession
 
 The `UserSession` class represents an active user session that tracks conversation state, context data, and interaction history. Sessions store user-specific data across multiple interactions, enabling stateful conversations, menu navigation, and persistent context between messages. The class provides methods for managing session state, context data, command history, and session lifecycle tracking.
