@@ -658,6 +658,83 @@ Console.WriteLine($"Updated: {mainMenu.UpdatedAt}");
 Console.WriteLine($"Max Buttons Per Row: {mainMenu.MaxButtonsPerRow}");
 ```
 
+## InlineQuery
+
+The `InlineQuery` class represents an inline query received from a Telegram user. It encapsulates the query text, user information, pagination state, and processing metadata, enabling bots to handle inline queries efficiently and track their lifecycle from reception to response.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create an inline query instance (typically received from Telegram API)
+var inlineQuery = new InlineQuery
+{
+    QueryId = Guid.NewGuid().ToString(),
+    UserId = 123456789,
+    Query = "search query",
+    Offset = "",
+    Status = InlineQueryStatus.Pending,
+    ReceivedAt = DateTime.UtcNow,
+    Metadata = new Dictionary<string, object>
+    {
+        { "source", "user_input" },
+        { "priority", 1 }
+    }
+};
+
+// Validate the inline query
+inlineQuery.Validate();
+
+// Set additional metadata for processing context
+inlineQuery.SetMetadata("processing_started", DateTime.UtcNow);
+
+// Track processing state
+inlineQuery.Status = InlineQueryStatus.Processing;
+
+// After processing completes
+inlineQuery.Status = InlineQueryStatus.Answered;
+inlineQuery.AnsweredAt = DateTime.UtcNow;
+Console.WriteLine($"Processing took: {inlineQuery.GetProcessingDurationMs()}ms");
+
+// Access metadata
+string? source = inlineQuery.GetMetadata("source") as string;
+Console.WriteLine($"Query source: {source}"); // "user_input"
+
+// Create a result for this inline query
+var result = new InlineQueryResult
+{
+    Title = "Search Result",
+    Description = "Description of the search result",
+    Content = "This is the content that will be sent when the user selects this result",
+    Type = InlineQueryResultType.Article,
+    ThumbnailUrl = "https://example.com/thumbnail.jpg",
+    CustomPayload = "search_result_123"
+};
+
+// Validate the result
+result.Validate();
+
+// Access inline query properties
+Console.WriteLine($"Query ID: {inlineQuery.QueryId}");
+Console.WriteLine($"User ID: {inlineQuery.UserId}");
+Console.WriteLine($"Query: {inlineQuery.Query}");
+Console.WriteLine($"Status: {inlineQuery.Status}");
+Console.WriteLine($"Received at: {inlineQuery.ReceivedAt}");
+Console.WriteLine($"Answered at: {inlineQuery.AnsweredAt}");
+```
+
 ## Message
 
 The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
