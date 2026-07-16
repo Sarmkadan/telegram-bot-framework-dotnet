@@ -1923,6 +1923,130 @@ if (closeSessionsResult is OkObjectResult okCloseResult)
 }
 ```
 
+## XmlFormatter
+
+The `XmlFormatter` class provides utility methods for converting objects, collections, and Telegram messages into XML format. It handles proper XML escaping, hierarchical structures, and supports both pretty-printed and compact XML output. This formatter is particularly useful for exporting bot data, logging message history, and generating structured XML reports for interoperability with other systems.
+
+**Key features:**
+- Convert single objects to XML with automatic property detection and recursive serialization
+- Format collections of any type to XML with a root `<items>` element containing `<item>` elements
+- Format Telegram `Message` objects into standardized XML structure
+- Format error messages as XML for logging and monitoring systems
+- Support for both pretty-printed (default) and compact XML output via constructor parameter
+- Automatic XML escaping for special characters in content
+- Recursive serialization of complex object graphs
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Formatters;
+using TelegramBotFramework.Models;
+
+// Create an XML formatter with pretty printing (default)
+var xmlFormatter = new XmlFormatter();
+
+// Format a single object to XML
+var user = new { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" };
+string userXml = xmlFormatter.Format(user);
+
+/* Output:
+<User>
+  <Id>1</Id>
+  <Name>John Doe</Name>
+  <Email>john@example.com</Email>
+  <Role>Admin</Role>
+</User>
+*/
+
+// Format a collection to XML
+var users = new List<object>
+{
+    new { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" },
+    new { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Role = "User" }
+};
+
+string usersXml = xmlFormatter.Format(users);
+
+/* Output:
+<items>
+  <item>
+    <Id>1</Id>
+    <Name>John Doe</Name>
+    <Email>john@example.com</Email>
+    <Role>Admin</Role>
+  </item>
+  <item>
+    <Id>2</Id>
+    <Name>Jane Smith</Name>
+    <Email>jane@example.com</Email>
+    <Role>User</Role>
+  </item>
+</items>
+*/
+
+// Format a Telegram Message to XML
+var message = new Message
+{
+    MessageId = 123,
+    Content = "Hello World!",
+    UserId = 456,
+    ChatId = 789,
+    CreatedAt = DateTime.UtcNow,
+    Type = MessageType.Text
+};
+
+string messageXml = xmlFormatter.FormatMessage(message);
+
+/* Output:
+<message>
+  <id>123</id>
+  <content>Hello World!</content>
+  <userId>456</userId>
+  <chatId>789</chatId>
+  <createdAt>2024-07-16T14:30:00.0000000Z</createdAt>
+  <type>Text</type>
+</message>
+*/
+
+// Format multiple messages to XML
+var messages = new List<Message> { message };
+string messagesXml = xmlFormatter.FormatMessages(messages);
+
+/* Output:
+<messages count="1">
+  <message>
+    <id>123</id>
+    <content>Hello World!</content>
+    <userId>456</userId>
+    <chatId>789</chatId>
+    <createdAt>2024-07-16T14:30:00.0000000Z</createdAt>
+    <type>Text</type>
+  </message>
+</messages>
+*/
+
+// Format an error message as XML for logging
+string errorXml = xmlFormatter.FormatError(
+    "API_TIMEOUT",
+    "Telegram API request timed out",
+    "The request to getUpdates exceeded 30 seconds"
+);
+
+/* Output:
+<error>
+  <code>API_TIMEOUT</code>
+  <message>Telegram API request timed out</message>
+  <details>The request to getUpdates exceeded 30 seconds</details>
+  <timestamp>2024-07-16T14:30:00.0000000Z</timestamp>
+</error>
+*/
+
+// Create a formatter with compact XML output (no pretty printing)
+var compactFormatter = new XmlFormatter(pretty: false);
+string compactXml = compactFormatter.Format(user);
+// Output: <User><Id>1</Id><Name>John Doe</Name><Email>john@example.com</Email><Role>Admin</Role></User>
+```
+
 ## CsvFormatter
 
 The `CsvFormatter` class provides utility methods for converting collections of objects and Telegram messages into CSV format. It handles proper escaping of fields, quoted values, and supports both single objects and collections through generic methods. This formatter is particularly useful for exporting bot data, logging message history, and generating reports in a standardized CSV format.
