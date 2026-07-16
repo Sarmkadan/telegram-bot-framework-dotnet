@@ -815,6 +815,53 @@ Console.WriteLine($"Answered at: {inlineQuery.AnsweredAt}");
 
 The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
 
+## HttpErrorHandlingMiddleware
+
+The `HttpErrorHandlingMiddleware` class handles HTTP errors by logging error details and returning a user-friendly error message. It captures error information including the error code, message, timestamp, request path, and trace identifier for debugging purposes.
+
+**Example usage**
+
+```csharp
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Middleware;
+
+// Setup middleware in your ASP.NET Core pipeline
+app.UseMiddleware<HttpErrorHandlingMiddleware>();
+
+// The middleware will automatically handle HTTP errors and return appropriate responses
+```
+
+**Example with custom error handling:**
+
+```csharp
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Middleware;
+
+public class CustomErrorHandlingMiddleware : HttpErrorHandlingMiddleware
+{
+    private readonly ILogger<CustomErrorHandlingMiddleware> _logger;
+
+    public CustomErrorHandlingMiddleware(RequestDelegate next, ILogger<CustomErrorHandlingMiddleware> logger)
+        : base(next, logger)
+    {
+        _logger = logger;
+    }
+
+    protected override async Task HandleErrorAsync(HttpContext context, Exception exception)
+    {
+        _logger.LogError(exception, "Custom error handling for request {Path}", context.Request.Path);
+        
+        // You can access error details from the base class
+        await base.HandleErrorAsync(context, exception);
+    }
+}
+
+// Register in your pipeline
+app.UseMiddleware<CustomErrorHandlingMiddleware>();
+```
+
 **Example usage**
 
 ```csharp
