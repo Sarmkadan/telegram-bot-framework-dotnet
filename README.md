@@ -17,6 +17,10 @@ A modern, opinionated framework for building scalable Telegram bots with .NET 10
 - Webhook mode with secret-token validation and auto-registration
 - In-memory cache provider with TTL support
 
+## Architecture
+
+The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
+
 ## Configuration
 
 All configuration is done via `appsettings.json`. Here are the available settings:
