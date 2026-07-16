@@ -1923,6 +1923,78 @@ if (closeSessionsResult is OkObjectResult okCloseResult)
 }
 ```
 
+## CsvFormatter
+
+The `CsvFormatter` class provides utility methods for converting collections of objects and Telegram messages into CSV format. It handles proper escaping of fields, quoted values, and supports both single objects and collections through generic methods. This formatter is particularly useful for exporting bot data, logging message history, and generating reports in a standardized CSV format.
+
+**Key features:**
+- Convert collections of any type to CSV with automatic property detection
+- Format Telegram `Message` objects into CSV rows with standard columns
+- Format error messages as CSV for logging and monitoring systems
+- Proper CSV escaping and quoting for fields containing commas, quotes, or newlines
+- Support for generic collections via `Format<T>(IEnumerable<T>)` overload
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Formatters;
+using TelegramBotFramework.Models;
+
+// Format a collection of objects to CSV
+var users = new List<User> 
+{
+    new User { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" },
+    new User { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Role = "User" },
+    new User { Id = 3, Name = "Bob Johnson", Email = "bob@example.com", Role = "User" }
+};
+
+var csvFormatter = new CsvFormatter();
+string csvOutput = csvFormatter.Format(users);
+
+// Output:
+// Id,Name,Email,Role
+// 1,John Doe,john@example.com,Admin
+// 2,Jane Smith,jane@example.com,User
+// 3,Bob Johnson,bob@example.com,User
+
+// Format a single object
+var singleUser = new User { Id = 4, Name = "Alice Brown", Email = "alice@example.com", Role = "Moderator" };
+string singleUserCsv = csvFormatter.Format(singleUser);
+// Output: Id,Name,Email,Role\n4,Alice Brown,alice@example.com,Moderator
+
+// Format Telegram messages to CSV
+var messages = new List<Message>
+{
+    new Message 
+    {
+        MessageId = 123,
+        Content = "Hello World!",
+        UserId = 456,
+        ChatId = 789,
+        CreatedAt = DateTime.UtcNow,
+        Type = MessageType.Text
+    },
+    new Message 
+    {
+        MessageId = 124,
+        Content = "How are you?",
+        UserId = 457,
+        ChatId = 789,
+        CreatedAt = DateTime.UtcNow.AddMinutes(5),
+        Type = MessageType.Text
+    }
+};
+
+string messagesCsv = csvFormatter.FormatMessages(messages);
+
+// Format error messages as CSV for logging
+string errorCsv = csvFormatter.FormatError(
+    "API_TIMEOUT",
+    "Telegram API request timed out",
+    "The request to getUpdates exceeded 30 seconds"
+);
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
