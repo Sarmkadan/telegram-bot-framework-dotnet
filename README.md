@@ -1099,6 +1099,119 @@ int age = birthDate.GetAge();
 Console.WriteLine($"Age: {age} years");
 ```
 
+## ValidationUtility
+
+The `ValidationUtility` class provides a comprehensive set of static validation methods for common data formats and patterns used throughout the Telegram Bot Framework. It centralizes validation logic to ensure consistency and type safety when processing user input, configuration values, and API responses, helping prevent injection attacks and malformed data from entering your application.
+
+**Key features:**
+- Telegram-specific validation (user IDs, chat IDs, bot tokens)
+- URL and IP address validation for webhook configurations
+- Phone number and filename validation for user data handling
+- Password strength validation for secure authentication
+- GUID and numeric string validation for database operations
+- Length validation for text fields and constraints
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Validate Telegram user and chat IDs before processing updates
+var userId = 123456789L;
+var chatId = 987654321L;
+
+if (!ValidationUtility.IsValidTelegramUserId(userId))
+{
+    Console.WriteLine("Invalid user ID");
+    return;
+}
+
+if (!ValidationUtility.IsValidTelegramChatId(chatId))
+{
+    Console.WriteLine("Invalid chat ID");
+    return;
+}
+
+// Example 2: Validate bot token format before configuration
+string botToken = "123456789:ABCDEFghijklmnopqrstuvwxyz";
+if (!ValidationUtility.IsValidTelegramToken(botToken))
+{
+    Console.WriteLine("Invalid bot token format");
+    return;
+}
+
+// Example 3: Validate webhook URL and IP address for deployment
+string webhookUrl = "https://mybot.example.com/webhook";
+string serverIp = "192.168.1.100";
+
+if (!ValidationUtility.IsValidUrl(webhookUrl))
+{
+    Console.WriteLine("Invalid webhook URL");
+    return;
+}
+
+if (!ValidationUtility.IsValidIPv4(serverIp))
+{
+    Console.WriteLine("Invalid server IP address");
+    return;
+}
+
+// Example 4: Validate user-provided phone numbers and filenames
+string phoneNumber = "+1 (555) 123-4567";
+string filename = "user_document.pdf";
+
+if (!ValidationUtility.IsValidPhoneNumber(phoneNumber))
+{
+    Console.WriteLine("Invalid phone number format");
+    return;
+}
+
+if (!ValidationUtility.IsValidFilename(filename))
+{
+    Console.WriteLine("Invalid filename - contains illegal characters");
+    return;
+}
+
+// Example 5: Validate password strength for user registration
+string password = "SecureP@ssw0rd123";
+if (!ValidationUtility.IsStrongPassword(password))
+{
+    Console.WriteLine("Password does not meet strength requirements");
+    return;
+}
+
+// Example 6: Validate text field lengths and numeric inputs
+string username = "johndoe";
+if (!ValidationUtility.IsValidLength(username, 3, 20))
+{
+    Console.WriteLine("Username must be between 3 and 20 characters");
+    return;
+}
+
+string ageInput = "25";
+if (!ValidationUtility.IsNumeric(ageInput))
+{
+    Console.WriteLine("Age must be a numeric value");
+    return;
+}
+
+// Example 7: Validate GUIDs for database operations
+string productId = "550e8400-e29b-41d4-a716-446655440000";
+if (!ValidationUtility.IsValidGuid(productId))
+{
+    Console.WriteLine("Invalid GUID format");
+    return;
+}
+
+// Example 8: Validate command names for bot commands
+string commandName = "/start";
+if (!ValidationUtility.IsValidCommandName(commandName))
+{
+    Console.WriteLine("Invalid command name format");
+    return;
+}
+```
+
 ## CryptoUtility
 
 The `CryptoUtility` class provides cryptographic operations including hashing, password management, and encoding utilities. It offers secure methods for generating hashes, creating and verifying password hashes, generating random tokens, and encoding/decoding Base64 strings. These utilities are essential for implementing secure authentication, data integrity checks, and token-based systems in your bot applications.
