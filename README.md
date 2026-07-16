@@ -815,6 +815,84 @@ Console.WriteLine($"Answered at: {inlineQuery.AnsweredAt}");
 
 The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
 
+## MessageService
+
+The `MessageService` class provides centralized message processing, storage, and lifecycle management for Telegram bot applications. It handles incoming message processing, retrieval, status tracking, and archiving operations, enabling reliable message handling and monitoring capabilities.
+
+**Key features:**
+- Message processing and persistence via `ProcessIncomingMessageAsync`
+- Message retrieval with `GetMessageAsync` and `GetUserMessagesAsync`
+- Failed message management with `GetFailedMessagesAsync` and `MarkAsFailedAsync`
+- Message status tracking and processing state management
+- Unprocessed message counting via `GetUnprocessedMessageCountAsync`
+- Automatic message archiving via `ArchiveOldMessagesAsync`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the message service
+var messageService = serviceProvider.GetRequiredService<MessageService>();
+
+// Process an incoming user message
+var incomingMessage = new Message
+{
+    MessageId = 42,
+    UserId = 123456789,
+    ChatId = 987654321,
+    Content = "/start Hello world!",
+    Type = MessageType.Text,
+    CreatedAt = DateTime.UtcNow
+};
+
+var processedMessage = await messageService.ProcessIncomingMessageAsync(incomingMessage);
+Console.WriteLine($"Message processed: {processedMessage.MessageId}, Status: {processedMessage.Status}");
+
+// Retrieve a specific message by ID
+var retrievedMessage = await messageService.GetMessageAsync(42);
+if (retrievedMessage != null)
+{
+    Console.WriteLine($"Found message: {retrievedMessage.Content}");
+}
+
+// Get all messages from a specific user
+var userMessages = await messageService.GetUserMessagesAsync(123456789, limit: 20);
+Console.WriteLine($"User has {userMessages.Count} messages");
+
+// Get failed messages for error handling
+var failedMessages = await messageService.GetFailedMessagesAsync(limit: 50);
+Console.WriteLine($"Found {failedMessages.Count} failed messages");
+
+// Mark a message as processed after successful handling
+bool markedProcessed = await messageService.MarkAsProcessedAsync(42);
+Console.WriteLine($"Message marked as processed: {markedProcessed}");
+
+// Mark a message as failed when processing encounters an error
+bool markedFailed = await messageService.MarkAsFailedAsync(43, "Failed to parse command");
+Console.WriteLine($"Message marked as failed: {markedFailed}");
+
+// Check for unprocessed messages (useful for monitoring)
+int unprocessedCount = await messageService.GetUnprocessedMessageCountAsync();
+Console.WriteLine($"Unprocessed messages: {unprocessedCount}");
+
+// Archive old messages to keep storage clean
+await messageService.ArchiveOldMessagesAsync(daysOld: 30);
+Console.WriteLine("Old messages archived");
+```
+
 ## HttpErrorHandlingMiddleware
 
 The `HttpErrorHandlingMiddleware` class handles HTTP errors by logging error details and returning a user-friendly error message. It captures error information including the error code, message, timestamp, request path, and trace identifier for debugging purposes.
