@@ -501,6 +501,81 @@ Console.WriteLine($"Cache stats - Hits: {stats.HitCount}, Misses: {stats.MissCou
 // await cacheProvider.FlushAsync();
 ```
 
+## LocalCacheProvider
+
+The `LocalCacheProvider` class provides an in-memory, thread-safe cache implementation that stores data locally within the application process. It implements the `ICacheProvider` interface and is ideal for scenarios where distributed caching isn't required or when you need a lightweight, fast cache with minimal overhead. The provider supports time-to-live (TTL) expiration, atomic operations, and comprehensive statistics tracking.
+
+**Key features:**
+- Thread-safe in-memory storage with O(1) average complexity for most operations
+- TTL-based expiration with configurable timeouts
+- Atomic get-or-create operations via `GetOrCreateAsync`
+- Statistics tracking (hits, misses, sets, removals, memory usage)
+- Bulk operations for efficient batch processing
+- Simple integration with dependency injection
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Caching;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+// Register LocalCacheProvider as the cache implementation
+services.AddSingleton<ICacheProvider, LocalCacheProvider>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the cache provider
+var cacheProvider = serviceProvider.GetRequiredService<ICacheProvider>() as LocalCacheProvider;
+
+// Example 1: Basic get/set operations with TTL
+await cacheProvider.SetAsync("user:123:profile", 
+    new { Name = "John Doe", Email = "john@example.com" }, 
+    TimeSpan.FromMinutes(30));
+
+var cachedProfile = await cacheProvider.GetAsync<object>("user:123:profile");
+if (cachedProfile != null)
+{
+    Console.WriteLine("Profile retrieved from cache!");
+}
+
+// Example 2: Atomic get-or-create pattern
+var userData = await cacheProvider.GetOrCreateAsync(
+    "user:456:data",
+    async () =>
+    {
+        // This factory is only called if the key doesn't exist
+        await Task.Delay(100); // Simulate expensive operation
+        return new { LastAccessed = DateTime.UtcNow, Count = 1 };
+    },
+    TimeSpan.FromHours(1)
+);
+
+Console.WriteLine($"User data: {userData.LastAccessed}");
+
+// Example 3: Check if key exists
+bool exists = await cacheProvider.ExistsAsync("user:123:profile");
+Console.WriteLine($"Key exists: {exists}");
+
+// Example 4: Remove a cached item
+await cacheProvider.RemoveAsync("user:123:profile");
+
+// Example 5: Get cache statistics for monitoring
+var stats = await cacheProvider.GetStatisticsAsync();
+Console.WriteLine($"Cache stats - Hits: {stats.HitCount}, Misses: {stats.MissCount}, Items: {stats.ItemCount}, Memory: {stats.MemoryBytes} bytes");
+Console.WriteLine($"Cache hit rate: {stats.HitRate:F2}%");
+
+// Example 6: Clear all cache entries (use with caution in production)
+// await cacheProvider.FlushAsync();
+```
+
 ## LocalCacheProviderExtensions
 
 Provides additional utility methods for `LocalCacheProvider` to simplify common caching operations such as conditional retrieval, batch management, and atomic get-or-create patterns. These extensions improve code readability and efficiency when working with cached data in your bot services.
