@@ -966,6 +966,65 @@ string minifiedJson = JsonUtility.Minify(largeJson);
 Console.WriteLine(minifiedJson.Length < largeJson.Length); // true
 ```
 
+## StringExtensions
+
+Provides extension methods for string manipulation and validation. Includes utilities for truncating strings, generating URL-friendly slugs, validating email addresses, checking alphanumeric content, repeating strings, reversing text, extracting numbers, ensuring string prefixes/suffixes, and capitalizing text.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Truncate a long string
+string longText = "This is a very long text that needs to be shortened for display purposes";
+string truncated = longText.Truncate(20); // "This is a very long…"
+Console.WriteLine(truncated);
+
+// Example 2: Convert text to URL-friendly slug
+string title = "Hello World! This is a Test";
+string slug = title.ToSlug(); // "hello-world-this-is-a-test"
+Console.WriteLine(slug);
+
+// Example 3: Validate email address
+string email = "user@example.com";
+bool isValid = email.IsValidEmail(); // true
+Console.WriteLine(isValid);
+
+// Example 4: Check if string is alphanumeric
+string alphanumeric = "abc123";
+bool isAlphanumeric = alphanumeric.IsAlphanumeric(); // true
+Console.WriteLine(isAlphanumeric);
+
+// Example 5: Repeat a string multiple times
+string repeated = "abc".Repeat(3); // "abcabcabc"
+Console.WriteLine(repeated);
+
+// Example 6: Reverse a string
+string original = "Hello";
+string reversed = original.Reverse(); // "olleH"
+Console.WriteLine(reversed);
+
+// Example 7: Extract numbers from text
+string textWithNumbers = "Order #12345 shipped on 2024-07-16";
+string numbers = textWithNumbers.ExtractNumbers(); // "1234520240716"
+Console.WriteLine(numbers);
+
+// Example 8: Ensure string starts with prefix
+string path = "config/settings.json";
+string ensuredPath = path.EnsureStartsWith("./"); // "./config/settings.json"
+Console.WriteLine(ensuredPath);
+
+// Example 9: Ensure string ends with suffix
+string url = "https://example.com"
+string fullUrl = url.EnsureEndsWith("/"); // "https://example.com/"
+Console.WriteLine(fullUrl);
+
+// Example 10: Capitalize first character
+string name = "john doe";
+string capitalized = name.Capitalize(); // "John doe"
+Console.WriteLine(capitalized);
+```
+
 ## CollectionExtensions
 
 Provides extension methods for working with collections, lists, enumerables, and dictionaries. Includes utilities for safe access, batch operations, random shuffling, and dictionary conversion with duplicate key handling.
