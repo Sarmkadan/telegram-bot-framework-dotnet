@@ -128,6 +128,8 @@ public static class WebhookSetup
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Integration.TelegramApiClient>>();
             return new Integration.TelegramApiClient(config.BotToken, null, logger);
         });
+        services.AddSingleton<Integration.ITelegramApiClient>(sp =>
+            sp.GetRequiredService<Integration.TelegramApiClient>());
         services.AddSingleton<Integration.WebhookService>();
         services.AddSingleton<Integration.IWebhookService>(sp =>
             sp.GetRequiredService<Integration.WebhookService>());

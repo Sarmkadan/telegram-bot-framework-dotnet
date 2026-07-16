@@ -1,0 +1,48 @@
+#nullable enable
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
+namespace TelegramBotFramework.Integration;
+
+using System.Text.Json;
+
+/// <summary>
+/// Abstraction over the Telegram Bot API surface used by the framework.
+/// </summary>
+/// <remarks>
+/// <see cref="TelegramApiClient"/> is the default HTTP implementation.
+/// <see cref="PollingStrategy"/> and <see cref="WebhookService"/> depend on this
+/// interface rather than the concrete client, so both can be exercised in tests
+/// with a fake that never touches the network.
+/// </remarks>
+public interface ITelegramApiClient
+{
+    /// <summary>Sends a plain text message to a chat.</summary>
+    Task<bool> SendMessageAsync(long chatId, string text);
+
+    /// <summary>Sends a message with an inline keyboard.</summary>
+    Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels);
+
+    /// <summary>Edits a previously sent message.</summary>
+    Task<bool> EditMessageAsync(long chatId, int messageId, string newText);
+
+    /// <summary>Deletes a message from a chat.</summary>
+    Task<bool> DeleteMessageAsync(long chatId, int messageId);
+
+    /// <summary>Returns the bot username via <c>getMe</c>, or null on failure.</summary>
+    Task<string?> GetMeAsync();
+
+    /// <summary>Answers a callback query, optionally showing a notification.</summary>
+    Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null);
+
+    /// <summary>Registers a webhook URL with Telegram.</summary>
+    Task<bool> SetWebhookAsync(string webhookUrl);
+
+    /// <summary>Removes the currently registered webhook.</summary>
+    Task<bool> RemoveWebhookAsync();
+
+    /// <summary>Long-polls Telegram for new updates starting at <paramref name="offset"/>.</summary>
+    Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = 30);
+}

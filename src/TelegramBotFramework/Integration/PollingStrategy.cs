@@ -12,14 +12,14 @@ namespace TelegramBotFramework.Integration;
 /// </summary>
 public sealed class PollingStrategy
 {
-    private readonly TelegramApiClient _apiClient;
+    private readonly ITelegramApiClient _apiClient;
     private readonly WebhookHandler _webhookHandler;
     private readonly ILogger<PollingStrategy> _logger;
     private long _lastUpdateId = 0;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _pollingTask;
 
-    public PollingStrategy(TelegramApiClient apiClient, ILogger<PollingStrategy>? logger = null)
+    public PollingStrategy(ITelegramApiClient apiClient, ILogger<PollingStrategy>? logger = null)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _logger = logger ?? new ConsoleLogger<PollingStrategy>();

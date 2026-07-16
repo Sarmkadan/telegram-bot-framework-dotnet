@@ -16,7 +16,7 @@ namespace TelegramBotFramework.Integration;
 /// </summary>
 public sealed class WebhookService : IWebhookService, IHostedService
 {
-    private readonly TelegramApiClient _apiClient;
+    private readonly ITelegramApiClient _apiClient;
     private readonly WebhookHandler _webhookHandler;
     private readonly WebhookOptions _options;
     private readonly ILogger<WebhookService> _logger;
@@ -32,7 +32,7 @@ public sealed class WebhookService : IWebhookService, IHostedService
     /// Initialises a new instance of <see cref="WebhookService"/>.
     /// </summary>
     public WebhookService(
-        TelegramApiClient apiClient,
+        ITelegramApiClient apiClient,
         WebhookOptions options,
         ILogger<WebhookService> logger)
     {

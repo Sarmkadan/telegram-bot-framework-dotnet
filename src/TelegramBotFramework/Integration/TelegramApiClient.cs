@@ -15,7 +15,7 @@ using Utilities;
 /// Client for interacting with Telegram Bot API.
 /// Provides methods for sending messages, managing updates, and querying bot state.
 /// </summary>
-public sealed class TelegramApiClient
+public sealed class TelegramApiClient : ITelegramApiClient
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly string _botToken;
