@@ -652,6 +652,93 @@ Console.WriteLine($"Current context: {session.CurrentContext}");
 Console.WriteLine($"Current menu: {session.CurrentMenuId}");
 ```
 
+## IBotOrchestrator
+
+The `IBotOrchestrator` interface serves as the central coordinator for all bot operations, providing a unified API for processing user messages, executing commands, managing menus, and handling sessions. It orchestrates interactions between the various framework services (user management, command processing, session handling, message processing, and menu navigation) through a middleware pipeline, enabling clean separation of concerns and extensible bot behavior.
+
+The orchestrator handles the complete lifecycle of user interactions: from initial message processing through command execution, menu display, and session management, returning comprehensive execution contexts that contain the results of each operation.
+
+**Key features:**
+- Message processing with automatic user/session creation
+- Command execution with parameter support
+- Menu display and navigation
+- Session lifecycle management (retrieval and termination)
+- Integration with middleware pipeline for extensibility
+- Comprehensive execution context tracking
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var orchestrator = serviceProvider.GetRequiredService<IBotOrchestrator>();
+
+// Example 1: Process a user message
+var userId = 123456789L;
+var chatId = 987654321L;
+
+var messageContext = await orchestrator.ProcessUserMessageAsync(
+  userId,
+  chatId,
+  "/start Welcome to the bot!",
+  "John",
+  "Doe"
+);
+
+if (messageContext.IsValid)
+{
+  Console.WriteLine("Message processed successfully!");
+  Console.WriteLine($"Context ID: {messageContext.ContextId}");
+}
+
+// Example 2: Execute a user command
+var commandContext = await orchestrator.ExecuteUserCommandAsync(
+  userId,
+  chatId,
+  "/help"
+);
+
+if (commandContext.IsValid && commandContext.Command != null)
+{
+  Console.WriteLine($"Command executed: {commandContext.Command.Name}");
+  Console.WriteLine($"Response: {commandContext.GetState<string>("response")}");
+}
+
+// Example 3: Display a menu
+var mainMenu = await orchestrator.DisplayMenuAsync(userId, "main_menu");
+Console.WriteLine($"Displaying menu: {mainMenu.Title}");
+
+// Example 4: Handle a menu button click
+bool buttonHandled = await orchestrator.HandleMenuButtonAsync(
+  userId,
+  "main_menu",
+  "/settings"
+);
+
+if (buttonHandled)
+{
+  Console.WriteLine("Menu button handled successfully!");
+}
+
+// Example 5: Get user session
+var session = await orchestrator.GetUserSessionAsync(userId);
+Console.WriteLine($"Session state: {session.State}");
+
+// Example 6: End user session
+bool sessionEnded = await orchestrator.EndUserSessionAsync(userId);
+Console.WriteLine($"Session ended: {sessionEnded}");
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
