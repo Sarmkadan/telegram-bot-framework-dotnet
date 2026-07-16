@@ -35,6 +35,31 @@ All configuration is done via `appsettings.json`. Here are the available setting
 
 > ⚠️ Never commit actual secrets like `botToken` to version control.
 
+## TelegramBotFrameworkDotnetOptions
+
+The `TelegramBotFrameworkDotnetOptions` class provides a strongly-typed configuration object for initializing and managing the Telegram Bot Framework. It encapsulates essential settings such as bot credentials, database connections, and performance tuning parameters, allowing for cleaner configuration in code compared to JSON-only setups.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Configure the framework options in code
+services.Configure<TelegramBotFrameworkDotnetOptions>(options =>
+{
+    options.BotToken = "123456789:ABCDEF";
+    options.BotUsername = "my_bot_username";
+    options.DatabaseConnectionString = "Server=localhost;Database=BotDb;";
+    options.SessionTimeoutMinutes = 30;
+    options.MessageProcessingTimeoutSeconds = 15;
+    options.MaxConcurrentRequests = 20;
+    options.EnableLogging = true;
+    options.EnableRateLimiting = true;
+    options.RateLimitPerMinute = 60;
+});
+```
+
 ## WebhookServiceExtensions
 
 Provides extension methods for configuring and managing webhook services in Telegram bot applications. Includes methods for registering webhook services, checking registration status, and accessing webhook‑related options and statistics.
