@@ -1201,6 +1201,115 @@ await inlineQueryService.InvalidateCacheAsync("search music");
 
 The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
 
+## InMemoryUserRepository
+
+The `InMemoryUserRepository` class provides an in-memory implementation of the `IUserRepository` interface for storing and managing user data. This repository stores `BotUser` entities in memory with thread-safe operations, making it ideal for development, testing, and lightweight production scenarios where persistence isn't required.
+
+**Key features:**
+- Thread-safe operations using `lock` synchronization
+- Fast in-memory storage with O(1) average complexity for most operations
+- Comprehensive user lookup methods (by ID, username, status, role, etc.)
+- Pagination support for large user collections
+- Search functionality across user properties
+- Async API with cancellation support
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Repositories;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the in-memory user repository
+var userRepository = serviceProvider.GetRequiredService<IUserRepository>()
+    as InMemoryUserRepository;
+
+// Create a new user
+var newUser = new BotUser
+{
+    TelegramId = 123456789,
+    FirstName = "John",
+    LastName = "Doe",
+    Username = "johndoe",
+    PhoneNumber = "+1234567890",
+    Status = UserStatus.Active,
+    Role = UserRole.User,
+    IsPremium = true,
+    IsBot = false,
+    Metadata = new Dictionary<string, string>
+    {
+        { "preferred_language", "en" },
+        { "timezone", "UTC-5" }
+    }
+};
+
+// Add the user to the repository
+var createdUser = await userRepository.CreateAsync(newUser);
+Console.WriteLine($"User created: {createdUser.TelegramId}");
+
+// Retrieve a user by ID
+var retrievedUser = await userRepository.GetByIdAsync(123456789);
+if (retrievedUser != null)
+{
+    Console.WriteLine($"Found user: {retrievedUser.GetDisplayName()}");
+}
+
+// Get all users
+var allUsers = await userRepository.GetAllAsync();
+Console.WriteLine($"Total users: {allUsers.Count}");
+
+// Update a user
+retrievedUser!.Status = UserStatus.Inactive;
+var updatedUser = await userRepository.UpdateAsync(retrievedUser);
+Console.WriteLine($"User updated: {updatedUser.Status}");
+
+// Search for users by name
+var searchResults = await userRepository.SearchAsync("John");
+Console.WriteLine($"Found {searchResults.Count} users matching 'John'");
+
+// Get users by status
+var activeUsers = await userRepository.GetByStatusAsync(UserStatus.Active);
+Console.WriteLine($"Active users: {activeUsers.Count}");
+
+// Get users by role
+var adminUsers = await userRepository.GetByRoleAsync(UserRole.Admin);
+Console.WriteLine($"Admin users: {adminUsers.Count}");
+
+// Get paginated results
+var page1 = await userRepository.GetPaginatedAsync(1, 10);
+Console.WriteLine($"Page 1 users: {page1.Count}");
+
+// Check if user exists
+bool exists = await userRepository.ExistsAsync(123456789);
+Console.WriteLine($"User exists: {exists}");
+
+// Get user by Telegram ID
+var userByTelegramId = await userRepository.GetByTelegramIdAsync(123456789);
+Console.WriteLine($"User by Telegram ID: {userByTelegramId?.Username}");
+
+// Get user by username
+var userByUsername = await userRepository.GetByUsernameAsync("johndoe");
+Console.WriteLine($"User by username: {userByUsername?.TelegramId}");
+
+// Count users
+int userCount = await userRepository.CountAsync();
+Console.WriteLine($"Total user count: {userCount}");
+
+// Delete a user
+bool deleted = await userRepository.DeleteAsync(123456789);
+Console.WriteLine($"User deleted: {deleted}");
+```
+
 ## MessageService
 
 The `MessageService` class provides centralized message processing, storage, and lifecycle management for Telegram bot applications. It handles incoming message processing, retrieval, status tracking, and archiving operations, enabling reliable message handling and monitoring capabilities.
