@@ -291,6 +291,89 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## UserSession
+
+The `UserSession` class represents an active user session that tracks conversation state, context data, and interaction history. Sessions store user-specific data across multiple interactions, enabling stateful conversations, menu navigation, and persistent context between messages. The class provides methods for managing session state, context data, command history, and session lifecycle tracking.
+
+**Key features:**
+- Session identification with unique `SessionId`
+- User and chat metadata (UserId, ChatId) for context tracking
+- Session state management with `SessionState` enum (Active, Idle, Suspended, Expired, Closed)
+- Context data storage via `ContextData` dictionary for custom session properties
+- Command history tracking with automatic pruning
+- Session expiration and activity tracking
+- Convenience properties like `IsActive` and `IsExpired()`
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var orchestrator = serviceProvider.GetRequiredService<IBotOrchestrator>();
+
+// Create or retrieve a user session
+var userId = 123456789L;
+var chatId = 987654321L;
+
+// Get or create a session for the user
+var session = await orchestrator.GetUserSessionAsync(userId);
+
+// Update session state and context
+session.State = SessionState.Active;
+session.CurrentContext = "admin_panel";
+session.CurrentMenuId = "main_menu";
+
+// Store custom context data
+session.SetContextData("preferences.theme", "dark");
+session.SetContextData("preferences.language", "en");
+
+// Retrieve context data
+string? theme = session.GetContextData("preferences.theme");
+Console.WriteLine($"User theme preference: {theme}"); // "dark"
+
+// Track user activity
+session.UpdateActivity();
+Console.WriteLine($"Interaction count: {session.InteractionCount}"); // 1
+
+// Add command to history
+session.AddCommandToHistory("/admin");
+session.AddCommandToHistory("/settings");
+
+// Check session status
+bool isExpired = session.IsExpired();
+bool isActive = session.IsActive;
+Console.WriteLine($"Session active: {isActive}, Expired: {isExpired}");
+
+// Get session duration
+var duration = session.GetDuration();
+Console.WriteLine($"Session duration: {duration.TotalMinutes} minutes");
+
+// Clear specific context data
+session.RemoveContextData("preferences.language");
+
+// Clear all context data
+session.ClearContextData();
+
+// Access session properties
+Console.WriteLine($"Session ID: {session.SessionId}");
+Console.WriteLine($"User ID: {session.UserId}");
+Console.WriteLine($"Chat ID: {session.ChatId}");
+Console.WriteLine($"Created: {session.CreatedAt}");
+Console.WriteLine($"Last activity: {session.LastActivityAt}");
+Console.WriteLine($"Current context: {session.CurrentContext}");
+Console.WriteLine($"Current menu: {session.CurrentMenuId}");
+```
+
 ## BotUser
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
