@@ -1157,6 +1157,92 @@ var processedNumbers = numbers
 // Result: [2, 4, 6, 8, 10]
 ```
 
+## EnumHelper
+
+The `EnumHelper` class provides utility methods for working with enumerations in .NET. It offers functionality for parsing enum values, converting enums to dictionaries, retrieving descriptions from enum members, checking flag values, and working with enum attributes. This utility is particularly useful for creating dropdown lists, validating enum inputs, and working with enum metadata.
+
+**Example usage**
+
+```csharp
+using System.ComponentModel;
+using TelegramBotFramework.Utilities;
+
+// Example 1: Define an enum with Description attributes
+public enum UserRole
+{
+    [Description("Regular user with basic permissions")]
+    User = 0,
+    
+    [Description("Trusted user with additional capabilities")]
+    Trusted = 1,
+    
+    [Description("Administrator with full system access")]
+    Admin = 2,
+    
+    [Description("Super administrator with unrestricted access")]
+    Owner = 3
+}
+
+// Example 2: Get all enum values
+var allRoles = EnumHelper.GetAllValues<UserRole>();
+foreach (var role in allRoles)
+{
+    Console.WriteLine($"Role: {role}");
+}
+
+// Example 3: Safely parse a string to an enum with fallback
+string userInput = "admin";
+UserRole parsedRole = EnumHelper.TryParse(userInput, UserRole.User);
+Console.WriteLine($"Parsed role: {parsedRole}"); // UserRole.Admin
+
+// Example 4: Get description from DescriptionAttribute
+UserRole role = UserRole.Admin;
+string description = role.GetDescription();
+Console.WriteLine($"Admin description: {description}"); // "Administrator with full system access"
+
+// Example 5: Convert enum to dictionary for UI binding
+var roleDictionary = EnumHelper.EnumToDictionary<UserRole>();
+foreach (var kvp in roleDictionary)
+{
+    Console.WriteLine($"{kvp.Key} = {kvp.Value}");
+}
+
+// Example 6: Create display dictionary with descriptions
+var displayDictionary = EnumHelper.EnumToDisplayDictionary<UserRole>();
+foreach (var kvp in displayDictionary)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Example 7: Check if a string is a valid enum value
+bool isValid = EnumHelper.IsValid<UserRole>("trusted");
+Console.WriteLine($"Is 'trusted' valid: {isValid}"); // true
+
+// Example 8: Get the name of an enum value
+string enumName = EnumHelper.GetName(UserRole.Owner);
+Console.WriteLine($"Enum name: {enumName}"); // "Owner"
+
+// Example 9: Get numeric value of an enum
+UserRole roleValue = UserRole.Trusted;
+object numericValue = roleValue.GetNumericValue();
+Console.WriteLine($"Numeric value: {numericValue}"); // 1
+
+// Example 10: Check if enum value has a specific flag
+[Flags]
+public enum PermissionFlags
+{
+    None = 0,
+    Read = 1,
+    Write = 2,
+    Execute = 4,
+    All = Read | Write | Execute
+}
+
+var permissions = PermissionFlags.Read | PermissionFlags.Write;
+bool hasWrite = permissions.HasFlag(PermissionFlags.Write);
+Console.WriteLine($"Has write permission: {hasWrite}"); // true
+```
+
 ## UserSession
 
 The `UserSession` class represents an active user session that tracks conversation state, context data, and interaction history. Sessions store user-specific data across multiple interactions, enabling stateful conversations, menu navigation, and persistent context between messages. The class provides methods for managing session state, context data, command history, and session lifecycle tracking.
