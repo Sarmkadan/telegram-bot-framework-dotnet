@@ -1096,6 +1096,187 @@ public class SessionServiceTests
 }
 ```
 
+## UserServiceTests
+
+The `UserServiceTests` class contains unit tests for the `UserService` class. It verifies user management functionality including creation, retrieval, updating, deletion, and activity tracking through comprehensive test cases that cover various scenarios like existing vs. new users, null values, partial updates, and status filtering.
+
+**Example usage:**
+
+```csharp
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Repositories;
+using TelegramBotFramework.Services;
+using Xunit;
+
+public class UserServiceTestsExample
+{
+    [Fact]
+    public async Task GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        var existingUser = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe" };
+        mockRepository
+            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        // Act
+        var result = await userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe");
+
+        // Assert
+        result.Should().Be(existingUser);
+        mockRepository.Verify(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetOrCreateUserAsync_WithNonExistingUser_CreatesAndReturnsNewUser()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        mockRepository
+            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BotUser?)null);
+        mockRepository
+            .Setup(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BotUser user, CancellationToken _) => user);
+
+        // Act
+        var result = await userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.TelegramId.Should().Be(123);
+        result.FirstName.Should().Be("John");
+        result.LastName.Should().Be("Doe");
+        result.Username.Should().Be("johndoe");
+        result.Status.Should().Be(UserStatus.Active);
+    }
+
+    [Fact]
+    public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe" };
+        mockRepository
+            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        var result = await userService.GetUserByIdAsync(123);
+
+        // Assert
+        result.Should().Be(user);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_UpdatesUserProperties()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Username = "johndoe" };
+        mockRepository
+            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        mockRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        var result = await userService.UpdateUserAsync(123, "John", "Smith", "johnsmith");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.LastName.Should().Be("Smith");
+        result.Username.Should().Be("johnsmith");
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WithExistingUser_DeletesAndReturnsTrue()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        mockRepository
+            .Setup(r => r.DeleteAsync(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await userService.DeleteUserAsync(123);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SearchUsersAsync_FiltersByFirstName()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        var users = new List<BotUser>
+        {
+            new BotUser { UserId = 1, FirstName = "John", LastName = "Doe" },
+            new BotUser { UserId = 2, FirstName = "Jane", LastName = "Smith" }
+        };
+        mockRepository
+            .Setup(r => r.SearchAsync("John", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(users.Where(u => u.FirstName.Contains("John", StringComparison.OrdinalIgnoreCase)).ToList());
+
+        // Act
+        var result = await userService.SearchUsersAsync("John");
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].FirstName.Should().Be("John");
+    }
+
+    [Fact]
+    public async Task GetUsersByStatusAsync_ReturnsFilteredUsers()
+    {
+        // Arrange
+        var mockRepository = new Mock<IUserRepository>();
+        var mockLogger = new Mock<ILogger<UserService>>();
+        var userService = new UserService(mockRepository.Object, mockLogger.Object);
+        
+        var activeUsers = new List<BotUser>
+        {
+            new BotUser { UserId = 1, Status = UserStatus.Active },
+            new BotUser { UserId = 2, Status = UserStatus.Active }
+        };
+        mockRepository
+            .Setup(r => r.GetByStatusAsync(UserStatus.Active, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeUsers);
+
+        // Act
+        var result = await userService.GetUsersByStatusAsync(UserStatus.Active);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().AllSatisfy(u => u.Status.Should().Be(UserStatus.Active));
+    }
+}
+```
+
 ## BotUserTests
 
 The `BotUserTests` class contains unit tests for the `BotUser` and `Command` classes, focusing on user metadata management, validation, and command execution tracking.
