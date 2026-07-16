@@ -1096,6 +1096,62 @@ public class SessionServiceTests
 }
 ```
 
+## BotUserTests
+
+The `BotUserTests` class contains unit tests for the `BotUser` and `Command` classes, focusing on user metadata management, validation, and command execution tracking.
+
+
+It verifies display name generation, metadata storage/retrieval, validation rules, activity tracking, and command execution statistics including rate limiting functionality.
+
+### Example usage
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Models;
+
+// Create a new user with first and last name
+var user = new BotUser { TelegramId = 123456789, FirstName = "John", LastName = "Doe" };
+
+// Test display name generation
+string fullName = user.GetDisplayName(); // "John Doe"
+
+// Test metadata management
+user.SetMetadata("subscription_tier", "premium");
+user.SetMetadata("last_active", DateTime.UtcNow.ToString());
+
+string tier = user.GetMetadata("subscription_tier"); // "premium"
+string missing = user.GetMetadata("non_existent_key"); // null
+
+// Test activity tracking
+user.UpdateActivity(); // Increments MessagesCount
+user.UpdateActivity();
+
+int messageCount = user.MessagesCount; // 2
+
+// Test command execution tracking
+var command = new Command { Name = "/announce", HandlerType = "AnnouncementHandler", RequiresAdmin = true };
+
+// Test command validation and execution
+command.RecordExecution(); // Increments ExecutionCount
+command.RecordExecution();
+
+int executionCount = command.ExecutionCount; // 2
+
+// Test rate limiting
+bool isRateLimited = command.IsRateLimited(10); // false (below limit of 10)
+bool atLimit = command.IsRateLimited(10); // true (at limit)
+
+// Test command permission checks
+bool canExecute = command.CanExecuteBy(UserRole.Administrator); // true
+bool cannotExecute = command.CanExecuteBy(UserRole.User); // false
+
+// Test command patterns (handles aliases)
+var patterns = command.GetCommandPatterns(); // ["/announce"]
+
+var aliasedCommand = new Command { Name = "/start", HandlerType = "Handler", Alias = "/go" };
+var aliasedPatterns = aliasedCommand.GetCommandPatterns(); // ["/start", "/go"]
+```
+
 ## SessionService
 
 The `SessionService` class provides centralized session management for Telegram bot applications, handling creation, retrieval, updating, and cleanup of user sessions. Sessions track conversation state, context data, and interaction history, enabling stateful conversations, menu navigation, and persistent context between messages across multiple interactions.
