@@ -403,6 +403,59 @@ Console.WriteLine($"Current menu: {session.CurrentMenuId}");
 
 The `BotUser` class represents a Telegram user interacting with the bot. It stores user profile information, activity statistics, authentication status, and custom metadata. The class provides methods for user validation, activity tracking, and metadata management, making it ideal for implementing user sessions, role-based access control, and personalized bot experiences.
 
+## BotConfiguration
+
+The `BotConfiguration` class represents the central configuration object for the Telegram Bot Framework. It encapsulates all essential settings including bot credentials, database connections, session management, logging configuration, rate limiting, webhook settings, and custom application-specific parameters. This class serves as the primary configuration mechanism when initializing the framework.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Create and configure the bot configuration
+var configuration = new BotConfiguration
+{
+    BotToken = "123456789:ABCDEF...",
+    BotUsername = "my_bot_username",
+    OwnerId = 123456789,
+    DatabaseConnectionString = "Server=localhost;Database=BotDb;User=sa;Password=your_password;",
+    SessionTimeoutMinutes = 30,
+    MessageProcessingTimeoutSeconds = 15,
+    EnableLogging = true,
+    LogLevel = LogLevel.Info,
+    MaxConcurrentRequests = 20,
+    EnableWebhook = true,
+    WebhookUrl = "https://mybot.com/webhook",
+    WebhookSecret = "your-secret-token",
+    ApiKey = "your-api-key",
+    EnableRateLimiting = true,
+    RateLimitPerMinute = 60,
+    LocalizationLanguage = "en",
+    AdminIds = new List<long> { 111111111, 222222222 },
+    CustomSettings = new Dictionary<string, string>
+    {
+        { "custom_feature_enabled", "true" },
+        { "feature_timeout", "300" }
+    }
+};
+
+// Validate the configuration
+configuration.Validate();
+
+// Check if a user is admin
+bool isAdmin = configuration.IsAdmin(111111111);
+
+// Get a custom setting value
+string? customValue = configuration.GetCustomSetting("custom_feature_enabled");
+
+// Register the configuration with the DI container
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(configuration);
+
+var serviceProvider = services.BuildServiceProvider();
+```
+
 **Key features:**
 - User profile management with first/last name, username, and phone number
 - Activity tracking with timestamps for last activity and message count
