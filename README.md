@@ -810,6 +810,292 @@ var createdUser = await userService.UpdateUserAsync(newUser);
 Console.WriteLine($"User created: {createdUser.TelegramId}");
 ```
 
+## SessionServiceTests
+
+The `SessionServiceTests` class contains unit tests for the `SessionService` class.
+
+### Example usage
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Tests;
+
+public class SessionServiceTests
+{
+    private readonly SessionService _sessionService;
+
+    public SessionServiceTests()
+    {
+        var services = new ServiceCollection();
+        services.AddTelegramBotFramework(new BotConfiguration
+        {
+            BotToken = "test_token",
+            BotUsername = "test_bot",
+            SessionTimeoutMinutes = 30
+        });
+
+        var serviceProvider = services.BuildServiceProvider();
+        _sessionService = serviceProvider.GetRequiredService<SessionService>();
+    }
+
+    public async Task GetActiveSessionAsync_WithExistingActiveSession_ReturnsSession()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Act
+        var activeSession = await _sessionService.GetActiveSessionAsync(userId);
+
+        // Assert
+        Assert.NotNull(activeSession);
+        Assert.Equal(session.SessionId, activeSession.SessionId);
+    }
+
+    public async Task GetActiveSessionAsync_WithNoActiveSession_ReturnsNull()
+    {
+        // Arrange
+        var userId = 123456789L;
+
+        // Act
+        var activeSession = await _sessionService.GetActiveSessionAsync(userId);
+
+        // Assert
+        Assert.Null(activeSession);
+    }
+
+    public async Task CreateSessionAsync_CreatesNewSession()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+
+        // Act
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Assert
+        Assert.NotNull(session);
+        Assert.Equal(userId, session.UserId);
+        Assert.Equal(chatId, session.ChatId);
+        Assert.Equal(SessionState.Active, session.State);
+    }
+
+    public async Task CreateSessionAsync_WithCustomTimeout_CreatesSessionWithCorrectExpiration()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var timeout = TimeSpan.FromMinutes(15);
+
+        // Act
+        var session = await _sessionService.CreateSessionAsync(userId, chatId, timeout);
+
+        // Assert
+        Assert.NotNull(session);
+        Assert.Equal(timeout, session.ExpiresAt - session.CreatedAt);
+    }
+
+    public async Task RecordSessionActivityAsync_UpdatesLastActivityAndIncrementsInteractionCount()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+        var initialLastActivity = session.LastActivityAt;
+        var initialCount = session.InteractionCount;
+
+        // Act
+        await _sessionService.RecordSessionActivityAsync(session.SessionId);
+        var updatedSession = await _sessionService.GetSessionByIdAsync(session.SessionId);
+
+        // Assert
+        Assert.NotNull(updatedSession);
+        Assert.True(updatedSession.LastActivityAt > initialLastActivity);
+        Assert.Equal(initialCount + 1, updatedSession.InteractionCount);
+    }
+
+    public async Task RecordSessionActivityAsync_WithNonExistingSession_DoesNotThrow()
+    {
+        // Arrange
+        var nonExistingSessionId = Guid.NewGuid();
+
+        // Act & Assert
+        await _sessionService.RecordSessionActivityAsync(nonExistingSessionId);
+        // Should not throw
+    }
+
+    public async Task CloseSessionAsync_WithActiveSession_ClosesSessionAndReturnsTrue()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Act
+        var result = await _sessionService.CloseSessionAsync(session.SessionId);
+
+        // Assert
+        Assert.True(result);
+        var closedSession = await _sessionService.GetSessionByIdAsync(session.SessionId);
+        Assert.Equal(SessionState.Closed, closedSession.State);
+    }
+
+    public async Task CloseSessionAsync_WithAlreadyClosedSession_ReturnsFalse()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+        await _sessionService.CloseSessionAsync(session.SessionId);
+
+        // Act
+        var result = await _sessionService.CloseSessionAsync(session.SessionId);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    public async Task CloseSessionAsync_WithNonExistingSession_ReturnsFalse()
+    {
+        // Arrange
+        var nonExistingSessionId = Guid.NewGuid();
+
+        // Act
+        var result = await _sessionService.CloseSessionAsync(nonExistingSessionId);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    public async Task NavigateToMenuAsync_UpdatesCurrentMenuId()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Act
+        var updatedSession = await _sessionService.NavigateToMenuAsync(session.SessionId, "main_menu");
+
+        // Assert
+        Assert.Equal("main_menu", updatedSession.CurrentMenuId);
+    }
+
+    public async Task GetSessionByIdAsync_WithExistingSession_ReturnsSession()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Act
+        var retrievedSession = await _sessionService.GetSessionByIdAsync(session.SessionId);
+
+        // Assert
+        Assert.NotNull(retrievedSession);
+        Assert.Equal(session.SessionId, retrievedSession.SessionId);
+    }
+
+    public async Task GetSessionByIdAsync_WithNonExistingSession_ReturnsNull()
+    {
+        // Arrange
+        var nonExistingSessionId = Guid.NewGuid();
+
+        // Act
+        var session = await _sessionService.GetSessionByIdAsync(nonExistingSessionId);
+
+        // Assert
+        Assert.Null(session);
+    }
+
+    public async Task GetAllActiveSessionsAsync_ReturnsActiveSessions()
+    {
+        // Arrange
+        var userId1 = 123456789L;
+        var userId2 = 987654321L;
+        var chatId = 111111111L;
+        await _sessionService.CreateSessionAsync(userId1, chatId);
+        await _sessionService.CreateSessionAsync(userId2, chatId);
+
+        // Act
+        var activeSessions = await _sessionService.GetAllActiveSessionsAsync();
+
+        // Assert
+        Assert.NotEmpty(activeSessions);
+        Assert.Equal(2, activeSessions.Count);
+    }
+
+    public async Task GetSessionsByUserIdAsync_ReturnsUserSessions()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId1 = 111111111L;
+        var chatId2 = 222222222L;
+        await _sessionService.CreateSessionAsync(userId, chatId1);
+        await _sessionService.CreateSessionAsync(userId, chatId2);
+
+        // Act
+        var userSessions = await _sessionService.GetSessionsByUserIdAsync(userId);
+
+        // Assert
+        Assert.NotEmpty(userSessions);
+        Assert.Equal(2, userSessions.Count);
+        Assert.All(userSessions, s => Assert.Equal(userId, s.UserId));
+    }
+
+    public async Task DeleteSessionAsync_WithExistingSession_DeletesAndReturnsTrue()
+    {
+        // Arrange
+        var userId = 123456789L;
+        var chatId = 987654321L;
+        var session = await _sessionService.CreateSessionAsync(userId, chatId);
+
+        // Act
+        var result = await _sessionService.DeleteSessionAsync(session.SessionId);
+
+        // Assert
+        Assert.True(result);
+        var deletedSession = await _sessionService.GetSessionByIdAsync(session.SessionId);
+        Assert.Null(deletedSession);
+    }
+
+    public async Task DeleteSessionAsync_WithNonExistingSession_ReturnsFalse()
+    {
+        // Arrange
+        var nonExistingSessionId = Guid.NewGuid();
+
+        // Act
+        var result = await _sessionService.DeleteSessionAsync(nonExistingSessionId);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    public async Task ExpireInactiveSessionsAsync_WithInactiveSessions_ClosesThem()
+    {
+        // Arrange
+        var userId1 = 123456789L;
+        var userId2 = 987654321L;
+        var chatId = 111111111L;
+        var session1 = await _sessionService.CreateSessionAsync(userId1, chatId);
+        var session2 = await _sessionService.CreateSessionAsync(userId2, chatId);
+
+        // Act
+        var expiredCount = await _sessionService.ExpireInactiveSessionsAsync(TimeSpan.Zero);
+
+        // Assert
+        Assert.Equal(2, expiredCount);
+        var expiredSession1 = await _sessionService.GetSessionByIdAsync(session1.SessionId);
+        var expiredSession2 = await _sessionService.GetSessionByIdAsync(session2.SessionId);
+        Assert.Equal(SessionState.Expired, expiredSession1.State);
+        Assert.Equal(SessionState.Expired, expiredSession2.State);
+    }
+}
+```
+
 ## SessionService
 
 The `SessionService` class provides centralized session management for Telegram bot applications, handling creation, retrieval, updating, and cleanup of user sessions. Sessions track conversation state, context data, and interaction history, enabling stateful conversations, menu navigation, and persistent context between messages across multiple interactions.
