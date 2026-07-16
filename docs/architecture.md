@@ -1,462 +1,132 @@
-# Architecture Overview
+# Architecture
 
-## System Design
+This document describes the actual structure of the codebase (`src/TelegramBotFramework`), the reasoning behind the main design decisions, and where to plug in your own code. Everything below maps to real types in the source - if a class is named here, it exists.
 
-The Telegram Bot Framework is built with a layered, modular architecture that promotes separation of concerns and extensibility.
+## Big Picture
 
-### Layers
-
-```
-┌─────────────────────────────────────┐
-│      API Layer (Controllers)         │
-│  BotController, AdminController     │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│    Middleware Pipeline               │
-│  Logging, Auth, RateLimit, etc.     │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│    Orchestration Layer (Services)    │
-│  BotOrchestrator, MessageService    │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│    Domain Logic Layer (Services)     │
-│  CommandService, UserService, etc.  │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│    Data Access Layer (Repositories) │
-│  IRepository, InMemoryRepository    │
-└─────────────────────────────────────┘
-```
-
-## Core Components
-
-### Models (Domain Entities)
-
-**BotUser**
-- Represents a Telegram user
-- Properties: TelegramId, FirstName, LastName, Username, Role, Status
-- Roles: User, Moderator, Admin, Owner
-- Status: Active, Inactive, Banned, Suspended
-
-**Message**
-- Represents a user message
-- Properties: UserId, ChatId, Content, Type, Status
-- Types: Text, Photo, Video, Audio, File, Command
-- Status: Received, Processing, Processed, Failed
-
-**Command**
-- Represents a bot command (e.g., /start)
-- Properties: Name, Description, Type, RequiresAdmin
-- Parameters support: CommandParameter list
-- Rate limiting: Per-minute limits
-
-**Menu**
-- Interactive keyboard interface
-- Types: Inline, ReplyKeyboard, Custom
-- Contains: MenuButton list
-- Navigation support
-
-**UserSession**
-- Tracks user session state
-- Properties: SessionId, UserId, ChatId, State
-- Context: ContextData dictionary
-- Menu navigation: CurrentMenuId tracking
-
-### Services
-
-**BotOrchestrator**
-- Main coordinator service
-- Routes incoming messages
-- Manages service interaction
-- Handles message lifecycle
-
-**CommandService**
-- Registers and executes commands
-- Parameter validation
-- Permission checking
-- Rate limit enforcement
-
-**UserService**
-- User CRUD operations
-- Role management (promote/demote)
-- Ban/suspend functionality
-- Profile updates
-
-**MessageService**
-- Message processing pipeline
-- Status tracking
-- Archive management
-- Metadata handling
-
-**SessionAndMenuService**
-- Session creation/management
-- Menu management
-- Navigation state
-- Context data storage
-
-### Middleware Pipeline
+One project, one assembly. The solution is a framework library that also ships a runnable ASP.NET Core host (`Program.cs`) so you can boot a bot with nothing but a token.
 
 ```
-Request
-  │
-  ▼
-ErrorHandlingMiddleware (Exception catching)
-  │
-  ▼
-LoggingMiddleware (Request/response tracking)
-  │
-  ▼
-AuthenticationMiddleware (API key validation)
-  │
-  ▼
-RateLimitingMiddleware (Traffic control)
-  │
-  ▼
-RequestValidationMiddleware (Payload verification)
-  │
-  ▼
-Endpoint Handler
-  │
-  ▼
-Response
+Telegram ──(webhook or long polling)──► Integration layer
+                                            │ TelegramUpdate
+                                            ▼
+              Controllers (HTTP surface, webhook + admin/testing API)
+                                            │
+                                            ▼
+                       BotOrchestrator (Services/BotOrchestrator.cs)
+                                            │ ExecutionContext
+                                            ▼
+        Middleware pipeline (error handling → logging → authorization → rate limit)
+                                            │
+                                            ▼
+     Domain services (User / Session / Command / Message / Menu services)
+                                            │
+                                            ▼
+              Repositories (IRepository<T,TId>, in-memory implementations)
 ```
 
-Each middleware is optional and can be:
-- Configured independently
-- Replaced with custom implementation
-- Reordered based on requirements
+## Module Breakdown
 
-### Caching Architecture
+| Folder | What lives there |
+|---|---|
+| `Models/` | Domain entities: `BotUser`, `Message`, `Command`, `Menu`, `UserSession`, `ExecutionContext`, plus `BotConfiguration` and options types. Entities carry their own `Validate()` methods. |
+| `Services/` | `BotOrchestrator` (the coordinator) and the domain services: `UserService`, `CommandService`, `MessageService`, `SessionAndMenuService` (implements both `ISessionService` and `IMenuService`), `InlineQueryService`. |
+| `Middleware/` | Two separate middleware families - see below. `IBotMiddleware` is the bot pipeline contract. |
+| `Repositories/` | `IRepository<T, TId>` plus typed interfaces (`IUserRepository`, `ISessionRepository`, ...) and their `InMemory*` implementations. |
+| `Integration/` | Telegram wire-level code: `TelegramApiClient` (+ `ITelegramApiClient`), `PollingStrategy`, `WebhookService` (an `IHostedService`), `WebhookHandler` (update parsing), `WebhookOptions`, `HttpClientFactory`. |
+| `Controllers/` | ASP.NET Core controllers: `WebhookController` (receives Telegram POSTs, checks the secret token), `BotController` and `AdminController` (message/command/user management over HTTP). |
+| `ConversationFlow/` | Multi-step dialog engine: `ConversationFlowEngine`, `IConversationStateStore` with in-memory and file-backed stores, `ConversationFlowMiddleware` to hook flows into the pipeline. |
+| `Commands/` | `ICommandHandler` contract and the built-in `HelpCommandHandler`. |
+| `Events/` | `EventBus` (in-process pub/sub, `IEventBus`), `EventPublisher`, `IEventHandler<T>`. |
+| `Strategies/` | Rate limiting: `TokenBucketStrategy`, `SlidingWindowStrategy`, `FixedWindowStrategy`, and `InMemoryRateLimitingStrategy` (the one registered by default). |
+| `Caching/` | `ICacheProvider`, `LocalCacheProvider` (in-memory + TTL), abstract `DistributedCacheProvider` base, `NoOpCacheProvider`. |
+| `BackgroundWorkers/` | `BackgroundTaskWorker` (queue + worker loop) and `ScheduledTaskManager` (interval-based scheduling). |
+| `Keyboard/` | `InlineKeyboardBuilder` - fluent builder producing Telegram inline keyboard markup. |
+| `Formatters/` | `MessageFormatter` (Markdown/HTML escaping), `JsonFormatter`, `CsvFormatter`, `XmlFormatter`. |
+| `Configuration/` | `DependencyInjectionSetup.AddTelegramBotFramework()`, `WebhookSetup.AddWebhookMode()`, `ConfigurationLoader` (env vars or JSON file). |
+| `Exceptions/` | `BotFrameworkException` hierarchy (`CommandExecutionException`, `SessionException`, `RateLimitExceededException`, ...). |
 
-```
-┌─────────────┐
-│ ICacheProvider (Interface)
-└──────┬──────┘
-       │
-       ├─────────────────┬──────────────────┐
-       │                 │                  │
-       ▼                 ▼                  ▼
- LocalCacheProvider  DistributedCacheProvider  Custom
-  (In-Memory)       (Redis, Memcached)      Implementations
-```
+## Key Design Decisions
 
-**LocalCacheProvider**
-- In-process memory cache
-- Built-in TTL expiration
-- Thread-safe operations
-- Suitable for single-instance deployments
+### One `ExecutionContext` object through the whole pipeline
 
-**DistributedCacheProvider**
-- Multi-instance cache
-- Redis-compatible interface
-- Shared state across instances
-- Better for scaled deployments
+Every user interaction is folded into a `Models.ExecutionContext` (user, session, message, resolved command, parameters, errors, `IsValid`, `IsStopped`). The orchestrator builds it, the middleware chain transforms it, and it comes back out as the result.
 
-### Event System
+*Rationale:* a single mutable context makes the middleware contract trivial (`ProcessAsync(context, next)`) and keeps cross-cutting state (errors, stop flag) in one place instead of threading a dozen parameters around.
 
-```
-Event Publisher → EventBus → Event Handlers
-                     ▲
-                     │
-                (Subscribe/Publish)
-```
+*Trade-off:* it is a grab-bag object - everything can see everything. Fine at this size; if the pipeline grows, splitting read-only input from mutable result would be the first refactor.
 
-**Built-in Events**
-- `MessageReceivedEvent` - User sends message
-- `CommandExecutedEvent` - Command completes
-- `BotStateChangedEvent` - State transition
+### Custom bot middleware pipeline, not ASP.NET Core middleware
 
-Custom events can be published:
-```csharp
-eventBus.PublishAsync(new CustomEvent { ... });
-eventBus.Subscribe<CustomEvent>(handler);
-```
+There are two middleware families and they are intentionally separate:
 
-### Rate Limiting Strategies
+- **Bot pipeline** (`IBotMiddleware`): `BotErrorHandlingMiddleware`, `BotLoggingMiddleware`, `AuthorizationMiddleware`, `RateLimitingMiddleware`, `ConversationFlowMiddleware`. Runs inside `BotOrchestrator` over `ExecutionContext`.
+- **HTTP middleware** (`HttpErrorHandlingMiddleware`, `HttpLoggingMiddleware`, `AuthenticationMiddleware`): plain ASP.NET Core-style middleware guarding the HTTP surface.
 
-**Token Bucket**
-- Allows burst traffic up to capacity
-- Smooth rate distribution
-- Best for user-facing APIs
-- Default strategy
+*Rationale:* bot updates can arrive from long polling too, where there is no HTTP request at all. Tying authorization/rate limiting to ASP.NET middleware would make polling mode a second-class citizen.
 
-**Sliding Window**
-- Precise rolling window limiting
-- No bursts allowed
-- Strict rate control
-- Best for resource protection
+*Ordering:* `IBotMiddleware.Priority` decides the order - the orchestrator sorts descending, so **higher priority runs earlier**: logging (100) → authorization (30) → rate limiting (20) → error handling (10). A middleware can short-circuit by setting `IsStopped`; the pipeline in `BotOrchestrator.ExecuteMiddlewarePipelineAsync` then skips the rest.
 
-**Fixed Window**
-- Counter resets at fixed intervals
-- Simple implementation
-- Can allow burst at boundaries
-- Legacy option
+### Repository pattern with in-memory defaults
 
-## Data Flow
+All persistence goes through `IRepository<T, TId>` sub-interfaces. The only shipped implementations are in-memory (`ConcurrentDictionary`-based), registered as singletons in `DependencyInjectionSetup`.
 
-### Incoming Message Processing
+*Rationale:* the framework stays dependency-free (no EF, no driver packages) and works out of the box. The interfaces are the seam where a real database goes.
 
-```
-Telegram User
-     │
-     ▼
-WebhookHandler / Polling
-     │
-     ▼
-BotController.ProcessMessage
-     │
-     ▼
-Authentication Middleware (Verify token)
-     │
-     ▼
-RateLimit Middleware (Check limit)
-     │
-     ▼
-MessageService.ProcessIncomingMessage
-     │
-     ▼
-EventBus.PublishMessageReceived
-     │
-     ├─→ Event Subscribers (Handlers)
-     │
-     ▼
-CommandService.ExecuteCommand (if command)
-     │
-     ▼
-MessageRepository.Store
-     │
-     ▼
-Response to User
-```
+*Trade-off:* state dies with the process and does not scale past one instance. `BotConfiguration.DatabaseConnectionString` exists but nothing consumes it yet - it is a placeholder for persistent repositories.
 
-### Command Execution Flow
+### Webhook and polling as siblings
 
-```
-User sends "/start"
-     │
-     ▼
-BotController
-     │
-     ▼
-CommandService.ExecuteCommand
-     │
-     ├─ Check if command exists
-     ├─ Verify user permissions
-     ├─ Check rate limit
-     ├─ Validate parameters
-     │
-     ▼
-CommandHandler (Custom logic)
-     │
-     ├─ Execute command
-     ├─ Update session/user state
-     ├─ Publish CommandExecutedEvent
-     │
-     ▼
-Send Response to User
-```
+`WebhookService` is an `IHostedService`: it registers the webhook URL (with optional secret token) on startup and removes it on shutdown; `WebhookController` receives the actual POSTs and validates `X-Telegram-Bot-Api-Secret-Token`. `PollingStrategy` is the alternative: a background loop calling `getUpdates` with offset tracking. Both normalize updates via `WebhookHandler` and raise the same `OnUpdateReceived` event.
 
-## Database Design (Phase 2+)
+*Rationale:* production wants webhooks; local development behind NAT wants polling. Sharing the update-parsing code keeps the two modes behaviorally identical downstream.
 
-**Users Table**
-- TelegramId (PK/indexed)
-- FirstName, LastName
-- Username, PhoneNumber
-- Role, Status
-- Metadata (JSON)
-- CreatedAt, UpdatedAt (timestamps)
+### Interfaces for the Telegram client
 
-**Messages Table**
-- MessageId (PK)
-- UserId (FK)
-- ChatId (indexed)
-- Content, Type
-- Status (indexed)
-- Metadata (JSON)
-- CreatedAt, UpdatedAt
+`TelegramApiClient` implements `ITelegramApiClient`; `PollingStrategy` and `WebhookService` depend on the interface. This exists purely so integration components can be tested with a fake client instead of hitting the real API.
 
-**Sessions Table**
-- SessionId (PK)
-- UserId (FK)
-- ChatId (indexed)
-- State, CurrentMenuId
-- ContextData (JSON)
-- ExpiresAt (indexed)
-- CreatedAt, UpdatedAt
+### In-process event bus
 
-**Commands Table**
-- CommandId (PK)
-- Name (unique)
-- Description, Type
-- RequiresAdmin
-- Parameters (JSON)
-- RateLimitPerMinute
-- IsEnabled
+`EventBus` is a minimal pub/sub (subscribe by event type, `PublishAsync` fans out). Conversation flows publish `FlowStartedEvent` / `FlowStepCompletedEvent` / `FlowCompletedEvent` / `FlowAbortedEvent` through it.
 
-**Menus Table**
-- MenuId (PK)
-- Title, Description
-- Type, MaxButtonsPerRow
-- Buttons (JSON)
-- IsActive
-- CreatedAt, UpdatedAt
+*Trade-off:* handlers run in-process and unordered; there is no retry or persistence. It is for decoupling within one process, not a message queue replacement.
 
-## Configuration Management
+### Conversation flows with pluggable state stores
 
-**appsettings.json** - Default configuration
-**appsettings.Development.json** - Development overrides
-**Environment Variables** - Runtime overrides
-**Custom Providers** - IConfigurationProvider implementations
+`ConversationFlowEngine` executes declarative `FlowDefinition`s (steps, validation, branching). Active state lives behind `IConversationStateStore`: `InMemoryConversationStateStore` for tests/single instance, `FileConversationStateStore` for cheap durability across restarts (JSON files, write-behind with periodic flush).
 
-## Dependency Injection
+*Rationale:* multi-step dialogs are the hardest part of bot UX; keeping the state store behind an interface means a Redis/DB store is an implementation away, without touching the engine.
 
-The framework uses built-in .NET DI:
+## Data Flow (incoming text message)
 
-```csharp
-builder.Services.AddTelegramBotFramework(config);
+1. Update arrives - `WebhookController` (webhook mode) or `PollingStrategy` (polling mode), parsed by `WebhookHandler` into a `TelegramUpdate`.
+2. `BotOrchestrator.ProcessUserMessageAsync`:
+   - `UserService.GetOrCreateUserAsync` - upsert the user.
+   - `SessionService.GetActiveSessionAsync` / `CreateSessionAsync` - attach or open a session; activity timestamps recorded on both.
+   - `MessageService.ProcessIncomingMessageAsync` - persist the message.
+   - If the text starts with `/`, `CommandService.GetCommandAsync` resolves the command into the context.
+3. The `ExecutionContext` runs through the bot middleware chain.
+4. On success the message is marked processed; on errors `MessageService.MarkAsFailedAsync` records why.
+5. Replies go out through `ITelegramApiClient` (`SendMessageAsync`, `SendMessageWithButtonsAsync` fed by `InlineKeyboardBuilder`).
 
-// Automatically registers:
-- ICommandService → CommandService
-- IUserService → UserService
-- IMessageService → MessageService
-- ISessionAndMenuService → SessionAndMenuService
-- ICacheProvider → Configured provider
-- IEventBus → EventBus (Singleton)
-- TelegramApiClient → Direct registration
-```
+## Extension Points
 
-## Extensibility Points
+- **Custom command:** implement `ICommandHandler`, register it transient - `CommandService` picks up all registered handlers.
+- **Custom middleware:** implement `IBotMiddleware`, choose a `Priority`, register as `IBotMiddleware`.
+- **Persistence:** implement the typed repository interfaces (`IUserRepository` etc.) and register them before/instead of the in-memory ones.
+- **Conversation state:** implement `IConversationStateStore` for Redis/DB-backed flow state.
+- **Rate limiting:** implement `IRateLimitingStrategy` or swap in one of the three shipped strategies.
+- **Caching:** implement `ICacheProvider`, or subclass `DistributedCacheProvider` for a distributed backend.
+- **Events:** subscribe handlers on `IEventBus` for flow and domain events.
 
-### Custom Services
-```csharp
-builder.Services.AddScoped<ICustomAnalyticsService, CustomAnalyticsService>();
-```
+## DI Registration
 
-### Custom Middleware
-```csharp
-app.UseMiddleware<CustomMiddleware>();
-```
+`AddTelegramBotFramework(botConfig)` registers repositories, domain services, the orchestrator, the built-in help command handler, the in-memory rate limiting strategy and the four default bot middleware, plus console logging mapped from `BotConfiguration.LogLevel`. `AddWebhookMode(opts)` adds `TelegramApiClient` (exposed as `ITelegramApiClient`) and `WebhookService` as a hosted service. Configuration comes from environment variables first, `appsettings.json` as fallback (see `Program.cs` / `ConfigurationLoader`).
 
-### Custom Event Handlers
-```csharp
-eventBus.Subscribe<MessageReceivedEvent>(async evt => {
-    await HandleCustomLogicAsync(evt);
-});
-```
+## Known Limitations
 
-### Custom Repositories
-```csharp
-builder.Services.AddScoped<IRepository, SqlServerRepository>();
-```
-
-## Error Handling
-
-**Exception Hierarchy**
-```
-Exception
-  └─ BotFrameworkException
-      ├─ CommandExecutionException
-      ├─ CommandNotFoundException
-      ├─ InsufficientPermissionException
-      ├─ SessionException
-      ├─ UserException
-      ├─ RateLimitExceededException
-      └─ ConfigurationException
-```
-
-All exceptions are caught by ErrorHandlingMiddleware and returned as structured responses.
-
-## Performance Considerations
-
-**Caching**
-- Cache frequently accessed users (1h TTL)
-- Cache commands list (30m TTL)
-- Cache menu definitions (1h TTL)
-
-**Connection Pooling**
-- HttpClientFactory manages pooled clients
-- Reduces connection overhead
-
-**Async/Await**
-- All I/O operations are async
-- No thread blocking
-- Supports thousands of concurrent users
-
-**Rate Limiting**
-- Prevents abuse
-- Protects resources
-- Configurable per command/user
-
-## Scaling Considerations
-
-**Single Instance**
-- LocalCacheProvider
-- Polling updates
-- Suitable for <1k users
-
-**Multiple Instances**
-- DistributedCacheProvider (Redis)
-- Webhook updates
-- Load balancer frontend
-- Suitable for 1k-100k users
-
-**Enterprise Scale**
-- Database persistence (SQL Server/PostgreSQL)
-- Message queue (RabbitMQ, Service Bus)
-- Cache layer (Redis)
-- CDN for assets
-- Kubernetes orchestration
-- Suitable for 100k+ users
-
-## Security Architecture
-
-**Authentication**
-- Bearer token validation
-- X-API-Key header support
-- Webhook signature verification (HMAC-SHA256)
-
-**Authorization**
-- Role-based access control (RBAC)
-- Per-command permission checks
-- User status verification
-
-**Input Validation**
-- Content-type checking
-- JSON schema validation
-- Size limits
-- Sanitization in formatters
-
-**Data Protection**
-- Password hashing (PBKDF2-SHA256)
-- Encrypted sensitive fields
-- Secure token generation
-
-## Monitoring & Observability
-
-**Logging**
-- Structured logging via ILogger
-- Correlation IDs for request tracing
-- Multiple log levels (Debug, Info, Warning, Error)
-
-**Metrics**
-- Request count/latency
-- Cache hit/miss rates
-- Command execution times
-- User session stats
-
-**Health Checks**
-- `/api/bot/health` endpoint
-- Database connectivity
-- Cache availability
-- Message queue status
-
-## References
-
-- [Service Locator Pattern](https://en.wikipedia.org/wiki/Service_locator_pattern)
-- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-- [Clean Code Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- All shipped repositories are in-memory; `DatabaseConnectionString` is accepted but unused. Restart = data loss.
+- `EventBus`, caches and rate limiters are per-process - horizontal scaling needs distributed implementations that do not exist here yet.
+- `TelegramApiClient` covers the subset of the Bot API the framework needs (send/edit/delete, callbacks, webhook management, getUpdates), not the full API surface.
+- `HandleMenuButtonAsync` treats `OpenUrl` / `SwitchInline` actions as presentation-layer concerns and does nothing with them server-side.
+- The bot error-handling middleware runs last in the chain (priority 10), so it converts exceptions thrown by domain code, not by the earlier middleware.
