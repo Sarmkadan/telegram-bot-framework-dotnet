@@ -625,6 +625,67 @@ Console.WriteLine($"Cache hit rate: {stats.HitRate:F2}%");
 // await cacheProvider.FlushAsync();
 ```
 
+## LocalCacheProviderTests
+
+The `LocalCacheProviderTests` class contains unit tests for the `LocalCacheProvider` class, which provides in-memory caching functionality for Telegram bot framework components. The test suite covers basic CRUD operations, expiration behavior, cache statistics tracking, and thread-safe operations on the cache provider.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Caching;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+// Register LocalCacheProvider as the cache implementation
+services.AddSingleton<ICacheProvider, LocalCacheProvider>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the cache provider
+var cacheProvider = serviceProvider.GetRequiredService<ICacheProvider>() as LocalCacheProvider;
+
+// Test 1: Basic get/set operations with TTL
+await cacheProvider.SetAsync("user:123:profile", new { Name = "John Doe", Email = "john@example.com" }, TimeSpan.FromMinutes(30));
+var cachedProfile = await cacheProvider.GetAsync<object>("user:123:profile");
+if (cachedProfile != null)
+{
+    Console.WriteLine("Profile retrieved from cache!");
+}
+
+// Test 2: Check if key exists
+bool exists = await cacheProvider.ExistsAsync("user:123:profile");
+Console.WriteLine($"Key exists: {exists}");
+
+// Test 3: Remove a cached item
+await cacheProvider.RemoveAsync("user:123:profile");
+
+// Test 4: GetOrCreateAsync - factory is only called when key doesn't exist
+var userData = await cacheProvider.GetOrCreateAsync(
+    "user:456:data",
+    async () => 
+    {
+        // This factory is only called if the key doesn't exist
+        await Task.Delay(100); // Simulate expensive operation
+        return new { LastAccessed = DateTime.UtcNow, Count = 1 };
+    },
+    TimeSpan.FromHours(1)
+);
+
+// Test 5: Get cache statistics for monitoring
+var stats = await cacheProvider.GetStatisticsAsync();
+Console.WriteLine($"Cache stats - Hits: {stats.HitCount}, Misses: {stats.MissCount}, Items: {stats.ItemCount}");
+
+// Test 6: Flush all cache entries (use with caution in production)
+// await cacheProvider.FlushAsync();
+```
+
 ## LocalCacheProviderExtensions
 
 Provides additional utility methods for `LocalCacheProvider` to simplify common caching operations such as conditional retrieval, batch management, and atomic get-or-create patterns. These extensions improve code readability and efficiency when working with cached data in your bot services.
