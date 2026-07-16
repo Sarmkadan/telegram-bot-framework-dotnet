@@ -1071,6 +1071,94 @@ Console.WriteLine($"Received at: {inlineQuery.ReceivedAt}");
 Console.WriteLine($"Answered at: {inlineQuery.AnsweredAt}");
 ```
 
+## IInlineQueryService
+
+The `IInlineQueryService` interface handles Telegram inline queries with transparent result caching and page-based pagination. It processes inline queries by delegating result generation to a factory function on cache misses, then caches the complete result set for subsequent pages of the same query within a configurable time-to-live window. This service enables efficient handling of paginated inline query results while maintaining performance through intelligent caching.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the inline query service
+var inlineQueryService = serviceProvider.GetRequiredService<IInlineQueryService>();
+
+// Create an inline query instance
+var inlineQuery = new InlineQuery
+{
+    QueryId = Guid.NewGuid().ToString(),
+    UserId = 123456789,
+    Query = "search music",
+    Offset = "",
+    Status = InlineQueryStatus.Pending,
+    ReceivedAt = DateTime.UtcNow
+};
+
+// Define a results factory that returns all matching results for the query
+Func<InlineQuery, CancellationToken, Task<IList<InlineQueryResult>>> resultsFactory = 
+    async (query, ct) =>
+    {
+        // In a real implementation, this would query your data source
+        // For example: search music tracks, documents, or other content
+        var results = new List<InlineQueryResult>();
+        
+        for (int i = 1; i <= 25; i++)
+        {
+            results.Add(new InlineQueryResult
+            {
+                Title = $"Result {i}",
+                Description = $"Description for result {i}",
+                Content = $"Content for result {i}",
+                Type = InlineQueryResultType.Article,
+                Id = i.ToString()
+            });
+        }
+        
+        return results;
+    };
+
+// Handle the inline query with pagination (default page size is 10)
+var pagedResult = await inlineQueryService.HandleAsync(
+    inlineQuery,
+    resultsFactory,
+    pageSize: 10
+);
+
+// Access the paginated results
+Console.WriteLine($"Total results: {pagedResult.TotalCount}");
+Console.WriteLine($"Page {pagedResult.PageNumber} with {pagedResult.Results.Count} results");
+Console.WriteLine($"Next offset: {pagedResult.NextOffset}");
+
+// Get results from cache for subsequent pages without invoking the factory
+var cachedResult = await inlineQueryService.GetCachedAsync(
+    "search music",
+    pageNumber: 2
+);
+
+if (cachedResult != null)
+{
+    Console.WriteLine($"Retrieved page 2 from cache: {cachedResult.Results.Count} results");
+}
+
+// Record query telemetry for monitoring
+await inlineQueryService.RecordQueryAsync(inlineQuery, pagedResult.TotalCount);
+
+// Invalidate cache when data changes (e.g., new items added to your data source)
+await inlineQueryService.InvalidateCacheAsync("search music");
+```
+
 ## Message
 
 The `Message` class represents a user message received by the bot. It encapsulates message metadata, content, attachments, and processing state, providing methods for tracking message lifecycle, managing attachments, and storing custom metadata for extended functionality.
