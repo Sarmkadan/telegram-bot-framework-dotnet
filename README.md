@@ -896,6 +896,73 @@ Console.WriteLine($"Command created at: {startCommand.CreatedAt}");
 Console.WriteLine($"Last updated: {startCommand.UpdatedAt}");
 ```
 
+## BackgroundTaskWorker
+
+The `BackgroundTaskWorker` class provides a lightweight background task queue and execution engine for running long-running operations without blocking the main request processing pipeline. It manages concurrent task execution with configurable limits, tracks task lifecycle (queued, started, completed), and provides detailed statistics about the worker's performance.
+
+The worker uses a queue-based approach with a configurable maximum number of concurrent tasks, automatically scaling task execution as slots become available. Each task runs in a separate background thread, allowing the main application to remain responsive while processing potentially time-consuming operations like file processing, API calls, or database operations.
+
+**Key features:**
+- Configurable maximum concurrent tasks (default: 4)
+- Graceful start/stop with cancellation support
+- Task lifecycle tracking with timestamps
+- Detailed statistics via `GetStatistics()`
+- Thread-safe task queue with semaphore synchronization
+- Automatic error handling and logging
+- Lightweight implementation with minimal overhead
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.BackgroundWorkers;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+var logger = serviceProvider.GetRequiredService<ILogger<BackgroundTaskWorker>>();
+
+// Create a background task worker with 8 concurrent tasks
+var taskWorker = new BackgroundTaskWorker(maxConcurrentTasks: 8, logger: logger);
+
+// Start the worker
+taskWorker.Start();
+
+// Queue a background task (e.g., process a large file)
+taskWorker.QueueTask(async cancellationToken =>
+{
+    // Simulate a long-running operation
+    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+    
+    Console.WriteLine("Background task completed!");
+    
+    // Perform additional work...
+    for (int i = 0; i < 10; i++)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+        Console.WriteLine($"Processing step {i + 1}/10");
+    }
+}, "File Processing Task");
+
+// Queue another task with different work
+taskWorker.QueueTask(async cancellationToken =>
+{
+    // Call external API
+    await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+    Console.WriteLine("API call completed!");
+}, "API Integration Task");
+
+// Get current statistics
+var stats = taskWorker.GetStatistics();
+Console.WriteLine($"Queued: {stats.QueuedTaskCount}, Running: {stats.RunningTaskCount}, Max: {stats.MaxConcurrentTasks}");
+
+// Later, when shutting down the application...
+// await taskWorker.StopAsync(TimeSpan.FromSeconds(10));
+```
+
 ## BotConfigurationTestsExtensions
 
 Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
