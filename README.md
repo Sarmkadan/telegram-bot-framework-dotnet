@@ -1827,6 +1827,72 @@ public class BotConfigurationTestsExample
 }
 ```
 
+## BotConfigurationAdditionalTests
+
+The `BotConfigurationAdditionalTests` class contains additional unit tests for the `BotConfiguration` class, focusing on edge cases, null handling, and validation scenarios not covered in the main test classes. This test suite verifies proper initialization of collections, validation behavior, and configuration management under various conditions.
+
+**Key features tested:**
+- Null collection initialization (AdminIds, CustomSettings)
+- Empty collection handling
+- Validation edge cases (whitespace, minimum values)
+- Configuration property management
+- Admin management operations
+
+**Example usage:**
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Models;
+using Xunit;
+
+// Setup a BotConfiguration instance
+var config = new BotConfiguration
+{
+    BotToken = "123456789:ABCDEFghijklmnopqrstuvwxyz",
+    BotUsername = "MyBot",
+    OwnerId = 123456789
+};
+
+// Test 1: Add admin to configuration with null AdminIds list
+config.AddAdmin(987654321);
+Assert.Contains(987654321, config.AdminIds);
+
+// Test 2: Set custom settings with null CustomSettings dictionary
+config.SetCustomSetting("api_endpoint", "https://api.example.com");
+Assert.Equal("https://api.example.com", config.GetCustomSetting("api_endpoint"));
+
+// Test 3: Check if user is admin (returns false for non-admin)
+bool isAdmin = config.IsAdmin(999999999);
+Assert.False(isAdmin);
+
+// Test 4: Check if owner is admin (returns true even with empty AdminIds)
+var configWithOwner = new BotConfiguration
+{
+    BotToken = "test-token",
+    BotUsername = "TestBot",
+    OwnerId = 123456789
+};
+Assert.True(configWithOwner.IsAdmin(123456789));
+
+// Test 5: Get session timeout with default value
+TimeSpan defaultTimeout = config.GetSessionTimeout();
+Assert.Equal(TimeSpan.FromMinutes(30), defaultTimeout);
+
+// Test 6: Get session timeout with custom value
+config.SessionTimeoutMinutes = 60;
+TimeSpan customTimeout = config.GetSessionTimeout();
+Assert.Equal(TimeSpan.FromMinutes(60), customTimeout);
+
+// Test 7: Validate configuration with valid values
+bool isValid = config.Validate();
+Assert.True(isValid);
+
+// Test 8: Remove admin from configuration
+bool removed = config.RemoveAdmin(987654321);
+Assert.True(removed);
+Assert.DoesNotContain(987654321, config.AdminIds);
+```
+
 ## StringExtensionTests
 
 Contains unit tests for the `StringExtensions` class, verifying the functionality of various string manipulation and validation extension methods. The test suite covers truncation, email validation, alphanumeric checks, string repetition, text reversal, number extraction, prefix/suffix operations, and capitalization.
