@@ -1416,6 +1416,91 @@ string capitalized = name.Capitalize(); // "John doe"
 Console.WriteLine(capitalized);
 ```
 
+## StringExtensionTests
+
+Contains unit tests for the `StringExtensions` class, verifying the functionality of various string manipulation and validation extension methods. The test suite covers truncation, email validation, alphanumeric checks, string repetition, text reversal, number extraction, prefix/suffix operations, and capitalization.
+
+**Example usage**
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Utilities;
+using Xunit;
+
+public class StringExtensionTestsExample
+{
+    [Fact]
+    public void Truncate_Example()
+    {
+        // Truncate a long string to 15 characters
+        string longText = "This is a very long text that needs truncation";
+        string result = longText.Truncate(15);
+        
+        result.Should().Be("This is a very…");
+    }
+    
+    [Fact]
+    public void IsValidEmail_Example()
+    {
+        // Validate email addresses
+        "user@example.com".IsValidEmail().Should().BeTrue();
+        "invalid-email".IsValidEmail().Should().BeFalse();
+    }
+    
+    [Fact]
+    public void IsAlphanumeric_Example()
+    {
+        // Check if string contains only alphanumeric characters
+        "abc123".IsAlphanumeric().Should().BeTrue();
+        "abc-123".IsAlphanumeric().Should().BeFalse();
+    }
+    
+    [Fact]
+    public void Repeat_Example()
+    {
+        // Repeat a string multiple times
+        "ab".Repeat(3).Should().Be("ababab");
+        "x".Repeat(5).Should().Be("xxxxx");
+    }
+    
+    [Fact]
+    public void ExtractNumbers_Example()
+    {
+        // Extract only digits from a mixed string
+        "Order #12345 shipped on 2024-07-16".ExtractNumbers()
+            .Should().Be("1234520240716");
+        "No numbers here".ExtractNumbers().Should().BeEmpty();
+    }
+    
+    [Fact]
+    public void EnsureStartsWith_Example()
+    {
+        // Ensure string starts with specified prefix
+        "config/settings.json".EnsureStartsWith("./")
+            .Should().Be("./config/settings.json");
+        "https://example.com".EnsureStartsWith("https://")
+            .Should().Be("https://example.com");
+    }
+    
+    [Fact]
+    public void EnsureEndsWith_Example()
+    {
+        // Ensure string ends with specified suffix
+        "hello".EnsureEndsWith("!").Should().Be("hello!");
+        "https://example.com/".EnsureEndsWith("/")
+            .Should().Be("https://example.com/");
+    }
+    
+    [Fact]
+    public void Capitalize_Example()
+    {
+        // Capitalize first character of string
+        "john doe".Capitalize().Should().Be("John doe");
+        "Hello World".Capitalize().Should().Be("Hello World");
+    }
+}
+```
+
 ## DateTimeExtensions
 
 Provides extension methods for common DateTime operations including Unix timestamp conversions, temporal comparisons, and calendar calculations. Useful for working with timestamps, scheduling, and date-based calculations in bot applications.
