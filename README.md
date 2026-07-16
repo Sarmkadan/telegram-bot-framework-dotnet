@@ -1912,6 +1912,69 @@ public class StringExtensionTestsExample
 }
 ```
 
+## CommandServiceAdditionalTests
+
+The `CommandServiceAdditionalTests` class contains advanced unit tests for the `CommandService` class, extending the basic test coverage with scenarios for role-based command filtering, command execution tracking, rate limiting, and permission validation. This test suite verifies that commands are properly filtered based on user roles, disabled commands are handled correctly, execution counts are tracked accurately, and rate limiting works per-user rather than globally.
+
+**Key features tested:**
+- Role-based command access control (Admin, Moderator, User)
+- Command execution tracking and statistics
+- Disabled command handling and error reporting
+- Rate limiting per user identifier
+- Permission validation and error handling
+- User status validation (active vs inactive users)
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Tests;
+using Xunit;
+
+// Setup test services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+
+// Create command service with mocked dependencies
+var mockCommandRepository = new Mock<ICommandRepository>();
+var mockUserService = new Mock<IUserService>();
+var mockLogger = new Mock<ILogger<CommandService>>();
+
+var commandService = new CommandService(
+    mockCommandRepository.Object,
+    mockUserService.Object,
+    mockLogger.Object
+);
+
+// Test 1: Check available commands for different user roles
+var adminCommands = await commandService.GetAvailableCommandsAsync(UserRole.Administrator);
+var userCommands = await commandService.GetAvailableCommandsAsync(UserRole.User);
+var moderatorCommands = await commandService.GetAvailableCommandsAsync(UserRole.Moderator);
+
+// Test 2: Check if user can execute a command
+bool canExecute = await commandService.CanUserExecuteCommandAsync(123, "help");
+
+// Test 3: Execute a command and verify execution count is incremented
+var executionResult = await commandService.ExecuteCommandAsync(context);
+if (executionResult.IsValid)
+{
+    int executionCount = await commandService.GetCommandExecutionCountAsync("help");
+    Console.WriteLine($"Command executed {executionCount} times");
+}
+
+// Test 4: Check rate limiting for a command
+bool isRateLimited = await commandService.IsCommandRateLimitedAsync(123, "announce");
+if (!isRateLimited)
+{
+    // User can execute the command
+}
+
+// Test 5: Record command execution for analytics
+await commandService.RecordCommandExecutionAsync("help");
+```
+
 ## DateTimeExtensions
 
 Provides extension methods for common DateTime operations including Unix timestamp conversions, temporal comparisons, and calendar calculations. Useful for working with timestamps, scheduling, and date-based calculations in bot applications.
