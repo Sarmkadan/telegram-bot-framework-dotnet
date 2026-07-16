@@ -876,6 +876,96 @@ int closedExpiredCount = await sessionService.CloseExpiredSessionsAsync();
 Console.WriteLine($"Closed {closedExpiredCount} expired sessions");
 ```
 
+## JsonUtility
+
+The `JsonUtility` class provides a comprehensive set of static methods for JSON serialization, deserialization, validation, and manipulation. It uses consistent `System.Text.Json` settings throughout the framework with camelCase property naming, case-insensitive matching, and null value handling, ensuring predictable and maintainable JSON processing across all components.
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Example 1: Serialize an object to JSON
+var user = new { Name = "John Doe", Email = "john@example.com", Role = "Admin" };
+string json = JsonUtility.Serialize(user);
+Console.WriteLine(json);
+// Output: {"name":"John Doe","email":"john@example.com","role":"Admin"}
+
+// Example 2: Serialize with pretty printing
+string prettyJson = JsonUtility.Serialize(user, pretty: true);
+Console.WriteLine(prettyJson);
+/* Output:
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "role": "Admin"
+}
+*/
+
+// Example 3: Deserialize JSON back to object
+string jsonData = "{\"name\":\"Jane Smith\",\"email\":\"jane@example.com\",\"role\":\"User\"}";
+var deserializedUser = JsonUtility.Deserialize<dynamic>(jsonData);
+Console.WriteLine(deserializedUser?.name); // "Jane Smith"
+
+// Example 4: TryDeserialize with error handling
+string invalidJson = "{invalid}";
+bool success = JsonUtility.TryDeserialize<dynamic>(invalidJson, out var result);
+Console.WriteLine(success); // false
+
+// Example 5: Validate JSON
+string testJson = "{\"valid\":true}";
+bool isValid = JsonUtility.IsValidJson(testJson);
+Console.WriteLine(isValid); // true
+
+// Example 6: Parse JSON for flexible access
+var parsed = JsonUtility.ParseJson("{\"user\":{\"profile\":{\"name\":\"Alice\"}}}");
+if (parsed.HasValue)
+{
+    Console.WriteLine(parsed.Value.GetProperty("user").GetProperty("profile").GetProperty("name").GetString());
+}
+
+// Example 7: Merge two JSON objects
+string json1 = "{\"name\":\"John\",\"age\":30}";
+string json2 = "{\"age\":31,\"city\":\"NYC\"}";
+string merged = JsonUtility.MergeJson(json1, json2);
+Console.WriteLine(merged); // {"name":"John","age":31,"city":"NYC"}
+
+// Example 8: Get nested property value
+string userJson = "{\"user\":{\"profile\":{\"name\":\"Bob\",\"email\":\"bob@example.com\"}}}";
+string email = JsonUtility.GetPropertyValue(userJson, "user.profile.email");
+Console.WriteLine(email); // "\"bob@example.com\""
+
+// Example 9: Pretty print existing JSON
+string minified = "{\"data\":{\"items\":[1,2,3]}}";
+string pretty = JsonUtility.PrettyPrint(minified);
+Console.WriteLine(pretty);
+/* Output:
+{
+  "data": {
+    "items": [
+      1,
+      2,
+      3
+    ]
+  }
+}
+*/
+
+// Example 10: Minify JSON for storage/transmission
+string largeJson = """
+{
+  "name": "Charlie",
+  "email": "charlie@example.com",
+  "preferences": {
+    "theme": "dark",
+    "language": "en"
+  }
+}
+""";
+string minifiedJson = JsonUtility.Minify(largeJson);
+Console.WriteLine(minifiedJson.Length < largeJson.Length); // true
+```
+
 ## CollectionExtensions
 
 Provides extension methods for working with collections, lists, enumerables, and dictionaries. Includes utilities for safe access, batch operations, random shuffling, and dictionary conversion with duplicate key handling.
