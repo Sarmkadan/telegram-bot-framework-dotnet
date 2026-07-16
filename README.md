@@ -1096,6 +1096,121 @@ public class SessionServiceTests
 }
 ```
 
+## BotOrchestratorTests
+
+The `BotOrchestratorTests` class contains unit tests for the `BotOrchestrator` class. It verifies various scenarios including message processing, command execution, menu handling, session management, and constructor validation. The test suite covers constructor parameter validation, message processing with different content types, command extraction and execution, menu navigation and button handling, and session retrieval operations.
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Tests;
+using Xunit;
+
+// Setup test services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+
+// Create orchestrator with mocked dependencies
+var mockUserService = new Mock<IUserService>();
+var mockCommandService = new Mock<ICommandService>();
+var mockSessionService = new Mock<ISessionService>();
+var mockMessageService = new Mock<IMessageService>();
+var mockMenuService = new Mock<IMenuService>();
+var mockLogger = new Mock<ILogger<BotOrchestrator>>();
+var middlewares = new List<Middleware.IBotMiddleware>();
+
+var configuration = new BotConfiguration
+{
+    BotToken = "test-token",
+    BotUsername = "TestBot"
+};
+
+var orchestrator = new BotOrchestrator(
+    mockUserService.Object,
+    mockCommandService.Object,
+    mockSessionService.Object,
+    mockMessageService.Object,
+    mockMenuService.Object,
+    middlewares,
+    configuration,
+    mockLogger.Object
+);
+
+// Test 1: Constructor validation
+Assert.Throws<ArgumentNullException>(() => new BotOrchestrator(
+    null!, mockCommandService.Object, mockSessionService.Object, 
+    mockMessageService.Object, mockMenuService.Object, middlewares, 
+    configuration, mockLogger.Object
+));
+
+// Test 2: Process user message
+var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
+var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
+var message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "Hello", Type = MessageType.Text };
+
+mockUserService.Setup(s => s.GetOrCreateUserAsync(123, "John", "Doe", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(user);
+mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+mockSessionService.Setup(s => s.CreateSessionAsync(123, 456, It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
+    .ReturnsAsync(message);
+
+var result = await orchestrator.ProcessUserMessageAsync(123, 456, "Hello", "John", "Doe");
+Assert.NotNull(result);
+Assert.Equal(123, result.UserId);
+Assert.Equal(456, result.ChatId);
+
+// Test 3: Execute user command
+mockCommandService.Setup(s => s.GetCommandAsync("test", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(new Command { Name = "/test", IsEnabled = true });
+mockCommandService.Setup(s => s.RecordCommandExecutionAsync("test", It.IsAny<CancellationToken>()))
+    .Returns(Task.CompletedTask);
+
+var commandResult = await orchestrator.ExecuteUserCommandAsync(123, 456, "test");
+Assert.NotNull(commandResult);
+Assert.Equal("/test", commandResult.Command?.Name);
+
+// Test 4: Display menu
+mockMenuService.Setup(s => s.GetMenuAsync("main", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(new Menu { MenuId = "main", Title = "Main Menu", Buttons = new List<MenuButton>() });
+mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+mockSessionService.Setup(s => s.NavigateToMenuAsync("session-123", "main", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+
+var menuResult = await orchestrator.DisplayMenuAsync(123, "main");
+Assert.NotNull(menuResult);
+Assert.Equal("main", menuResult.MenuId);
+
+// Test 5: Handle menu button
+var button = new MenuButton { CallbackData = "/start", Action = ButtonAction.ExecuteCommand };
+mockMenuService.Setup(s => s.GetButtonAsync("main", "/start", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(button);
+mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+mockCommandService.Setup(s => s.GetCommandAsync("start", It.IsAny<CancellationToken>()))
+    .ReturnsAsync(new Command { Name = "/start", IsEnabled = true });
+mockCommandService.Setup(s => s.RecordCommandExecutionAsync("start", It.IsAny<CancellationToken>()))
+    .Returns(Task.CompletedTask);
+
+var buttonResult = await orchestrator.HandleMenuButtonAsync(123, "main", "/start");
+Assert.True(buttonResult);
+
+// Test 6: Get user session
+mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+    .ReturnsAsync(session);
+
+var sessionResult = await orchestrator.GetUserSessionAsync(123);
+Assert.NotNull(sessionResult);
+Assert.Equal("session-123", sessionResult.SessionId);
+```
+
 ## UserServiceTests
 
 The `UserServiceTests` class contains unit tests for the `UserService` class. It verifies user management functionality including creation, retrieval, updating, deletion, and activity tracking through comprehensive test cases that cover various scenarios like existing vs. new users, null values, partial updates, and status filtering.
