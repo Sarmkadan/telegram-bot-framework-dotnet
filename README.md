@@ -1019,6 +1019,124 @@ Console.WriteLine($"Command created at: {startCommand.CreatedAt}");
 Console.WriteLine($"Last updated: {startCommand.UpdatedAt}");
 ```
 
+## CommandService
+
+The `CommandService` class provides centralized command management for registering, retrieving, executing, and monitoring bot commands. It serves as the primary service for command lifecycle management, including rate limiting, permission checks, and execution tracking. The service integrates with the command repository and user service to enforce access control and rate limiting policies across all bot commands.
+
+**Key features:**
+- Command registration and unregistration via `RegisterCommandAsync` and `UnregisterCommandAsync`
+- Command retrieval with `GetCommandAsync` and `GetAvailableCommandsAsync`
+- Command execution with validation and error handling via `ExecuteCommandAsync`
+- Role-based access control and rate limiting enforcement
+- Execution tracking and statistics via `RecordCommandExecutionAsync` and `GetCommandExecutionCountAsync`
+- In-memory rate limiting with configurable windows
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the command service
+var commandService = serviceProvider.GetRequiredService<CommandService>();
+
+// Register a new command
+var newCommand = new Command
+{
+  Name = "/weather",
+  Description = "Get weather information for a location",
+  HandlerType = "WeatherCommandHandler",
+  Type = CommandType.Standard,
+  RequiresAdmin = false,
+  IsEnabled = true,
+  RateLimitPerMinute = 10,
+  Parameters = new List<CommandParameter>
+  {
+    new CommandParameter
+    {
+      Name = "location",
+      Type = "string",
+      IsRequired = true,
+      Description = "City or ZIP code for weather lookup"
+    }
+  }
+};
+
+await commandService.RegisterCommandAsync(newCommand);
+Console.WriteLine($"Command registered: {newCommand.Name}");
+
+// Check if a user can execute a command
+bool canExecute = await commandService.CanUserExecuteCommandAsync(
+  userId: 123456789,
+  commandName: "/weather"
+);
+Console.WriteLine($"Can user execute command: {canExecute}");
+
+// Check if a command is rate limited for a user
+bool isRateLimited = await commandService.IsCommandRateLimitedAsync(
+  userId: 123456789,
+  commandName: "/weather"
+);
+Console.WriteLine($"Command is rate limited: {isRateLimited}");
+
+// Get a specific command
+var weatherCommand = await commandService.GetCommandAsync("/weather");
+if (weatherCommand != null)
+{
+  Console.WriteLine($"Found command: {weatherCommand.Name}");
+  Console.WriteLine($"Description: {weatherCommand.Description}");
+  Console.WriteLine($"Execution count: {weatherCommand.ExecutionCount}");
+}
+
+// Get all available commands for a user role
+var availableCommands = await commandService.GetAvailableCommandsAsync(UserRole.User);
+Console.WriteLine($"Available commands: {availableCommands.Count}");
+
+// Execute a command with proper context
+var executionContext = new ExecutionContext
+{
+  UserId = 123456789,
+  ChatId = 987654321,
+  Command = weatherCommand,
+  Arguments = new Dictionary<string, object> { { "location", "London" } }
+};
+
+executionContext = await commandService.ExecuteCommandAsync(executionContext);
+if (executionContext.IsValid)
+{
+  Console.WriteLine("Command executed successfully!");
+  Console.WriteLine($"Execution time: {executionContext.GetState<bool>("executed")}");
+}
+else
+{
+  Console.WriteLine("Command execution failed:");
+  foreach (var error in executionContext.Errors ?? new List<string>())
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+
+// Record command execution and get statistics
+await commandService.RecordCommandExecutionAsync("/weather");
+int executionCount = await commandService.GetCommandExecutionCountAsync("/weather");
+Console.WriteLine($"Total executions: {executionCount}");
+
+// Unregister a command when needed
+bool unregistered = await commandService.UnregisterCommandAsync("/weather");
+Console.WriteLine($"Command unregistered: {unregistered}");
+```
+
 ## BackgroundTaskWorker
 
 The `BackgroundTaskWorker` class provides a lightweight background task queue and execution engine for running long-running operations without blocking the main request processing pipeline. It manages concurrent task execution with configurable limits, tracks task lifecycle (queued, started, completed), and provides detailed statistics about the worker's performance.
