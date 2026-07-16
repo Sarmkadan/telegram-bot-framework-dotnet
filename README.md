@@ -2243,6 +2243,66 @@ string errorCsv = csvFormatter.FormatError(
 );
 ```
 
+## InlineKeyboardBuilderTests
+
+The `InlineKeyboardBuilderTests` class provides comprehensive unit tests for the `InlineKeyboardBuilder` class, verifying the behavior of inline keyboard construction, button management, row handling, validation, and conversion methods. It uses xUnit for test execution and FluentAssertions for readable assertions, ensuring that inline keyboards are built correctly according to Telegram Bot API specifications.
+
+**Key test scenarios:**
+- Single button construction with `Build_WithSingleCallbackButton_CreatesOneRowOneButton`
+- URL button handling with `Build_WithUrlButton_SetsTypeAndUrl`
+- Switch inline query buttons with `Build_WithSwitchInlineButton_SetsTypeAndQuery`
+- Automatic row wrapping with `Build_AutoWrapsButtonsAtMaxPerRow`
+- Manual row breaks with `NewRow_ForcesRowBreakBeforeMaxReached`
+- Button label conversion with `ToButtonLabels_ReturnsTwoDimensionalLabelArray`
+- Menu model conversion with `ToMenu_ConvertsMarkupToMenuModel`
+- Validation scenarios with `Build_WithNoButtons_ThrowsInvalidOperationException`, `AddButton_WithCallbackDataExceeding64Bytes_ThrowsArgumentException`, and `AddButton_WithEmptyText_ThrowsArgumentException`
+
+**Example usage:**
+
+```csharp
+using FluentAssertions;
+using TelegramBotFramework.Keyboard;
+using Xunit;
+
+// Test that a single callback button creates correct markup
+var markup = InlineKeyboardBuilder.Create()
+    .AddButton("Click me", "click")
+    .Build();
+
+markup.RowCount.Should().Be(1);
+markup.TotalButtonCount.Should().Be(1);
+markup.InlineKeyboard[0][0].Text.Should().Be("Click me");
+markup.InlineKeyboard[0][0].CallbackData.Should().Be("click");
+
+// Test URL button creation
+var urlMarkup = InlineKeyboardBuilder.Create()
+    .AddUrlButton("Visit Website", "https://example.com")
+    .Build();
+
+urlMarkup.InlineKeyboard[0][0].Type.Should().Be(InlineButtonType.Url);
+urlMarkup.InlineKeyboard[0][0].Url.Should().Be("https://example.com");
+
+// Test auto-wrapping with max buttons per row
+var wrappedMarkup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
+    .AddButton("Button 1", "btn1")
+    .AddButton("Button 2", "btn2")
+    .AddButton("Button 3", "btn3")
+    .Build();
+
+wrappedMarkup.RowCount.Should().Be(2);
+wrappedMarkup.InlineKeyboard[0].Count.Should().Be(2);
+wrappedMarkup.InlineKeyboard[1].Count.Should().Be(1);
+
+// Test conversion to menu model
+var menu = InlineKeyboardBuilder.Create()
+    .AddButton("Help", "help")
+    .AddUrlButton("Docs", "https://docs.example.com")
+    .ToMenu("main_menu", "Main Menu");
+
+menu.Id.Should().Be("main_menu");
+menu.Title.Should().Be("Main Menu");
+```
+
 ## ExecutionContextTests
 
 The `ExecutionContextTests` class provides unit tests for the `ExecutionContext` class, verifying the behavior of context initialization, state management, error handling, validation, and lifecycle tracking. It uses xUnit for test execution and FluentAssertions for readable assertions, ensuring that execution contexts maintain proper state throughout message processing pipelines and command execution flows.
