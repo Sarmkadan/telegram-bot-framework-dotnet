@@ -291,6 +291,85 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## Command
+
+The `Command` class represents a bot command that can be executed by users. It defines the command's metadata, behavior, and execution constraints including name, description, access control, rate limiting, and parameter definitions. Commands are the primary mechanism for handling user input in Telegram bots built with this framework.
+
+**Key features:**
+- Command routing with role-based access control via `RequiresAdmin`
+- Rate limiting support with configurable `RateLimitPerMinute`
+- Parameter definitions for structured command arguments
+- Command patterns with alias support via `GetCommandPatterns()`
+- Execution tracking with `ExecutionCount` and `RecordExecution()`
+- Validation and metadata via `Validate()`, `CreatedAt`, and `UpdatedAt`
+- Command type classification via `Type` (Standard, Menu, Inline, Callback)
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create a standard command
+var startCommand = new Command
+{
+    Name = "/start",
+    Description = "Starts the bot and shows welcome message",
+    HandlerType = "BotCommandHandler",
+    Type = CommandType.Standard,
+    RequiresAdmin = false,
+    IsEnabled = true,
+    RateLimitPerMinute = 30,
+    Parameters = new List<CommandParameter>
+    {
+        new CommandParameter
+        {
+            Name = "name",
+            Type = "string",
+            IsRequired = false,
+            Description = "User's name for personalized greeting"
+        }
+    }
+};
+
+// Validate the command definition
+startCommand.Validate();
+
+// Check if a user can execute this command
+bool canExecute = startCommand.CanExecuteBy(UserRole.User); // true
+bool adminCanExecute = startCommand.CanExecuteBy(UserRole.Administrator); // true
+bool restrictedCanExecute = startCommand.CanExecuteBy(UserRole.Restricted); // false
+
+// Record command execution
+startCommand.RecordExecution();
+Console.WriteLine($"Command executed {startCommand.ExecutionCount} times");
+
+// Get all command patterns (including alias if defined)
+var patterns = startCommand.GetCommandPatterns();
+foreach (var pattern in patterns)
+{
+    Console.WriteLine($"Command pattern: {pattern}");
+}
+
+// Check rate limiting
+bool isRateLimited = startCommand.IsRateLimited(25); // false (under limit)
+bool isOverLimit = startCommand.IsRateLimited(35); // true (over limit)
+
+// Access metadata
+Console.WriteLine($"Command created at: {startCommand.CreatedAt}");
+Console.WriteLine($"Last updated: {startCommand.UpdatedAt}");
+```
+
 ## BotConfigurationTestsExtensions
 
 Utility extensions used in the test suite to build and validate `BotConfiguration` objects fluently. They provide shortcuts for creating a baseline valid configuration and then tweaking individual settings such as owners, admins, webhook, rate‑limiting, session timeout, concurrency limits, logging, and localization.
