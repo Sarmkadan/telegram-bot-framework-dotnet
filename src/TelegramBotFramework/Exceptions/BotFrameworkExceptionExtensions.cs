@@ -15,10 +15,12 @@ public static class BotFrameworkExceptionExtensions
     /// <param name="errorCode">The error code to check.</param>
     /// <returns>True if the exception has the specified error code; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="errorCode"/> is null.</exception>
     public static bool HasErrorCode(this BotFrameworkException exception, string errorCode)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        
+        ArgumentNullException.ThrowIfNull(errorCode);
+
         return string.Equals(exception.ErrorCode, errorCode, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -32,7 +34,7 @@ public static class BotFrameworkExceptionExtensions
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        return exception.ErrorCode != null 
+        return exception.ErrorCode is not null
             ? $"[{exception.ErrorCode}] {exception.Message}"
             : exception.Message;
     }
