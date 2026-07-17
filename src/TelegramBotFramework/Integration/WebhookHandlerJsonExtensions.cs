@@ -12,6 +12,10 @@ using System.Text.Json;
 /// <summary>
 /// Provides System.Text.Json serialization and deserialization extensions for <see cref="WebhookHandler"/>.
 /// </summary>
+/// <remarks>
+/// Uses camelCase property naming policy and case-insensitive property matching by default.
+/// Serialization is performed without indentation for compact output, which can be enabled via the <see cref="ToJson(bool)"/> parameter.
+/// </remarks>
 public static class WebhookHandlerJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
@@ -27,7 +31,7 @@ public static class WebhookHandlerJsonExtensions
     /// <param name="value">The webhook handler instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the webhook handler.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static string ToJson(this WebhookHandler value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -42,7 +46,7 @@ public static class WebhookHandlerJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A deserialized <see cref="WebhookHandler"/> instance, or null if deserialization fails.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
     public static WebhookHandler? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -61,9 +65,9 @@ public static class WebhookHandlerJsonExtensions
     /// Attempts to deserialize a JSON string into a <see cref="WebhookHandler"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized instance if successful.</param>
+    /// <param name="value">Receives the deserialized instance if successful; otherwise, null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out WebhookHandler? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
