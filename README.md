@@ -1272,9 +1272,51 @@ Assert.NotNull(sessionResult);
 Assert.Equal("session-123", sessionResult.SessionId);
 ```
 
+## StateManagementExample
+
+The `StateManagementExample` class demonstrates how to handle complex user flows with form data, multi-step processes, and conversation state tracking using the framework's session management capabilities. This example shows how to maintain state across multiple interactions, collect user input through sequential steps, and persist data between messages.
+
+**Key features:**
+- Multi-step form processing with sequential state transitions
+- Context data storage and retrieval for maintaining form state
+- Integration with session service for durable state persistence
+- Example of both registration and survey workflows
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Examples;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username",
+    SessionTimeoutMinutes = 30
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the state management example
+var stateExample = new StateManagementExample(serviceProvider);
+
+// Run the state management example
+await stateExample.RunAsync();
+
+// The example demonstrates:
+// 1. Creating a registration form flow with multiple steps
+// 2. Collecting user data (FirstName, Email, PhoneNumber)
+// 3. Creating a feedback survey flow
+// 4. Collecting survey responses (SatisfactionLevel, ImprovementSuggestions, WouldRecommend)
+// 5. Maintaining state across all interactions
+```
+
 ## BotOrchestratorAdditionalTests
 
-The `BotOrchestratorAdditionalTests` class contains additional unit tests for the `BotOrchestrator` class, extending the basic test coverage with edge cases, boundary conditions, and specific scenarios not covered in the main test suite. This test suite verifies proper handling of empty messages, null values, very long content, command parameters, non-existent commands, menu operations with null sessions, various button actions, session management edge cases, and command name extraction with different whitespace scenarios.
+The `BotOrchestratorAdditionalTests` class contains additional unit tests for the `BotOrchestrator` class, extending the basic test coverage with edge cases, boundary conditions, and specific scenarios not covered in the main test suite. This test suite verifies proper handling of empty messages, null values, very long content, command parameters, non-existent commands, menu operations with null sessions, various button actions, session management edge cases, and command name extraction with different whitespace characters.
 
 **Key features tested:**
 - Empty message content handling and error reporting
