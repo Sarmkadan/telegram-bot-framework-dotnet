@@ -15,19 +15,26 @@ namespace TelegramBotFramework.Tests;
 /// </summary>
 public static class CommandServiceAdditionalTestsJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions _jsonOptions;
+    private static readonly JsonSerializerOptions _indentedJsonOptions;
 
-    private static readonly JsonSerializerOptions _indentedJsonOptions = new(JsonSerializerDefaults.Web)
+    static CommandServiceAdditionalTestsJsonExtensions()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true
-    };
+        // Initialize JSON options once for thread safety
+        _jsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false,
+            PropertyNameCaseInsensitive = true
+        };
+
+        _indentedJsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true
+        };
+    }
 
     /// <summary>
     /// Serializes the <see cref="CommandServiceAdditionalTests"/> instance to a JSON string.
@@ -50,6 +57,7 @@ public static class CommandServiceAdditionalTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized instance, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid and cannot be deserialized.</exception>
     public static CommandServiceAdditionalTests? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
