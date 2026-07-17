@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using TelegramBotFramework.Models;
 
 namespace TelegramBotFramework.Models
 {
@@ -11,7 +9,8 @@ namespace TelegramBotFramework.Models
     public static class BotUserExtensions
     {
         /// <summary>
-        /// Gets a display name for the bot user, prioritizing <see cref="BotUser.FirstName"/> and <see cref="BotUser.LastName"/>.
+        /// Gets a display name for the bot user, prioritizing <see cref="BotUser.Username"/>,
+        /// then <see cref="BotUser.FirstName"/> and <see cref="BotUser.LastName"/>.
         /// </summary>
         /// <param name="user">The bot user.</param>
         /// <returns>A display name for the bot user.</returns>
@@ -20,11 +19,11 @@ namespace TelegramBotFramework.Models
         {
             ArgumentNullException.ThrowIfNull(user);
 
-            return string.IsNullOrEmpty(user.FirstName) ? 
-                user.Username ?? string.Empty : 
-                string.IsNullOrEmpty(user.LastName) ? 
-                    user.FirstName : 
-                    $"{user.FirstName} {user.LastName}";
+            return string.IsNullOrWhiteSpace(user.Username)
+                ? string.IsNullOrWhiteSpace(user.LastName)
+                    ? user.FirstName ?? string.Empty
+                    : $"{user.FirstName} {user.LastName}"
+                : user.Username;
         }
 
         /// <summary>
@@ -38,8 +37,8 @@ namespace TelegramBotFramework.Models
         {
             ArgumentNullException.ThrowIfNull(user);
 
-            return user.LastActivityAt.HasValue && 
-                (DateTime.UtcNow - user.LastActivityAt.Value) < inactiveThreshold;
+            return user.LastActivityAt.HasValue
+                && (DateTime.UtcNow - user.LastActivityAt.Value) < inactiveThreshold;
         }
 
         /// <summary>
@@ -54,7 +53,9 @@ namespace TelegramBotFramework.Models
             ArgumentNullException.ThrowIfNull(user);
             ArgumentException.ThrowIfNullOrEmpty(key);
 
-            return user.Metadata?.TryGetValue(key, out string? value) == true ? value : null;
+            return user.Metadata?.TryGetValue(key, out var value) == true
+                ? value
+                : null;
         }
     }
 }
