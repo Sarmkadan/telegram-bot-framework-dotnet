@@ -22,6 +22,15 @@ public sealed class XmlFormatter : IOutputFormatter
         _pretty = pretty;
     }
 
+    /// <summary>
+    /// Gets the pretty-print setting of this formatter.
+    /// </summary>
+    /// <returns>The pretty-print setting.</returns>
+    public bool GetPretty()
+    {
+        return _pretty;
+    }
+
     public string Format<T>(T data)
     {
         var element = SerializeObject(data, typeof(T).Name);

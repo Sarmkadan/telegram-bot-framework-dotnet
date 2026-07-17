@@ -34,7 +34,7 @@ public static class XmlFormatterJsonExtensions
     /// </summary>
     /// <param name="value">The formatter to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
-    /// <returns>A JSON string representation of the formatter.</returns>
+    /// <returns>A JSON string representation of the formatter's configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this XmlFormatter value, bool indented = false)
     {
@@ -44,7 +44,8 @@ public static class XmlFormatterJsonExtensions
         {
             WriteIndented = indented
         };
-        return JsonSerializer.Serialize(value, options);
+
+        return JsonSerializer.Serialize(new XmlFormatterConfiguration(value), options);
     }
 
     /// <summary>
@@ -53,13 +54,15 @@ public static class XmlFormatterJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="XmlFormatter"/> instance, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid.</exception>
     public static XmlFormatter? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            return JsonSerializer.Deserialize<XmlFormatter>(json, _jsonOptions);
+            var config = JsonSerializer.Deserialize<XmlFormatterConfiguration>(json, _jsonOptions);
+            return config is null ? null : new XmlFormatter(config.Pretty);
         }
         catch (JsonException)
         {
@@ -80,13 +83,33 @@ public static class XmlFormatterJsonExtensions
 
         try
         {
-            value = JsonSerializer.Deserialize<XmlFormatter>(json, _jsonOptions);
+            var config = JsonSerializer.Deserialize<XmlFormatterConfiguration>(json, _jsonOptions);
+            value = config is null ? null : new XmlFormatter(config.Pretty);
             return true;
         }
         catch (JsonException)
         {
             value = null;
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Represents the serializable configuration of an <see cref="XmlFormatter"/>.
+    /// </summary>
+    private sealed class XmlFormatterConfiguration
+    {
+        public bool Pretty { get; set; }
+
+        [JsonConstructor]
+        public XmlFormatterConfiguration(bool pretty)
+        {
+            Pretty = pretty;
+        }
+
+        public XmlFormatterConfiguration(XmlFormatter formatter)
+        {
+            Pretty = formatter.GetPretty();
         }
     }
 }
