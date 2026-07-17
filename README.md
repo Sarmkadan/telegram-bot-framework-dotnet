@@ -1293,6 +1293,54 @@ bool isMenuStandard = menuCommand.IsStandardCommand(); // false
 Console.WriteLine($"Menu command is standard: {isMenuStandard}");
 ```
 
+## MessageExtensionsTests
+
+The `MessageExtensionsTests` class contains unit tests for extension methods that provide utility functionality for `Message` objects in the Telegram Bot Framework. These tests verify that message extension methods correctly identify message properties, extract type information, and determine reply status, enabling robust message processing and routing in bot applications.
+
+**Tested methods:**
+- `IsCommand()` - Returns true when the message has a command name starting with '/', false otherwise
+- `HasAttachments()` - Returns true when the message has one or more attachment URLs
+- `GetTypeString()` - Returns the string representation of the message type (e.g., "text", "photo")
+- `IsReply()` - Returns true when the message has a ReplyToMessageId set
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Models;
+
+// Create a message with a command
+var commandMessage = new Message { CommandName = "/start" };
+
+// Test 1: Check if message is a command
+bool isCommand = commandMessage.IsCommand(); // true
+Console.WriteLine($"Message is command: {isCommand}");
+
+// Test 2: Check if message is NOT a command
+var textMessage = new Message { CommandName = "hello" };
+bool notCommand = textMessage.IsCommand(); // false
+Console.WriteLine($"Text message is command: {notCommand}");
+
+// Test 3: Check if message has attachments
+var photoMessage = new Message { AttachmentUrls = new[] { "https://example.com/photo.jpg" } };
+bool hasAttachments = photoMessage.HasAttachments(); // true
+Console.WriteLine($"Photo message has attachments: {hasAttachments}");
+
+// Test 4: Get message type string
+var textMsg = new Message { Type = MessageType.Text };
+string typeString = textMsg.GetTypeString(); // "text"
+Console.WriteLine($"Message type: {typeString}");
+
+// Test 5: Check if message is a reply
+var replyMessage = new Message { ReplyToMessageId = 123 };
+bool isReply = replyMessage.IsReply(); // true
+Console.WriteLine($"Message is reply: {isReply}");
+
+// Test 6: Check if regular message is NOT a reply
+var regularMessage = new Message { ReplyToMessageId = null };
+bool notReply = regularMessage.IsReply(); // false
+Console.WriteLine($"Regular message is reply: {notReply}");
+```
+
 ## UserService
 
 The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
