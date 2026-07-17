@@ -882,6 +882,77 @@ await flowEngine.ProcessInputAsync(userId, chatId, "john@example.com");
 await flowEngine.ProcessInputAsync(userId, chatId, "yes");
 ```
 
+## InMemoryConversationStateStoreExtensions
+
+Provides extension methods for `InMemoryConversationStateStore` that simplify common state management operations beyond basic CRUD operations. These extensions offer convenient methods for checking state existence, updating state status, managing active states, cleaning up terminal states, and tracking state activity timestamps.
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the in-memory conversation state store
+var stateStore = serviceProvider.GetRequiredService<InMemoryConversationStateStore>();
+
+// Example 1: Check if a user has an active state
+var userId = 123456789L;
+bool hasState = await stateStore.HasStateAsync(userId);
+Console.WriteLine($"User has active state: {hasState}");
+
+// Example 2: Try to load a state (returns null if not found)
+var state = await stateStore.TryLoadStateAsync(userId);
+if (state != null)
+{
+  Console.WriteLine($"State loaded: {state.StateId}");
+}
+
+// Example 3: Update the state status and persist changes
+var updatedState = await stateStore.UpdateStateStatusAsync(userId, FlowStateStatus.Completed);
+if (updatedState != null)
+{
+  Console.WriteLine($"State status updated to: {updatedState.Status}");
+}
+
+// Example 4: Get all active states (Active or WaitingForInput)
+var activeStates = await stateStore.GetActiveStatesAsync();
+Console.WriteLine($"Found {activeStates.Count} active states");
+
+// Example 5: Remove all terminal states (Completed, Aborted, TimedOut, Failed)
+int removedTerminalCount = await stateStore.RemoveTerminalStatesAsync();
+Console.WriteLine($"Removed {removedTerminalCount} terminal states");
+
+// Example 6: Update the last activity timestamp (touch state)
+bool touched = await stateStore.TouchStateAsync(userId);
+Console.WriteLine($"State was updated: {touched}");
+
+// Example 7: Get the total count of stored states
+totalStateCount = stateStore.GetStateCount();
+Console.WriteLine($"Total states in store: {totalStateCount}");
+
+// Example 8: Find a state by its unique StateId
+var foundState = await stateStore.FindStateByIdAsync(state.StateId);
+if (foundState != null)
+{
+  Console.WriteLine($"Found state by ID: {foundState.StateId}");
+}
+
+// Example 9: Remove stale states (not updated since cutoff time)
+var cutoffTime = DateTime.UtcNow.AddHours(-1);
+int removedStaleCount = await stateStore.RemoveStaleStatesAsync(cutoffTime);
+Console.WriteLine($"Removed {removedStaleCount} stale states");
+```
+
 ## UserService
 
 The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
