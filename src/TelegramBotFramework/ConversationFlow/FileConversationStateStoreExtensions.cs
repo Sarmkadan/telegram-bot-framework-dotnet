@@ -4,8 +4,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
-
 namespace TelegramBotFramework.ConversationFlow;
 
 /// <summary>
@@ -31,7 +29,7 @@ public static class FileConversationStateStoreExtensions
         ArgumentNullException.ThrowIfNull(store);
 
         var path = store.GetFilePath(userId);
-        return File.Exists(path);
+        return await Task.FromResult(File.Exists(path)).ConfigureAwait(false);
     }
 
     /// <summary>
