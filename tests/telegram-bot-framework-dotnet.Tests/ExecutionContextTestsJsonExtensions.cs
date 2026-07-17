@@ -46,17 +46,17 @@ public static class ExecutionContextTestsJsonExtensions
     /// <summary>
     /// Deserializes an <see cref="ExecutionContext"/> from a JSON string.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized execution context, or null if the JSON is null or empty.</returns>
+    /// <param name="json">The JSON string to deserialize. Null or whitespace returns null.</param>
+    /// <returns>The deserialized execution context, or null if <paramref name="json"/> is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown if the JSON is invalid or cannot be deserialized.</exception>
     public static global::TelegramBotFramework.Models.ExecutionContext? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<global::TelegramBotFramework.Models.ExecutionContext>(json, _jsonOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<global::TelegramBotFramework.Models.ExecutionContext>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -65,9 +65,12 @@ public static class ExecutionContextTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized execution context if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out global::TelegramBotFramework.Models.ExecutionContext? value)
     {
         value = null;
+
+        ArgumentNullException.ThrowIfNull(json);
 
         if (string.IsNullOrWhiteSpace(json))
         {
