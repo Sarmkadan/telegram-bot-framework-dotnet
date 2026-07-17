@@ -31,9 +31,7 @@ public static class DateTimeExtensionsJsonExtensions
     {
         var options = indented
             ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
+            { WriteIndented = true }
             : _jsonSerializerOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -43,24 +41,39 @@ public static class DateTimeExtensionsJsonExtensions
     /// Deserializes a JSON string to a DateTime value.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized DateTime value, or default if JSON is null or empty.</returns>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid.</exception>
+    /// <returns>The deserialized DateTime value.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized to DateTime.</exception>
     public static DateTime FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
-        return JsonSerializer.Deserialize<DateTime>(json, _jsonSerializerOptions);
+        try
+        {
+            return JsonSerializer.Deserialize<DateTime>(json, _jsonSerializerOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonException("Failed to deserialize JSON to DateTime", ex);
+        }
     }
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a DateTime value.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized DateTime value, or default if deserialization fails.</param>
+    /// <param name="value">The deserialized DateTime value if deserialization succeeds.</param>
     /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out DateTime value)
     {
         value = default;
+
+        if (json is null)
+        {
+            return false;
+        }
 
         try
         {
