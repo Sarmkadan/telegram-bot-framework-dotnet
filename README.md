@@ -712,6 +712,75 @@ await provider.SetManyAsync(new Dictionary<string, string> { { "key3", "val3" } 
 await provider.RemoveManyAsync(new List<string> { "key1", "key2" });
 ```
 
+## EventPublisherExtensions
+
+Provides extension methods for the `EventPublisher` class that simplify common event publishing scenarios with strongly-typed APIs and automatic null handling. These extensions handle correlation ID management, batch publishing, and provide convenience overloads for frequently used event types like message received, command executed, and bot state changes.
+
+**Example usage**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Events;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the event publisher
+var eventPublisher = serviceProvider.GetRequiredService<EventPublisher>();
+
+// Example 1: Publish a message received event
+await eventPublisher.PublishMessageReceivedAsync(chatId: 123456789L, userId: 987654321L, messageText: "Hello, bot!");
+
+// Example 2: Publish a command executed event
+await eventPublisher.PublishCommandExecutedAsync(
+    commandName: "start",
+    userId: 987654321L,
+    arguments: "--help",
+    success: true
+);
+
+// Example 3: Publish a bot state changed event
+await eventPublisher.PublishBotStateChangedAsync(
+    newState: "Processing",
+    previousState: "Idle",
+    reason: "User initiated action"
+);
+
+// Example 4: Publish an event with correlation ID tracking
+var userRegisteredEvent = new UserRegisteredEvent
+{
+    UserId = 987654321L,
+    Username = "johndoe",
+    Timestamp = DateTime.UtcNow
+};
+
+await eventPublisher.PublishWithCorrelationAsync(
+    @event: userRegisteredEvent,
+    correlationId: "user-registration-123"
+);
+
+// Example 5: Publish a collection of events with correlation tracking
+var events = new List<IEvent>
+{
+    new MessageReceivedEvent { ChatId = 123, UserId = 456, Text = "First message" },
+    new MessageReceivedEvent { ChatId = 123, UserId = 456, Text = "Second message" },
+    new CommandExecutedEvent { CommandName = "help", UserId = 456, Success = true }
+};
+
+await eventPublisher.PublishCollectionAsync(
+    events: events,
+    correlationId: "user-session-456"
+);
+```
+
 ## ConversationFlowExtensions
 
 Provides extension methods for registering conversation flow services in the dependency-injection container and for building `FlowDefinition` instances using a fluent API. Includes methods for both in-memory and file-based state persistence, enabling durable multi-step conversations that survive process restarts.
