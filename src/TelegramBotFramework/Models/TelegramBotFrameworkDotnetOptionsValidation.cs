@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace TelegramBotFramework.Models
 {
@@ -40,25 +39,25 @@ namespace TelegramBotFramework.Models
             }
 
             // Validate SessionTimeoutMinutes
-            if (value.SessionTimeoutMinutes < 1 || value.SessionTimeoutMinutes > 60)
+            if (value.SessionTimeoutMinutes is < 1 or > 60)
             {
                 errors.Add($"SessionTimeoutMinutes must be between 1 and 60 inclusive, but was {value.SessionTimeoutMinutes}.");
             }
 
             // Validate MessageProcessingTimeoutSeconds
-            if (value.MessageProcessingTimeoutSeconds < 1 || value.MessageProcessingTimeoutSeconds > 300)
+            if (value.MessageProcessingTimeoutSeconds is < 1 or > 300)
             {
                 errors.Add($"MessageProcessingTimeoutSeconds must be between 1 and 300 inclusive, but was {value.MessageProcessingTimeoutSeconds}.");
             }
 
             // Validate MaxConcurrentRequests
-            if (value.MaxConcurrentRequests < 1 || value.MaxConcurrentRequests > 100)
+            if (value.MaxConcurrentRequests is < 1 or > 100)
             {
                 errors.Add($"MaxConcurrentRequests must be between 1 and 100 inclusive, but was {value.MaxConcurrentRequests}.");
             }
 
             // Validate RateLimitPerMinute
-            if (value.RateLimitPerMinute < 1 || value.RateLimitPerMinute > 600)
+            if (value.RateLimitPerMinute is < 1 or > 600)
             {
                 errors.Add($"RateLimitPerMinute must be between 1 and 600 inclusive, but was {value.RateLimitPerMinute}.");
             }
@@ -73,9 +72,7 @@ namespace TelegramBotFramework.Models
         /// <returns>True if the options are valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
         public static bool IsValidOptions(this TelegramBotFrameworkDotnetOptions value)
-        {
-            return value.ValidateOptions().Count == 0;
-        }
+            => value.ValidateOptions().Count == 0;
 
         /// <summary>
         /// Validates the specified options instance and throws an exception if it is invalid.
@@ -91,7 +88,8 @@ namespace TelegramBotFramework.Models
             if (errors.Count > 0)
             {
                 throw new ArgumentException(
-                    $"TelegramBotFrameworkDotnetOptions is invalid. Validation errors:\n{string.Join("\n", errors)}");
+                    $"TelegramBotFrameworkDotnetOptions is invalid. Validation errors:\n{string.Join("\n", errors)}",
+                    nameof(value));
             }
         }
     }
