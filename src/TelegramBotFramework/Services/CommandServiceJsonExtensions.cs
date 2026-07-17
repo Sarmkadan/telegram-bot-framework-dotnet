@@ -65,27 +65,27 @@ public static class CommandServiceJsonExtensions
     /// Attempts to deserialize a JSON string to a <see cref="CommandService"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized command service instance if successful.</param>
+    /// <param name="value">Receives the deserialized command service instance if successful; otherwise, null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out CommandService? value)
     {
         ArgumentNullException.ThrowIfNull(json);
 
-        value = null;
-
         if (string.IsNullOrWhiteSpace(json))
         {
+            value = null;
             return true;
         }
 
         try
         {
             value = JsonSerializer.Deserialize<CommandService>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
+            value = null;
             return false;
         }
     }
