@@ -953,6 +953,79 @@ int removedStaleCount = await stateStore.RemoveStaleStatesAsync(cutoffTime);
 Console.WriteLine($"Removed {removedStaleCount} stale states");
 ```
 
+## FileConversationStateStoreExtensions
+
+Provides extension methods for `FileConversationStateStore` that simplify common file-based state management operations. These extensions offer convenient methods for checking state existence, loading states, deleting states, and filtering states by status, flow, or age. The file-based store persists conversation states to disk, enabling durable state across application restarts.
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+
+// Setup your services with file-based state store
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+// Configure file-based conversation state store
+services.AddConversationFlowsWithFileStore(
+  stateDirectory: "/var/lib/telegram-bot/conversation-states",
+  configure: opts => opts.DefaultFlowTimeout = TimeSpan.FromMinutes(10)
+);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the file-based conversation state store
+var stateStore = serviceProvider.GetRequiredService<FileConversationStateStore>();
+
+// Example 1: Check if a user has an existing state file
+var userId = 123456789L;
+bool stateExists = await stateStore.ExistsAsync(userId);
+Console.WriteLine($"State file exists: {stateExists}");
+
+// Example 2: Try to load a state (returns null if file doesn't exist)
+var state = await stateStore.TryLoadStateAsync(userId);
+if (state != null)
+{
+  Console.WriteLine($"State loaded from file: {state.StateId}");
+}
+
+// Example 3: Get the file path for a user's state
+string stateFilePath = stateStore.GetStateFilePath(userId);
+Console.WriteLine($"State file path: {stateFilePath}");
+
+// Example 4: Try to delete a state file (returns false if it doesn't exist)
+bool deleted = await stateStore.TryDeleteStateAsync(userId);
+Console.WriteLine($"State file deleted: {deleted}");
+
+// Example 5: Load all states with a specific status
+var activeStates = await stateStore.LoadStatesByStatusAsync(FlowStateStatus.Active);
+Console.WriteLine($"Found {activeStates.Count} active states");
+
+// Example 6: Load all states for a specific flow
+var flowStates = await stateStore.LoadStatesByFlowAsync("user_onboarding");
+Console.WriteLine($"Found {flowStates.Count} states for user_onboarding flow");
+
+// Example 7: Load all states for a specific flow with a specific status
+var completedOnboardingStates = await stateStore.LoadStatesByFlowAndStatusAsync(
+  "user_onboarding",
+  FlowStateStatus.Completed
+);
+Console.WriteLine($"Found {completedOnboardingStates.Count} completed onboarding states");
+
+// Example 8: Load states that have been inactive for more than 24 hours
+var inactiveStates = await stateStore.LoadInactiveStatesAsync(TimeSpan.FromHours(24));
+Console.WriteLine($"Found {inactiveStates.Count} inactive states");
+
+// Example 9: Load completed states older than 7 days
+var oldCompletedStates = await stateStore.LoadOldCompletedStatesAsync(TimeSpan.FromDays(7));
+Console.WriteLine($"Found {oldCompletedStates.Count} old completed states");
+```
+
 ## UserService
 
 The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
