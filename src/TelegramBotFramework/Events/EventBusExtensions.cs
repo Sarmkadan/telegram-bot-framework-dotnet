@@ -35,17 +35,32 @@ namespace TelegramBotFramework.Events
             ArgumentNullException.ThrowIfNull(bus);
 
             return bus.GetRegisteredEventTypes()
-                .Select(type =>
-                {
-                    // Resolve the generic method GetSubscriberCount<TEvent>()
-                    MethodInfo? genericMethod = typeof(EventBus)
-                        .GetMethod(nameof(EventBus.GetSubscriberCount), BindingFlags.Public | BindingFlags.Instance)?
-                        .MakeGenericMethod(type);
-
-                    // If the method cannot be resolved, treat the count as zero.
-                    return genericMethod is null ? 0 : (int)genericMethod.Invoke(bus, null)!;
-                })
+                .Select(type => bus.GetSubscriberCount(type))
                 .Sum();
+        }
+
+        /// <summary>
+        /// Gets the subscriber count for a specific event type.
+        /// </summary>
+        /// <param name="bus">The <see cref="EventBus"/> instance.</param>
+        /// <param name="eventType">The event type to check.</param>
+        /// <returns>The number of subscribers for the specified event type, or 0 if not found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="bus"/> or <paramref name="eventType"/> is <c>null</c>.</exception>
+        private static int GetSubscriberCount(this EventBus bus, Type eventType)
+        {
+            ArgumentNullException.ThrowIfNull(bus);
+            ArgumentNullException.ThrowIfNull(eventType);
+
+            var method = typeof(EventBus).GetMethod(
+                nameof(EventBus.GetSubscriberCount),
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new[] { typeof(Type) },
+                null);
+
+            return method is null
+                ? 0
+                : (int)method.Invoke(bus, new object[] { eventType })!;
         }
 
         /// <summary>
@@ -55,32 +70,62 @@ namespace TelegramBotFramework.Events
         /// <param name="events">The events to publish.</param>
         /// <returns>A <see cref="Task"/> that completes when all publish operations have finished.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="bus"/> or <paramref name="events"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="events"/> contains a <c>null</c> element.</exception>
         public static Task PublishManyAsync(this EventBus bus, IEnumerable<object> events)
         {
             ArgumentNullException.ThrowIfNull(bus);
             ArgumentNullException.ThrowIfNull(events);
 
-            // Materialise the sequence to avoid multiple enumeration.
+            // Materialize the sequence to avoid multiple enumeration
             var eventList = events as IList<object> ?? events.ToList();
 
-            // No events to publish – return a completed task.
+            // No events to publish – return a completed task
             if (eventList.Count == 0)
-                return Task.CompletedTask;
-
-            IEnumerable<Task> publishTasks = eventList.Select(e =>
             {
-                Type eventType = e.GetType();
+                return Task.CompletedTask;
+            }
 
-                // Resolve the generic method PublishAsync<TEvent>(TEvent @event)
-                MethodInfo? genericMethod = typeof(EventBus)
-                    .GetMethod(nameof(EventBus.PublishAsync), BindingFlags.Public | BindingFlags.Instance)?
-                    .MakeGenericMethod(eventType);
+            // Validate all events are non-null
+            if (eventList.Any(e => e is null))
+            {
+                throw new ArgumentException("Event collection contains null elements.", nameof(events));
+            }
 
-                // The method is guaranteed to exist; invoke it and cast the result to Task.
-                return (Task)genericMethod!.Invoke(bus, new[] { e })!;
-            });
+            var publishTasks = eventList
+                .Select(e => bus.PublishAsync(e.GetType(), e))
+                .ToList();
 
             return Task.WhenAll(publishTasks);
+        }
+
+        /// <summary>
+        /// Publishes an event using its runtime type.
+        /// </summary>
+        /// <param name="bus">The <see cref="EventBus"/> instance.</param>
+        /// <param name="eventType">The runtime type of the event.</param>
+        /// <param name="event">The event to publish.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="bus"/>, <paramref name="eventType"/>, or <paramref name="event"/> is <c>null</c>.</exception>
+        private static Task PublishAsync(this EventBus bus, Type eventType, object @event)
+        {
+            ArgumentNullException.ThrowIfNull(bus);
+            ArgumentNullException.ThrowIfNull(eventType);
+            ArgumentNullException.ThrowIfNull(@event);
+
+            var method = typeof(EventBus).GetMethod(
+                nameof(EventBus.PublishAsync),
+                BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new[] { eventType },
+                null);
+
+            if (method is null)
+            {
+                throw new InvalidOperationException(
+                    $"No PublishAsync method found for event type {eventType.FullName}.");
+            }
+
+            return (Task)method.Invoke(bus, new[] { @event })!;
         }
     }
 }
