@@ -953,7 +953,71 @@ int removedStaleCount = await stateStore.RemoveStaleStatesAsync(cutoffTime);
 Console.WriteLine($"Removed {removedStaleCount} stale states");
 ```
 
+## FileConversationStateStoreValidation
+
+Provides validation helpers for `FileConversationStateStore` instances. Validates the configuration and runtime state of file-based conversation state storage to ensure the configured directory exists and is accessible before attempting to persist conversation state.
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.ConversationFlow;
+
+// Setup your services with file-based state store
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+  BotToken = "your-bot-token",
+  BotUsername = "your-bot-username"
+});
+
+// Configure file-based conversation state store
+services.AddConversationFlowsWithFileStore(
+  stateDirectory: "/var/lib/telegram-bot/conversation-states",
+  configure: opts => opts.DefaultFlowTimeout = TimeSpan.FromMinutes(10)
+);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the file-based conversation state store
+var stateStore = serviceProvider.GetRequiredService<FileConversationStateStore>();
+
+// Validate the store configuration and runtime state
+var validationErrors = stateStore.Validate();
+
+if (validationErrors.Count > 0)
+{
+  Console.WriteLine("FileConversationStateStore validation failed:");
+  foreach (var error in validationErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+else
+{
+  Console.WriteLine("FileConversationStateStore is valid and ready to use");
+}
+
+// Quick validation check
+if (stateStore.IsValid())
+{
+  Console.WriteLine("Store configuration is valid");
+}
+
+// Ensure validation throws if invalid (useful for startup validation)
+try
+{
+  stateStore.EnsureValid();
+  Console.WriteLine("Store passed validation successfully");
+}
+catch (ArgumentException ex)
+{
+  Console.WriteLine($"Store validation failed: {ex.Message}");
+}
+```
+
 ## FileConversationStateStoreExtensions
+
 
 Provides extension methods for `FileConversationStateStore` that simplify common file-based state management operations. These extensions offer convenient methods for checking state existence, loading states, deleting states, and filtering states by status, flow, or age. The file-based store persists conversation states to disk, enabling durable state across application restarts.
 
