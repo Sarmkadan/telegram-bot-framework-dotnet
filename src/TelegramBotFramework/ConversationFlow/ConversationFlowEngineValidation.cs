@@ -17,12 +17,12 @@ namespace TelegramBotFramework.ConversationFlow;
 public static class ConversationFlowEngineValidation
 {
     /// <summary>
-    /// Validates the specified <see cref="ConversationFlowEngine"/> instance.
+    /// Validates the specified <see cref="ConversationFlowEngine"/> instance asynchronously.
     /// </summary>
     /// <param name="value">The engine instance to validate.</param>
     /// <returns>An empty list if valid; otherwise, a list of human-readable validation errors.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static IReadOnlyList<string> Validate(this ConversationFlowEngine value)
+    public static async Task<IReadOnlyList<string>> ValidateAsync(this ConversationFlowEngine value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -30,48 +30,40 @@ public static class ConversationFlowEngineValidation
 
         // Validate public API contract through exception testing
         // This validates that required dependencies are properly initialized
-
         try
         {
             // Test that basic operations don't throw null reference exceptions
-            var _ = value.GetAllFlowsAsync();
-            var __ = value.GetActiveFlowStateAsync(12345);
+            _ = await value.GetAllFlowsAsync().ConfigureAwait(false);
+            _ = await value.GetActiveFlowStateAsync(12345).ConfigureAwait(false);
         }
-        catch (NullReferenceException)
+        catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
         {
-            errors.Add("ConversationFlowEngine contains null internal references in critical components.");
-        }
-        catch (ArgumentNullException ex)
-        {
-            // This indicates a null dependency was passed to constructor
-            errors.Add($"ConversationFlowEngine has null dependency: {ex.ParamName}");
-        }
-        catch (Exception ex) when (ex is not InvalidOperationException and not KeyNotFoundException)
-        {
-            // Other exceptions may be acceptable depending on context
+            errors.Add($"ConversationFlowEngine failed basic operation test: {ex.Message}");
         }
 
         // Validate that flows collection is accessible and not corrupted
         try
         {
-            var flows = Task.Run(() => value.GetAllFlowsAsync()).GetAwaiter().GetResult();
+            var flows = await value.GetAllFlowsAsync().ConfigureAwait(false);
             if (flows == null)
+            {
                 errors.Add("ConversationFlowEngine.GetAllFlowsAsync() returned null.");
+            }
         }
-        catch (AggregateException ae) when (ae.InnerException is not null)
+        catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
         {
-            errors.Add($"ConversationFlowEngine flow retrieval failed: {ae.InnerException.Message}");
+            errors.Add($"ConversationFlowEngine flow retrieval failed: {ex.Message}");
         }
 
         // Validate that active states collection is accessible
         try
         {
-            var state = Task.Run(() => value.GetActiveFlowStateAsync(12345)).GetAwaiter().GetResult();
+            var state = await value.GetActiveFlowStateAsync(12345).ConfigureAwait(false);
             // null is acceptable for non-existent states
         }
-        catch (AggregateException ae) when (ae.InnerException is not null)
+        catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
         {
-            errors.Add($"ConversationFlowEngine state retrieval failed: {ae.InnerException.Message}");
+            errors.Add($"ConversationFlowEngine state retrieval failed: {ex.Message}");
         }
 
         return errors.AsReadOnly();
@@ -85,7 +77,7 @@ public static class ConversationFlowEngineValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ConversationFlowEngine value)
     {
-        return Validate(value).Count == 0;
+        return ValidateAsync(value).GetAwaiter().GetResult().Count == 0;
     }
 
     /// <summary>
@@ -93,16 +85,16 @@ public static class ConversationFlowEngineValidation
     /// </summary>
     /// <param name="value">The engine instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when the instance is not valid, containing a list of validation errors.</exception>
+    /// <exception cref="ArgumentException">Thrown when the instance is not valid, containing a list of validation errors in the exception message.</exception>
     public static void EnsureValid(this ConversationFlowEngine value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = Validate(value);
+        var errors = ValidateAsync(value).GetAwaiter().GetResult();
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"ConversationFlowEngine is not valid. Validation errors:\n{string.Join("\n", errors)}",
+                $"ConversationFlowEngine is not valid. Validation errors:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}",
                 nameof(value));
         }
     }
