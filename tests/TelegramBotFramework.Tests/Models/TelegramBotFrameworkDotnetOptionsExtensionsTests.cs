@@ -4,8 +4,15 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Models;
 
+/// <summary>
+/// Tests for the <see cref="TelegramBotFrameworkDotnetOptionsExtensions"/> extension methods.
+/// </summary>
 public class TelegramBotFrameworkDotnetOptionsExtensionsTests
 {
+    /// <summary>
+    /// Verifies that calling <see cref="TelegramBotFrameworkDotnetOptionsExtensions.Validate(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
+    /// with valid options does not throw an exception.
+    /// </summary>
     [Fact]
     public void Validate_OptionsAreValid_DoesNotThrow()
     {
@@ -20,6 +27,10 @@ public class TelegramBotFrameworkDotnetOptionsExtensionsTests
         options.Validate();
     }
 
+    /// <summary>
+    /// Verifies that calling <see cref="TelegramBotFrameworkDotnetOptionsExtensions.Validate(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
+    /// with invalid options throws an <see cref="InvalidOperationException"/>.
+    /// </summary>
     [Fact]
     public void Validate_OptionsAreInvalid_ThrowsInvalidOperationException()
     {
@@ -34,6 +45,10 @@ public class TelegramBotFrameworkDotnetOptionsExtensionsTests
         Assert.Throws<InvalidOperationException>(() => options.Validate());
     }
 
+    /// <summary>
+    /// Verifies that <see cref="TelegramBotFrameworkDotnetOptionsExtensions.GetSessionTimeout(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
+    /// returns a <see cref="TimeSpan"/> representing the configured session timeout.
+    /// </summary>
     [Fact]
     public void GetSessionTimeout_OptionsHaveSessionTimeout_ReturnsTimeSpan()
     {
@@ -47,6 +62,10 @@ public class TelegramBotFrameworkDotnetOptionsExtensionsTests
         result.Should().Be(TimeSpan.FromMinutes(30));
     }
 
+    /// <summary>
+    /// Verifies that <see cref="TelegramBotFrameworkDotnetOptionsExtensions.GetMessageProcessingTimeout(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
+    /// returns a <see cref="TimeSpan"/> representing the configured message processing timeout.
+    /// </summary>
     [Fact]
     public void GetMessageProcessingTimeout_OptionsHaveMessageProcessingTimeout_ReturnsTimeSpan()
     {
@@ -60,6 +79,10 @@ public class TelegramBotFrameworkDotnetOptionsExtensionsTests
         result.Should().Be(TimeSpan.FromSeconds(30));
     }
 
+    /// <summary>
+    /// Verifies that <see cref="TelegramBotFrameworkDotnetOptionsExtensions.HasDatabaseConfigured(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
+    /// returns <c>true</c> when a database connection string is configured.
+    /// </summary>
     [Fact]
     public void HasDatabaseConfigured_OptionsHaveDatabaseConnectionString_ReturnsTrue()
     {
