@@ -48,8 +48,9 @@ public static class InlineQueryJsonExtensions
     /// Deserializes a JSON string to an <see cref="InlineQuery"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized inline query, or null if the JSON is invalid.</returns>
+    /// <returns>The deserialized <see cref="InlineQuery"/> instance, or null if the JSON is null, empty, or cannot be deserialized.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid and cannot be deserialized.</exception>
     public static InlineQuery? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
