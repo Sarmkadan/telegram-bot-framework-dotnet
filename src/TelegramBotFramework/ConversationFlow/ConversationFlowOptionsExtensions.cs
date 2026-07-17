@@ -21,7 +21,9 @@ namespace TelegramBotFramework.ConversationFlow
         {
             ArgumentNullException.ThrowIfNull(options);
             if (timeout <= TimeSpan.Zero)
+            {
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+            }
 
             options.DefaultFlowTimeout = timeout;
             return options;
@@ -39,7 +41,9 @@ namespace TelegramBotFramework.ConversationFlow
         {
             ArgumentNullException.ThrowIfNull(options);
             if (maxActiveFlows < 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(maxActiveFlows), "There must be at least one active flow per user.");
+            }
 
             options.MaxActiveFlowsPerUser = maxActiveFlows;
             return options;
@@ -85,22 +89,34 @@ namespace TelegramBotFramework.ConversationFlow
             ArgumentNullException.ThrowIfNull(options);
 
             if (options.DefaultFlowTimeout <= TimeSpan.Zero)
+            {
                 throw new ArgumentOutOfRangeException(nameof(options.DefaultFlowTimeout), "DefaultFlowTimeout must be greater than zero.");
+            }
 
             if (options.MaxActiveFlowsPerUser < 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(options.MaxActiveFlowsPerUser), "MaxActiveFlowsPerUser must be at least 1.");
+            }
 
             if (options.MaxHistoryPerUser < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(options.MaxHistoryPerUser), "MaxHistoryPerUser cannot be negative.");
+            }
 
             if (options.CleanupIntervalMinutes < 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(options.CleanupIntervalMinutes), "CleanupIntervalMinutes must be at least 1.");
+            }
 
-            if (options.AbortKeyword is not null && string.IsNullOrWhiteSpace(options.AbortKeyword))
+            if (options.AbortKeyword is { Length: > 0 } keyword && string.IsNullOrWhiteSpace(keyword))
+            {
                 throw new ArgumentException("AbortKeyword cannot be empty when provided.", nameof(options.AbortKeyword));
+            }
 
-            if (options.AbortAcknowledgementMessage is not null && string.IsNullOrWhiteSpace(options.AbortAcknowledgementMessage))
+            if (options.AbortAcknowledgementMessage is { Length: > 0 } message && string.IsNullOrWhiteSpace(message))
+            {
                 throw new ArgumentException("AbortAcknowledgementMessage cannot be empty when provided.", nameof(options.AbortAcknowledgementMessage));
+            }
         }
     }
 }
