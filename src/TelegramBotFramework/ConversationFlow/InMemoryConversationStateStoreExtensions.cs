@@ -16,21 +16,21 @@ namespace TelegramBotFramework.ConversationFlow;
 public static class InMemoryConversationStateStoreExtensions
 {
     /// <summary>
-    /// Attempts to load the state for the specified user and converts it to a strongly-typed
-    /// record if present. Returns <c>null</c> when the user has no active state.
+    /// Attempts to load the state for the specified user.
     /// </summary>
     /// <param name="store">The state store instance.</param>
     /// <param name="userId">The Telegram user identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The loaded state or <c>null</c> if not found.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is zero or negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is zero or negative.</exception>
     public static async Task<UserFlowState?> TryLoadStateAsync(
         this InMemoryConversationStateStore store,
         long userId,
         CancellationToken cancellationToken = default)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
         ArgumentNullException.ThrowIfNull(store);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
 
         return await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
     }
@@ -42,17 +42,17 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="userId">The Telegram user identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if the user has an active state; otherwise, <c>false</c>.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is zero or negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is zero or negative.</exception>
     public static async Task<bool> HasStateAsync(
         this InMemoryConversationStateStore store,
         long userId,
         CancellationToken cancellationToken = default)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
         ArgumentNullException.ThrowIfNull(store);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
 
-        var state = await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
-        return state is not null;
+        return await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false) is not null;
     }
 
     /// <summary>
@@ -64,15 +64,16 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="newStatus">The status value to set on the state.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The updated state, or <c>null</c> if no state existed for the user.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is zero or negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is zero or negative.</exception>
     public static async Task<UserFlowState?> UpdateStateStatusAsync(
         this InMemoryConversationStateStore store,
         long userId,
         FlowStateStatus newStatus,
         CancellationToken cancellationToken = default)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
         ArgumentNullException.ThrowIfNull(store);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
 
         var state = await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
         if (state is null)
@@ -92,6 +93,7 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="store">The state store instance.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>An immutable list of active states.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
     public static async Task<IReadOnlyList<UserFlowState>> GetActiveStatesAsync(
         this InMemoryConversationStateStore store,
         CancellationToken cancellationToken = default)
@@ -108,7 +110,7 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="store">The state store instance.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The number of states that were removed.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
     public static async Task<int> RemoveTerminalStatesAsync(
         this InMemoryConversationStateStore store,
         CancellationToken cancellationToken = default)
@@ -141,14 +143,15 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="userId">The Telegram user identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if the state was updated; otherwise, <c>false</c> if no state existed.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is zero or negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is zero or negative.</exception>
     public static async Task<bool> TouchStateAsync(
         this InMemoryConversationStateStore store,
         long userId,
         CancellationToken cancellationToken = default)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
         ArgumentNullException.ThrowIfNull(store);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
 
         var state = await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
         if (state is null)
@@ -167,11 +170,10 @@ public static class InMemoryConversationStateStoreExtensions
     /// </summary>
     /// <param name="store">The state store instance.</param>
     /// <returns>The total count of stored states (active and terminal).</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
     public static int GetStateCount(this InMemoryConversationStateStore store)
     {
         ArgumentNullException.ThrowIfNull(store);
-
         return store.Count;
     }
 
@@ -182,7 +184,8 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="stateId">The unique state identifier.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The state with the matching identifier, or <c>null</c> if not found.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="stateId"/> is <c>null</c>, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException"><paramref name="stateId"/> is <c>null</c>, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
     public static async Task<UserFlowState?> FindStateByIdAsync(
         this InMemoryConversationStateStore store,
         string stateId,
@@ -203,7 +206,7 @@ public static class InMemoryConversationStateStoreExtensions
     /// <param name="cutoffUtc">The UTC timestamp threshold; states with <see cref="UserFlowState.LastActivityAt"/> before this time are removed.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The number of states that were removed.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
     public static async Task<int> RemoveStaleStatesAsync(
         this InMemoryConversationStateStore store,
         DateTime cutoffUtc,
