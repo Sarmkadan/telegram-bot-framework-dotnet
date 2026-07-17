@@ -17,6 +17,7 @@ public static class DistributedCacheProviderValidation
     /// <param name="value">The cache provider to validate.</param>
     /// <returns>A list of validation problems; empty if valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="DistributedCacheProvider.GetStatisticsAsync"/> fails.</exception>
     public static IReadOnlyList<string> Validate(this DistributedCacheProvider? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -24,7 +25,7 @@ public static class DistributedCacheProviderValidation
         var problems = new List<string>();
 
         // Validate GetStatisticsAsync result
-        var stats = value.GetStatisticsAsync().GetAwaiter().GetResult();
+        CacheStatistics stats = value.GetStatisticsAsync().GetAwaiter().GetResult();
         ValidateCacheStatistics(stats, problems);
 
         return problems.AsReadOnly();
@@ -38,7 +39,7 @@ public static class DistributedCacheProviderValidation
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this DistributedCacheProvider? value)
     {
-        return value?.Validate() is { Count: 0 };
+        return value is not null && value.Validate().Count == 0;
     }
 
     /// <summary>
@@ -47,6 +48,7 @@ public static class DistributedCacheProviderValidation
     /// <param name="value">The cache provider to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not valid.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="DistributedCacheProvider.GetStatisticsAsync"/> fails.</exception>
     public static void EnsureValid(this DistributedCacheProvider? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -63,37 +65,37 @@ public static class DistributedCacheProviderValidation
     {
         ArgumentNullException.ThrowIfNull(stats);
 
-        if (stats.HitCount < 0)
+        if (stats.HitCount is < 0)
         {
             problems.Add($"CacheStatistics.HitCount must be non-negative, but was {stats.HitCount}.");
         }
 
-        if (stats.MissCount < 0)
+        if (stats.MissCount is < 0)
         {
             problems.Add($"CacheStatistics.MissCount must be non-negative, but was {stats.MissCount}.");
         }
 
-        if (stats.SetCount < 0)
+        if (stats.SetCount is < 0)
         {
             problems.Add($"CacheStatistics.SetCount must be non-negative, but was {stats.SetCount}.");
         }
 
-        if (stats.RemoveCount < 0)
+        if (stats.RemoveCount is < 0)
         {
             problems.Add($"CacheStatistics.RemoveCount must be non-negative, but was {stats.RemoveCount}.");
         }
 
-        if (stats.ItemCount < 0)
+        if (stats.ItemCount is < 0)
         {
             problems.Add($"CacheStatistics.ItemCount must be non-negative, but was {stats.ItemCount}.");
         }
 
-        if (stats.MemoryBytes < 0)
+        if (stats.MemoryBytes is < 0)
         {
             problems.Add($"CacheStatistics.MemoryBytes must be non-negative, but was {stats.MemoryBytes}.");
         }
 
-        if (stats.HitRate < 0 || stats.HitRate > 100)
+        if (stats.HitRate is < 0 or > 100)
         {
             problems.Add($"CacheStatistics.HitRate must be between 0 and 100, but was {stats.HitRate:F2}.");
         }
