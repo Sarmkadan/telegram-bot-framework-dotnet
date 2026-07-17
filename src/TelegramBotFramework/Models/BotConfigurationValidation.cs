@@ -25,11 +25,19 @@ namespace TelegramBotFramework.Models
             {
                 problems.Add("BotToken must not be null or whitespace.");
             }
+            else if (value.BotToken.Trim().Length < 2)
+            {
+                problems.Add("BotToken must be at least 2 characters long.");
+            }
 
             // BotUsername validation
             if (string.IsNullOrWhiteSpace(value.BotUsername))
             {
                 problems.Add("BotUsername must not be null or whitespace.");
+            }
+            else if (value.BotUsername.Trim().Length < 2)
+            {
+                problems.Add("BotUsername must be at least 2 characters long.");
             }
 
             // OwnerId validation (if specified)
@@ -99,6 +107,16 @@ namespace TelegramBotFramework.Models
                 }
             }
 
+            // LocalizationLanguage validation (if specified)
+            if (string.IsNullOrWhiteSpace(value.LocalizationLanguage))
+            {
+                problems.Add("LocalizationLanguage must not be null or whitespace.");
+            }
+            else if (value.LocalizationLanguage.Length != 2)
+            {
+                problems.Add("LocalizationLanguage must be a 2-letter ISO language code.");
+            }
+
             return problems.AsReadOnly();
         }
 
@@ -110,6 +128,7 @@ namespace TelegramBotFramework.Models
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static bool IsValidConfiguration(this BotConfiguration value)
         {
+            ArgumentNullException.ThrowIfNull(value);
             return value.ValidateConfiguration().Count == 0;
         }
 
