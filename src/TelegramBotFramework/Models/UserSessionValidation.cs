@@ -2,10 +2,9 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
-using System.Globalization;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TelegramBotFramework.Models;
 
@@ -59,7 +58,7 @@ public static class UserSessionValidation
         }
 
         // Validate CurrentMenuId
-        if (value.CurrentMenuId is not null && value.CurrentMenuId.Length > 50)
+        if (value.CurrentMenuId?.Length > 50)
         {
             errors.Add("CurrentMenuId cannot exceed 50 characters.");
         }
@@ -77,15 +76,16 @@ public static class UserSessionValidation
         // Validate LastActivityAt
         if (value.LastActivityAt.HasValue)
         {
-            if (value.LastActivityAt.Value == default)
+            var lastActivity = value.LastActivityAt.Value;
+            if (lastActivity == default)
             {
                 errors.Add("LastActivityAt must be a valid DateTime if set.");
             }
-            else if (value.LastActivityAt.Value > DateTime.UtcNow.AddMinutes(5))
+            else if (lastActivity > DateTime.UtcNow.AddMinutes(5))
             {
                 errors.Add("LastActivityAt cannot be in the future.");
             }
-            else if (value.LastActivityAt.Value < value.CreatedAt)
+            else if (lastActivity < value.CreatedAt)
             {
                 errors.Add("LastActivityAt cannot be before CreatedAt.");
             }
@@ -94,15 +94,16 @@ public static class UserSessionValidation
         // Validate ExpiresAt
         if (value.ExpiresAt.HasValue)
         {
-            if (value.ExpiresAt.Value == default)
+            var expiresAt = value.ExpiresAt.Value;
+            if (expiresAt == default)
             {
                 errors.Add("ExpiresAt must be a valid DateTime if set.");
             }
-            else if (value.ExpiresAt.Value < value.CreatedAt)
+            else if (expiresAt < value.CreatedAt)
             {
                 errors.Add("ExpiresAt cannot be before CreatedAt.");
             }
-            else if (value.ExpiresAt.Value > DateTime.UtcNow.AddYears(1))
+            else if (expiresAt > DateTime.UtcNow.AddYears(1))
             {
                 errors.Add("ExpiresAt cannot be more than 1 year in the future.");
             }
@@ -115,31 +116,33 @@ public static class UserSessionValidation
             {
                 errors.Add("ContextData dictionary cannot contain more than 1000 entries.");
             }
-
-            foreach (var kvp in value.ContextData)
+            else
             {
-                if (string.IsNullOrWhiteSpace(kvp.Key))
+                foreach (var kvp in value.ContextData)
                 {
-                    errors.Add("ContextData contains an entry with null or whitespace key.");
-                    break;
-                }
+                    if (string.IsNullOrWhiteSpace(kvp.Key))
+                    {
+                        errors.Add("ContextData contains an entry with null or whitespace key.");
+                        break;
+                    }
 
-                if (kvp.Key.Length > 100)
-                {
-                    errors.Add("ContextData key cannot exceed 100 characters.");
-                    break;
-                }
+                    if (kvp.Key.Length > 100)
+                    {
+                        errors.Add("ContextData key cannot exceed 100 characters.");
+                        break;
+                    }
 
-                if (string.IsNullOrWhiteSpace(kvp.Value))
-                {
-                    errors.Add($"ContextData key '{kvp.Key}' has null or whitespace value.");
-                    break;
-                }
+                    if (string.IsNullOrWhiteSpace(kvp.Value))
+                    {
+                        errors.Add($"ContextData key '{kvp.Key}' has null or whitespace value.");
+                        break;
+                    }
 
-                if (kvp.Value.Length > 1000)
-                {
-                    errors.Add($"ContextData value for key '{kvp.Key}' cannot exceed 1000 characters.");
-                    break;
+                    if (kvp.Value.Length > 1000)
+                    {
+                        errors.Add($"ContextData value for key '{kvp.Key}' cannot exceed 1000 characters.");
+                        break;
+                    }
                 }
             }
         }
@@ -151,19 +154,21 @@ public static class UserSessionValidation
             {
                 errors.Add("CommandHistory cannot contain more than 50 entries.");
             }
-
-            foreach (var command in value.CommandHistory)
+            else
             {
-                if (string.IsNullOrWhiteSpace(command))
+                foreach (var command in value.CommandHistory)
                 {
-                    errors.Add("CommandHistory contains null or whitespace entry.");
-                    break;
-                }
+                    if (string.IsNullOrWhiteSpace(command))
+                    {
+                        errors.Add("CommandHistory contains null or whitespace entry.");
+                        break;
+                    }
 
-                if (command.Length > 200)
-                {
-                    errors.Add("CommandHistory entry cannot exceed 200 characters.");
-                    break;
+                    if (command.Length > 200)
+                    {
+                        errors.Add("CommandHistory entry cannot exceed 200 characters.");
+                        break;
+                    }
                 }
             }
         }
@@ -175,7 +180,7 @@ public static class UserSessionValidation
         }
 
         // Validate UserInput
-        if (value.UserInput is not null && value.UserInput.Length > 1000)
+        if (value.UserInput?.Length > 1000)
         {
             errors.Add("UserInput cannot exceed 1000 characters.");
         }
@@ -207,7 +212,7 @@ public static class UserSessionValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                "UserSession validation failed:\n" + string.Join("\n", errors),
+                $"UserSession validation failed:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}",
                 nameof(value));
         }
     }
