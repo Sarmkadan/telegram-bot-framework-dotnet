@@ -4,8 +4,16 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Models;
 
+/// <summary>
+/// Provides extension methods for testing command-related functionality in the Telegram Bot Framework.
+/// Contains unit tests for verifying the behavior of command extensions and their methods.
+/// </summary>
 public class CommandExtensionsTests
 {
+    /// <summary>
+    /// Tests that <see cref="Command.HasParameters()"/> returns true when the command has parameters.
+    /// Verifies the extension method correctly identifies commands with parameters.
+    /// </summary>
     [Fact]
     public void HasParameters_CommandHasParameters_ReturnsTrue()
     {
@@ -19,6 +27,10 @@ public class CommandExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="Command.HasParameters()"/> returns false when the command has no parameters.
+    /// Verifies the extension method correctly handles null parameter collections.
+    /// </summary>
     [Fact]
     public void HasParameters_CommandHasNoParameters_ReturnsFalse()
     {
@@ -32,6 +44,10 @@ public class CommandExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="Command.GetPrimaryPattern()"/> returns the command name when present.
+    /// Verifies the extension method correctly extracts the primary pattern from a command.
+    /// </summary>
     [Fact]
     public void GetPrimaryPattern_CommandHasName_ReturnsName()
     {
@@ -45,6 +61,10 @@ public class CommandExtensionsTests
         result.Should().Be("test");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Command.IsStandardCommand()"/> returns true for standard commands.
+    /// Verifies the extension method correctly identifies commands of standard type.
+    /// </summary>
     [Fact]
     public void IsStandardCommand_CommandIsStandard_ReturnsTrue()
     {
@@ -58,6 +78,10 @@ public class CommandExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="Command.GetFormattedString()"/> generates a non-empty formatted string for commands with details.
+    /// Verifies the extension method produces output for commands containing name, type, description, and metadata.
+    /// </summary>
     [Fact]
     public void GetFormattedString_CommandHasDetails_ReturnsFormattedString()
     {
