@@ -1272,6 +1272,129 @@ Assert.NotNull(sessionResult);
 Assert.Equal("session-123", sessionResult.SessionId);
 ```
 
+## BotOrchestratorAdditionalTests
+
+The `BotOrchestratorAdditionalTests` class contains additional unit tests for the `BotOrchestrator` class, extending the basic test coverage with edge cases, boundary conditions, and specific scenarios not covered in the main test suite. This test suite verifies proper handling of empty messages, null values, very long content, command parameters, non-existent commands, menu operations with null sessions, various button actions, session management edge cases, and command name extraction with different whitespace scenarios.
+
+**Key features tested:**
+- Empty message content handling and error reporting
+- Null user properties (e.g., last name)
+- Maximum message length boundaries (4000 characters)
+- Command parameter storage and retrieval
+- Non-existent command error handling
+- Menu operations with null sessions
+- Button action handling (OpenUrl, SwitchInline)
+- Session exception scenarios
+- Command name extraction with various whitespace characters
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+using TelegramBotFramework.Tests;
+using Xunit;
+
+// Setup test services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+
+// Create orchestrator with mocked dependencies
+var mockUserService = new Mock<IUserService>();
+var mockCommandService = new Mock<ICommandService>();
+var mockSessionService = new Mock<ISessionService>();
+var mockMessageService = new Mock<IMessageService>();
+var mockMenuService = new Mock<IMenuService>();
+var mockLogger = new Mock<ILogger<BotOrchestrator>>();
+var middlewares = new List<Middleware.IBotMiddleware>();
+
+var configuration = new BotConfiguration
+{
+  BotToken = "test-token",
+  BotUsername = "TestBot"
+};
+
+var orchestrator = new BotOrchestrator(
+  mockUserService.Object,
+  mockCommandService.Object,
+  mockSessionService.Object,
+  mockMessageService.Object,
+  mockMenuService.Object,
+  middlewares,
+  configuration,
+  mockLogger.Object
+);
+
+// Test 1: Process message with empty content
+var result1 = await orchestrator.ProcessUserMessageAsync(123, 456, "", "John", "Doe");
+Assert.False(result1.IsValid);
+Assert.Contains("empty", result1.Errors.First());
+
+// Test 2: Process message with null last name
+var result2 = await orchestrator.ProcessUserMessageAsync(123, 456, "Hello", "John");
+Assert.True(result2.IsValid);
+Assert.Equal(123, result2.UserId);
+
+// Test 3: Process very long message (4000 characters)
+var longMessage = new string('x', 4000);
+var result3 = await orchestrator.ProcessUserMessageAsync(123, 456, longMessage, "John", "Doe");
+Assert.True(result3.IsValid);
+
+// Test 4: Execute command with parameters
+var parameters = new Dictionary<string, object> { { "param1", "value1" }, { "param2", 123 } };
+var result4 = await orchestrator.ExecuteUserCommandAsync(123, 456, "test", parameters);
+Assert.NotNull(result4.Parameters);
+Assert.Equal(2, result4.Parameters.Count);
+
+// Test 5: Execute non-existent command
+var result5 = await orchestrator.ExecuteUserCommandAsync(123, 456, "nonexistent");
+Assert.False(result5.IsValid);
+Assert.Contains("not found", result5.Errors.First());
+
+// Test 6: Display menu with null session
+var menuResult = await orchestrator.DisplayMenuAsync(123, "main");
+Assert.NotNull(menuResult);
+Assert.Equal("main", menuResult.MenuId);
+
+// Test 7: Handle menu button with OpenUrl action
+var button1 = new MenuButton { CallbackData = "https://example.com", Action = ButtonAction.OpenUrl };
+mockMenuService.Setup(s => s.GetButtonAsync("main", "https://example.com", It.IsAny<CancellationToken>()))
+  .ReturnsAsync(button1);
+var result7 = await orchestrator.HandleMenuButtonAsync(123, "main", "https://example.com");
+Assert.True(result7);
+
+// Test 8: Handle menu button with SwitchInline action
+var button2 = new MenuButton { CallbackData = "inline_query", Action = ButtonAction.SwitchInline };
+mockMenuService.Setup(s => s.GetButtonAsync("main", "inline_query", It.IsAny<CancellationToken>()))
+  .ReturnsAsync(button2);
+var result8 = await orchestrator.HandleMenuButtonAsync(123, "main", "inline_query");
+Assert.True(result8);
+
+// Test 9: Get user session with no active session (throws exception)
+await Assert.ThrowsAsync<Exceptions.SessionException>(
+  () => orchestrator.GetUserSessionAsync(123)
+);
+
+// Test 10: End user session with no active session
+var result10 = await orchestrator.EndUserSessionAsync(123);
+Assert.False(result10);
+
+// Test 11: Extract command name with multiple spaces
+var commandName1 = BotOrchestrator.ExtractCommandName("/start param1 param2");
+Assert.Equal("start", commandName1);
+
+// Test 12: Extract command name with leading/trailing spaces
+var commandName2 = BotOrchestrator.ExtractCommandName(" /start ");
+Assert.Equal("start", commandName2);
+
+// Test 13: Extract command name with tab characters
+var commandName3 = BotOrchestrator.ExtractCommandName("/start\tparam1");
+Assert.Equal("start", commandName3);
+```
+
 ## UserServiceTests
 
 The `UserServiceTests` class contains unit tests for the `UserService` class. It verifies user management functionality including creation, retrieval, updating, deletion, and activity tracking through comprehensive test cases that cover various scenarios like existing vs. new users, null values, partial updates, and status filtering.
