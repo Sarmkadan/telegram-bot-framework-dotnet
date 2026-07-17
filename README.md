@@ -1210,6 +1210,89 @@ long userId = webhookHandler.GetUserId(chatIdUpdate);
 Console.WriteLine(userId); // 0
 ```
 
+## CommandExtensionsTests
+
+The `CommandExtensionsTests` class contains unit tests for the extension methods of `Command` that provide utility functionality for command objects. These tests verify that command extension methods correctly identify command properties, extract patterns, determine command types, and generate formatted string representations for logging and display purposes.
+
+**Tested methods:**
+- `HasParameters` - Returns true when command has parameters, false when it doesn't
+- `GetPrimaryPattern` - Returns the command name as the primary pattern
+- `IsStandardCommand` - Returns true when command type is Standard
+- `GetFormattedString` - Generates a formatted string representation of the command
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Create a command with parameters
+var commandWithParams = new Command
+{
+    Name = "/announce",
+    Type = CommandType.Standard,
+    Description = "Send an announcement to all users",
+    Parameters = new List<CommandParameter>
+    {
+        new CommandParameter { Name = "message", Type = "string", IsRequired = true },
+        new CommandParameter { Name = "priority", Type = "int", IsRequired = false, DefaultValue = "1" }
+    },
+    ExecutionCount = 42,
+    CreatedAt = DateTime.UtcNow.AddDays(-7)
+};
+
+// Test 1: Check if command has parameters
+bool hasParameters = commandWithParams.HasParameters(); // true
+Console.WriteLine($"Command has parameters: {hasParameters}");
+
+// Test 2: Get primary pattern
+string primaryPattern = commandWithParams.GetPrimaryPattern(); // "/announce"
+Console.WriteLine($"Primary pattern: {primaryPattern}");
+
+// Test 3: Check if command is standard
+bool isStandard = commandWithParams.IsStandardCommand(); // true
+Console.WriteLine($"Is standard command: {isStandard}");
+
+// Test 4: Get formatted string representation
+string formatted = commandWithParams.GetFormattedString();
+Console.WriteLine(formatted);
+/* Output example:
+Command '/announce' (Standard) - Send an announcement to all users ['/announce'] with 2 parameter(s), no rate limit [Created: 2024-07-12, Executions: 42]
+*/
+
+// Test 5: Command without parameters
+var simpleCommand = new Command
+{
+    Name = "/help",
+    Type = CommandType.Standard,
+    Description = "Display help information"
+};
+
+bool simpleHasParams = simpleCommand.HasParameters(); // false
+Console.WriteLine($"Simple command has parameters: {simpleHasParams}");
+
+// Test 6: Non-standard command
+var menuCommand = new Command
+{
+    Name = "main_menu",
+    Type = CommandType.Menu,
+    Description = "Main menu command"
+};
+
+bool isMenuStandard = menuCommand.IsStandardCommand(); // false
+Console.WriteLine($"Menu command is standard: {isMenuStandard}");
+```
+
 ## UserService
 
 The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
