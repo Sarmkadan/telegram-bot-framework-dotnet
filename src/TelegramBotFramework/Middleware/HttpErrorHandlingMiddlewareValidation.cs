@@ -58,9 +58,7 @@ public static class HttpErrorHandlingMiddlewareValidation
     /// <param name="value">The middleware instance to check.</param>
     /// <returns>True if the instance is valid; otherwise, false.</returns>
     public static bool IsValid(this HttpErrorHandlingMiddleware? value)
-    {
-        return value?.Validate().Count == 0;
-    }
+        => value is not null && value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="HttpErrorHandlingMiddleware"/> instance is valid.
