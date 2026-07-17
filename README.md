@@ -1090,6 +1090,62 @@ var oldCompletedStates = await stateStore.LoadOldCompletedStatesAsync(TimeSpan.F
 Console.WriteLine($"Found {oldCompletedStates.Count} old completed states");
 ```
 
+## TelegramBotFrameworkDotnetOptionsExtensionsTests
+
+The `TelegramBotFrameworkDotnetOptionsExtensionsTests` class contains unit tests for the extension methods of `TelegramBotFrameworkDotnetOptions` that provide validation and timeout utilities for framework configuration. These tests verify that configuration validation works correctly, timeout values are properly calculated, and database configuration detection functions as expected.
+
+**Tested methods:**
+- `Validate` - Validates configuration options and throws for invalid settings
+- `GetSessionTimeout` - Returns configured session timeout as TimeSpan
+- `GetMessageProcessingTimeout` - Returns configured message processing timeout as TimeSpan
+- `HasDatabaseConfigured` - Detects whether a database connection string is configured
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username",
+    SessionTimeoutMinutes = 30,
+    MessageProcessingTimeoutSeconds = 15,
+    DatabaseConnectionString = "Server=localhost;Database=BotDb;"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve options (typically via IOptions pattern)
+var options = serviceProvider.GetRequiredService<IOptions<TelegramBotFrameworkDotnetOptions>>().Value;
+
+// Test 1: Validate configuration
+try
+{
+    options.Validate();
+    Console.WriteLine("Configuration is valid");
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine($"Configuration error: {ex.Message}");
+}
+
+// Test 2: Get session timeout
+var sessionTimeout = options.GetSessionTimeout();
+Console.WriteLine($"Session timeout: {sessionTimeout.TotalMinutes} minutes");
+
+// Test 3: Get message processing timeout
+var messageTimeout = options.GetMessageProcessingTimeout();
+Console.WriteLine($"Message processing timeout: {messageTimeout.TotalSeconds} seconds");
+
+// Test 4: Check if database is configured
+bool hasDatabase = options.HasDatabaseConfigured();
+Console.WriteLine($"Database configured: {hasDatabase}");
+```
+
 ## WebhookHandlerExtensionsTests
 
 The `WebhookHandlerExtensionsTests` class contains unit tests for the extension methods of `WebhookHandler` that simplify common webhook update processing scenarios. These tests verify proper handling of null updates, callback data matching, and ID extraction from Telegram updates, ensuring robust error handling and correct behavior for webhook integration scenarios.
