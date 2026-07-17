@@ -1895,6 +1895,72 @@ public class UserServiceTestsExample
 }
 ```
 
+## XmlFormatterJsonExtensions
+
+Provides JSON serialization and deserialization extensions for `XmlFormatter`, enabling conversion between XML formatter configuration and JSON representations. This is useful for persisting formatter settings, transmitting configurations between services, or storing formatter preferences in databases.
+
+**Key features:**
+- Serialize `XmlFormatter` to JSON with optional pretty-printing
+- Deserialize JSON back to `XmlFormatter` instances with error handling
+- Try-based deserialization for safe JSON parsing
+- Preserves formatter configuration including pretty-printing preference
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Formatters;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve XmlFormatter
+var xmlFormatter = new XmlFormatter(pretty: true);
+
+// Example 1: Serialize formatter to JSON
+string json = xmlFormatter.ToJson();
+Console.WriteLine(json);
+// Output: {"pretty":true}
+
+// Example 2: Serialize with pretty printing
+string prettyJson = xmlFormatter.ToJson(indented: true);
+Console.WriteLine(prettyJson);
+/* Output:
+{
+  "pretty": true
+}
+*/
+
+// Example 3: Deserialize JSON back to formatter
+string formatterJson = "{\"pretty\":false}";
+var formatter = XmlFormatterJsonExtensions.FromJson(formatterJson);
+if (formatter != null)
+{
+    Console.WriteLine($"Formatter pretty: {formatter.GetPretty()}");
+}
+
+// Example 4: Try-based deserialization (safe parsing)
+string invalidJson = "{invalid}";
+bool success = XmlFormatterJsonExtensions.TryFromJson(invalidJson, out var result);
+Console.WriteLine(success); // false
+Console.WriteLine(result); // null
+
+// Example 5: Create formatter from configuration
+var configJson = "{\"pretty\":true}";
+var configuredFormatter = XmlFormatterJsonExtensions.FromJson(configJson);
+if (configuredFormatter != null)
+{
+    Console.WriteLine($"Configured formatter pretty: {configuredFormatter.GetPretty()}");
+}
+```
+
 ## BotUserTests
 
 The `BotUserTests` class contains unit tests for the `BotUser` and `Command` classes, focusing on user metadata management, validation, and command execution tracking.
