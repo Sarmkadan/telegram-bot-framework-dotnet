@@ -27,7 +27,8 @@ public static class FileConversationStateStoreValidation
         var problems = new List<string>();
 
         // Validate directory path
-        if (string.IsNullOrWhiteSpace(value.GetDirectory()))
+        string directory = value.GetDirectory();
+        if (string.IsNullOrWhiteSpace(directory))
         {
             problems.Add("Directory path cannot be null or whitespace.");
         }
@@ -35,13 +36,12 @@ public static class FileConversationStateStoreValidation
         {
             try
             {
-                var directory = value.GetDirectory();
                 if (!Directory.Exists(directory) && !string.IsNullOrEmpty(directory))
                 {
                     problems.Add("Configured directory does not exist and cannot be created automatically.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not ArgumentNullException and not ArgumentException)
             {
                 problems.Add($"Directory validation failed: {ex.Message}");
             }
@@ -55,9 +55,10 @@ public static class FileConversationStateStoreValidation
     /// </summary>
     /// <param name="value">The store instance to check.</param>
     /// <returns><see langword="true"/> if the instance is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static bool IsValid(this FileConversationStateStore value)
     {
-        return Validate(value).Count == 0;
+        return value.Validate().Count is 0;
     }
 
     /// <summary>
@@ -70,8 +71,8 @@ public static class FileConversationStateStoreValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = Validate(value);
-        if (problems.Count == 0)
+        var problems = value.Validate();
+        if (problems.Count is 0)
             return;
 
         throw new ArgumentException(
@@ -123,7 +124,7 @@ public static class FileConversationStateStoreValidation
         {
             problems.Add("StartedAt cannot be the default DateTime value.");
         }
-        else if (state.StartedAt.Kind != DateTimeKind.Utc)
+        else if (state.StartedAt.Kind is not DateTimeKind.Utc)
         {
             problems.Add("StartedAt must be in UTC timezone.");
         }
@@ -132,7 +133,7 @@ public static class FileConversationStateStoreValidation
         {
             problems.Add("LastActivityAt cannot be the default DateTime value.");
         }
-        else if (state.LastActivityAt.Kind != DateTimeKind.Utc)
+        else if (state.LastActivityAt.Kind is not DateTimeKind.Utc)
         {
             problems.Add("LastActivityAt must be in UTC timezone.");
         }
@@ -143,7 +144,7 @@ public static class FileConversationStateStoreValidation
             {
                 problems.Add("CompletedAt cannot be the default DateTime value when set.");
             }
-            else if (state.CompletedAt.Value.Kind != DateTimeKind.Utc)
+            else if (state.CompletedAt.Value.Kind is not DateTimeKind.Utc)
             {
                 problems.Add("CompletedAt must be in UTC timezone when set.");
             }
@@ -191,12 +192,12 @@ public static class FileConversationStateStoreValidation
                 {
                     problems.Add("History entry EnteredAt cannot be the default DateTime value.");
                 }
-                else if (entry.EnteredAt.Kind != DateTimeKind.Utc)
+                else if (entry.EnteredAt.Kind is not DateTimeKind.Utc)
                 {
                     problems.Add("History entry EnteredAt must be in UTC timezone.");
                 }
 
-                if (entry.CompletedAt.HasValue && entry.CompletedAt.Value.Kind != DateTimeKind.Utc)
+                if (entry.CompletedAt.HasValue && entry.CompletedAt.Value.Kind is not DateTimeKind.Utc)
                 {
                     problems.Add("History entry CompletedAt must be in UTC timezone when set.");
                 }
@@ -216,9 +217,10 @@ public static class FileConversationStateStoreValidation
     /// </summary>
     /// <param name="state">The state to check.</param>
     /// <returns><see langword="true"/> if the state is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="state"/> is <see langword="null"/>.</exception>
     public static bool IsValid(this UserFlowState state)
     {
-        return Validate(state).Count == 0;
+        return state.Validate().Count is 0;
     }
 
     /// <summary>
@@ -231,8 +233,8 @@ public static class FileConversationStateStoreValidation
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var problems = Validate(state);
-        if (problems.Count == 0)
+        var problems = state.Validate();
+        if (problems.Count is 0)
             return;
 
         throw new ArgumentException(
@@ -246,12 +248,18 @@ public static class FileConversationStateStoreValidation
     /// </summary>
     /// <param name="store">The store instance.</param>
     /// <returns>The configured directory path.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="store"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when reflection fails to access the private field.</exception>
     private static string GetDirectory(this FileConversationStateStore store)
     {
+        ArgumentNullException.ThrowIfNull(store);
+
         // Use reflection to access the private _directory field
         var field = typeof(FileConversationStateStore).GetField(
             "_directory",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (string)field!.GetValue(store)!;
+
+        return field?.GetValue(store) as string
+            ?? throw new InvalidOperationException("Failed to access the private _directory field via reflection.");
     }
 }
