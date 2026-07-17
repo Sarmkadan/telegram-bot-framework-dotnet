@@ -6,8 +6,15 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Integration;
 
+/// <summary>
+/// Contains unit tests for the <see cref="WebhookHandler"/> extension methods.
+/// </summary>
 public class WebhookHandlerExtensionsTests
 {
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.GetMessageText"/> returns <c>null</c>
+    /// when the supplied <see cref="TelegramUpdate"/> instance itself is <c>null</c>.
+    /// </summary>
     [Fact]
     public void GetMessageText_MessageIsNull_ReturnsNull()
     {
@@ -22,6 +29,10 @@ public class WebhookHandlerExtensionsTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.GetMessageText"/> throws an <see cref="ArgumentNullException"/>
+    /// when the <see cref="TelegramUpdate"/> argument is <c>null</c>.
+    /// </summary>
     [Fact]
     public void GetMessageText_UpdateIsNull_ThrowsArgumentNullException()
     {
@@ -33,6 +44,10 @@ public class WebhookHandlerExtensionsTests
         Assert.Throws<ArgumentNullException>(() => handler.GetMessageText(update));
     }
 
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.HasCallbackData"/> returns <c>true</c>
+    /// when the <see cref="TelegramUpdate.CallbackData"/> matches the expected value.
+    /// </summary>
     [Fact]
     public void HasCallbackData_CallbackDataMatches_ReturnsTrue()
     {
@@ -47,6 +62,10 @@ public class WebhookHandlerExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.HasCallbackData"/> returns <c>false</c>
+    /// when the <see cref="TelegramUpdate.CallbackData"/> does not match the expected value.
+    /// </summary>
     [Fact]
     public void HasCallbackData_CallbackDataDoesNotMatch_ReturnsFalse()
     {
@@ -61,6 +80,10 @@ public class WebhookHandlerExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.GetChatId"/> returns <c>0</c>
+    /// when the <see cref="TelegramUpdate.Message"/> property is <c>null</c>.
+    /// </summary>
     [Fact]
     public void GetChatId_MessageIsNull_Returns0()
     {
@@ -75,6 +98,10 @@ public class WebhookHandlerExtensionsTests
         result.Should().Be(0);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="WebhookHandler.GetUserId"/> returns <c>0</c>
+    /// when the <see cref="TelegramUpdate.Message"/> property is <c>null</c>.
+    /// </summary>
     [Fact]
     public void GetUserId_MessageIsNull_Returns0()
     {
