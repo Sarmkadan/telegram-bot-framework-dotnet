@@ -39,78 +39,72 @@ public static class InlineKeyboardBuilderValidation
         catch (InvalidOperationException ex)
         {
             errors.Add(ex.Message);
+            return errors.AsReadOnly(); // Early return if build fails
         }
 
         // Validate the built markup if successful
-        try
+        var markup = value.Build();
+
+        // Validate each row in the built markup
+        for (int rowIndex = 0; rowIndex < markup.InlineKeyboard.Count; rowIndex++)
         {
-            var markup = value.Build();
+            var row = markup.InlineKeyboard[rowIndex];
 
-            // Validate each row in the built markup
-            for (int rowIndex = 0; rowIndex < markup.InlineKeyboard.Count; rowIndex++)
+            if (row.Count == 0)
             {
-                var row = markup.InlineKeyboard[rowIndex];
+                errors.Add($"Row {rowIndex} is empty.");
+                continue;
+            }
 
-                if (row.Count == 0)
+            // Validate each button in the row
+            for (int buttonIndex = 0; buttonIndex < row.Count; buttonIndex++)
+            {
+                var button = row[buttonIndex];
+
+                // Validate button text
+                if (string.IsNullOrWhiteSpace(button.Text))
                 {
-                    errors.Add($"Row {rowIndex} is empty.");
-                    continue;
+                    errors.Add($"Button at row {rowIndex}, position {buttonIndex} has empty or whitespace text.");
+                }
+                else if (button.Text.Length > 64)
+                {
+                    errors.Add($"Button at row {rowIndex}, position {buttonIndex} has text longer than 64 characters (length: {button.Text.Length}).");
                 }
 
-                // Validate each button in the row
-                for (int buttonIndex = 0; buttonIndex < row.Count; buttonIndex++)
+                // Validate button type-specific properties
+                switch (button.Type)
                 {
-                    var button = row[buttonIndex];
+                    case InlineButtonType.Callback:
+                        if (string.IsNullOrEmpty(button.CallbackData))
+                        {
+                            errors.Add($"Callback button at row {rowIndex}, position {buttonIndex} has null or empty CallbackData.");
+                        }
+                        else if (System.Text.Encoding.UTF8.GetByteCount(button.CallbackData) > Models.Menu.MaxCallbackDataBytes)
+                        {
+                            errors.Add($"Callback button at row {rowIndex}, position {buttonIndex} has CallbackData exceeding {Models.Menu.MaxCallbackDataBytes} bytes (byte length: {System.Text.Encoding.UTF8.GetByteCount(button.CallbackData)}).");
+                        }
+                        break;
 
-                    // Validate button text
-                    if (string.IsNullOrWhiteSpace(button.Text))
-                    {
-                        errors.Add($"Button at row {rowIndex}, position {buttonIndex} has empty or whitespace text.");
-                    }
-                    else if (button.Text.Length > 64)
-                    {
-                        errors.Add($"Button at row {rowIndex}, position {buttonIndex} has text longer than 64 characters (length: {button.Text.Length}).");
-                    }
+                    case InlineButtonType.Url:
+                        if (string.IsNullOrWhiteSpace(button.Url))
+                        {
+                            errors.Add($"URL button at row {rowIndex}, position {buttonIndex} has null or empty Url.");
+                        }
+                        else if (!Uri.TryCreate(button.Url, UriKind.Absolute, out _))
+                        {
+                            errors.Add($"URL button at row {rowIndex}, position {buttonIndex} has invalid URL format: '{button.Url}'");
+                        }
+                        break;
 
-                    // Validate button type-specific properties
-                    switch (button.Type)
-                    {
-                        case InlineButtonType.Callback:
-                            if (string.IsNullOrEmpty(button.CallbackData))
-                            {
-                                errors.Add($"Callback button at row {rowIndex}, position {buttonIndex} has null or empty CallbackData.");
-                            }
-                            else if (button.CallbackData!.Length > Models.Menu.MaxCallbackDataBytes)
-                            {
-                                errors.Add($"Callback button at row {rowIndex}, position {buttonIndex} has CallbackData exceeding {Models.Menu.MaxCallbackDataBytes} bytes (length: {button.CallbackData!.Length}).");
-                            }
-                            break;
-
-                        case InlineButtonType.Url:
-                            if (string.IsNullOrWhiteSpace(button.Url))
-                            {
-                                errors.Add($"URL button at row {rowIndex}, position {buttonIndex} has null or empty Url.");
-                            }
-                            else if (!Uri.TryCreate(button.Url, UriKind.Absolute, out _))
-                            {
-                                errors.Add($"URL button at row {rowIndex}, position {buttonIndex} has invalid URL format: '{button.Url}'");
-                            }
-                            break;
-
-                        case InlineButtonType.SwitchInline:
-                            // SwitchInlineQuery can be empty string, which is valid
-                            if (button.SwitchInlineQuery?.Length > 64)
-                            {
-                                errors.Add($"Switch-inline button at row {rowIndex}, position {buttonIndex} has SwitchInlineQuery exceeding 64 characters (length: {button.SwitchInlineQuery?.Length ?? 0}).");
-                            }
-                            break;
-                    }
+                    case InlineButtonType.SwitchInline:
+                        // SwitchInlineQuery can be empty string, which is valid
+                        if (button.SwitchInlineQuery?.Length > 64)
+                        {
+                            errors.Add($"Switch-inline button at row {rowIndex}, position {buttonIndex} has SwitchInlineQuery exceeding 64 characters (length: {button.SwitchInlineQuery?.Length ?? 0}).");
+                        }
+                        break;
                 }
             }
-        }
-        catch (InvalidOperationException)
-        {
-            // Already handled above
         }
 
         return errors.AsReadOnly();
@@ -123,8 +117,12 @@ public static class InlineKeyboardBuilderValidation
     /// <returns>
     /// <see langword="true"/> if the builder is valid; otherwise, <see langword="false"/>.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="value"/> is <see langword="null"/>.
+    /// </exception>
     public static bool IsValid(this InlineKeyboardBuilder value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
