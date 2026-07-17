@@ -2,9 +2,9 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TelegramBotFramework.BackgroundWorkers;
 
@@ -97,7 +97,8 @@ public static class ScheduledTaskManagerValidation
             }
 
             // If LastSuccessAt is set, LastExecutedAt should also be set and not after it
-            if (value.LastExecutedAt.HasValue && value.LastExecutedAt.Value > value.LastSuccessAt.Value)
+            if (value.LastExecutedAt.HasValue && value.LastSuccessAt.HasValue
+                && value.LastExecutedAt.Value > value.LastSuccessAt.Value)
             {
                 problems.Add("LastExecutedAt cannot be after LastSuccessAt.");
             }
@@ -120,7 +121,8 @@ public static class ScheduledTaskManagerValidation
             }
 
             // If LastErrorAt is set, LastExecutedAt should also be set and not before it
-            if (value.LastExecutedAt.HasValue && value.LastExecutedAt.Value < value.LastErrorAt.Value)
+            if (value.LastExecutedAt.HasValue && value.LastErrorAt.HasValue
+                && value.LastExecutedAt.Value < value.LastErrorAt.Value)
             {
                 problems.Add("LastExecutedAt cannot be before LastErrorAt.");
             }
@@ -152,10 +154,7 @@ public static class ScheduledTaskManagerValidation
     /// </summary>
     /// <param name="value">The instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this ScheduledTask? value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this ScheduledTask? value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="ScheduledTask"/> instance is valid.
@@ -163,7 +162,7 @@ public static class ScheduledTaskManagerValidation
     /// <param name="value">The instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing a list of problems.</exception>
-    public static void EnsureValid(this ScheduledTask? value)
+    public static void EnsureValid([NotNull] this ScheduledTask? value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
