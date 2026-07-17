@@ -31,11 +31,9 @@ public static class SessionServiceTestsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
+        return JsonSerializer.Serialize(value, indented
             ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
-            : _jsonSerializerOptions;
-
-        return JsonSerializer.Serialize(value, options);
+            : _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -43,7 +41,9 @@ public static class SessionServiceTestsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A <see cref="SessionServiceTests"/> instance, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized.</exception>
     public static SessionServiceTests? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -57,6 +57,8 @@ public static class SessionServiceTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out SessionServiceTests? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
