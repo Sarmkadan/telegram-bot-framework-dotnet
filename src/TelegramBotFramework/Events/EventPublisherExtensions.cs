@@ -19,13 +19,13 @@ public static class EventPublisherExtensions
     /// <param name="publisher">The event publisher instance.</param>
     /// <param name="chatId">The chat identifier.</param>
     /// <param name="userId">The user identifier.</param>
-    /// <param name="messageText">The message text. If null or empty, an empty string will be used.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is null.</exception>
+    /// <param name="messageText">The message text. If <see langword="null"/> or empty, an empty string will be used.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>
     public static async Task PublishMessageReceivedAsync(this EventPublisher publisher, long chatId, long userId, string? messageText = null)
     {
         ArgumentNullException.ThrowIfNull(publisher);
 
-        await publisher.PublishMessageReceivedAsync(chatId, userId, messageText).ConfigureAwait(false);
+        await publisher.PublishMessageReceivedAsync(chatId, userId, messageText ?? string.Empty).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -34,10 +34,10 @@ public static class EventPublisherExtensions
     /// <param name="publisher">The event publisher instance.</param>
     /// <param name="commandName">The name of the command that was executed.</param>
     /// <param name="userId">The user identifier who executed the command.</param>
-    /// <param name="arguments">The command arguments. Can be null if no arguments were provided.</param>
+    /// <param name="arguments">The command arguments. Can be <see langword="null"/> if no arguments were provided.</param>
     /// <param name="success">Whether the command execution was successful.</param>
-    /// <param name="errorMessage">Optional error message if the command failed. Can be null.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="commandName"/> is null.</exception>
+    /// <param name="errorMessage">Optional error message if the command failed. Can be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="commandName"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="commandName"/> is empty or whitespace.</exception>
     public static async Task PublishCommandExecutedAsync(
         this EventPublisher publisher,
@@ -63,9 +63,9 @@ public static class EventPublisherExtensions
     /// </summary>
     /// <param name="publisher">The event publisher instance.</param>
     /// <param name="newState">The new state the bot transitioned to.</param>
-    /// <param name="previousState">The previous state the bot was in. Can be null if there was no previous state.</param>
-    /// <param name="reason">Optional reason for the state change. Can be null.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="newState"/> is null.</exception>
+    /// <param name="previousState">The previous state the bot was in. Can be <see langword="null"/> if there was no previous state.</param>
+    /// <param name="reason">Optional reason for the state change. Can be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="newState"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="newState"/> is empty or whitespace.</exception>
     public static async Task PublishBotStateChangedAsync(
         this EventPublisher publisher,
@@ -92,7 +92,7 @@ public static class EventPublisherExtensions
     /// <param name="event">The event to publish.</param>
     /// <param name="correlationId">The correlation ID to associate with the event.</param>
     /// <returns>A task that represents the asynchronous publish operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="event"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/>, <paramref name="event"/>, or <paramref name="correlationId"/> is <see langword="null"/>.</exception>
     public static async Task PublishWithCorrelationAsync<TEvent>(
         this EventPublisher publisher,
         TEvent @event,
@@ -116,7 +116,7 @@ public static class EventPublisherExtensions
     /// <param name="events">The collection of events to publish.</param>
     /// <param name="correlationId">The correlation ID to associate with all events.</param>
     /// <returns>A task that represents the asynchronous publish operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> or <paramref name="events"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/>, <paramref name="events"/>, or <paramref name="correlationId"/> is <see langword="null"/>.</exception>
     public static async Task PublishCollectionAsync<TEvent>(
         this EventPublisher publisher,
         IEnumerable<TEvent> events,
