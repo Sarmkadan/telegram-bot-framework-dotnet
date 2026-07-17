@@ -4,6 +4,9 @@ using TelegramBotFramework.Utilities;
 
 namespace TelegramBotFramework.Integration
 {
+    /// <summary>
+    /// Provides extension methods for <see cref="TelegramApiClient"/> to simplify common Telegram Bot API operations.
+    /// </summary>
     public static class TelegramApiClientExtensions
     {
         /// <summary>
@@ -14,46 +17,30 @@ namespace TelegramBotFramework.Integration
         /// <param name="text">Message text</param>
         /// <param name="buttonLabels">2D array of button labels (rows x columns)</param>
         /// <returns>True if successful, false otherwise</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+        /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid or <paramref name="text"/> is null or whitespace or <paramref name="buttonLabels"/> is null</exception>
         public static async Task<bool> SendMessageWithButtonsAsync(
             this TelegramApiClient client,
             long chatId,
             string text,
             string[][] buttonLabels)
         {
-            if (client is null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+            ArgumentNullException.ThrowIfNull(client);
 
             if (!ValidationUtility.IsValidTelegramChatId(chatId))
             {
                 throw new ArgumentException("Invalid chat ID", nameof(chatId));
             }
 
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                throw new ArgumentException("Message text cannot be null or whitespace", nameof(text));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(text, nameof(text));
 
-            if (buttonLabels is null)
-            {
-                throw new ArgumentNullException(nameof(buttonLabels));
-            }
+            ArgumentNullException.ThrowIfNull(buttonLabels);
 
-            try
-            {
-                var result = await client.SendMessageWithButtonsAsync(
-                    chatId,
-                    text,
-                    buttonLabels
-                ).ConfigureAwait(false);
-
-                return result;
-            }
-            catch
-            {
-                return false;
-            }
+            return await client.SendMessageWithButtonsAsync(
+                chatId,
+                text,
+                buttonLabels
+            ).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -64,16 +51,15 @@ namespace TelegramBotFramework.Integration
         /// <param name="messageId">Message identifier to edit</param>
         /// <param name="newText">New message text</param>
         /// <returns>True if successful, false otherwise</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+        /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid, <paramref name="messageId"/> is not positive, or <paramref name="newText"/> is null or whitespace</exception>
         public static async Task<bool> EditMessageTextAsync(
             this TelegramApiClient client,
             long chatId,
             int messageId,
             string newText)
         {
-            if (client is null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+            ArgumentNullException.ThrowIfNull(client);
 
             if (!ValidationUtility.IsValidTelegramChatId(chatId))
             {
@@ -85,25 +71,13 @@ namespace TelegramBotFramework.Integration
                 throw new ArgumentException("Message ID must be positive", nameof(messageId));
             }
 
-            if (string.IsNullOrWhiteSpace(newText))
-            {
-                throw new ArgumentException("Message text cannot be null or whitespace", nameof(newText));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(newText, nameof(newText));
 
-            try
-            {
-                var result = await client.EditMessageAsync(
-                    chatId,
-                    messageId,
-                    newText
-                ).ConfigureAwait(false);
-
-                return result;
-            }
-            catch
-            {
-                return false;
-            }
+            return await client.EditMessageAsync(
+                chatId,
+                messageId,
+                newText
+            ).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -113,34 +87,21 @@ namespace TelegramBotFramework.Integration
         /// <param name="callbackQueryId">Callback query identifier</param>
         /// <param name="text">Optional text to show to user</param>
         /// <returns>True if successful, false otherwise</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+        /// <exception cref="ArgumentException"><paramref name="callbackQueryId"/> is null or whitespace</exception>
         public static async Task<bool> AnswerCallbackQueryWithTextAsync(
             this TelegramApiClient client,
             string callbackQueryId,
             string? text = null)
         {
-            if (client is null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+            ArgumentNullException.ThrowIfNull(client);
 
-            if (string.IsNullOrWhiteSpace(callbackQueryId))
-            {
-                throw new ArgumentException("Callback query ID cannot be null or whitespace", nameof(callbackQueryId));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(callbackQueryId, nameof(callbackQueryId));
 
-            try
-            {
-                var result = await client.AnswerCallbackQueryAsync(
-                    callbackQueryId,
-                    text
-                ).ConfigureAwait(false);
-
-                return result;
-            }
-            catch
-            {
-                return false;
-            }
+            return await client.AnswerCallbackQueryAsync(
+                callbackQueryId,
+                text
+            ).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -148,22 +109,12 @@ namespace TelegramBotFramework.Integration
         /// </summary>
         /// <param name="client">The Telegram API client</param>
         /// <returns>Bot information if successful, null otherwise</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         public static async Task<string?> GetBotInformationAsync(this TelegramApiClient client)
         {
-            if (client is null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+            ArgumentNullException.ThrowIfNull(client);
 
-            try
-            {
-                var botInfo = await client.GetMeAsync().ConfigureAwait(false);
-                return botInfo;
-            }
-            catch
-            {
-                return null;
-            }
+            return await client.GetMeAsync().ConfigureAwait(false);
         }
     }
 }
