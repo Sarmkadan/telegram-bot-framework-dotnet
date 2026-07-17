@@ -1090,6 +1090,70 @@ var oldCompletedStates = await stateStore.LoadOldCompletedStatesAsync(TimeSpan.F
 Console.WriteLine($"Found {oldCompletedStates.Count} old completed states");
 ```
 
+## WebhookHandlerExtensionsTests
+
+The `WebhookHandlerExtensionsTests` class contains unit tests for the extension methods of `WebhookHandler` that simplify common webhook update processing scenarios. These tests verify proper handling of null updates, callback data matching, and ID extraction from Telegram updates, ensuring robust error handling and correct behavior for webhook integration scenarios.
+
+**Tested methods:**
+- `GetMessageText` - Returns null when message is null, throws when update is null
+- `HasCallbackData` - Returns true when callback data matches expected value
+- `GetChatId` - Returns 0 when message is null
+- `GetUserId` - Returns 0 when message is null
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Integration;
+using TelegramBotFramework.Models;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddTelegramBotFramework(new BotConfiguration
+{
+    BotToken = "your-bot-token",
+    BotUsername = "your-bot-username"
+});
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve WebhookHandler
+var webhookHandler = new WebhookHandler();
+
+// Test 1: GetMessageText with null message
+var nullUpdate = new TelegramUpdate { Message = null };
+string? messageText = webhookHandler.GetMessageText(nullUpdate);
+Console.WriteLine(messageText); // null
+
+// Test 2: GetMessageText with null update (throws)
+try
+{
+    webhookHandler.GetMessageText(null);
+}
+catch (ArgumentNullException ex)
+{
+    Console.WriteLine("Caught ArgumentNullException as expected");
+}
+
+// Test 3: HasCallbackData with matching callback
+var callbackUpdate = new TelegramUpdate { CallbackData = "confirm_yes" };
+bool hasCallback = webhookHandler.HasCallbackData(callbackUpdate, "confirm_yes");
+Console.WriteLine(hasCallback); // true
+
+// Test 4: HasCallbackData with non-matching callback
+bool noMatch = webhookHandler.HasCallbackData(callbackUpdate, "cancel");
+Console.WriteLine(noMatch); // false
+
+// Test 5: GetChatId with null message
+var chatIdUpdate = new TelegramUpdate { Message = null };
+long chatId = webhookHandler.GetChatId(chatIdUpdate);
+Console.WriteLine(chatId); // 0
+
+// Test 6: GetUserId with null message
+long userId = webhookHandler.GetUserId(chatIdUpdate);
+Console.WriteLine(userId); // 0
+```
+
 ## UserService
 
 The `UserService` class provides centralized user management for Telegram bot applications. It handles user registration, retrieval, updating, and deletion, enabling features like user sessions, role-based access control, and personalized bot experiences.
