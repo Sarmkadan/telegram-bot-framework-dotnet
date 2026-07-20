@@ -6,7 +6,10 @@
 
 namespace TelegramBotFramework.Integration;
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Utilities;
@@ -275,6 +278,22 @@ public sealed class TelegramApiClient : ITelegramApiClient
     public async Task<bool> RemoveWebhookAsync()
     {
         return await SendApiRequestAsync("setWebhook", new { url = string.Empty }).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sets the list of bot commands shown in the Telegram UI.
+    /// </summary>
+    public async Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands)
+    {
+        if (commands == null)
+            throw new ArgumentNullException(nameof(commands));
+
+        var payload = new
+        {
+            commands = commands.Select(c => new { command = c.Command, description = c.Description })
+        };
+
+        return await SendApiRequestAsync("setMyCommands", payload).ConfigureAwait(false);
     }
 
     /// <summary>
