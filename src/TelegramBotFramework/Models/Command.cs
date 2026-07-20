@@ -27,11 +27,11 @@ public sealed class Command
 
     public List<CommandParameter>? Parameters { get; set; }
 
+    public List<string> Aliases { get; set; } = new();
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-    public string? Alias { get; set; }
 
     public int? RateLimitPerMinute { get; set; }
 
@@ -53,13 +53,16 @@ public sealed class Command
     }
 
     /// <summary>
-    /// Gets the full command pattern including alias.
+    /// Gets all command patterns including primary name and aliases.
     /// </summary>
     public IEnumerable<string> GetCommandPatterns()
     {
         yield return Name;
-        if (!string.IsNullOrWhiteSpace(Alias))
-            yield return Alias;
+        foreach (var alias in Aliases)
+        {
+            if (!string.IsNullOrWhiteSpace(alias))
+                yield return alias;
+        }
     }
 
     /// <summary>

@@ -204,7 +204,7 @@ public sealed class CommandTests
 	[Fact]
 	public void GetCommandPatterns_WithAlias_ReturnsBothNameAndAlias()
 	{
-		var command = new Command { Name = "/start", HandlerType = "Handler", Alias = "/go" };
+		var command = new Command { Name = "/start", HandlerType = "Handler", Aliases = new List<string> { "/go" } };
 
 		var patterns = command.GetCommandPatterns().ToList();
 

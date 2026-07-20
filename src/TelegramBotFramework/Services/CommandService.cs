@@ -38,8 +38,31 @@ private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations 
 
     public async Task<Models.Command?> GetCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
-        var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
-        return await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
+    var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
+
+    // First try to get the command by its primary name
+    var command = await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
+
+    if (command != null)
+    {
+        return command;
+    }
+
+    // If not found, check if it's an alias
+    // Get all commands and check their aliases
+    var allCommands = await _commandRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+    if (allCommands != null)
+        {
+                        foreach (var cmd in allCommands)
+    {
+        if (cmd.Aliases.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+        {
+            return cmd;
+        }
+        }
+    }
+
+    return null;
     }
 
     public async Task<Models.Command> RegisterCommandAsync(Models.Command command, CancellationToken cancellationToken = default)

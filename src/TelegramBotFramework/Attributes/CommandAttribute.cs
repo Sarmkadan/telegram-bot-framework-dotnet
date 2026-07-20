@@ -22,6 +22,11 @@ public sealed class CommandAttribute : Attribute
     /// </summary>
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Optional list of aliases for this command (e.g. ["start", "begin"]).
+    /// </summary>
+    public string[] Aliases { get; set; } = Array.Empty<string>();
+
     public CommandAttribute(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
