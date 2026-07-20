@@ -6,7 +6,9 @@
 
 namespace TelegramBotFramework.Integration;
 
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 
 /// <summary>
 /// Represents a media item for sending in a media group.
@@ -23,6 +25,12 @@ public enum MediaType
     Audio,
     Document
 }
+
+/// <summary>
+/// Simple representation of a bot command (name + description) for the
+/// <c>setMyCommands</c> Telegram API method.
+/// </summary>
+public record BotCommand(string Command, string Description);
 
 /// <summary>
 /// Abstraction over the Telegram Bot API surface used by the framework.
@@ -73,4 +81,9 @@ public interface ITelegramApiClient
 
     /// <summary>Long-polls Telegram for new updates starting at <paramref name="offset"/>.</summary>
     Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = 30);
+
+    /// <summary>Sets the list of bot commands shown in the Telegram UI.</summary>
+    /// <param name="commands">Collection of command name / description pairs.</param>
+    /// <returns>True if the request succeeded, false otherwise.</returns>
+    Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands);
 }
