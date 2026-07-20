@@ -428,33 +428,43 @@ public sealed class WebhookHandlerTests
 	update.Should().BeNull();
 	}
 
-	[Fact]
-	public void ValidateWebhookRequest_WithMatchingSignature_ReturnsTrue()
-	{
-		const string payload = "{\"update_id\":1}";
-		const string secretKey = "my-secret";
-		var signature = Utilities.CryptoUtility.ComputeHmacSHA256(payload, secretKey);
 
-		var valid = _handler.ValidateWebhookRequest(payload, signature, secretKey);
+	[Fact]
+	public void ValidateSecretToken_WithMatchingTokens_ReturnsTrue()
+	{
+		const string secretToken = "my-secret-token";
+
+		var valid = _handler.ValidateSecretToken(secretToken, secretToken);
 
 		valid.Should().BeTrue();
 	}
 
 	[Fact]
-	public void ValidateWebhookRequest_WithWrongSignature_ReturnsFalse()
+	public void ValidateSecretToken_WithWrongToken_ReturnsFalse()
 	{
-		const string payload = "{\"update_id\":1}";
+		const string correctToken = "my-secret-token";
+		const string wrongToken = "wrong-token";
 
-		var valid = _handler.ValidateWebhookRequest(payload, "wrong-sig", "my-secret");
+		var valid = _handler.ValidateSecretToken(wrongToken, correctToken);
 
 		valid.Should().BeFalse();
 	}
 
 	[Fact]
-	public void ValidateWebhookRequest_WithNoSecretConfigured_ReturnsTrue()
+	public void ValidateSecretToken_WithNoSecretConfigured_ReturnsTrue()
 	{
-		var valid = _handler.ValidateWebhookRequest("{}", "any-sig", secretKey: null);
-	valid.Should().BeTrue();
+		var valid = _handler.ValidateSecretToken("any-token", configuredSecret: null);
+		valid.Should().BeTrue();
+	}
+
+	[Fact]
+	public void ValidateSecretToken_WithMissingHeader_ReturnsFalse()
+	{
+		const string configuredSecret = "my-secret";
+
+		var valid = _handler.ValidateSecretToken(secretTokenHeader: null, configuredSecret);
+
+		valid.Should().BeFalse();
 	}
 }
 
