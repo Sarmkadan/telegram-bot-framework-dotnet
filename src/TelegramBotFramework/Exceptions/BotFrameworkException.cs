@@ -158,3 +158,23 @@ public sealed class ConfigurationException : BotFrameworkException
     {
     }
 }
+
+/// <summary>
+/// Thrown when a duplicate update is detected to prevent double-processing.
+/// </summary>
+public sealed class DuplicateUpdateException : BotFrameworkException
+{
+    public long? UpdateId { get; set; }
+
+    public DuplicateUpdateException(string message, long? updateId = null)
+        : base(message, "DUPLICATE_UPDATE")
+    {
+        UpdateId = updateId;
+    }
+
+    public DuplicateUpdateException(string message, long? updateId, Exception innerException)
+        : base(message, "DUPLICATE_UPDATE", innerException)
+    {
+        UpdateId = updateId;
+    }
+}
