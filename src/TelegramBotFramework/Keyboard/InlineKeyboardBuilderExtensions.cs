@@ -1,5 +1,7 @@
 #nullable enable
 
+using TelegramBotFramework.Utilities;
+
 namespace TelegramBotFramework.Keyboard;
 
 /// <summary>
@@ -235,6 +237,123 @@ public static class InlineKeyboardBuilderExtensions
                 builder.NewRow();
             }
         }
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds a callback button with HMAC-SHA256 signature protection.
+    /// The callback data will include a truncated HMAC signature to prevent forgery.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="text">Button label shown to the user.</param>
+    /// <param name="data">The original callback data payload.</param>
+    /// <param name="secret">Secret key for HMAC signing.</param>
+    /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if builder, text, data, or secret is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if the resulting signed callback data exceeds Telegram's 64-byte limit.
+    /// </exception>
+    public static InlineKeyboardBuilder AddSignedButton(this InlineKeyboardBuilder builder, string text, string data, string secret)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        ArgumentException.ThrowIfNullOrWhiteSpace(data);
+        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+
+        var signedData = CallbackDataSigner.Sign(data, secret);
+        return builder.AddButton(text, signedData);
+    }
+
+    /// <summary>
+    /// Adds multiple signed callback buttons in a single fluent call.
+    /// Each button's callback data will include an HMAC signature.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="secret">Secret key for HMAC signing.</param>
+    /// <param name="buttons">Collection of (text, data) pairs to sign.</param>
+    /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if builder, secret, or buttons is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if any resulting signed callback data exceeds Telegram's 64-byte limit.
+    /// </exception>
+    public static InlineKeyboardBuilder AddSignedButtons(this InlineKeyboardBuilder builder, string secret, IEnumerable<(string Text, string Data)> buttons)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+        ArgumentNullException.ThrowIfNull(buttons);
+
+        foreach (var (text, data) in buttons)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(text);
+            ArgumentException.ThrowIfNullOrWhiteSpace(data);
+
+            var signedData = CallbackDataSigner.Sign(data, secret);
+            builder.AddButton(text, signedData);
+        }
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds a signed confirmation row with ✅ Confirm and ❌ Cancel buttons.
+    /// Both buttons include HMAC signatures for security.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="secret">Secret key for HMAC signing.</param>
+    /// <param name="confirmCallbackData">Callback data for the confirm button (default: "confirm").</param>
+    /// <param name="cancelCallbackData">Callback data for the cancel button (default: "cancel").</param>
+    /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if builder or secret is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if secret is empty or whitespace.</exception>
+    public static InlineKeyboardBuilder AddSignedConfirmationRow(this InlineKeyboardBuilder builder, string secret, string confirmCallbackData = "confirm", string cancelCallbackData = "cancel")
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+
+        return builder
+            .AddSignedButton("✅ Confirm", confirmCallbackData, secret)
+            .AddSignedButton("❌ Cancel", cancelCallbackData, secret);
+    }
+
+    /// <summary>
+    /// Adds a signed pagination row with previous/next navigation buttons.
+    /// All buttons include HMAC signatures for security.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="secret">Secret key for HMAC signing.</param>
+    /// <param name="hasPrevious">Whether previous page is available.</param>
+    /// <param name="hasNext">Whether next page is available.</param>
+    /// <param name="pageNumber">Current page number (displayed in the center).</param>
+    /// <param name="baseCallbackData">Base callback data for pagination (e.g., "page_").</param>
+    /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if builder or secret is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if secret is empty or whitespace.</exception>
+    public static InlineKeyboardBuilder AddSignedPaginationRow(
+        this InlineKeyboardBuilder builder,
+        string secret,
+        bool hasPrevious,
+        bool hasNext,
+        int pageNumber,
+        string baseCallbackData = "page")
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+
+        if (hasPrevious)
+        {
+            var prevData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber - 1}", secret);
+            builder.AddButton("⬅️ Previous", prevData);
+        }
+
+        var currentData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber}_current", secret);
+        builder.AddButton($"📄 Page {pageNumber}", currentData);
+
+        if (hasNext)
+        {
+            var nextData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber + 1}", secret);
+            builder.AddButton("Next ➡️", nextData);
+        }
+
         return builder;
     }
 }
