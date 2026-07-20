@@ -45,6 +45,7 @@ public static class DependencyInjectionSetup
         services.AddSingleton<Services.IMenuService, Services.MenuService>();
         services.AddSingleton<Services.IMessageService, Services.MessageService>();
 services.AddSingleton<Services.ILocalizationService, Services.LocalizationService>();
+    services.AddSingleton<Services.IScheduledMessageService, Services.ScheduledMessageService>();
         services.AddSingleton<Services.IBotOrchestrator, Services.BotOrchestrator>();
 
         // Register built-in command handlers
