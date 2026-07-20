@@ -9,6 +9,7 @@ namespace TelegramBotFramework.Integration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -329,6 +330,69 @@ public sealed class TelegramApiClient : ITelegramApiClient
             return Array.Empty<JsonElement>();
         }
     }
+
+    /// <summary>
+    /// Gets information about a file stored on Telegram servers.
+    /// </summary>
+    /// <param name="fileId">File identifier to get info for</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>File information including file path and size, or null if not found</returns>
+    public async Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(fileId))
+            throw new ArgumentException("File ID cannot be empty", nameof(fileId));
+
+        try
+        {
+            var client = _httpClientFactory.GetTelegramClient();
+            var url = $"bot{_botToken}/getFile?file_id={Uri.EscapeDataString(fileId)}";
+
+            var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("ok", out var okElement) && okElement.GetBoolean() &&
+                    root.TryGetProperty("result", out var resultElement))
+                {
+                    var fileIdResult = resultElement.TryGetProperty("file_id", out var fileIdProp) ? fileIdProp.GetString() : null;
+                    var fileUniqueId = resultElement.TryGetProperty("file_unique_id", out var fileUniqueIdProp) ? fileUniqueIdProp.GetString() : null;
+                    var filePath = resultElement.TryGetProperty("file_path", out var filePathProp) ? filePathProp.GetString() : null;
+                    var fileSize = resultElement.TryGetProperty("file_size", out var fileSizeProp) ? fileSizeProp.GetInt64() : 0L;
+                    var createdAt = resultElement.TryGetProperty("created_at", out var createdAtProp) ?
+                        DateTimeOffset.FromUnixTimeSeconds(createdAtProp.GetInt64()) : DateTimeOffset.UtcNow;
+
+                    if (filePath != null)
+                    {
+                        return new FileInfoResult(
+                            fileIdResult ?? fileId,
+                            fileUniqueId ?? string.Empty,
+                            filePath,
+                            fileSize,
+                            createdAt
+                        );
+                    }
+                }
+            }
+
+            _logger.LogWarning("Failed to get file info for file_id: {FileId}, Status: {StatusCode}", fileId, response.StatusCode);
+            return null;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("GetFile operation was cancelled for file_id: {FileId}", fileId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting file info for file_id: {FileId}", fileId);
+            return null;
+        }
+    }
+
 
     private string GetMediaMethod(MediaType type)
     {

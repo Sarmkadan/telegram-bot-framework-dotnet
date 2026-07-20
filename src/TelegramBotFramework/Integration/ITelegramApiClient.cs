@@ -6,7 +6,9 @@
 
 namespace TelegramBotFramework.Integration;
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Threading;
 
@@ -86,4 +88,18 @@ public interface ITelegramApiClient
     /// <param name="commands">Collection of command name / description pairs.</param>
     /// <returns>True if the request succeeded, false otherwise.</returns>
     Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands);
+
+/// <summary>
+/// Gets information about a file stored on Telegram servers.
+/// </summary>
+/// <param name="fileId">File identifier to get info for</param>
+/// <param name="cancellationToken">Cancellation token</param>
+/// <returns>File information including file path and size, or null if not found</returns>
+Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default);
+
 }
+
+/// <summary>
+/// File information returned by Telegram API's getFile method.
+/// </summary>
+public record FileInfoResult(string FileId, string FileUniqueId, string FilePath, long FileSize, DateTimeOffset CreatedAt);
