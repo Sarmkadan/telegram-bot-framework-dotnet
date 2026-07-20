@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// ====================================================================
 
 namespace TelegramBotFramework.Integration;
 
@@ -166,6 +166,78 @@ public sealed class TelegramApiClient : ITelegramApiClient
     }
 
     /// <summary>
+    /// Sends a media group (album) to a chat.
+    /// </summary>
+    /// <param name="chatId">Target chat identifier</param>
+    /// <param name="items">List of media items (2-10 items)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
+    public async Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default)
+    {
+        if (!ValidationUtility.IsValidTelegramChatId(chatId))
+            throw new ArgumentException("Invalid chat ID", nameof(chatId));
+
+        if (items == null || items.Count < 2 || items.Count > 10)
+            throw new ArgumentException("Must provide 2-10 media items", nameof(items));
+
+        if (items.Any(item => item == null || string.IsNullOrWhiteSpace(item.FileIdOrUrl)))
+            throw new ArgumentException("Each item must have a valid FileIdOrUrl", nameof(items));
+
+        try
+        {
+            var client = _httpClientFactory.GetTelegramClient();
+            var messageIds = new List<int>();
+
+            foreach (var item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var method = GetMediaMethod(item.Type);
+                var payload = CreateMediaPayload(chatId, item);
+
+                var json = JsonUtility.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var url = $"bot{_botToken}/{method}";
+                var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                    using var doc = JsonDocument.Parse(responseContent);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("ok", out var okElement) && okElement.GetBoolean() &&
+                        root.TryGetProperty("result", out var resultElement) &&
+                        resultElement.TryGetProperty("message_id", out var messageIdElement))
+                    {
+                        messageIds.Add(messageIdElement.GetInt32());
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                    _logger.LogWarning("Media item send failed: Type={Type}, Status={StatusCode}, Error={Error}",
+                        item.Type, response.StatusCode, errorContent);
+                }
+            }
+
+            _logger.LogInformation("Sent media group with {Count} items to chat {ChatId}", items.Count, chatId);
+            return messageIds;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Media group send operation was cancelled");
+            return new List<int>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending media group to Telegram API");
+            return new List<int>();
+        }
+    }
+
+    /// <summary>
     /// Gets information about the bot itself.
     /// </summary>
     public async Task<string?> GetMeAsync()
@@ -237,6 +309,45 @@ public sealed class TelegramApiClient : ITelegramApiClient
             _logger.LogError(ex, "Failed to parse getUpdates response");
             return Array.Empty<JsonElement>();
         }
+    }
+
+    private string GetMediaMethod(MediaType type)
+    {
+        return type switch
+        {
+            MediaType.Photo => "sendPhoto",
+            MediaType.Video => "sendVideo",
+            MediaType.Audio => "sendAudio",
+            MediaType.Document => "sendDocument",
+            _ => "sendPhoto"
+        };
+    }
+
+    private object CreateMediaPayload(long chatId, MediaGroupItem item)
+    {
+        var payload = new Dictionary<string, object> { { "chat_id", chatId } };
+
+        if (item.Caption != null)
+        {
+            payload["caption"] = item.Caption;
+        }
+
+        // Telegram API expects media to be sent as file_id or URL
+        payload[GetMediaFieldName(item.Type)] = item.FileIdOrUrl;
+
+        return payload;
+    }
+
+    private string GetMediaFieldName(MediaType type)
+    {
+        return type switch
+        {
+            MediaType.Photo => "photo",
+            MediaType.Video => "video",
+            MediaType.Audio => "audio",
+            MediaType.Document => "document",
+            _ => "photo"
+        };
     }
 
     private async Task<bool> SendApiRequestAsync<T>(string method, T payload) where T : class

@@ -193,4 +193,18 @@ public interface IMessageService
         string[] options,
         bool allowsMultipleAnswers = false,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a media group (album) to a chat.
+    /// </summary>
+    /// <param name="chatId">Target chat identifier</param>
+    /// <param name="items">List of media items (2-10 items)</param>
+    /// <param name="caption">Optional caption for the media group</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of created message entities if successful, null otherwise</returns>
+    Task<IList<Models.Message>?> SendMediaGroupAsync(
+        long chatId,
+        IList<Integration.MediaGroupItem> items,
+        string? caption = null,
+        CancellationToken cancellationToken = default);
 }

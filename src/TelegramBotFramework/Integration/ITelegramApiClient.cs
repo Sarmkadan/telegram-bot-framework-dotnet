@@ -2,11 +2,27 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 namespace TelegramBotFramework.Integration;
 
 using System.Text.Json;
+
+/// <summary>
+/// Represents a media item for sending in a media group.
+/// </summary>
+public record MediaGroupItem(MediaType Type, string FileIdOrUrl, string? Caption = null);
+
+/// <summary>
+/// Media type for media group items.
+/// </summary>
+public enum MediaType
+{
+    Photo,
+    Video,
+    Audio,
+    Document
+}
 
 /// <summary>
 /// Abstraction over the Telegram Bot API surface used by the framework.
@@ -33,6 +49,15 @@ public interface ITelegramApiClient
 
     /// <summary>Sends a poll to a chat.</summary>
     Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false);
+
+    /// <summary>
+    /// Sends a media group (album) to a chat.
+    /// </summary>
+    /// <param name="chatId">Target chat identifier</param>
+    /// <param name="items">List of media items (2-10 items)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
+    Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default);
 
     /// <summary>Returns the bot username via <c>getMe</c>, or null on failure.</summary>
     Task<string?> GetMeAsync();
