@@ -21,6 +21,7 @@ public sealed class CommandServiceTests
 {
     private readonly Mock<ICommandRepository> _mockRepository = new();
     private readonly Mock<IUserService> _mockUserService = new();
+    private readonly Mock<ICommandUsageTracker> _mockCommandUsageTracker = new();
     private readonly Mock<ILogger<CommandService>> _mockLogger = new();
     private readonly CommandService _service;
 
@@ -29,7 +30,7 @@ public sealed class CommandServiceTests
     /// </summary>
     public CommandServiceTests()
     {
-        _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockLogger.Object);
+        _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockCommandUsageTracker.Object, _mockLogger.Object);
     }
 
     /// <summary>

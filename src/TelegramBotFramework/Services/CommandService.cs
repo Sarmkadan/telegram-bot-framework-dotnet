@@ -15,6 +15,7 @@ public sealed class CommandService : ICommandService
 {
     private readonly Repositories.ICommandRepository _commandRepository;
     private readonly IUserService _userService;
+    private readonly ICommandUsageTracker _commandUsageTracker;
     private readonly Microsoft.Extensions.Logging.ILogger<CommandService> _logger;
     private readonly Dictionary<string, (int Count, DateTime WindowStart)> _commandExecutionRateLimiter = new();
     private readonly object _rateLimitLockObj = new();
@@ -26,10 +27,12 @@ private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations 
     public CommandService(
         Repositories.ICommandRepository commandRepository,
         IUserService userService,
+        ICommandUsageTracker commandUsageTracker,
         Microsoft.Extensions.Logging.ILogger<CommandService> logger)
     {
         _commandRepository = commandRepository ?? throw new ArgumentNullException(nameof(commandRepository));
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+        _commandUsageTracker = commandUsageTracker ?? throw new ArgumentNullException(nameof(commandUsageTracker));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -116,6 +119,10 @@ private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations 
 
             _lastCommandInvocations[key] = DateTime.UtcNow;
         }
+
+		// Record command usage statistics
+		_commandUsageTracker.RecordCommandInvocation(context.Command.Name);
+
 
 
             context.Command.RecordExecution();

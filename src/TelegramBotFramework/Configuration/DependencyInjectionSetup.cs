@@ -40,6 +40,7 @@ public static class DependencyInjectionSetup
         // Register services as singletons
         services.AddSingleton<Services.IUserService, Services.UserService>();
         services.AddSingleton<Services.ICommandService, Services.CommandService>();
+	services.AddSingleton<Services.ICommandUsageTracker, Services.CommandUsageTracker>();
         services.AddSingleton<Services.ISessionService, Services.SessionService>();
         services.AddSingleton<Services.IMenuService, Services.MenuService>();
         services.AddSingleton<Services.IMessageService, Services.MessageService>();
