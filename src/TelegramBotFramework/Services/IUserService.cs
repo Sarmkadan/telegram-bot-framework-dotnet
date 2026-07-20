@@ -133,6 +133,13 @@ public interface ISessionService
     /// </summary>
     /// <returns>The number of sessions that were expired.</returns>
     Task<int> ExpireInactiveSessionsAsync(TimeSpan inactivityThreshold, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Prunes all sessions that have already expired (based on ExpiresAt timestamp).
+    /// This method should be called periodically to clean up expired sessions.
+    /// </summary>
+    /// <returns>The number of sessions that were pruned.</returns>
+    Task<int> PruneExpiredSessions(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

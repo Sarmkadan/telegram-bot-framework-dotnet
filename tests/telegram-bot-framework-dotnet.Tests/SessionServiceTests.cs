@@ -504,4 +504,63 @@ public sealed class SessionServiceTests
         result.Should().Be(2);
         _mockSessionRepository.Verify(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
+
+    /// <summary>
+    /// Tests that <see cref="SessionService.PruneExpiredSessions"/> prunes all sessions that have already expired
+    /// based on their ExpiresAt timestamp and returns the count of pruned sessions.
+    /// </summary>
+    /// <returns>The number of sessions that were pruned.</returns>
+    [Fact]
+    public async Task PruneExpiredSessions_WithExpiredSessions_PrunesThemAndReturnsCount()
+    {
+        // Arrange
+        var now = DateTime.UtcNow;
+        var sessions = new List<UserSession>
+        {
+            new UserSession { SessionId = "session-1", UserId = 1, IsActive = true, ExpiresAt = now.AddDays(-1) }, // Expired
+            new UserSession { SessionId = "session-2", UserId = 2, IsActive = true, ExpiresAt = now.AddDays(1) }, // Not expired
+            new UserSession { SessionId = "session-3", UserId = 3, IsActive = true, ExpiresAt = now.AddDays(-2) } // Expired
+        };
+
+        _mockSessionRepository
+            .Setup(r => r.GetExpiredAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessions.Where(s => s.IsExpired()).ToList());
+        _mockSessionRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserSession s, CancellationToken _) => s);
+
+        // Act
+        var result = await _sessionService.PruneExpiredSessions().ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be(2);
+        _mockSessionRepository.Verify(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _mockSessionRepository.Verify(r => r.GetExpiredAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SessionService.PruneExpiredSessions"/> returns 0 when there are no expired sessions.
+    /// </summary>
+    /// <returns>The number of sessions pruned (should be 0).</returns>
+    [Fact]
+    public async Task PruneExpiredSessions_WithNoExpiredSessions_ReturnsZero()
+    {
+        // Arrange
+        var sessions = new List<UserSession>
+        {
+            new UserSession { SessionId = "session-1", UserId = 1, IsActive = true, ExpiresAt = DateTime.UtcNow.AddDays(1) },
+            new UserSession { SessionId = "session-2", UserId = 2, IsActive = true, ExpiresAt = DateTime.UtcNow.AddDays(2) }
+        };
+
+        _mockSessionRepository
+            .Setup(r => r.GetExpiredAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UserSession>());
+
+        // Act
+        var result = await _sessionService.PruneExpiredSessions().ConfigureAwait(false);
+
+        // Assert
+        result.Should().Be(0);
+        _mockSessionRepository.Verify(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

@@ -125,6 +125,22 @@ public sealed class SessionService : ISessionService
         return count;
     }
 
+    public async Task<int> PruneExpiredSessions(CancellationToken cancellationToken = default)
+    {
+        var expiredSessions = await _sessionRepository.GetExpiredAsync(cancellationToken).ConfigureAwait(false);
+        var count = 0;
+
+        foreach (var session in expiredSessions)
+        {
+            session.State = Models.SessionState.Expired;
+            await _sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+            count++;
+        }
+
+        _logger.LogInformation("Pruned {Count} expired sessions", count);
+        return count;
+    }
+
     public async Task<Models.UserSession?> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
         return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
