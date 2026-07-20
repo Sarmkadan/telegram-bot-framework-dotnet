@@ -3,6 +3,8 @@
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
 // =============================================================================
+using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace TelegramBotFramework.Services;
 
@@ -19,6 +21,7 @@ public sealed class CommandService : ICommandService
     private DateTime _lastCleanup = DateTime.UtcNow;
     private static readonly TimeSpan RateLimitWindow = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
+private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations = new();
 
     public CommandService(
         Repositories.ICommandRepository commandRepository,
@@ -93,6 +96,27 @@ public sealed class CommandService : ICommandService
                 context.AddError("Insufficient permissions to execute this command");
                 return context;
             }
+
+        // Check cooldown
+        var cooldownAttribute = context.Command.GetType()
+            .GetCustomAttributes(typeof(Attributes.CooldownAttribute), false)
+            .FirstOrDefault() as Attributes.CooldownAttribute;
+
+        if (cooldownAttribute != null)
+        {
+            var key = $"{context.UserId}:{context.Command.Name}";
+            var lastInvocation = _lastCommandInvocations.GetValueOrDefault(key);
+            var cooldownPeriod = TimeSpan.FromSeconds(cooldownAttribute.Seconds);
+
+            if (DateTime.UtcNow - lastInvocation < cooldownPeriod)
+            {
+                context.AddError($"Command {context.Command.Name} is on cooldown. Please wait {cooldownAttribute.Seconds} seconds.");
+                return context;
+            }
+
+            _lastCommandInvocations[key] = DateTime.UtcNow;
+        }
+
 
             context.Command.RecordExecution();
             await _commandRepository.UpdateAsync(context.Command, cancellationToken).ConfigureAwait(false);
