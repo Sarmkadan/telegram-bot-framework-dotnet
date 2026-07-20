@@ -179,4 +179,11 @@ public interface IMessageService
     Task<int> GetUnprocessedMessageCountAsync(CancellationToken cancellationToken = default);
 
     Task ArchiveOldMessagesAsync(int daysOld = 30, CancellationToken cancellationToken = default);
+
+    Task<Models.Message?> SendPollAsync(
+        long chatId,
+        string question,
+        string[] options,
+        bool allowsMultipleAnswers = false,
+        CancellationToken cancellationToken = default);
 }

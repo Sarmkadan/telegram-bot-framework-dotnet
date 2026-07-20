@@ -116,7 +116,8 @@ public enum MessageType
     Document = 4,
     Sticker = 5,
     Location = 6,
-    Contact = 7
+    Contact = 7,
+    Poll = 8
 }
 
 public enum MessageStatus

@@ -12,13 +12,16 @@ namespace TelegramBotFramework.Services;
 public sealed class MessageService : IMessageService
 {
     private readonly Repositories.IMessageRepository _messageRepository;
+    private readonly Integration.ITelegramApiClient _telegramApiClient;
     private readonly Microsoft.Extensions.Logging.ILogger<MessageService> _logger;
 
     public MessageService(
         Repositories.IMessageRepository messageRepository,
+        Integration.ITelegramApiClient telegramApiClient,
         Microsoft.Extensions.Logging.ILogger<MessageService> logger)
     {
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
+        _telegramApiClient = telegramApiClient ?? throw new ArgumentNullException(nameof(telegramApiClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -112,5 +115,77 @@ public sealed class MessageService : IMessageService
         }
 
         _logger.LogInformation("Archived {Count} messages older than {Days} days", messagesForArchiving.Count, daysOld);
+    }
+
+    /// <summary>
+    /// Sends a poll to a chat using the bot's message sending pipeline.
+    /// </summary>
+    /// <param name="chatId">Target chat identifier</param>
+    /// <param name="question">Poll question (1-256 characters)</param>
+    /// <param name="options">List of answer options (2-10 options, each 1-100 characters)</param>
+    /// <param name="allowsMultipleAnswers">Whether users can select multiple answers</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Created message entity if successful, null otherwise</returns>
+    public async Task<Models.Message?> SendPollAsync(
+        long chatId,
+        string question,
+        string[] options,
+        bool allowsMultipleAnswers = false,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate inputs
+        if (chatId <= 0)
+            throw new ArgumentException("Chat ID must be positive", nameof(chatId));
+
+        if (string.IsNullOrWhiteSpace(question) || question.Length > 256)
+            throw new ArgumentException("Question must be 1-256 characters", nameof(question));
+
+        if (options == null || options.Length < 2 || options.Length > 10)
+            throw new ArgumentException("Must provide 2-10 options", nameof(options));
+
+        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > 100))
+            throw new ArgumentException("Each option must be 1-100 characters", nameof(options));
+
+        try
+        {
+            // Send poll using the bot's API client
+            var messageId = await _telegramApiClient.SendPollAsync(
+                chatId,
+                question,
+                options,
+                allowsMultipleAnswers
+            ).ConfigureAwait(false);
+
+            if (messageId.HasValue)
+            {
+                // Create and store message record
+                var message = new Models.Message
+                {
+                    ChatId = chatId,
+                    Content = question,
+                    Type = Models.MessageType.Poll,
+                    Status = Models.MessageStatus.Processed,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "poll_type", "quiz" },
+                        { "options", options },
+                        { "allows_multiple_answers", allowsMultipleAnswers },
+                        { "message_id", messageId.Value }
+                    }
+                };
+
+                var created = await _messageRepository.CreateAsync(message, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("Poll sent to chat {ChatId}: {Question}", chatId, question);
+                return created;
+            }
+
+            _logger.LogWarning("Failed to send poll to chat {ChatId}", chatId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending poll to chat {ChatId}", chatId);
+            return null;
+        }
     }
 }

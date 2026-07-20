@@ -99,6 +99,73 @@ public sealed class TelegramApiClient : ITelegramApiClient
     }
 
     /// <summary>
+    /// Sends a poll to a chat.
+    /// </summary>
+    /// <param name="chatId">Target chat identifier</param>
+    /// <param name="question">Poll question (1-256 characters)</param>
+    /// <param name="options">List of answer options (2-10 options, each 1-100 characters)</param>
+    /// <param name="allowsMultipleAnswers">Whether users can select multiple answers</param>
+    /// <returns>Message ID of the sent poll if successful, null otherwise</returns>
+    public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false)
+    {
+        if (!ValidationUtility.IsValidTelegramChatId(chatId))
+            throw new ArgumentException("Invalid chat ID", nameof(chatId));
+
+        if (string.IsNullOrWhiteSpace(question) || question.Length > 256)
+            throw new ArgumentException("Question must be 1-256 characters", nameof(question));
+
+        if (options == null || options.Length < 2 || options.Length > 10)
+            throw new ArgumentException("Must provide 2-10 options", nameof(options));
+
+        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > 100))
+            throw new ArgumentException("Each option must be 1-100 characters", nameof(options));
+
+        var payload = new
+        {
+            chat_id = chatId,
+            question = question,
+            options = options,
+            allows_multiple_answers = allowsMultipleAnswers
+        };
+
+        try
+        {
+            var client = _httpClientFactory.GetTelegramClient();
+            var url = $"bot{_botToken}/sendPoll";
+
+            var json = JsonUtility.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync(url, content).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("ok", out var okElement) && okElement.GetBoolean() &&
+                    root.TryGetProperty("result", out var resultElement) &&
+                    resultElement.TryGetProperty("message_id", out var messageIdElement))
+                {
+                    return messageIdElement.GetInt32();
+                }
+            }
+
+            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            _logger.LogWarning("Poll send failed: Status: {StatusCode}, Error: {Error}",
+                response.StatusCode, errorContent);
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending poll to Telegram API");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Gets information about the bot itself.
     /// </summary>
     public async Task<string?> GetMeAsync()

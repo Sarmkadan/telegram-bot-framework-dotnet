@@ -31,6 +31,9 @@ public interface ITelegramApiClient
     /// <summary>Deletes a message from a chat.</summary>
     Task<bool> DeleteMessageAsync(long chatId, int messageId);
 
+    /// <summary>Sends a poll to a chat.</summary>
+    Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false);
+
     /// <summary>Returns the bot username via <c>getMe</c>, or null on failure.</summary>
     Task<string?> GetMeAsync();
 
