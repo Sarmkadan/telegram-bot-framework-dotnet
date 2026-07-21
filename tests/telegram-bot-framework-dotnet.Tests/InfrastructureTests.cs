@@ -215,6 +215,270 @@ public sealed class LocalCacheProviderTests
         stats.MissCount.Should().BeGreaterThanOrEqualTo(1);
         stats.SetCount.Should().BeGreaterThanOrEqualTo(1);
     }
+
+    [Fact]
+    public async Task GetAsync_WithNullKey_ReturnsDefaultValue()
+    {
+        // Act
+        var result = await _cache.GetAsync<string>(null!).ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAsync_WithEmptyKey_ReturnsDefaultValue()
+    {
+        // Act
+        var result = await _cache.GetAsync<string>(string.Empty).ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAsync_WithWhitespaceKey_ReturnsDefaultValue()
+    {
+        // Act
+        var result = await _cache.GetAsync<string>("   ").ConfigureAwait(false);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetAsync_WithNullKey_DoesNotThrow()
+    {
+        // Act & Assert
+        await _cache.SetAsync<object>(null!, new object()).ConfigureAwait(false);
+
+        // Should not throw
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.SetCount.Should().Be(0); // No entries should be set
+    }
+
+    [Fact]
+    public async Task SetAsync_WithEmptyKey_DoesNotThrow()
+    {
+        // Act & Assert
+        await _cache.SetAsync(string.Empty, "value").ConfigureAwait(false);
+
+        // Should not throw
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.SetCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SetAsync_WithWhitespaceKey_DoesNotThrow()
+    {
+        // Act & Assert
+        await _cache.SetAsync("   ", "value").ConfigureAwait(false);
+
+        // Should not throw
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.SetCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SetAsync_WithValidKey_StoresValue()
+    {
+        // Arrange
+        const string key = "valid_key";
+        const string value = "test_value";
+
+        // Act
+        await _cache.SetAsync(key, value).ConfigureAwait(false);
+
+        // Assert
+        var result = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        result.Should().Be(value);
+
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.SetCount.Should().Be(1);
+        stats.ItemCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task SetAsync_WithExpiration_StoresValueWithExpiration()
+    {
+        // Arrange
+        const string key = "expiring_key";
+        const string value = "expiring_value";
+        var expiration = TimeSpan.FromMilliseconds(100);
+
+        // Act
+        await _cache.SetAsync(key, value, expiration).ConfigureAwait(false);
+
+        // Assert - value should be retrievable immediately
+        var result = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        result.Should().Be(value);
+    }
+
+    [Fact]
+    public async Task ExpiryAfterTTL_ValueExpiresAfterTimeSpan()
+    {
+        // Arrange
+        const string key = "expiry_test_key";
+        const string value = "expiry_test_value";
+        var expiration = TimeSpan.FromMilliseconds(50);
+
+        await _cache.SetAsync(key, value, expiration).ConfigureAwait(false);
+
+        // Act - wait for expiration
+        await Task.Delay(100).ConfigureAwait(false);
+
+        // Assert - value should no longer be retrievable
+        var result = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        result.Should().BeNull();
+
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.ItemCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task OverwriteExistingKey_UpdatesValue()
+    {
+        // Arrange
+        const string key = "overwrite_key";
+        const string initialValue = "initial_value";
+        const string updatedValue = "updated_value";
+
+        await _cache.SetAsync(key, initialValue).ConfigureAwait(false);
+        var initialResult = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        initialResult.Should().Be(initialValue);
+
+        // Act - overwrite with new value
+        await _cache.SetAsync(key, updatedValue).ConfigureAwait(false);
+
+        // Assert - should return updated value
+        var updatedResult = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        updatedResult.Should().Be(updatedValue);
+
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.SetCount.Should().Be(2); // Two sets: initial and update
+    }
+
+    [Fact]
+    public async Task RemoveAsync_WithNonExistentKey_DoesNotThrow()
+    {
+        // Act & Assert
+        await _cache.RemoveAsync("nonexistent_key").ConfigureAwait(false);
+
+        // Should not throw
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.RemoveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task NullValues_HandledCorrectly()
+    {
+        // Arrange
+        const string key = "null_value_key";
+
+        // Act - set null value
+        await _cache.SetAsync<string>(key, null).ConfigureAwait(false);
+
+        // Assert - should be able to retrieve null
+        var result = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        result.Should().BeNull();
+
+        // Verify it exists
+        var exists = await _cache.ExistsAsync(key).ConfigureAwait(false);
+        exists.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ComplexObjectValues_AreStoredAndRetrieved()
+    {
+        // Arrange
+        const string key = "complex_object_key";
+        var complexObject = new TestCacheObject
+        {
+            Id = 123,
+            Name = "Test Object",
+            Values = new List<int> { 1, 2, 3 },
+            Metadata = new Dictionary<string, string>
+            {
+                { "key1", "value1" },
+                { "key2", "value2" }
+            }
+        };
+
+        // Act
+        await _cache.SetAsync(key, complexObject).ConfigureAwait(false);
+        var result = await _cache.GetAsync<TestCacheObject>(key).ConfigureAwait(false);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(complexObject.Id);
+        result.Name.Should().Be(complexObject.Name);
+        result.Values.Should().BeEquivalentTo(complexObject.Values);
+        result.Metadata.Should().BeEquivalentTo(complexObject.Metadata);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_WithExistingKey_RemovesValue()
+    {
+        // Arrange
+        const string key = "remove_key";
+        const string value = "remove_value";
+        await _cache.SetAsync(key, value).ConfigureAwait(false);
+
+        // Verify value exists
+        var beforeRemove = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        beforeRemove.Should().Be(value);
+
+        // Act
+        await _cache.RemoveAsync(key).ConfigureAwait(false);
+
+        // Assert - value should no longer exist
+        var afterRemove = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        afterRemove.Should().BeNull();
+
+        var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
+        stats.RemoveCount.Should().Be(1);
+        stats.ItemCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetOrCreateAsync_WithExpiration_StoresValueWithExpiration()
+    {
+        // Arrange
+        const string key = "get_or_create_expiring_key";
+
+        // Act - first call creates with expiration
+        var result1 = await _cache.GetOrCreateAsync(key, () => Task.FromResult("value1"), TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+        // Assert - result should be correct
+        result1.Should().Be("value1");
+
+        // Verify it was cached
+        var cached1 = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        cached1.Should().Be("value1");
+
+        // Wait for expiration
+        await Task.Delay(100).ConfigureAwait(false);
+
+        // Value should no longer be retrievable
+        var expiredValue = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        expiredValue.Should().BeNull();
+
+        // Factory should be called again since value expired
+        var result2 = await _cache.GetOrCreateAsync(key, () => Task.FromResult("value2")).ConfigureAwait(false);
+        result2.Should().Be("value2");
+
+        // Verify the new value was cached
+        var cached2 = await _cache.GetAsync<string>(key).ConfigureAwait(false);
+        cached2.Should().Be("value2");
+    }
+
+    private class TestCacheObject
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public List<int> Values { get; set; } = new();
+        public Dictionary<string, string> Metadata { get; set; } = new();
+    }
 }
 
 public sealed class EventBusTests
