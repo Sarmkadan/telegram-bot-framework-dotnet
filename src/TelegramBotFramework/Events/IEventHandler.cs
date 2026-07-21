@@ -85,6 +85,28 @@ public sealed class MessageReceivedEvent : EventBase
 }
 
 /// <summary>
+/// Example: Message edited event
+/// </summary>
+public sealed class MessageEditedEvent : EventBase
+{
+    public long ChatId { get; set; }
+    public long UserId { get; set; }
+    public string? MessageText { get; set; }
+    public DateTime MessageTimestamp { get; set; }
+    public DateTime? EditedTimestamp { get; set; }
+
+    public MessageEditedEvent(long chatId, long userId, string? messageText, DateTime? editedTimestamp = null, string? correlationId = null)
+        : base(correlationId)
+    {
+        ChatId = chatId;
+        UserId = userId;
+        MessageText = messageText;
+        MessageTimestamp = DateTime.UtcNow;
+        EditedTimestamp = editedTimestamp;
+    }
+}
+
+/// <summary>
 /// Example: User command executed event
 /// </summary>
 public sealed class CommandExecutedEvent : EventBase
