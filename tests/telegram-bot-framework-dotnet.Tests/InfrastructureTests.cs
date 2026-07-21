@@ -560,4 +560,236 @@ public sealed class ConversationFlowEngineTests
         // Verify history entries are internally consistent (no corrupted entries)
         history.All(s => s.UserId == TestUserId).Should().BeTrue();
     }
-}
+
+        [Fact]
+        public async Task StartFlowAsync_ValidFlowId_ReturnsFlowState()
+        {
+            // Act
+            var flowState = await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Assert
+            flowState.Should().NotBeNull();
+            flowState.FlowId.Should().Be(TestFlowId);
+            flowState.CurrentStepId.Should().Be("step1");
+            flowState.Status.Should().Be(FlowStateStatus.WaitingForInput);
+            flowState.UserId.Should().Be(TestUserId);
+            flowState.ChatId.Should().Be(TestChatId);
+        }
+
+        [Fact]
+        public async Task StartFlowAsync_InvalidFlowId_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var invalidFlowId = "nonExistentFlow";
+
+            // Act
+            Func<Task> act = () => _engine.StartFlowAsync(TestUserId, TestChatId, invalidFlowId);
+
+            // Assert
+            await act.Should().ThrowAsync<InvalidOperationException>();
+        }
+
+        [Fact]
+        public async Task StartFlowAsync_AbortsExistingFlowForUser()
+        {
+            // Arrange - start a different flow first
+            var existingFlowId = "existingFlow";
+            var existingFlow = new FlowDefinition
+            {
+                FlowId = existingFlowId,
+                Name = "Existing Flow",
+                InitialStepId = "step1",
+                Steps = new List<FlowStep>
+                {
+                    new() { StepId = "step1", Prompt = "Existing prompt", InputType = FlowInputType.Text, IsTerminal = true }
+                }
+            };
+            await _engine.RegisterFlowAsync(existingFlow);
+            await _engine.StartFlowAsync(TestUserId, TestChatId, existingFlowId).ConfigureAwait(false);
+
+            // Act - start a new flow, should abort the old one
+            var newFlowState = await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Assert
+            newFlowState.Should().NotBeNull();
+            newFlowState.FlowId.Should().Be(TestFlowId);
+        }
+
+        [Fact]
+        public async Task ProcessInputAsync_ValidInput_AdvancesToNextStep()
+        {
+            // Arrange - start flow
+            await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act - process first step
+            var result = await _engine.ProcessInputAsync(TestUserId, "valid input").ConfigureAwait(false);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsValid.Should().BeTrue();
+            result.IsCompleted.Should().BeFalse();
+            result.FlowState.CurrentStepId.Should().Be("step2");
+            result.Prompt.Should().Be("Prompt 2");
+        }
+
+        [Fact]
+        public async Task ProcessInputAsync_InvalidInput_ReturnsValidationError()
+        {
+            // Arrange - start flow
+            await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act - provide empty input (should fail validation)
+            var result = await _engine.ProcessInputAsync(TestUserId, "").ConfigureAwait(false);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsValid.Should().BeFalse();
+            result.IsCompleted.Should().BeFalse();
+            result.ValidationError.Should().NotBeNullOrEmpty();
+            result.Prompt.Should().Contain("Input cannot be empty");
+        }
+
+        [Fact]
+        public async Task ProcessInputAsync_EmptyInputKeepsCurrentStep()
+        {
+            // Arrange - start flow
+            var initialState = await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+            var initialStepId = initialState.CurrentStepId;
+
+            // Act - provide invalid input
+            await _engine.ProcessInputAsync(TestUserId, "").ConfigureAwait(false);
+
+            // Assert - step should remain the same
+            var currentState = await _engine.GetActiveFlowStateAsync(TestUserId).ConfigureAwait(false);
+            currentState.Should().NotBeNull();
+            currentState!.CurrentStepId.Should().Be(initialStepId);
+        }
+
+        [Fact]
+        public async Task CompleteFlow_ReachesTerminalStep()
+        {
+            // Arrange - start flow
+            await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act - complete all steps
+            var result1 = await _engine.ProcessInputAsync(TestUserId, "data1").ConfigureAwait(false);
+            result1.IsCompleted.Should().BeFalse();
+
+            var result2 = await _engine.ProcessInputAsync(TestUserId, "data2").ConfigureAwait(false);
+            result2.IsCompleted.Should().BeFalse();
+
+            var result3 = await _engine.ProcessInputAsync(TestUserId, "data3").ConfigureAwait(false);
+            result3.IsCompleted.Should().BeTrue();
+
+            // Assert
+            result3.IsValid.Should().BeTrue();
+            result3.IsCompleted.Should().BeTrue();
+            result3.Prompt.Should().Be("Completed.");
+        }
+
+        [Fact]
+        public async Task AbortFlowAsync_CancelsActiveFlow()
+        {
+            // Arrange - start flow
+            await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act
+            await _engine.AbortFlowAsync(TestUserId, "Test abort").ConfigureAwait(false);
+
+            // Assert
+            var state = await _engine.GetActiveFlowStateAsync(TestUserId).ConfigureAwait(false);
+            state.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetActiveFlowStateAsync_UserHasActiveFlow_ReturnsState()
+        {
+            // Arrange - start flow
+            var expectedState = await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act
+            var state = await _engine.GetActiveFlowStateAsync(TestUserId).ConfigureAwait(false);
+
+            // Assert
+            state.Should().NotBeNull();
+            state!.UserId.Should().Be(TestUserId);
+            state.FlowId.Should().Be(TestFlowId);
+            state.Should().BeEquivalentTo(expectedState);
+        }
+
+        [Fact]
+        public async Task GetActiveFlowStateAsync_UserHasNoActiveFlow_ReturnsNull()
+        {
+            // Act
+            var state = await _engine.GetActiveFlowStateAsync(999).ConfigureAwait(false);
+
+            // Assert
+            state.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task IsUserInFlowAsync_UserHasActiveFlow_ReturnsTrue()
+        {
+            // Arrange - start flow
+            await _engine.StartFlowAsync(TestUserId, TestChatId, TestFlowId).ConfigureAwait(false);
+
+            // Act
+            var isInFlow = await _engine.IsUserInFlowAsync(TestUserId).ConfigureAwait(false);
+
+            // Assert
+            isInFlow.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IsUserInFlowAsync_UserHasNoActiveFlow_ReturnsFalse()
+        {
+            // Act
+            var isInFlow = await _engine.IsUserInFlowAsync(999).ConfigureAwait(false);
+
+            // Assert
+            isInFlow.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetAllFlowsAsync_ReturnsRegisteredFlows()
+        {
+            // Act
+            var flows = await _engine.GetAllFlowsAsync().ConfigureAwait(false);
+
+            // Assert
+            flows.Should().NotBeEmpty();
+            flows.Should().ContainSingle(f => f.FlowId == TestFlowId);
+        }
+
+        [Fact]
+        public async Task GetFlowAsync_ExistingFlowId_ReturnsFlowDefinition()
+        {
+            // Act
+            var flow = await _engine.GetFlowAsync(TestFlowId).ConfigureAwait(false);
+
+            // Assert
+            flow.Should().NotBeNull();
+            flow!.FlowId.Should().Be(TestFlowId);
+        }
+
+        [Fact]
+        public async Task GetFlowAsync_NonExistentFlowId_ReturnsNull()
+        {
+            // Act
+            var flow = await _engine.GetFlowAsync("nonExistentFlow").ConfigureAwait(false);
+
+            // Assert
+            flow.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task UnregisterFlowAsync_RemovesFlowDefinition()
+        {
+            // Act
+            await _engine.UnregisterFlowAsync(TestFlowId).ConfigureAwait(false);
+
+            // Assert
+            var flow = await _engine.GetFlowAsync(TestFlowId).ConfigureAwait(false);
+            flow.Should().BeNull();
+        }
+    }
