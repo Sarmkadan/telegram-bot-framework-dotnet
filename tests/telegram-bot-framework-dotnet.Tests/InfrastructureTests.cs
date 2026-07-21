@@ -492,6 +492,12 @@ public sealed class EventBusTests
     }
 
     [Fact]
+    public void Subscribe_WithNullHandler_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => _bus.Subscribe<MessageReceivedEvent>(null!));
+    }
+
+    [Fact]
     public void Subscribe_RegistersHandlerAndReflectsInSubscriberCount()
     {
         var handler = new TestMessageHandler();
@@ -511,6 +517,31 @@ public sealed class EventBusTests
     }
 
     [Fact]
+    public void Subscribe_HandlersForDifferentEvents_AddsSeparately()
+    {
+        _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
+        _bus.Subscribe<CommandExecutedEvent>(new TestCommandHandler());
+
+        _bus.GetSubscriberCount<MessageReceivedEvent>().Should().Be(1);
+        _bus.GetSubscriberCount<CommandExecutedEvent>().Should().Be(1);
+    }
+
+    [Fact]
+    public void Unsubscribe_WithNullHandler_DoesNotThrow()
+    {
+        _bus.Unsubscribe<MessageReceivedEvent>(null!);
+    }
+
+    [Fact]
+    public void Unsubscribe_WithNonSubscribedHandler_DoesNotThrow()
+    {
+        var handler = new TestMessageHandler();
+        _bus.Unsubscribe<MessageReceivedEvent>(handler);
+
+        _bus.GetSubscriberCount<MessageReceivedEvent>().Should().Be(0);
+    }
+
+    [Fact]
     public void Unsubscribe_RemovesHandlerAndDecrementsCount()
     {
         var handler = new TestMessageHandler();
@@ -519,6 +550,26 @@ public sealed class EventBusTests
         _bus.Unsubscribe<MessageReceivedEvent>(handler);
 
         _bus.GetSubscriberCount<MessageReceivedEvent>().Should().Be(0);
+    }
+
+    [Fact]
+    public void Unsubscribe_RemovesOnlySpecifiedHandler()
+    {
+        var handler1 = new TestMessageHandler();
+        var handler2 = new TestMessageHandler();
+        _bus.Subscribe<MessageReceivedEvent>(handler1);
+        _bus.Subscribe<MessageReceivedEvent>(handler2);
+
+        _bus.Unsubscribe<MessageReceivedEvent>(handler1);
+
+        _bus.GetSubscriberCount<MessageReceivedEvent>().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task PublishAsync_WithNullEvent_ThrowsArgumentNullException()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => _bus.PublishAsync<MessageReceivedEvent>(null!)).ConfigureAwait(false);
     }
 
     [Fact]
@@ -558,6 +609,34 @@ public sealed class EventBusTests
     }
 
     [Fact]
+    public async Task PublishAsync_WithHandlerThatThrows_PropagatesException()
+    {
+        var handler = new FailingTestHandler();
+        _bus.Subscribe<MessageReceivedEvent>(handler);
+        var evt = new MessageReceivedEvent(1, 2, "fail");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _bus.PublishAsync(evt)).ConfigureAwait(false);
+    }
+
+    [Fact]
+    public async Task PublishAsync_WithMultipleHandlersAndOneFails_StillInvokesOtherHandlers()
+    {
+        var handler1 = new TestMessageHandler();
+        var handler2 = new FailingTestHandler();
+        var handler3 = new TestMessageHandler();
+        _bus.Subscribe<MessageReceivedEvent>(handler1);
+        _bus.Subscribe<MessageReceivedEvent>(handler2);
+        _bus.Subscribe<MessageReceivedEvent>(handler3);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _bus.PublishAsync(new MessageReceivedEvent(1, 2, "mixed"))).ConfigureAwait(false);
+
+        handler1.Received.Should().HaveCount(1);
+        handler3.Received.Should().HaveCount(1);
+    }
+
+    [Fact]
     public void Clear_RemovesAllSubscriptionsAcrossEventTypes()
     {
         _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
@@ -576,11 +655,72 @@ public sealed class EventBusTests
     }
 
     [Fact]
-    public async Task PublishAsync_LogsAtLeastOneInformationMessage()
+    public void GetSubscriberCount_AfterSubscribe_ReturnsCorrectCount()
+    {
+        _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
+        _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
+        _bus.Subscribe<CommandExecutedEvent>(new TestCommandHandler());
+
+        _bus.GetSubscriberCount<MessageReceivedEvent>().Should().Be(2);
+        _bus.GetSubscriberCount<CommandExecutedEvent>().Should().Be(1);
+    }
+
+    [Fact]
+    public void GetRegisteredEventTypes_ReturnsAllRegisteredTypes()
+    {
+        _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
+        _bus.Subscribe<CommandExecutedEvent>(new TestCommandHandler());
+
+        var types = _bus.GetRegisteredEventTypes().ToList();
+        types.Should().HaveCount(2);
+        types.Should().Contain(typeof(MessageReceivedEvent));
+        types.Should().Contain(typeof(CommandExecutedEvent));
+    }
+
+    [Fact]
+    public void GetRegisteredEventTypes_WhenNoSubscribers_ReturnsEmptyCollection()
+    {
+        var types = _bus.GetRegisteredEventTypes();
+        types.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task PublishAsync_EventWithCorrelationId_PassesCorrelationIdToHandlers()
+    {
+        var correlationId = Guid.NewGuid().ToString();
+        var handler = new CorrelationTestHandler();
+        var evt = new MessageReceivedEvent(1, 2, "test") { CorrelationId = correlationId };
+
+        _bus.Subscribe<MessageReceivedEvent>(handler);
+        await _bus.PublishAsync(evt).ConfigureAwait(false);
+
+        handler.LastCorrelationId.Should().Be(correlationId);
+    }
+
+    [Fact]
+    public async Task PublishAsync_ConcurrentPublishOperations_HandlesCorrectly()
+    {
+        var handler = new TestMessageHandler();
+        _bus.Subscribe<MessageReceivedEvent>(handler);
+
+        var tasks = new List<Task>();
+        for (int i = 0; i < 10; i++)
+        {
+            var evt = new MessageReceivedEvent(i, i + 100, $"Message {i}");
+            tasks.Add(_bus.PublishAsync(evt));
+        }
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        handler.Received.Should().HaveCount(10);
+    }
+
+    [Fact]
+    public void PublishAsync_LogsAtLeastOneInformationMessage()
     {
         _bus.Subscribe<MessageReceivedEvent>(new TestMessageHandler());
 
-        await _bus.PublishAsync(new MessageReceivedEvent(1, 2, "log-test")).ConfigureAwait(false);
+        _bus.PublishAsync(new MessageReceivedEvent(1, 2, "log-test"));
 
         _mockLogger.Verify(
             l => l.Log(
@@ -590,6 +730,23 @@ public sealed class EventBusTests
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void PublishAsync_WithNoSubscribers_LogsWarning()
+    {
+        var evt = new MessageReceivedEvent(1, 2, "no-handlers");
+
+        _bus.PublishAsync(evt);
+
+        _mockLogger.Verify(
+            l => l.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("MessageReceivedEvent")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            Times.Once);
     }
 
     private sealed class TestMessageHandler : IEventHandler<MessageReceivedEvent>
@@ -607,9 +764,23 @@ public sealed class EventBusTests
     {
         public Task HandleAsync(CommandExecutedEvent @event) => Task.CompletedTask;
     }
-}
 
-public sealed class SlidingWindowStrategyTests
+    private sealed class FailingTestHandler : IEventHandler<MessageReceivedEvent>
+    {
+        public Task HandleAsync(MessageReceivedEvent @event) => Task.FromException<InvalidOperationException>(new InvalidOperationException("Handler failed"));
+    }
+
+    private sealed class CorrelationTestHandler : IEventHandler<MessageReceivedEvent>
+    {
+        public string? LastCorrelationId { get; private set; }
+
+        public Task HandleAsync(MessageReceivedEvent @event)
+        {
+            LastCorrelationId = @event.CorrelationId;
+            return Task.CompletedTask;
+        }
+    }
+}public sealed class SlidingWindowStrategyTests
 {
     [Fact]
     public void IsRequestAllowed_WhenFirstRequest_ReturnsTrue()
