@@ -27,7 +27,7 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy
             var queue = _requests.GetOrAdd(identifier, _ => new ConcurrentQueue<DateTime>());
 
             // Default window: 1 minute, default limit: 30
-            while (queue.TryPeek(out var oldest) && oldest < now - TimeSpan.FromMinutes(1))
+            while (queue.TryPeek(out var oldest) && oldest <= now - TimeSpan.FromMinutes(1))
                 queue.TryDequeue(out _);
 
             if (queue.Count < 30)
@@ -49,7 +49,7 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy
             if (!_requests.TryGetValue(identifier, out var queue))
                 return 30;
 
-            while (queue.TryPeek(out var oldest) && oldest < now - TimeSpan.FromMinutes(1))
+            while (queue.TryPeek(out var oldest) && oldest <= now - TimeSpan.FromMinutes(1))
                 queue.TryDequeue(out _);
 
             return Math.Max(0, 30 - queue.Count);
@@ -66,7 +66,7 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy
             var now = DateTime.UtcNow;
             var queue = _requests.GetOrAdd(key, _ => new ConcurrentQueue<DateTime>());
 
-            while (queue.TryPeek(out var oldestRequest) && oldestRequest < now - interval)
+            while (queue.TryPeek(out var oldestRequest) && oldestRequest <= now - interval)
                 queue.TryDequeue(out _);
 
             if (queue.Count < limit)
