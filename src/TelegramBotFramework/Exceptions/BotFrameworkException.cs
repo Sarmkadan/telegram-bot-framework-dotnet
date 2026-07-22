@@ -13,6 +13,10 @@ public class BotFrameworkException : Exception
 {
     public string? ErrorCode { get; set; }
 
+    public BotFrameworkException()
+    {
+    }
+
     public BotFrameworkException(string message) : base(message)
     {
     }

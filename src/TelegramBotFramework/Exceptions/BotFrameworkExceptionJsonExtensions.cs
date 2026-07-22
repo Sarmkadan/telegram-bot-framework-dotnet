@@ -66,6 +66,10 @@ public static class BotFrameworkExceptionJsonExtensions
         {
             return null;
         }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -85,6 +89,11 @@ public static class BotFrameworkExceptionJsonExtensions
             return true;
         }
         catch (JsonException)
+        {
+            value = null;
+            return false;
+        }
+        catch
         {
             value = null;
             return false;
