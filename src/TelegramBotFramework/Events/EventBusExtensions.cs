@@ -127,5 +127,43 @@ namespace TelegramBotFramework.Events
 
             return (Task)method.Invoke(bus, new[] { @event })!;
         }
+
+        /// <summary>
+        /// Registers middleware to be executed around event handling.
+        /// Middleware is executed in the order it's registered.
+        /// </summary>
+        /// <param name="bus">The event bus instance.</param>
+        /// <param name="middleware">The middleware to register.</param>
+        /// <returns>The event bus instance for method chaining.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="bus"/> or <paramref name="middleware"/> is <c>null</c>.</exception>
+        public static IEventBus UseMiddleware(this IEventBus bus, IEventMiddleware middleware)
+        {
+            ArgumentNullException.ThrowIfNull(bus);
+            ArgumentNullException.ThrowIfNull(middleware);
+
+            bus.RegisterMiddleware(middleware);
+            return bus;
+        }
+
+        /// <summary>
+        /// Registers multiple middleware components to be executed around event handling.
+        /// Middleware is executed in the order it's provided.
+        /// </summary>
+        /// <param name="bus">The event bus instance.</param>
+        /// <param name="middleware">The middleware components to register.</param>
+        /// <returns>The event bus instance for method chaining.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="bus"/> or <paramref name="middleware"/> is <c>null</c>.</exception>
+        public static IEventBus UseMiddleware(this IEventBus bus, params IEventMiddleware[] middleware)
+        {
+            ArgumentNullException.ThrowIfNull(bus);
+            ArgumentNullException.ThrowIfNull(middleware);
+
+            foreach (var m in middleware)
+            {
+                bus.RegisterMiddleware(m);
+            }
+
+            return bus;
+        }
     }
 }

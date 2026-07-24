@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 namespace TelegramBotFramework.Events;
 
@@ -25,6 +25,9 @@ public interface IEventBus
     /// <summary>
     /// Publishes an event to all registered subscribers.
     /// </summary>
+    /// <param name="event">The event to publish.</param>
+    /// <typeparam name="TEvent">The type of event.</typeparam>
+    /// <returns>A task representing the asynchronous operation.</returns>
     Task PublishAsync<TEvent>(TEvent @event) where TEvent : class, IEvent;
 
     /// <summary>
@@ -35,7 +38,22 @@ public interface IEventBus
     /// <summary>
     /// Gets the number of subscribers for an event type.
     /// </summary>
+    /// <typeparam name="TEvent">The type of event.</typeparam>
+    /// <returns>The number of subscribers.</returns>
     int GetSubscriberCount<TEvent>() where TEvent : class, IEvent;
+
+    /// <summary>
+    /// Registers middleware to be executed around event handling.
+    /// Middleware is executed in the order it's registered.
+    /// </summary>
+    /// <param name="middleware">The middleware to register.</param>
+    void RegisterMiddleware(IEventMiddleware middleware);
+
+    /// <summary>
+    /// Gets all registered middleware in the order they were registered.
+    /// </summary>
+    /// <returns>An enumerable of middleware instances.</returns>
+    IEnumerable<IEventMiddleware> GetMiddleware();
 }
 
 /// <summary>

@@ -293,4 +293,14 @@ internal sealed class NullEventBus : IEventBus
     {
         return 0;
     }
+
+    public void RegisterMiddleware(IEventMiddleware middleware)
+    {
+        // Do nothing - null implementation
+    }
+
+    public IEnumerable<IEventMiddleware> GetMiddleware()
+    {
+        return Enumerable.Empty<IEventMiddleware>();
+    }
 }
