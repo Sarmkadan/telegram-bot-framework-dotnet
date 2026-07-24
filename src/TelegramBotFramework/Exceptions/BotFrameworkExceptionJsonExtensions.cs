@@ -26,11 +26,14 @@ public static class BotFrameworkExceptionJsonExtensions
     };
 
     /// <summary>
-    /// Serializes the BotFrameworkException to a JSON string.
+    /// Serializes the BotFrameworkException to a JSON string using strict allow-list serialization.
+    /// Only explicitly permitted properties are included to prevent accidental leakage of sensitive data
+    /// such as bot tokens, connection strings, or other credentials that might be present in the
+    /// Exception.Data dictionary or other properties.
     /// </summary>
-    /// <param name="value">The exception to serialize.</param>
+    /// <param name="value">The exception to serialize. Must not be null.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the exception.</returns>
+    /// <returns>A JSON string representation of the exception with sensitive data redacted.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this BotFrameworkException value, bool indented = false)
     {
@@ -43,11 +46,11 @@ public static class BotFrameworkExceptionJsonExtensions
             }
             : _jsonSerializerOptions;
 
-        // Add custom converter to redact tokens
+        // Use custom serialization that filters sensitive data from Exception.Data
         var optionsWithConverter = new JsonSerializerOptions(options)
         {
             TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
-            Converters = { new BotFrameworkExceptionJsonConverter() }
+            Converters = { new BotFrameworkExceptionSafeSerializationConverter() }
         };
 
         return JsonSerializer.Serialize(value, optionsWithConverter);
@@ -107,89 +110,117 @@ public static class BotFrameworkExceptionJsonExtensions
             return false;
         }
     }
-}
-
-/// <summary>
-/// Custom JSON converter for BotFrameworkException that redacts bot tokens from messages.
-/// </summary>
-internal sealed class BotFrameworkExceptionJsonConverter : JsonConverter<BotFrameworkException>
-{
-    public override BotFrameworkException Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        return JsonSerializer.Deserialize<BotFrameworkException>(ref reader, options) ?? throw new JsonException("Failed to deserialize BotFrameworkException");
-    }
-
-    public override void Write(Utf8JsonWriter writer, BotFrameworkException value, JsonSerializerOptions options)
-    {
-        if (value == null)
-        {
-            writer.WriteNullValue();
-            return;
-        }
-
-        // Create a redacted version of the exception for serialization
-        var redactedException = new RedactedBotFrameworkExceptionWrapper(value);
-
-        var customOptions = new JsonSerializerOptions(options)
-        {
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
-            WriteIndented = options.WriteIndented
-        };
-
-        JsonSerializer.Serialize(writer, redactedException, customOptions);
-    }
 
     /// <summary>
-    /// Wrapper class that holds redacted exception data for serialization.
+    /// Custom JSON converter that ensures safe serialization of BotFrameworkException.
+    /// Filters out sensitive data from the Data dictionary and redacts tokens from all text properties.
     /// </summary>
-    private sealed class RedactedBotFrameworkExceptionWrapper
+    private sealed class BotFrameworkExceptionSafeSerializationConverter : JsonConverter<BotFrameworkException>
     {
-        public string? Message { get; }
-        public string? ErrorCode { get; }
-        public string? StackTrace { get; }
-        public RedactedExceptionWrapper? InnerException { get; }
-        public string? Source { get; }
-        public string? HelpLink { get; }
-
-        public RedactedBotFrameworkExceptionWrapper(Exception exception)
+        public override BotFrameworkException Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            Message = TokenRedaction.RedactTokenFromMessage(exception.Message);
-            ErrorCode = exception is BotFrameworkException botEx ? botEx.ErrorCode : null;
-            StackTrace = exception.StackTrace != null ? TokenRedaction.RedactTokenFromMessage(exception.StackTrace) : null;
-            Source = TokenRedaction.RedactTokenFromMessage(exception.Source ?? string.Empty);
-            HelpLink = exception.HelpLink != null ? TokenRedaction.RedactTokenFromMessage(exception.HelpLink) : null;
+            // Use default deserialization for reading
+            return JsonSerializer.Deserialize<BotFrameworkException>(ref reader, options) ?? throw new JsonException("Failed to deserialize BotFrameworkException");
+        }
 
-            if (exception.InnerException != null)
+        public override void Write(Utf8JsonWriter writer, BotFrameworkException value, JsonSerializerOptions options)
+        {
+            if (value == null)
             {
-                InnerException = new RedactedExceptionWrapper(exception.InnerException);
+                writer.WriteNullValue();
+                return;
+            }
+
+            // Create a safe JSON object manually to avoid recursion issues
+            writer.WriteStartObject();
+
+            // Message - always redact tokens
+            var message = TokenRedaction.RedactTokenFromMessage(value.Message ?? string.Empty);
+            if (message != null)
+            {
+                writer.WriteString("message", message);
+            }
+
+            // ErrorCode - always include for BotFrameworkException
+            if (value is BotFrameworkException botEx && !string.IsNullOrEmpty(botEx.ErrorCode))
+            {
+                writer.WriteString("errorCode", botEx.ErrorCode);
+            }
+
+            // StackTrace - redact tokens
+            if (!string.IsNullOrEmpty(value.StackTrace))
+            {
+                var redactedStackTrace = TokenRedaction.RedactTokenFromMessage(value.StackTrace);
+                writer.WriteString("stackTrace", redactedStackTrace);
+            }
+
+            // Source - redact tokens
+            if (!string.IsNullOrEmpty(value.Source))
+            {
+                var redactedSource = TokenRedaction.RedactTokenFromMessage(value.Source);
+                writer.WriteString("source", redactedSource);
+            }
+
+            // HelpLink - redact tokens
+            if (!string.IsNullOrEmpty(value.HelpLink))
+            {
+                var redactedHelpLink = TokenRedaction.RedactTokenFromMessage(value.HelpLink);
+                writer.WriteString("helpLink", redactedHelpLink);
+            }
+
+            // Data dictionary - filter to safe properties only
+            FilterSafeDataProperties(writer, value.Data);
+
+            // InnerException - handle recursively
+            if (value.InnerException != null)
+            {
+                writer.WritePropertyName("innerException");
+                Write(writer, value.InnerException as BotFrameworkException ?? new BotFrameworkException(value.InnerException.Message, "INNER_EXCEPTION"), options);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Filters the Exception.Data dictionary to only include safe, non-sensitive properties.
+        /// This prevents accidental leakage of credentials, connection strings, or other sensitive data.
+        /// </summary>
+        private static void FilterSafeDataProperties(Utf8JsonWriter writer, System.Collections.IDictionary data)
+        {
+            if (data.Count == 0)
+            {
+                return;
+            }
+
+            // Only include properties that are explicitly allow-listed
+            // This is a strict allow-list to prevent any accidental leakage
+            foreach (var keyObj in data.Keys)
+            {
+                if (keyObj is string key && IsSafeDataProperty(key))
+                {
+                    var value = data[key];
+                    if (value == null || value is string || value is int || value is long || value is bool)
+                    {
+                        writer.WritePropertyName(key);
+                        JsonSerializer.Serialize(writer, value, _jsonSerializerOptions);
+                    }
+                }
             }
         }
-    }
 
-    /// <summary>
-    /// Wrapper class for any redacted exception (not just BotFrameworkException).
-    /// </summary>
-    private sealed class RedactedExceptionWrapper
-    {
-        public string? Message { get; }
-        public string? ErrorCode { get; }
-        public string? StackTrace { get; }
-        public RedactedExceptionWrapper? InnerException { get; }
-        public string? Source { get; }
-        public string? HelpLink { get; }
-
-        public RedactedExceptionWrapper(Exception exception)
+        /// <summary>
+        /// Validates that a Data dictionary property name is safe to include.
+        /// This is a strict allow-list to prevent credential leakage.
+        /// </summary>
+        private static bool IsSafeDataProperty(string propertyName)
         {
-            Message = TokenRedaction.RedactTokenFromMessage(exception.Message);
-            ErrorCode = exception is BotFrameworkException botEx ? botEx.ErrorCode : null;
-            StackTrace = exception.StackTrace != null ? TokenRedaction.RedactTokenFromMessage(exception.StackTrace) : null;
-            Source = TokenRedaction.RedactTokenFromMessage(exception.Source ?? string.Empty);
-            HelpLink = exception.HelpLink != null ? TokenRedaction.RedactTokenFromMessage(exception.HelpLink) : null;
-
-            if (exception.InnerException != null)
-            {
-                InnerException = new RedactedExceptionWrapper(exception.InnerException);
-            }
+            // Only allow specific known-safe property names that are part of the framework's exception types
+            return propertyName.Equals("commandName", StringComparison.OrdinalIgnoreCase) ||
+                   propertyName.Equals("userId", StringComparison.OrdinalIgnoreCase) ||
+                   propertyName.Equals("sessionId", StringComparison.OrdinalIgnoreCase) ||
+                   propertyName.Equals("requiredPermission", StringComparison.OrdinalIgnoreCase) ||
+                   propertyName.Equals("retryAfterSeconds", StringComparison.OrdinalIgnoreCase) ||
+                   propertyName.Equals("updateId", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
