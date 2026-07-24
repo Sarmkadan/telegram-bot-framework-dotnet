@@ -1,12 +1,13 @@
 #nullable enable
-
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// ====================================================================
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using TelegramBotFramework.Utilities;
 
 namespace TelegramBotFramework.Exceptions;
 
@@ -42,7 +43,14 @@ public static class BotFrameworkExceptionJsonExtensions
             }
             : _jsonSerializerOptions;
 
-        return JsonSerializer.Serialize(value, options);
+        // Add custom converter to redact tokens
+        var optionsWithConverter = new JsonSerializerOptions(options)
+        {
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            Converters = { new BotFrameworkExceptionJsonConverter() }
+        };
+
+        return JsonSerializer.Serialize(value, optionsWithConverter);
     }
 
     /// <summary>
@@ -97,6 +105,91 @@ public static class BotFrameworkExceptionJsonExtensions
         {
             value = null;
             return false;
+        }
+    }
+}
+
+/// <summary>
+/// Custom JSON converter for BotFrameworkException that redacts bot tokens from messages.
+/// </summary>
+internal sealed class BotFrameworkExceptionJsonConverter : JsonConverter<BotFrameworkException>
+{
+    public override BotFrameworkException Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return JsonSerializer.Deserialize<BotFrameworkException>(ref reader, options) ?? throw new JsonException("Failed to deserialize BotFrameworkException");
+    }
+
+    public override void Write(Utf8JsonWriter writer, BotFrameworkException value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
+        // Create a redacted version of the exception for serialization
+        var redactedException = new RedactedBotFrameworkExceptionWrapper(value);
+
+        var customOptions = new JsonSerializerOptions(options)
+        {
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            WriteIndented = options.WriteIndented
+        };
+
+        JsonSerializer.Serialize(writer, redactedException, customOptions);
+    }
+
+    /// <summary>
+    /// Wrapper class that holds redacted exception data for serialization.
+    /// </summary>
+    private sealed class RedactedBotFrameworkExceptionWrapper
+    {
+        public string? Message { get; }
+        public string? ErrorCode { get; }
+        public string? StackTrace { get; }
+        public RedactedExceptionWrapper? InnerException { get; }
+        public string? Source { get; }
+        public string? HelpLink { get; }
+
+        public RedactedBotFrameworkExceptionWrapper(Exception exception)
+        {
+            Message = TokenRedaction.RedactTokenFromMessage(exception.Message);
+            ErrorCode = exception is BotFrameworkException botEx ? botEx.ErrorCode : null;
+            StackTrace = exception.StackTrace != null ? TokenRedaction.RedactTokenFromMessage(exception.StackTrace) : null;
+            Source = TokenRedaction.RedactTokenFromMessage(exception.Source ?? string.Empty);
+            HelpLink = exception.HelpLink != null ? TokenRedaction.RedactTokenFromMessage(exception.HelpLink) : null;
+
+            if (exception.InnerException != null)
+            {
+                InnerException = new RedactedExceptionWrapper(exception.InnerException);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Wrapper class for any redacted exception (not just BotFrameworkException).
+    /// </summary>
+    private sealed class RedactedExceptionWrapper
+    {
+        public string? Message { get; }
+        public string? ErrorCode { get; }
+        public string? StackTrace { get; }
+        public RedactedExceptionWrapper? InnerException { get; }
+        public string? Source { get; }
+        public string? HelpLink { get; }
+
+        public RedactedExceptionWrapper(Exception exception)
+        {
+            Message = TokenRedaction.RedactTokenFromMessage(exception.Message);
+            ErrorCode = exception is BotFrameworkException botEx ? botEx.ErrorCode : null;
+            StackTrace = exception.StackTrace != null ? TokenRedaction.RedactTokenFromMessage(exception.StackTrace) : null;
+            Source = TokenRedaction.RedactTokenFromMessage(exception.Source ?? string.Empty);
+            HelpLink = exception.HelpLink != null ? TokenRedaction.RedactTokenFromMessage(exception.HelpLink) : null;
+
+            if (exception.InnerException != null)
+            {
+                InnerException = new RedactedExceptionWrapper(exception.InnerException);
+            }
         }
     }
 }
