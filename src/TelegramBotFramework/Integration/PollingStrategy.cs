@@ -1,8 +1,9 @@
 #nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 namespace TelegramBotFramework.Integration;
 
@@ -15,15 +16,51 @@ public sealed class PollingStrategy
     private readonly ITelegramApiClient _apiClient;
     private readonly WebhookHandler _webhookHandler;
     private readonly ILogger<PollingStrategy> _logger;
+    private readonly IUpdateOffsetStore _offsetStore;
     private long _lastUpdateId = 0;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _pollingTask;
 
+    // Backoff configuration constants
+    private const int BasePollIntervalMs = 1000; // Default 1 second
+    private const int MaxBackoffMs = 30000; // Maximum 30 seconds
+    private const double BackoffMultiplier = 1.5; // Exponential backoff multiplier
+    private const double JitterFactor = 0.1; // 10% jitter to avoid thundering herd
+
+    // Backoff tracking state
+    private int _currentBackoffMs = 0;
+    private int _consecutiveFailureCount = 0;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PollingStrategy"/> class with an in-memory offset store.
+    /// </summary>
+    /// <param name="apiClient">The Telegram API client to use for fetching updates.</param>
+    /// <param name="logger">Optional logger for diagnostic messages.</param>
+    /// <exception cref="ArgumentNullException">Thrown when apiClient is null.</exception>
     public PollingStrategy(ITelegramApiClient apiClient, ILogger<PollingStrategy>? logger = null)
+        : this(apiClient, new InMemoryUpdateOffsetStore(), logger)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PollingStrategy"/> class with a custom offset store.
+    /// </summary>
+    /// <param name="apiClient">The Telegram API client to use for fetching updates.</param>
+    /// <param name="offsetStore">The offset store for persisting the last processed update.</param>
+    /// <param name="logger">Optional logger for diagnostic messages.</param>
+    /// <exception cref="ArgumentNullException">Thrown when apiClient or offsetStore is null.</exception>
+    public PollingStrategy(
+        ITelegramApiClient apiClient,
+        IUpdateOffsetStore offsetStore,
+        ILogger<PollingStrategy>? logger = null)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _offsetStore = offsetStore ?? throw new ArgumentNullException(nameof(offsetStore));
         _logger = logger ?? new ConsoleLogger<PollingStrategy>();
         _webhookHandler = new WebhookHandler();
+
+        // Initialize with offset from store
+        _lastUpdateId = _offsetStore.GetLastOffset();
     }
 
     /// <summary>
@@ -36,7 +73,7 @@ public sealed class PollingStrategy
     /// </summary>
     public void Start(TimeSpan? pollInterval = null)
     {
-        if (_pollingTask  is not null && !_pollingTask.IsCompleted)
+        if (_pollingTask is not null && !_pollingTask.IsCompleted)
         {
             _logger.LogWarning("Polling is already running");
             return;
@@ -55,12 +92,12 @@ public sealed class PollingStrategy
     /// </summary>
     public async Task StopAsync()
     {
-        if (_cancellationTokenSource  is null)
+        if (_cancellationTokenSource is null)
             return;
 
         _cancellationTokenSource.Cancel();
 
-        if (_pollingTask  is not null)
+        if (_pollingTask is not null)
         {
             try
             {
@@ -86,9 +123,12 @@ public sealed class PollingStrategy
     {
         return new PollingStatus
         {
-            IsRunning = _pollingTask  is not null && !_pollingTask.IsCompleted,
+            IsRunning = _pollingTask is not null && !_pollingTask.IsCompleted,
             LastUpdateId = _lastUpdateId,
-            LastPollTime = LastPollTime
+            LastPollTime = LastPollTime,
+            CurrentBackoffMs = _currentBackoffMs,
+            ConsecutiveFailureCount = _consecutiveFailureCount,
+            BasePollIntervalMs = BasePollIntervalMs
         };
     }
 
@@ -134,6 +174,14 @@ public sealed class PollingStrategy
                     // Small delay to avoid hammering the API when there is nothing to fetch
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
                 }
+
+                // Reset failure count on successful poll
+                if (_consecutiveFailureCount > 0)
+                {
+                    _logger.LogDebug("Resetting failure count after successful poll");
+                    _consecutiveFailureCount = 0;
+                    _currentBackoffMs = 0;
+                }
             }
             catch (OperationCanceledException)
             {
@@ -141,11 +189,44 @@ public sealed class PollingStrategy
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during polling");
-                // Continue polling even on error, but with backoff
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                _consecutiveFailureCount++;
+                _logger.LogError(ex, "Error during polling (failure #{FailureCount})", _consecutiveFailureCount);
+
+                // Apply adaptive backoff with exponential decay and jitter
+                int backoffDelayMs = CalculateBackoffDelay();
+
+                _logger.LogWarning(
+                    "Applying backoff delay of {BackoffMs}ms after {FailureCount} consecutive failures",
+                    backoffDelayMs,
+                    _consecutiveFailureCount);
+
+                await Task.Delay(backoffDelayMs, cancellationToken).ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>
+    /// Calculates the adaptive backoff delay using exponential backoff with jitter.
+    /// </summary>
+    /// <returns>The backoff delay in milliseconds.</returns>
+    private int CalculateBackoffDelay()
+    {
+        // Calculate exponential backoff with jitter
+        double exponentialBackoff = Math.Pow(BackoffMultiplier, _consecutiveFailureCount - 1);
+        double backoffMs = BasePollIntervalMs * exponentialBackoff;
+
+        // Apply jitter to avoid thundering herd problems
+        double jitterRange = backoffMs * JitterFactor;
+        double jitter = (Random.Shared.NextDouble() * 2 - 1) * jitterRange; // Range: [-jitterRange, +jitterRange]
+        backoffMs += jitter;
+
+        // Clamp to maximum backoff
+        int result = (int)Math.Min(backoffMs, MaxBackoffMs);
+
+        // Ensure we don't go below base interval
+        _currentBackoffMs = Math.Max(result, BasePollIntervalMs);
+
+        return _currentBackoffMs;
     }
 
     /// <summary>
@@ -159,8 +240,10 @@ public sealed class PollingStrategy
         try
         {
             _lastUpdateId = update.UpdateId;
+            await _offsetStore.SetLastOffset(_lastUpdateId);
+            await _offsetStore.PersistAsync();
 
-            if (OnUpdateReceived  is not null)
+            if (OnUpdateReceived is not null)
             {
                 await OnUpdateReceived.Invoke(update).ConfigureAwait(false);
             }
@@ -177,7 +260,33 @@ public sealed class PollingStrategy
 /// </summary>
 public sealed class PollingStatus
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether the polling loop is currently active.
+    /// </summary>
     public bool IsRunning { get; set; }
+
+    /// <summary>
+    /// Gets or sets the last processed update identifier.
+    /// </summary>
     public long LastUpdateId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the timestamp of the last successful polling request.
+    /// </summary>
     public DateTime? LastPollTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current backoff delay in milliseconds.
+    /// </summary>
+    public int CurrentBackoffMs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of consecutive failures since the last successful poll.
+    /// </summary>
+    public int ConsecutiveFailureCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the base poll interval in milliseconds.
+    /// </summary>
+    public int BasePollIntervalMs { get; set; }
 }
