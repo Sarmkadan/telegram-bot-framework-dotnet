@@ -75,6 +75,32 @@ public abstract class EventBase : IEvent
     public DateTime OccurredAt { get; } = DateTime.UtcNow;
     public string? CorrelationId { get; set; }
 
+    /// <summary>
+    /// Validates that the specified string value is not null or whitespace.
+    /// </summary>
+    /// <param name="value">The string value to validate.</param>
+    /// <param name="paramName">The name of the parameter being validated.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is null or whitespace.</exception>
+    protected static void ValidateStringNotNullOrWhiteSpace(string? value, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(value, paramName);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException("String cannot be whitespace.", paramName);
+        }
+    }
+
+    /// <summary>
+    /// Validates that the specified object reference is not null.
+    /// </summary>
+    /// <param name="value">The object reference to validate.</param>
+    /// <param name="paramName">The name of the parameter being validated.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    protected static void ValidateNotNull(object? value, string paramName)
+    {
+        ArgumentNullException.ThrowIfNull(value, paramName);
+    }
+
     protected EventBase(string? correlationId = null)
     {
         CorrelationId = correlationId ?? Guid.NewGuid().ToString();
