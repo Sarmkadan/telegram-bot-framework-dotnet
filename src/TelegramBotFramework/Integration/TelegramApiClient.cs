@@ -190,43 +190,65 @@ public sealed class TelegramApiClient : ITelegramApiClient
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
+
+            // A media group must go through sendMediaGroup in a single request;
+            // sending items one-by-one produces separate messages instead of an album.
+            var media = items.Select(item =>
+            {
+                var entry = new Dictionary<string, object>
+                {
+                    { "type", GetMediaFieldName(item.Type) },
+                    { "media", item.FileIdOrUrl }
+                };
+
+                if (item.Caption != null)
+                {
+                    entry["caption"] = item.Caption;
+                }
+
+                return entry;
+            }).ToArray();
+
+            var payload = new Dictionary<string, object>
+            {
+                { "chat_id", chatId },
+                { "media", media }
+            };
+
+            var json = JsonUtility.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var url = $"bot{_botToken}/sendMediaGroup";
+            var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogWarning("Media group send failed: Status={StatusCode}, Error={Error}",
+                    response.StatusCode, errorContent);
+                return new List<int>();
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(responseContent);
+            var root = doc.RootElement;
+
             var messageIds = new List<int>();
 
-            foreach (var item in items)
+            if (root.TryGetProperty("ok", out var okElement) && okElement.GetBoolean() &&
+                root.TryGetProperty("result", out var resultElement) &&
+                resultElement.ValueKind == JsonValueKind.Array)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var method = GetMediaMethod(item.Type);
-                var payload = CreateMediaPayload(chatId, item);
-
-                var json = JsonUtility.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var url = $"bot{_botToken}/{method}";
-                var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
-
-                if (response.IsSuccessStatusCode)
+                foreach (var message in resultElement.EnumerateArray())
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    using var doc = JsonDocument.Parse(responseContent);
-                    var root = doc.RootElement;
-
-                    if (root.TryGetProperty("ok", out var okElement) && okElement.GetBoolean() &&
-                        root.TryGetProperty("result", out var resultElement) &&
-                        resultElement.TryGetProperty("message_id", out var messageIdElement))
+                    if (message.TryGetProperty("message_id", out var messageIdElement))
                     {
                         messageIds.Add(messageIdElement.GetInt32());
                     }
                 }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    _logger.LogWarning("Media item send failed: Type={Type}, Status={StatusCode}, Error={Error}",
-                        item.Type, response.StatusCode, errorContent);
-                }
             }
 
-            _logger.LogInformation("Sent media group with {Count} items to chat {ChatId}", items.Count, chatId);
+            _logger.LogInformation("Sent media group with {Count} items to chat {ChatId}", messageIds.Count, chatId);
             return messageIds;
         }
         catch (OperationCanceledException)
@@ -394,34 +416,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     }
 
 
-    private string GetMediaMethod(MediaType type)
-    {
-        return type switch
-        {
-            MediaType.Photo => "sendPhoto",
-            MediaType.Video => "sendVideo",
-            MediaType.Audio => "sendAudio",
-            MediaType.Document => "sendDocument",
-            _ => "sendPhoto"
-        };
-    }
-
-    private object CreateMediaPayload(long chatId, MediaGroupItem item)
-    {
-        var payload = new Dictionary<string, object> { { "chat_id", chatId } };
-
-        if (item.Caption != null)
-        {
-            payload["caption"] = item.Caption;
-        }
-
-        // Telegram API expects media to be sent as file_id or URL
-        payload[GetMediaFieldName(item.Type)] = item.FileIdOrUrl;
-
-        return payload;
-    }
-
-    private string GetMediaFieldName(MediaType type)
+    private static string GetMediaFieldName(MediaType type)
     {
         return type switch
         {

@@ -20,12 +20,17 @@ public sealed class HttpClientFactory
     /// </summary>
     public HttpClient GetClient(string baseUrl, TimeSpan? timeout = null)
     {
+        return GetClientCore(baseUrl, baseUrl, timeout, configure: null);
+    }
+
+    private HttpClient GetClientCore(string cacheKey, string baseUrl, TimeSpan? timeout, Action<HttpClient>? configure)
+    {
         if (string.IsNullOrWhiteSpace(baseUrl))
             throw new ArgumentException("Base URL cannot be empty", nameof(baseUrl));
 
         lock (_lockObj)
         {
-            if (_httpClients.TryGetValue(baseUrl, out var existingClient))
+            if (_httpClients.TryGetValue(cacheKey, out var existingClient))
                 return existingClient;
 
             var client = new HttpClient(new SocketsHttpHandler
@@ -42,7 +47,9 @@ public sealed class HttpClientFactory
             client.DefaultRequestHeaders.Add("User-Agent", "TelegramBotFramework/1.0");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-            _httpClients[baseUrl] = client;
+            configure?.Invoke(client);
+
+            _httpClients[cacheKey] = client;
             return client;
         }
     }
@@ -61,16 +68,23 @@ public sealed class HttpClientFactory
     /// </summary>
     public HttpClient GetClientWithHeaders(string baseUrl, Dictionary<string, string> headers)
     {
-        var client = GetClient(baseUrl);
+        ArgumentNullException.ThrowIfNull(headers);
 
-        foreach (var header in headers)
+        // Header sets get their own cache entry: mutating the DefaultRequestHeaders
+        // of the shared per-base-URL client is not thread-safe and would leak the
+        // headers into every other consumer of that base URL.
+        var fingerprint = string.Join("\n", headers.OrderBy(h => h.Key, StringComparer.Ordinal)
+            .Select(h => h.Key + ":" + h.Value));
+        var cacheKey = baseUrl + "|headers|" + fingerprint;
+
+        return GetClientCore(cacheKey, baseUrl, timeout: null, configure: client =>
         {
-            // Remove existing header if present to avoid conflicts
-            client.DefaultRequestHeaders.Remove(header.Key);
-            client.DefaultRequestHeaders.Add(header.Key, header.Value);
-        }
-
-        return client;
+            foreach (var header in headers)
+            {
+                client.DefaultRequestHeaders.Remove(header.Key);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
+        });
     }
 
     /// <summary>
@@ -78,9 +92,16 @@ public sealed class HttpClientFactory
     /// </summary>
     public HttpClient GetClientWithAuth(string baseUrl, string authToken, string scheme = "Bearer")
     {
-        var client = GetClient(baseUrl);
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(scheme, authToken);
-        return client;
+        if (string.IsNullOrWhiteSpace(authToken))
+            throw new ArgumentException("Auth token cannot be empty", nameof(authToken));
+
+        // Authenticated clients are cached separately per credential so the token
+        // never bleeds into the unauthenticated shared client for the same host.
+        var cacheKey = baseUrl + "|auth|" + scheme + "|" + authToken;
+
+        return GetClientCore(cacheKey, baseUrl, timeout: null, configure: client =>
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(scheme, authToken));
     }
 
     /// <summary>

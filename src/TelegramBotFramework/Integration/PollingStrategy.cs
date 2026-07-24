@@ -72,6 +72,10 @@ public sealed class PollingStrategy
             }
         }
 
+        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource = null;
+        _pollingTask = null;
+
         _logger.LogInformation("Polling stopped");
     }
 
@@ -109,6 +113,19 @@ public sealed class PollingStrategy
                     if (update is not null)
                     {
                         await ProcessUpdateAsync(update).ConfigureAwait(false);
+                    }
+                    else if (updateElement.TryGetProperty("update_id", out var updateIdElement) &&
+                             updateIdElement.TryGetInt64(out var rawUpdateId))
+                    {
+                        // Advance the offset even when the update cannot be parsed;
+                        // otherwise the same malformed update is fetched forever and
+                        // the polling loop spins without making progress.
+                        if (rawUpdateId > _lastUpdateId)
+                        {
+                            _lastUpdateId = rawUpdateId;
+                        }
+
+                        _logger.LogWarning("Skipping unparseable update {UpdateId}", rawUpdateId);
                     }
                 }
 
