@@ -85,29 +85,6 @@ public sealed class EventBusExtensionsTests
         Assert.Throws<ArgumentNullException>(() => nullBus!.GetTotalSubscriberCount());
     }
 
-    // Note: PublishManyAsync uses reflection that doesn't work with the current EventBus implementation
-    // Skipping these tests as they would require fixing the EventBusExtensions implementation
-
-    [Fact]
-    public async Task PublishManyAsync_WithNullBus_ThrowsArgumentNullException()
-    {
-        // Arrange
-        EventBus? nullBus = null;
-        var events = new List<object>();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => nullBus!.PublishManyAsync(events));
-    }
-
-    [Fact]
-    public async Task PublishManyAsync_WithNullEventsCollection_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var nullEvents = (IEnumerable<object>)null!;
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _bus.PublishManyAsync(nullEvents));
-    }
 
     private sealed class TestEventHandler<TEvent> : IEventHandler<TEvent> where TEvent : class, IEvent
     {

@@ -207,6 +207,30 @@ public sealed class EventBus : IEventBus
     }
 
     /// <summary>
+    /// Gets the subscriber count for a specific event type.
+    /// </summary>
+    /// <param name="eventType">The event type to check.</param>
+    /// <returns>The number of subscribers for the specified event type, or 0 if not found.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="eventType"/> is <c>null</c>.</exception>
+    public int GetSubscriberCount(Type eventType)
+    {
+        if (eventType is null)
+        {
+            throw new ArgumentNullException(nameof(eventType));
+        }
+
+        if (_subscribers.TryGetValue(eventType, out var handlers))
+        {
+            lock (_syncLock)
+            {
+                return handlers.Count;
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>
     /// Gets all registered event types.
     /// </summary>
     public IEnumerable<Type> GetRegisteredEventTypes()
