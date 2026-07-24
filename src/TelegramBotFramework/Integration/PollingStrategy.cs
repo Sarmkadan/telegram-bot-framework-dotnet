@@ -5,6 +5,7 @@
 // CTO & Software Architect
 // =====================================================================
 
+using System.Text.Json;
 using TelegramBotFramework.Events;
 
 namespace TelegramBotFramework.Integration;
@@ -28,6 +29,10 @@ public sealed class PollingStrategy : IHostedService
     private TimeSpan _shutdownTimeout = TimeSpan.FromSeconds(30);
     private bool _isShuttingDown = false;
 
+    // Update flood protection configuration
+    private int _maxUpdatesPerBatch = 100; // Maximum updates to process per polling cycle
+    private int _maxInFlightUpdates = 1000; // Maximum concurrent in-flight updates
+
     // Backoff configuration constants
     private const int BasePollIntervalMs = 1000; // Default 1 second
     private const int MaxBackoffMs = 30000; // Maximum 30 seconds
@@ -37,6 +42,8 @@ public sealed class PollingStrategy : IHostedService
     // Backoff tracking state
     private int _currentBackoffMs = 0;
     private int _consecutiveFailureCount = 0;
+    private int _updatesProcessedThisBatch = 0;
+    private bool _updateFloodDetected = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PollingStrategy"/> class with an in-memory offset store.
@@ -56,18 +63,37 @@ public sealed class PollingStrategy : IHostedService
     /// <param name="offsetStore">The offset store for persisting the last processed update.</param>
     /// <param name="logger">Optional logger for diagnostic messages.</param>
     /// <param name="eventPublisher">Optional event publisher for state change notifications.</param>
+    /// <param name="maxUpdatesPerBatch">Optional maximum updates to process per polling cycle. Defaults to 100.</param>
+    /// <param name="maxInFlightUpdates">Optional maximum concurrent in-flight updates. Defaults to 1000.</param>
     /// <exception cref="ArgumentNullException">Thrown when apiClient or offsetStore is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when maxUpdatesPerBatch or maxInFlightUpdates is less than 1.</exception>
     public PollingStrategy(
         ITelegramApiClient apiClient,
         IUpdateOffsetStore offsetStore,
         ILogger<PollingStrategy>? logger = null,
-        EventPublisher? eventPublisher = null)
+        EventPublisher? eventPublisher = null,
+        int? maxUpdatesPerBatch = null,
+        int? maxInFlightUpdates = null)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _offsetStore = offsetStore ?? throw new ArgumentNullException(nameof(offsetStore));
         _logger = logger ?? new ConsoleLogger<PollingStrategy>();
         _webhookHandler = new WebhookHandler();
         _eventPublisher = eventPublisher ?? new EventPublisher(new InMemoryEventBus());
+
+        // Apply configured limits with validation
+        _maxUpdatesPerBatch = maxUpdatesPerBatch ?? 100;
+        _maxInFlightUpdates = maxInFlightUpdates ?? 1000;
+
+        if (_maxUpdatesPerBatch < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxUpdatesPerBatch), "Maximum updates per batch must be at least 1");
+        }
+
+        if (_maxInFlightUpdates < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxInFlightUpdates), "Maximum in-flight updates must be at least 1");
+        }
 
         // Initialize with offset from store
         _lastUpdateId = _offsetStore.GetLastOffset();
@@ -190,7 +216,11 @@ public sealed class PollingStrategy : IHostedService
                 BasePollIntervalMs = BasePollIntervalMs,
                 IsDraining = _isShuttingDown,
                 IsDrainComplete = _isShuttingDown && _inFlightHandlers.Count == 0,
-                InFlightCount = _inFlightHandlers.Count
+                InFlightCount = _inFlightHandlers.Count,
+                MaxUpdatesPerBatch = _maxUpdatesPerBatch,
+                MaxInFlightUpdates = _maxInFlightUpdates,
+                CurrentUpdatesPerBatch = _updatesProcessedThisBatch,
+                IsUpdateFloodDetected = _updateFloodDetected
             };
         }
     }
@@ -204,13 +234,18 @@ public sealed class PollingStrategy : IHostedService
             try
             {
                 LastPollTime = DateTime.UtcNow;
+                _updatesProcessedThisBatch = 0;
+                _updateFloodDetected = false;
 
                 _logger.LogDebug("Polling for updates, last update ID: {LastUpdateId}", _lastUpdateId);
 
                 var offset = _lastUpdateId > 0 ? _lastUpdateId + 1 : 0;
                 var updates = await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false);
 
-                foreach (var updateElement in updates)
+                // Apply update flood protection - limit updates per batch
+                var updatesToProcess = ApplyUpdateFloodProtection(updates);
+
+                foreach (var updateElement in updatesToProcess)
                 {
                     var update = await _webhookHandler.ProcessUpdateAsync(updateElement.GetRawText()).ConfigureAwait(false);
                     if (update is not null)
@@ -259,13 +294,36 @@ public sealed class PollingStrategy : IHostedService
                 int backoffDelayMs = CalculateBackoffDelay();
 
                 _logger.LogWarning(
-                    "Applying backoff delay of {BackoffMs}ms after {FailureCount} consecutive failures",
+                    "Applying backoff delay of {BackoffDelayMs}ms after {FailureCount} consecutive failures",
                     backoffDelayMs,
                     _consecutiveFailureCount);
 
                 await Task.Delay(backoffDelayMs, cancellationToken).ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>
+    /// Applies update flood protection by limiting the number of updates processed per batch.
+    /// </summary>
+    /// <param name="updates">The raw updates received from Telegram API.</param>
+    /// <returns>A filtered collection of updates to process.</returns>
+    private IReadOnlyList<JsonElement> ApplyUpdateFloodProtection(IReadOnlyList<JsonElement> updates)
+    {
+        if (updates.Count <= _maxUpdatesPerBatch)
+        {
+            return updates;
+        }
+
+        _updateFloodDetected = true;
+        _logger.LogWarning(
+            "Update flood detected: {TotalUpdates} updates received, but only {MaxAllowed} will be processed per batch. " +
+            "Consider increasing maxUpdatesPerBatch if this is expected behavior.",
+            updates.Count,
+            _maxUpdatesPerBatch);
+
+        // Return only the first N updates to prevent memory exhaustion
+        return updates.Take(_maxUpdatesPerBatch).ToList();
     }
 
     /// <summary>
@@ -298,6 +356,7 @@ public sealed class PollingStrategy : IHostedService
     /// </summary>
     /// <param name="update">The update to process.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when update is null.</exception>
     public async Task ProcessUpdateAsync(TelegramUpdate update)
     {
         ArgumentNullException.ThrowIfNull(update);
@@ -312,7 +371,22 @@ public sealed class PollingStrategy : IHostedService
                 return;
             }
 
+            // Apply in-flight update limit to prevent memory exhaustion
+            if (_inFlightHandlers.Count >= _maxInFlightUpdates)
+            {
+                _updateFloodDetected = true;
+                _logger.LogWarning(
+                    "In-flight update limit reached: {CurrentCount} updates in flight, but maximum is {MaxAllowed}. " +
+                    "Update {UpdateId} will be dropped to prevent memory exhaustion. " +
+                    "Consider increasing maxInFlightUpdates if this is expected behavior.",
+                    _inFlightHandlers.Count,
+                    _maxInFlightUpdates,
+                    update.UpdateId);
+                return;
+            }
+
             _lastUpdateId = update.UpdateId;
+            _updatesProcessedThisBatch++;
             handlerTask = OnUpdateReceived?.Invoke(update);
 
             if (handlerTask is not null)
@@ -498,4 +572,24 @@ public sealed class PollingStatus
     /// Gets or sets the number of currently in-flight update handlers.
     /// </summary>
     public int InFlightCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the configured maximum updates per batch limit.
+        /// </summary>
+        public int MaxUpdatesPerBatch { get; set; }
+
+        /// <summary>
+        /// Gets or sets the configured maximum in-flight updates limit.
+        /// </summary>
+        public int MaxInFlightUpdates { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of updates processed in the current batch.
+        /// </summary>
+        public int CurrentUpdatesPerBatch { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether an update flood was detected.
+        /// </summary>
+        public bool IsUpdateFloodDetected { get; set; }
 }
