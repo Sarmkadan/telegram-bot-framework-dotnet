@@ -11,8 +11,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Utilities;
 
 /// <summary>
@@ -24,8 +28,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
     private readonly HttpClientFactory _httpClientFactory;
     private readonly string _botToken;
     private readonly ILogger<TelegramApiClient> _logger;
+    private readonly TelegramApiRetryHandler _retryHandler;
+    private readonly TelegramApiRetryOptions _retryOptions;
 
-    public TelegramApiClient(string botToken, HttpClientFactory? httpClientFactory = null, ILogger<TelegramApiClient>? logger = null)
+    public TelegramApiClient(
+        string botToken,
+        HttpClientFactory? httpClientFactory = null,
+        ILogger<TelegramApiClient>? logger = null,
+        TelegramApiRetryOptions? retryOptions = null)
     {
         if (string.IsNullOrWhiteSpace(botToken))
             throw new ArgumentException("Bot token cannot be empty", nameof(botToken));
@@ -36,6 +46,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
         _botToken = botToken;
         _httpClientFactory = httpClientFactory ?? new HttpClientFactory();
         _logger = logger ?? new ConsoleLogger<TelegramApiClient>();
+
+        _retryOptions = retryOptions ?? new TelegramApiRetryOptions();
+        _retryOptions.Validate();
+        _retryHandler = new TelegramApiRetryHandler(_retryOptions, _logger);
     }
 
     /// <summary>
@@ -438,7 +452,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
             var json = JsonUtility.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content).ConfigureAwait(false);
+            // Determine if method is idempotent (safe to retry)
+            var isIdempotent = IsIdempotentMethod(method);
+
+            var response = await _retryHandler.ExecuteWithRetryAsync(
+                client,
+                url,
+                content,
+                method,
+                isIdempotent).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -447,9 +469,18 @@ public sealed class TelegramApiClient : ITelegramApiClient
             }
 
             var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            _logger.LogWarning("Telegram API call failed: {Method}, Status: {StatusCode}, Error: {Error}",
-                method, response.StatusCode, errorContent);
+            _logger.LogWarning("Telegram API call failed: {Method}, Status: {StatusCode}, Error: {Error}", method, response.StatusCode, errorContent);
 
+            return false;
+        }
+        catch (TelegramRateLimitedException ex)
+        {
+            _logger.LogWarning(ex, "Rate limited calling Telegram API method: {Method}", method);
+            return false;
+        }
+        catch (TelegramServerException ex)
+        {
+            _logger.LogWarning(ex, "Server error calling Telegram API method: {Method}", method);
             return false;
         }
         catch (Exception ex)
@@ -466,16 +497,29 @@ public sealed class TelegramApiClient : ITelegramApiClient
             var client = _httpClientFactory.GetTelegramClient();
             var url = $"bot{_botToken}/{method}";
 
-            var response = await client.GetAsync(url).ConfigureAwait(false);
+            // GET requests are generally idempotent
+            var response = await _retryHandler.ExecuteGetWithRetryAsync(
+                client,
+                url,
+                method).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
 
-            _logger.LogWarning("Telegram API GET call failed: {Method}, Status: {StatusCode}",
-                method, response.StatusCode);
+            _logger.LogWarning("Telegram API GET call failed: {Method}, Status: {StatusCode}", method, response.StatusCode);
 
+            return null;
+        }
+        catch (TelegramRateLimitedException ex)
+        {
+            _logger.LogWarning(ex, "Rate limited calling Telegram API GET method: {Method}", method);
+            return null;
+        }
+        catch (TelegramServerException ex)
+        {
+            _logger.LogWarning(ex, "Server error calling Telegram API GET method: {Method}", method);
             return null;
         }
         catch (Exception ex)
@@ -483,6 +527,99 @@ public sealed class TelegramApiClient : ITelegramApiClient
             _logger.LogError(ex, "Error calling Telegram API GET method: {Method}", method);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Determines if a Telegram API method is idempotent (safe to retry).
+    /// </summary>
+    /// <param name="method">The Telegram API method name.</param>
+    /// <returns>True if the method is idempotent, false otherwise.</returns>
+    private bool IsIdempotentMethod(string method)
+    {
+        // Methods that are generally safe to retry (idempotent)
+        var idempotentMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "getMe",
+            "getUpdates",
+            "getFile",
+            "getChat",
+            "getChatAdministrators",
+            "getChatMemberCount",
+            "getChatMembersCount",
+            "getUserProfilePhotos",
+            "getChatAdministrators",
+            "getStickerSet",
+            "getStickers",
+            "answerInlineQuery",
+            "getMyCommands",
+            "getMyDescription",
+            "getMyShortDescription",
+            "getMyName",
+            "getUserChatBoosts",
+            "getChatMenuButton",
+            "getMyDefaultAdministratorRights"
+        };
+
+        // Methods that modify state and should not be retried blindly
+        var nonIdempotentMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "sendMessage",
+            "forwardMessage",
+            "copyMessage",
+            "sendPhoto",
+            "sendAudio",
+            "sendDocument",
+            "sendVideo",
+            "sendAnimation",
+            "sendVoice",
+            "sendVideoNote",
+            "sendMediaGroup",
+            "sendLocation",
+            "sendVenue",
+            "sendContact",
+            "sendPoll",
+            "sendDice",
+            "sendChatAction",
+            "editMessageText",
+            "editMessageCaption",
+            "editMessageMedia",
+            "editMessageReplyMarkup",
+            "editMessageLiveLocation",
+            "stopMessageLiveLocation",
+            "deleteMessage",
+            "sendSticker",
+            "answerCallbackQuery",
+            "setChatTitle",
+            "setChatDescription",
+            "setChatPermissions",
+            "pinChatMessage",
+            "unpinChatMessage",
+            "leaveChat",
+            "promoteChatMember",
+            "setChatAdministratorCustomTitle",
+            "banChatMember",
+            "unbanChatMember",
+            "restrictChatMember",
+            "setMyCommands",
+            "deleteMyCommands",
+            "setMyDescription",
+            "setMyShortDescription",
+            "setMyName",
+            "setChatMenuButton",
+            "setWebhook",
+            "deleteWebhook"
+        };
+
+        // If it's explicitly marked as non-idempotent, return false
+        if (nonIdempotentMethods.Contains(method))
+            return false;
+
+        // If it's explicitly marked as idempotent, return true
+        if (idempotentMethods.Contains(method))
+            return true;
+
+        // Default to non-idempotent for safety (don't retry methods that modify state)
+        return false;
     }
 }
 
