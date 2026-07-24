@@ -172,14 +172,17 @@ public sealed class LocalCacheProvider : ICacheProvider
         long total = 0;
         foreach (var entry in _cache.Values)
         {
-            if (entry.Value is string str)
+            // Marshal.SizeOf throws for non-blittable types (i.e. almost any cached
+            // reference type), so only use cheap safe heuristics here.
+            total += entry.Value switch
             {
-                total += System.Text.Encoding.UTF8.GetByteCount(str);
-            }
-            else if (entry.Value is not null)
-            {
-                total += System.Runtime.InteropServices.Marshal.SizeOf(entry.Value) * 10; // Rough estimate
-            }
+                null => 0,
+                string str => System.Text.Encoding.UTF8.GetByteCount(str) + 24,
+                byte[] bytes => bytes.LongLength + 24,
+                System.Collections.ICollection collection => collection.Count * 64L + 24,
+                var value when value.GetType().IsPrimitive => 16,
+                _ => 128 // Rough default for arbitrary reference types
+            };
         }
         return total;
     }
