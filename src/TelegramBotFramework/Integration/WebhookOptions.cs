@@ -58,6 +58,13 @@ public sealed class WebhookOptions
     /// </summary>
     public TimeSpan UpdateDeduplicationWindow { get; set; } = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    /// Gets or sets the maximum allowed size in bytes for incoming webhook request bodies.
+    /// Prevents denial-of-service attacks via oversized payloads.
+    /// Defaults to <c>1 MB (1_048_576 bytes)</c>.
+    /// </summary>
+    public long MaxRequestBodySize { get; set; } = 1_048_576; // 1 MB
+
     /// <summary>Validates required fields.</summary>
     public void Validate()
     {
@@ -76,5 +83,8 @@ public sealed class WebhookOptions
 
         if (UpdateDeduplicationWindow <= TimeSpan.Zero)
             throw new InvalidOperationException("UpdateDeduplicationWindow must be positive.");
+
+        if (MaxRequestBodySize <= 0)
+            throw new InvalidOperationException("MaxRequestBodySize must be positive.");
     }
 }

@@ -50,6 +50,14 @@ public sealed class WebhookController : ControllerBase
     {
         _logger.LogInformation("Webhook endpoint called - Path: {Path}, Method: {Method}", Request.Path, Request.Method);
 
+        // Validate request body size to prevent DoS attacks
+        if (Request.ContentLength.HasValue && Request.ContentLength.Value > _webhookService.Options.MaxRequestBodySize)
+        {
+            _logger.LogWarning("Rejected webhook request: request body size {ContentLength} bytes exceeds maximum allowed {MaxSize} bytes",
+                Request.ContentLength.Value, _webhookService.Options.MaxRequestBodySize);
+            return StatusCode(413, "Request body too large.");
+        }
+
         string body;
         using (var reader = new System.IO.StreamReader(Request.Body))
         {
