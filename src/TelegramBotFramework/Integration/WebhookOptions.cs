@@ -1,8 +1,9 @@
 #nullable enable
+
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// ===================================================================
 
 namespace TelegramBotFramework.Integration;
 
@@ -50,6 +51,13 @@ public sealed class WebhookOptions
     /// </summary>
     public bool DropPendingUpdates { get; set; }
 
+    /// <summary>
+    /// Gets or sets the deduplication window for update_id tracking.
+    /// Updates with the same update_id within this window will be deduplicated.
+    /// Defaults to <c>TimeSpan.FromMinutes(5)</c>.
+    /// </summary>
+    public TimeSpan UpdateDeduplicationWindow { get; set; } = TimeSpan.FromMinutes(5);
+
     /// <summary>Validates required fields.</summary>
     public void Validate()
     {
@@ -64,6 +72,9 @@ public sealed class WebhookOptions
             throw new InvalidOperationException("MaxConnections must be between 1 and 100.");
 
         if (!string.IsNullOrEmpty(ListenPath) && !ListenPath.StartsWith('/'))
-            throw new InvalidOperationException("ListenPath must start with '/'.");
+            throw new InvalidOperationException("ListenPath must start with '/'");
+
+        if (UpdateDeduplicationWindow <= TimeSpan.Zero)
+            throw new InvalidOperationException("UpdateDeduplicationWindow must be positive.");
     }
 }
