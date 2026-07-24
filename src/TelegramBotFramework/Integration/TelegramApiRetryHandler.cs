@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using TelegramBotFramework.Utilities;
 
 /// <summary>
 /// Provides retry functionality for Telegram API calls with support for Retry-After header honoring.
@@ -66,6 +67,9 @@ internal sealed class TelegramApiRetryHandler
                     _options.MaxRetryAttempts + 1,
                     methodName);
 
+                // Redact token from URL for logging
+                var redactedUrl = TokenRedaction.RedactTokenFromUrl(url);
+
                 var response = await httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
                 // Check for rate limiting (429) or server errors (5xx)
@@ -73,8 +77,9 @@ internal sealed class TelegramApiRetryHandler
                 {
                     var retryAfter = await GetRetryAfterFromResponseAsync(response).ConfigureAwait(false);
                     _logger.LogWarning(
-                        "Telegram API rate limited (429) for method {MethodName}. Retry after {RetryAfter} seconds",
+                        "Telegram API rate limited (429) for method {MethodName}. URL: {RedactedUrl}. Retry after {RetryAfter} seconds",
                         methodName,
+                        redactedUrl,
                         retryAfter);
 
                     if (attempt <= _options.MaxRetryAttempts)
@@ -92,9 +97,10 @@ internal sealed class TelegramApiRetryHandler
                 if (IsRetryableServerError(response.StatusCode) && _options.RetryOnServerErrors)
                 {
                     _logger.LogWarning(
-                        "Telegram API server error {StatusCode} for method {MethodName}",
+                        "Telegram API server error {StatusCode} for method {MethodName}. URL: {RedactedUrl}",
                         response.StatusCode,
-                        methodName);
+                        methodName,
+                        redactedUrl);
 
                     if (attempt <= _options.MaxRetryAttempts)
                     {
@@ -121,8 +127,9 @@ internal sealed class TelegramApiRetryHandler
                 if (response.StatusCode == HttpStatusCode.RequestTimeout && _options.RetryOnTimeout)
                 {
                     _logger.LogWarning(
-                        "Telegram API timeout (408) for method {MethodName}",
-                        methodName);
+                        "Telegram API timeout (408) for method {MethodName}. URL: {RedactedUrl}",
+                        methodName,
+                        redactedUrl);
 
                     if (attempt <= _options.MaxRetryAttempts)
                     {
@@ -139,10 +146,11 @@ internal sealed class TelegramApiRetryHandler
                 lastException = ex;
                 _logger.LogWarning(
                     ex,
-                    "Network error calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Network error calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 if (attempt <= _options.MaxRetryAttempts)
                 {
@@ -158,10 +166,11 @@ internal sealed class TelegramApiRetryHandler
                 lastException = ex;
                 _logger.LogWarning(
                     ex,
-                    "Task cancelled/timeout calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Task cancelled/timeout calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 if (attempt <= _options.MaxRetryAttempts)
                 {
@@ -177,10 +186,11 @@ internal sealed class TelegramApiRetryHandler
                 lastException = ex;
                 _logger.LogWarning(
                     ex,
-                    "Error calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Error calling Telegram API method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 await DelayWithRetryAfterAsync(null, delay, cancellationToken).ConfigureAwait(false);
                 delay = Math.Min(delay * 2, _options.MaxDelayMilliseconds);
@@ -217,6 +227,9 @@ internal sealed class TelegramApiRetryHandler
                     _options.MaxRetryAttempts + 1,
                     methodName);
 
+                // Redact token from URL for logging
+                var redactedUrl = TokenRedaction.RedactTokenFromUrl(url);
+
                 var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
                 // Check for rate limiting (429) or server errors (5xx)
@@ -224,8 +237,9 @@ internal sealed class TelegramApiRetryHandler
                 {
                     var retryAfter = await GetRetryAfterFromResponseAsync(response).ConfigureAwait(false);
                     _logger.LogWarning(
-                        "Telegram API rate limited (429) for method {MethodName}. Retry after {RetryAfter} seconds",
+                        "Telegram API rate limited (429) for method {MethodName}. URL: {RedactedUrl}. Retry after {RetryAfter} seconds",
                         methodName,
+                        redactedUrl,
                         retryAfter);
 
                     if (attempt <= _options.MaxRetryAttempts)
@@ -243,9 +257,10 @@ internal sealed class TelegramApiRetryHandler
                 if (IsRetryableServerError(response.StatusCode) && _options.RetryOnServerErrors)
                 {
                     _logger.LogWarning(
-                        "Telegram API server error {StatusCode} for method {MethodName}",
+                        "Telegram API server error {StatusCode} for method {MethodName}. URL: {RedactedUrl}",
                         response.StatusCode,
-                        methodName);
+                        methodName,
+                        redactedUrl);
 
                     if (attempt <= _options.MaxRetryAttempts)
                     {
@@ -265,10 +280,11 @@ internal sealed class TelegramApiRetryHandler
             {
                 _logger.LogWarning(
                     ex,
-                    "Network error calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Network error calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 if (attempt <= _options.MaxRetryAttempts)
                 {
@@ -283,10 +299,11 @@ internal sealed class TelegramApiRetryHandler
             {
                 _logger.LogWarning(
                     ex,
-                    "Task cancelled/timeout calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Task cancelled/timeout calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 if (attempt <= _options.MaxRetryAttempts)
                 {
@@ -301,10 +318,11 @@ internal sealed class TelegramApiRetryHandler
             {
                 _logger.LogWarning(
                     ex,
-                    "Error calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts})",
+                    "Error calling Telegram API GET method {MethodName} (attempt {Attempt}/{MaxAttempts}). URL: {RedactedUrl}",
                     methodName,
                     attempt,
-                    _options.MaxRetryAttempts + 1);
+                    _options.MaxRetryAttempts + 1,
+                    TokenRedaction.RedactTokenFromUrl(url));
 
                 await DelayWithRetryAfterAsync(null, delay, cancellationToken).ConfigureAwait(false);
                 delay = Math.Min(delay * 2, _options.MaxDelayMilliseconds);

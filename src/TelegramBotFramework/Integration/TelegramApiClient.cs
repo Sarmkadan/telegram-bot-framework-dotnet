@@ -17,7 +17,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Utilities;
+using TelegramBotFramework.Utilities;
 
 /// <summary>
 /// Client for interacting with Telegram Bot API.
@@ -178,7 +178,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending poll to Telegram API");
+            _logger.LogError(ex, "Error sending poll to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
             return null;
         }
     }
@@ -272,7 +272,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending media group to Telegram API");
+            _logger.LogError(ex, "Error sending media group to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
             return new List<int>();
         }
     }
@@ -485,7 +485,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calling Telegram API method: {Method}", method);
+            _logger.LogError(ex, "Error calling Telegram API method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
             return false;
         }
     }
@@ -524,7 +524,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calling Telegram API GET method: {Method}", method);
+            _logger.LogError(ex, "Error calling Telegram API GET method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
             return null;
         }
     }
