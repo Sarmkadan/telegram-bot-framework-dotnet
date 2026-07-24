@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,7 +16,7 @@ namespace TelegramBotFramework.Examples
     /// Event-driven architecture example demonstrating pub-sub pattern for decoupled communication.
     /// Shows how to publish and subscribe to framework events.
     /// </summary>
-public sealed class EventDrivenExample
+    public sealed class EventDrivenExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<EventDrivenExample> _logger;
@@ -75,8 +75,8 @@ public sealed class EventDrivenExample
             // Subscribe to bot state changed events
             _eventBus.Subscribe<BotStateChangedEvent>(async evt =>
             {
-                _logger.LogInformation("🔄 Event: Bot state changed from {OldState} to {NewState}",
-                    evt.OldState, evt.NewState);
+                _logger.LogInformation("🔄 Event: Bot state changed from {PreviousState} to {NewState}",
+                    evt.PreviousState, evt.NewState);
 
                 await HandleBotStateChangedAsync(evt).ConfigureAwait(false);
             });
@@ -161,15 +161,9 @@ public sealed class EventDrivenExample
             _logger.LogInformation("Handler: State change handled");
         }
 
-        private async Task PublishBotStateChangeAsync(string oldState, string newState)
+        private async Task PublishBotStateChangeAsync(string previousState, string newState)
         {
-            var evt = new BotStateChangedEvent
-            {
-                CorrelationId = Guid.NewGuid().ToString(),
-                OldState = oldState,
-                NewState = newState,
-                Timestamp = DateTime.UtcNow
-            };
+            var evt = new BotStateChangedEvent(previousState, newState, null, Guid.NewGuid().ToString());
 
             await _eventBus.PublishAsync(evt).ConfigureAwait(false);
         }

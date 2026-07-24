@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using TelegramBotFramework.Integration;
 
@@ -96,10 +96,21 @@ public abstract class MessageEventBase : EventBase
     /// <param name="userId">The user identifier.</param>
     /// <param name="messageText">The message text.</param>
     /// <param name="correlationId">The correlation identifier.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="correlationId"/> is null or empty.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="chatId"/> is less than or equal to 0.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to 0.</exception>
     protected MessageEventBase(long chatId, long userId, string? messageText, string? correlationId = null)
-        : base(correlationId)
+    : base(correlationId)
     {
+        if (chatId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(chatId), chatId, "Chat ID must be greater than 0.");
+        }
+
+        if (userId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(userId), userId, "User ID must be greater than 0.");
+        }
+
         ChatId = chatId;
         UserId = userId;
         MessageText = messageText;
@@ -119,9 +130,10 @@ public sealed class MessageReceivedEvent : MessageEventBase
     /// <param name="userId">The user identifier.</param>
     /// <param name="messageText">The message text.</param>
     /// <param name="correlationId">The correlation identifier.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="correlationId"/> is null or empty.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="chatId"/> is less than or equal to 0.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to 0.</exception>
     public MessageReceivedEvent(long chatId, long userId, string? messageText, string? correlationId = null)
-        : base(chatId, userId, messageText, correlationId)
+    : base(chatId, userId, messageText, correlationId)
     {
     }
 }
@@ -144,9 +156,10 @@ public sealed class MessageEditedEvent : MessageEventBase
     /// <param name="messageText">The message text.</param>
     /// <param name="editedTimestamp">The edited timestamp.</param>
     /// <param name="correlationId">The correlation identifier.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="correlationId"/> is null or empty.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="chatId"/> is less than or equal to 0.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to 0.</exception>
     public MessageEditedEvent(long chatId, long userId, string? messageText, DateTime? editedTimestamp = null, string? correlationId = null)
-        : base(chatId, userId, messageText, correlationId)
+    : base(chatId, userId, messageText, correlationId)
     {
         EditedTimestamp = editedTimestamp;
     }
@@ -191,9 +204,18 @@ public sealed class CommandExecutedEvent : EventBase
     /// <param name="success">Whether the command execution was successful.</param>
     /// <param name="errorMessage">The error message if the command failed.</param>
     /// <param name="correlationId">The correlation identifier.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="commandName"/> is null or whitespace.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to 0.</exception>
     public CommandExecutedEvent(string commandName, long userId, string? arguments, bool success, string? errorMessage = null, string? correlationId = null)
-        : base(correlationId)
+    : base(correlationId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(commandName, nameof(commandName));
+
+        if (userId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(userId), userId, "User ID must be greater than 0.");
+        }
+
         CommandName = commandName;
         UserId = userId;
         Arguments = arguments;
@@ -210,12 +232,12 @@ public sealed class BotStateChangedEvent : EventBase
     /// <summary>
     /// Gets or sets the previous state.
     /// </summary>
-    public string PreviousState { get; set; }
+    public string PreviousState { get; }
 
     /// <summary>
-    /// Gets or sets the new state.
+    /// Gets the new state.
     /// </summary>
-    public string NewState { get; set; }
+    public string NewState { get; }
 
     /// <summary>
     /// Gets or sets the reason for the state change.
@@ -229,9 +251,14 @@ public sealed class BotStateChangedEvent : EventBase
     /// <param name="newState">The new state.</param>
     /// <param name="reason">The reason for the state change.</param>
     /// <param name="correlationId">The correlation identifier.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="previousState"/> is null or whitespace.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="newState"/> is null or whitespace.</exception>
     public BotStateChangedEvent(string previousState, string newState, string? reason = null, string? correlationId = null)
-        : base(correlationId)
+    : base(correlationId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(previousState, nameof(previousState));
+        ArgumentException.ThrowIfNullOrEmpty(newState, nameof(newState));
+
         PreviousState = previousState;
         NewState = newState;
         Reason = reason;
