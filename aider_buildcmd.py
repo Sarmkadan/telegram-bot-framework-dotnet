@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-Utility build script for the Telegram Bot Framework repository.
+Wrapper script to run `dotnet test` for the Telegram Bot Framework repository.
 
-Running this script will execute `dotnet test` in the repository root,
-allowing you to run all unit tests from a single command.
-
-If additional build steps are required, extend the `main` function
-accordingly.
+Place this file at /home/redrocket/task-factory/aider_buildcmd.py.
+It determines the repository root (workdir/telegram-bot-framework-dotnet) and
+executes `dotnet test` there, propagating the exit code.
 """
 
 import subprocess
@@ -15,8 +13,8 @@ import pathlib
 
 
 def main() -> None:
-    # Determine the repository root (the directory containing this script)
-    repo_root = pathlib.Path(__file__).resolve().parent
+    # Repository root relative to this script
+    repo_root = pathlib.Path(__file__).resolve().parent / "workdir" / "telegram-bot-framework-dotnet"
 
     # Execute `dotnet test` in the repository root
     try:
@@ -25,7 +23,7 @@ def main() -> None:
             cwd=repo_root,
             check=False,
         )
-    except FileNotFoundError as exc:
+    except FileNotFoundError:
         print("Error: `dotnet` executable not found. Ensure the .NET SDK is installed.", file=sys.stderr)
         sys.exit(1)
 
