@@ -5,21 +5,28 @@
 // CTO & Software Architect
 // =====================================================================
 
+using TelegramBotFramework.Events;
+
 namespace TelegramBotFramework.Integration;
 
 /// <summary>
 /// Implements polling strategy for fetching Telegram updates.
 /// Used as an alternative to webhooks for receiving bot updates.
 /// </summary>
-public sealed class PollingStrategy
+public sealed class PollingStrategy : IHostedService
 {
     private readonly ITelegramApiClient _apiClient;
     private readonly WebhookHandler _webhookHandler;
     private readonly ILogger<PollingStrategy> _logger;
     private readonly IUpdateOffsetStore _offsetStore;
+    private readonly EventPublisher _eventPublisher;
     private long _lastUpdateId = 0;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _pollingTask;
+    private readonly List<Task> _inFlightHandlers = [];
+    private readonly object _inFlightLock = new();
+    private TimeSpan _shutdownTimeout = TimeSpan.FromSeconds(30);
+    private bool _isShuttingDown = false;
 
     // Backoff configuration constants
     private const int BasePollIntervalMs = 1000; // Default 1 second
@@ -48,16 +55,19 @@ public sealed class PollingStrategy
     /// <param name="apiClient">The Telegram API client to use for fetching updates.</param>
     /// <param name="offsetStore">The offset store for persisting the last processed update.</param>
     /// <param name="logger">Optional logger for diagnostic messages.</param>
+    /// <param name="eventPublisher">Optional event publisher for state change notifications.</param>
     /// <exception cref="ArgumentNullException">Thrown when apiClient or offsetStore is null.</exception>
     public PollingStrategy(
         ITelegramApiClient apiClient,
         IUpdateOffsetStore offsetStore,
-        ILogger<PollingStrategy>? logger = null)
+        ILogger<PollingStrategy>? logger = null,
+        EventPublisher? eventPublisher = null)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _offsetStore = offsetStore ?? throw new ArgumentNullException(nameof(offsetStore));
         _logger = logger ?? new ConsoleLogger<PollingStrategy>();
         _webhookHandler = new WebhookHandler();
+        _eventPublisher = eventPublisher ?? new EventPublisher(new InMemoryEventBus());
 
         // Initialize with offset from store
         _lastUpdateId = _offsetStore.GetLastOffset();
@@ -71,6 +81,8 @@ public sealed class PollingStrategy
     /// <summary>
     /// Starts the polling loop that continuously fetches updates from Telegram.
     /// </summary>
+    /// <param name="pollInterval">Optional polling interval. If not specified, uses the default 1 second.</param>
+    /// <exception cref="InvalidOperationException">Thrown when polling is already running.</exception>
     public void Start(TimeSpan? pollInterval = null)
     {
         if (_pollingTask is not null && !_pollingTask.IsCompleted)
@@ -88,48 +100,99 @@ public sealed class PollingStrategy
     }
 
     /// <summary>
-    /// Stops the polling loop gracefully.
+    /// Starts the polling service.
     /// </summary>
-    public async Task StopAsync()
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task IHostedService.StartAsync(CancellationToken cancellationToken)
+    {
+        Start();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Stops the polling loop gracefully, waiting for in-flight updates to complete.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task StopAsync(CancellationToken cancellationToken = default)
     {
         if (_cancellationTokenSource is null)
+        {
+            _logger.LogDebug("Polling was not running, nothing to stop");
             return;
+        }
 
+        _logger.LogInformation("Initiating graceful shutdown of polling strategy");
+
+        // Signal shutdown start
+        _isShuttingDown = true;
+
+        // Stop fetching new updates
         _cancellationTokenSource.Cancel();
 
-        if (_pollingTask is not null)
+        // Wait for polling task to complete
+        if (_pollingTask is not null && !_pollingTask.IsCompleted)
         {
             try
             {
-                await _pollingTask;
+                await _pollingTask.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 // Expected when cancelling
+                _logger.LogDebug("Polling task cancelled");
             }
         }
 
+        // Wait for in-flight handlers to complete with timeout
+        await DrainInFlightHandlersAsync(cancellationToken).ConfigureAwait(false);
+
+        // Persist the final offset
+        await PersistFinalOffsetAsync().ConfigureAwait(false);
+
+        // Publish state change event
+        await PublishBotStoppedEventAsync().ConfigureAwait(false);
+
+        // Cleanup
         _cancellationTokenSource.Dispose();
         _cancellationTokenSource = null;
         _pollingTask = null;
 
-        _logger.LogInformation("Polling stopped");
+        _logger.LogInformation("Polling stopped gracefully");
     }
 
     /// <summary>
-    /// Gets the current polling status.
+    /// Stops the polling service.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task IHostedService.StopAsync(CancellationToken cancellationToken)
+    {
+        return StopAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the current polling status including drain state.
+    /// </summary>
+    /// <returns>A <see cref="PollingStatus"/> object representing the current state.</returns>
     public PollingStatus GetStatus()
     {
-        return new PollingStatus
+        lock (_inFlightLock)
         {
-            IsRunning = _pollingTask is not null && !_pollingTask.IsCompleted,
-            LastUpdateId = _lastUpdateId,
-            LastPollTime = LastPollTime,
-            CurrentBackoffMs = _currentBackoffMs,
-            ConsecutiveFailureCount = _consecutiveFailureCount,
-            BasePollIntervalMs = BasePollIntervalMs
-        };
+            return new PollingStatus
+            {
+                IsRunning = _pollingTask is not null && !_pollingTask.IsCompleted,
+                LastUpdateId = _lastUpdateId,
+                LastPollTime = LastPollTime,
+                CurrentBackoffMs = _currentBackoffMs,
+                ConsecutiveFailureCount = _consecutiveFailureCount,
+                BasePollIntervalMs = BasePollIntervalMs,
+                IsDraining = _isShuttingDown,
+                IsDrainComplete = _isShuttingDown && _inFlightHandlers.Count == 0,
+                InFlightCount = _inFlightHandlers.Count
+            };
+        }
     }
 
     public DateTime? LastPollTime { get; private set; }
@@ -233,25 +296,156 @@ public sealed class PollingStrategy
     /// Processes an update received from polling, advancing the last-seen update ID and
     /// invoking <see cref="OnUpdateReceived"/>.
     /// </summary>
+    /// <param name="update">The update to process.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task ProcessUpdateAsync(TelegramUpdate update)
     {
         ArgumentNullException.ThrowIfNull(update);
 
+        // Track in-flight handler
+        Task? handlerTask = null;
+        lock (_inFlightLock)
+        {
+            if (_isShuttingDown)
+            {
+                _logger.LogWarning("Update {UpdateId} received during shutdown, skipping processing", update.UpdateId);
+                return;
+            }
+
+            _lastUpdateId = update.UpdateId;
+            handlerTask = OnUpdateReceived?.Invoke(update);
+
+            if (handlerTask is not null)
+            {
+                _inFlightHandlers.Add(handlerTask);
+            }
+        }
+
         try
         {
-            _lastUpdateId = update.UpdateId;
-            await _offsetStore.SetLastOffset(_lastUpdateId);
-            await _offsetStore.PersistAsync();
-
-            if (OnUpdateReceived is not null)
+            if (handlerTask is not null)
             {
-                await OnUpdateReceived.Invoke(update).ConfigureAwait(false);
+                await handlerTask.ConfigureAwait(false);
             }
+
+            await _offsetStore.SetLastOffset(_lastUpdateId).ConfigureAwait(false);
+            await _offsetStore.PersistAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing update {UpdateId}", update.UpdateId);
         }
+        finally
+        {
+            // Remove completed handler from tracking
+            if (handlerTask is not null)
+            {
+                lock (_inFlightLock)
+                {
+                    _inFlightHandlers.Remove(handlerTask);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Drains all in-flight update handlers with a configurable timeout.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task DrainInFlightHandlersAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Waiting for {Count} in-flight update handlers to complete", _inFlightHandlers.Count);
+
+        var drainTimeout = _shutdownTimeout;
+        var startTime = DateTime.UtcNow;
+
+        while (true)
+        {
+            lock (_inFlightLock)
+            {
+                if (_inFlightHandlers.Count == 0)
+                {
+                    _logger.LogInformation("All in-flight handlers completed");
+                    return;
+                }
+
+                // Check if we've exceeded the timeout
+                if (DateTime.UtcNow - startTime > drainTimeout)
+                {
+                    _logger.LogWarning("Timeout reached while waiting for in-flight handlers. {RemainingCount} handlers still running", _inFlightHandlers.Count);
+                    return;
+                }
+            }
+
+            // Log progress every 5 seconds
+            var elapsed = DateTime.UtcNow - startTime;
+            if (elapsed.TotalSeconds % 5 < 0.1) // Small tolerance for timing
+            {
+                _logger.LogInformation("Waiting for in-flight handlers... {Elapsed}s elapsed, {RemainingCount} remaining",
+                    (int)elapsed.TotalSeconds, _inFlightHandlers.Count);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Persists the final update offset before shutdown completes.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task PersistFinalOffsetAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Persisting final offset: {LastUpdateId}", _lastUpdateId);
+            await _offsetStore.SetLastOffset(_lastUpdateId).ConfigureAwait(false);
+            await _offsetStore.PersistAsync().ConfigureAwait(false);
+            _logger.LogInformation("Final offset persisted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to persist final offset");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Publishes a BotStateChangedEvent(Stopped) event to notify subscribers of shutdown.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task PublishBotStoppedEventAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Publishing BotStateChangedEvent(Stopped)");
+            await _eventPublisher.PublishBotStateChangedAsync(
+                "Running",
+                "Stopped",
+                "Graceful shutdown completed"
+            ).ConfigureAwait(false);
+            _logger.LogInformation("Bot state change event published successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish bot state changed event");
+            // Don't throw - event publishing should not fail the shutdown
+        }
+    }
+
+    /// <summary>
+    /// Sets the shutdown timeout for graceful shutdown.
+    /// </summary>
+    /// <param name="timeout">The timeout duration.</param>
+    public void SetShutdownTimeout(TimeSpan timeout)
+    {
+        if (timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive");
+        }
+
+        _shutdownTimeout = timeout;
+        _logger.LogInformation("Shutdown timeout set to {TimeoutSeconds}s", (int)timeout.TotalSeconds);
     }
 }
 
@@ -289,4 +483,19 @@ public sealed class PollingStatus
     /// Gets or sets the base poll interval in milliseconds.
     /// </summary>
     public int BasePollIntervalMs { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the polling strategy is currently draining in-flight handlers.
+    /// </summary>
+    public bool IsDraining { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether all in-flight handlers have completed draining.
+    /// </summary>
+    public bool IsDrainComplete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of currently in-flight update handlers.
+    /// </summary>
+    public int InFlightCount { get; set; }
 }
