@@ -6,9 +6,9 @@ using FluentAssertions;
 using TelegramBotFramework.Integration;
 using Xunit;
 
-namespace TelegramBotFramework.Tests.Integration;
+namespace TelegramBotFramework.Integration.InternalTests;
 
-public class ExternalApiIntegrationValidationTests
+internal class ExternalApiIntegrationValidationTestsHelper
 {
     [Fact]
     public void Validate_ReturnsEmptyList_WhenInstanceIsValid()
