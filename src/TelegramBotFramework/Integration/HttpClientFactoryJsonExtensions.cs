@@ -15,7 +15,7 @@ namespace TelegramBotFramework.Integration;
 /// </summary>
 public static class HttpClientFactoryJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
@@ -34,7 +34,7 @@ public static class HttpClientFactoryJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        return JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _jsonOptions);
+        return JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public static class HttpClientFactoryJsonExtensions
             return null;
         }
 
-        return JsonSerializer.Deserialize<HttpClientFactory>(json, _jsonOptions);
+        return JsonSerializer.Deserialize<HttpClientFactory>(json, _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public static class HttpClientFactoryJsonExtensions
 
         try
         {
-            value = JsonSerializer.Deserialize<HttpClientFactory>(json, _jsonOptions);
+            value = JsonSerializer.Deserialize<HttpClientFactory>(json, _jsonSerializerOptions);
             return true;
         }
         catch (JsonException)
@@ -87,7 +87,7 @@ public static class HttpClientFactoryJsonExtensions
 
     private static JsonSerializerOptions GetIndentedOptions()
     {
-        var options = new JsonSerializerOptions(_jsonOptions)
+        var options = new JsonSerializerOptions(_jsonSerializerOptions)
         {
             WriteIndented = true
         };
