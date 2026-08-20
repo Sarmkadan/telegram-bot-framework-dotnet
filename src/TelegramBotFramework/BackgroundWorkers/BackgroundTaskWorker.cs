@@ -12,7 +12,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Background task worker for executing long-running operations without blocking requests.
 /// Uses a queue to manage tasks and workers for execution.
 /// </summary>
-public sealed class BackgroundTaskWorker : IDisposable
+public sealed class BackgroundTaskWorker : IBackgroundTaskWorker, IDisposable
 {
     private readonly Queue<BackgroundTask> _taskQueue = new();
     private readonly SemaphoreSlim _taskAvailable;
@@ -21,6 +21,16 @@ public sealed class BackgroundTaskWorker : IDisposable
     private readonly int _maxConcurrentTasks;
     private int _runningTasks = 0;
     private Task? _workerTask;
+
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public Func<CancellationToken, Task>? TaskFunc { get; set; }
+    public DateTime QueuedAt { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public int QueuedTaskCount { get; set; }
+    public int RunningTaskCount { get; set; }
+    public int MaxConcurrentTasks { get; set; }
 
     public BackgroundTaskWorker(int maxConcurrentTasks = 4, ILogger<BackgroundTaskWorker>? logger = null)
     {
