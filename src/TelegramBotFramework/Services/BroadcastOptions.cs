@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Configuration options for broadcast operations.
 /// </summary>
-public sealed class BroadcastOptions
+public sealed class BroadcastOptions : IBroadcastOptions
 {
     /// <summary>
     /// Maximum messages per second (default: 25).
