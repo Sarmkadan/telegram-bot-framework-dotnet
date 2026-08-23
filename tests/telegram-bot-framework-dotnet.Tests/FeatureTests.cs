@@ -46,6 +46,25 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="Build_WithSingleCallbackButton_CreatesOneRowOneButton"/>; performs the same steps.
+	/// </summary>
+	public async Task Build_WithSingleCallbackButton_CreatesOneRowOneButtonAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create()
+			.AddButton("Click me", "click")
+			.Build();
+
+		markup.RowCount.Should().Be(1);
+		markup.TotalButtonCount.Should().Be(1);
+		markup.InlineKeyboard[0][0].Text.Should().Be("Click me");
+		markup.InlineKeyboard[0][0].CallbackData.Should().Be("click");
+		markup.InlineKeyboard[0][0].Type.Should().Be(InlineButtonType.Callback);
+	}
+
+	/// <summary>
 	/// Tests that adding a URL button creates a button with the correct type and URL.
 	/// Verifies the button type is set to Url and the URL is correctly assigned.
 	/// </summary>
@@ -63,6 +82,24 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="Build_WithUrlButton_SetsTypeAndUrl"/>; performs the same steps.
+	/// </summary>
+	public async Task Build_WithUrlButton_SetsTypeAndUrlAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create()
+			.AddUrlButton("Visit", "https://example.com")
+			.Build();
+
+		var btn = markup.InlineKeyboard[0][0];
+		btn.Type.Should().Be(InlineButtonType.Url);
+		btn.Url.Should().Be("https://example.com");
+		btn.CallbackData.Should().BeNull();
+	}
+
+	/// <summary>
 	/// Tests that adding a switch inline button creates a button with the correct type and inline query.
 	/// Verifies the button type is set to SwitchInline and the switch inline query is correctly assigned.
 	/// </summary>
@@ -76,6 +113,23 @@ public sealed class InlineKeyboardBuilderTests
 		var btn = markup.InlineKeyboard[0][0];
 	btn.Type.Should().Be(InlineButtonType.SwitchInline);
 	btn.SwitchInlineQuery.Should().Be("my query");
+	}
+
+	/// <summary>
+	/// Async counterpart of <see cref="Build_WithSwitchInlineButton_SetsTypeAndQuery"/>; performs the same steps.
+	/// </summary>
+	public async Task Build_WithSwitchInlineButton_SetsTypeAndQueryAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create()
+			.AddSwitchInlineButton("Search", "my query")
+			.Build();
+
+		var btn = markup.InlineKeyboard[0][0];
+		btn.Type.Should().Be(InlineButtonType.SwitchInline);
+		btn.SwitchInlineQuery.Should().Be("my query");
 	}
 
 	/// <summary>
@@ -97,6 +151,25 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="Build_AutoWrapsButtonsAtMaxPerRow"/>; performs the same steps.
+	/// </summary>
+	public async Task Build_AutoWrapsButtonsAtMaxPerRowAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
+			.AddButton("A", "a")
+			.AddButton("B", "b")
+			.AddButton("C", "c")
+			.Build();
+
+		markup.RowCount.Should().Be(2);
+		markup.InlineKeyboard[0].Count.Should().Be(2);
+		markup.InlineKeyboard[1].Count.Should().Be(1);
+	}
+
+	/// <summary>
 	/// Tests that calling NewRow() forces a row break before the maximum buttons per row is reached.
 	/// Verifies that NewRow() creates a new row regardless of the current button count.
 	/// </summary>
@@ -115,6 +188,25 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="NewRow_ForcesRowBreakBeforeMaxReached"/>; performs the same steps.
+	/// </summary>
+	public async Task NewRow_ForcesRowBreakBeforeMaxReachedAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 3)
+			.AddButton("A", "a")
+			.NewRow()
+			.AddButton("B", "b")
+			.Build();
+
+		markup.RowCount.Should().Be(2);
+		markup.InlineKeyboard[0][0].Text.Should().Be("A");
+		markup.InlineKeyboard[1][0].Text.Should().Be("B");
+	}
+
+	/// <summary>
 	/// Tests that the ToButtonLabels() method returns a two-dimensional array of button labels.
 	/// Verifies the method correctly converts the keyboard markup into a label array.
 	/// </summary>
@@ -130,6 +222,25 @@ public sealed class InlineKeyboardBuilderTests
 
 		labels.Should().HaveCount(1);
 	labels[0].Should().BeEquivalentTo(new[] { "Yes", "No" });
+	}
+
+	/// <summary>
+	/// Async counterpart of <see cref="ToButtonLabels_ReturnsTwoDimensionalLabelArray"/>; performs the same steps.
+	/// </summary>
+	public async Task ToButtonLabels_ReturnsTwoDimensionalLabelArrayAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
+			.AddButton("Yes", "yes")
+			.AddButton("No", "no")
+			.Build();
+
+		var labels = markup.ToButtonLabels();
+
+		labels.Should().HaveCount(1);
+		labels[0].Should().BeEquivalentTo(new[] { "Yes", "No" });
 	}
 
 	/// <summary>
@@ -153,12 +264,47 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="ToMenu_ConvertsMarkupToMenuModel"/>; performs the same steps.
+	/// </summary>
+	public async Task ToMenu_ConvertsMarkupToMenuModelAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var menu = InlineKeyboardBuilder.Create()
+			.AddButton("Help", "help")
+			.AddUrlButton("Docs", "https://docs.example.com")
+			.ToMenu("main_menu", "Main Menu");
+
+		menu.Id.Should().Be("main_menu");
+		menu.Title.Should().Be("Main Menu");
+		menu.Buttons.Should().HaveCount(2);
+		menu.Buttons[0].CallbackData.Should().Be("help");
+		menu.Buttons[1].Url.Should().Be("https://docs.example.com");
+		menu.Buttons[1].Action.Should().Be(Models.ButtonAction.OpenUrl);
+	}
+
+	/// <summary>
 	/// Tests that attempting to build a keyboard with no buttons throws an InvalidOperationException.
 	/// Verifies the builder enforces the requirement for at least one button.
 	/// </summary>
 	[Fact]
 	public void Build_WithNoButtons_ThrowsInvalidOperationException()
 	{
+		var act = () => InlineKeyboardBuilder.Create().Build();
+
+		act.Should().Throw<InvalidOperationException>()
+			.WithMessage("*empty keyboard*");
+	}
+
+	/// <summary>
+	/// Async counterpart of <see cref="Build_WithNoButtons_ThrowsInvalidOperationException"/>; performs the same steps.
+	/// </summary>
+	public async Task Build_WithNoButtons_ThrowsInvalidOperationExceptionAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
 		var act = () => InlineKeyboardBuilder.Create().Build();
 
 		act.Should().Throw<InvalidOperationException>()
@@ -181,12 +327,41 @@ public sealed class InlineKeyboardBuilderTests
 	}
 
 	/// <summary>
+	/// Async counterpart of <see cref="AddButton_WithCallbackDataExceeding64Bytes_ThrowsArgumentException"/>; performs the same steps.
+	/// </summary>
+	public async Task AddButton_WithCallbackDataExceeding64Bytes_ThrowsArgumentExceptionAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
+		var longData = new string('x', 65);
+
+		var act = () => InlineKeyboardBuilder.Create().AddButton("Test", longData);
+
+		act.Should().Throw<ArgumentException>()
+			.WithMessage("*64*byte*");
+	}
+
+	/// <summary>
 	/// Tests that adding a button with empty text throws an ArgumentException.
 	/// Verifies the builder enforces non-empty button text.
 	/// </summary>
 	[Fact]
 	public void AddButton_WithEmptyText_ThrowsArgumentException()
 	{
+		var act = () => InlineKeyboardBuilder.Create().AddButton("", "data");
+
+		act.Should().Throw<ArgumentException>();
+	}
+
+	/// <summary>
+	/// Async counterpart of <see cref="AddButton_WithEmptyText_ThrowsArgumentException"/>; performs the same steps.
+	/// </summary>
+	public async Task AddButton_WithEmptyText_ThrowsArgumentExceptionAsync(CancellationToken cancellationToken = default)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		await Task.CompletedTask;
+
 		var act = () => InlineKeyboardBuilder.Create().AddButton("", "data");
 
 		act.Should().Throw<ArgumentException>();
