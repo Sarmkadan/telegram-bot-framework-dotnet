@@ -5,6 +5,8 @@
 // CTO & Software Architect
 // ===================================================================
 
+using System.Linq;
+
 namespace TelegramBotFramework.Integration;
 
 /// <summary>
@@ -12,7 +14,7 @@ namespace TelegramBotFramework.Integration;
 /// Pass an instance to <c>services.AddWebhookMode(options)</c> or configure
 /// via <see cref="BotConfiguration.WebhookUrl"/> and <see cref="BotConfiguration.WebhookSecret"/>.
 /// </summary>
-public sealed class WebhookOptions
+public sealed class WebhookOptions : IEquatable<WebhookOptions>
 {
     /// <summary>
     /// Gets or sets the HTTPS URL Telegram will send updates to.
@@ -64,6 +66,39 @@ public sealed class WebhookOptions
     /// Defaults to <c>1 MB (1_048_576 bytes)</c>.
     /// </summary>
     public long MaxRequestBodySize { get; set; } = 1_048_576; // 1 MB
+
+    public bool Equals(WebhookOptions? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Url == other.Url &&
+               SecretToken == other.SecretToken &&
+               MaxConnections == other.MaxConnections &&
+               (AllowedUpdates == null ? other.AllowedUpdates == null : other.AllowedUpdates != null && AllowedUpdates.SequenceEqual(other.AllowedUpdates)) &&
+               ListenPath == other.ListenPath &&
+               DropPendingUpdates == other.DropPendingUpdates;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as WebhookOptions);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Url, SecretToken, MaxConnections, AllowedUpdates != null ? AllowedUpdates.GetHashCode() : 0, ListenPath, DropPendingUpdates);
+    }
+
+    public static bool operator ==(WebhookOptions? left, WebhookOptions? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(WebhookOptions? left, WebhookOptions? right)
+    {
+        return !Equals(left, right);
+    }
 
     /// <summary>Validates required fields.</summary>
     public void Validate()
