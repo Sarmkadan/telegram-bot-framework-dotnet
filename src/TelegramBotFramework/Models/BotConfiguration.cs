@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Models;
 /// Contains all configuration parameters for the Telegram bot including authentication,
 /// session management, logging, rate limiting, and webhook settings.
 /// </remarks>
-public sealed class BotConfiguration
+public sealed class BotConfiguration : IEquatable<BotConfiguration>
 {
     public string BotToken { get; set; } = string.Empty;
 
@@ -51,6 +51,40 @@ public sealed class BotConfiguration
     public int RateLimitPerMinute { get; set; } = 30;
 
     public string? LocalizationLanguage { get; set; } = "en";
+
+    public bool Equals(BotConfiguration? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return BotToken == other.BotToken &&
+               BotUsername == other.BotUsername &&
+               OwnerId == other.OwnerId &&
+               DatabaseConnectionString == other.DatabaseConnectionString &&
+               SessionTimeoutMinutes == other.SessionTimeoutMinutes &&
+               MessageProcessingTimeoutSeconds == other.MessageProcessingTimeoutSeconds &&
+               EnableLogging == other.EnableLogging &&
+               LogLevel == other.LogLevel;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || (obj is BotConfiguration other && Equals(other));
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(BotToken, BotUsername, OwnerId, DatabaseConnectionString, SessionTimeoutMinutes, MessageProcessingTimeoutSeconds, EnableLogging, LogLevel);
+    }
+
+    public static bool operator ==(BotConfiguration? left, BotConfiguration? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(BotConfiguration? left, BotConfiguration? right)
+    {
+        return !Equals(left, right);
+    }
 
     /// <summary>
     /// Validates the bot configuration.
