@@ -16,12 +16,19 @@ namespace TelegramBotFramework.Examples
     /// State management example showing how to handle complex user flows with form data,
     /// multi-step processes, and conversation state tracking.
     /// </summary>
-public sealed class StateManagementExample
+public sealed class StateManagementExample : IStateManagementExample
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<StateManagementExample> _logger;
         private readonly ISessionAndMenuService _sessionService;
         private readonly IUserService _userService;
+
+        public string FirstName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public int SatisfactionLevel { get; set; }
+        public string ImprovementSuggestions { get; set; } = string.Empty;
+        public bool WouldRecommend { get; set; }
 
         public StateManagementExample(IServiceProvider serviceProvider)
         {
