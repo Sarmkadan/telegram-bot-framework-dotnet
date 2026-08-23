@@ -64,7 +64,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             throw new ArgumentException("Message text cannot be empty", nameof(text));
 
         var payload = new { chat_id = chatId, text = text };
-        return await SendApiRequestAsync("sendMessage", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             reply_markup = new { inline_keyboard = buttons }
         };
 
-        return await SendApiRequestAsync("sendMessage", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             throw new ArgumentException("Message ID must be positive", nameof(messageId));
 
         var payload = new { chat_id = chatId, message_id = messageId, text = newText };
-        return await SendApiRequestAsync("editMessageText", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.EditMessageTextMethod, payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
         var payload = new { chat_id = chatId, message_id = messageId };
-        return await SendApiRequestAsync("deleteMessage", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.DeleteMessageMethod, payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -129,13 +129,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
-        if (string.IsNullOrWhiteSpace(question) || question.Length > 256)
+        if (string.IsNullOrWhiteSpace(question) || question.Length > TelegramApiClientConstants.MaxPollQuestionLength)
             throw new ArgumentException("Question must be 1-256 characters", nameof(question));
 
-        if (options == null || options.Length < 2 || options.Length > 10)
+        if (options == null
+            || options.Length < TelegramApiClientConstants.MinPollOptions
+            || options.Length > TelegramApiClientConstants.MaxPollOptions)
             throw new ArgumentException("Must provide 2-10 options", nameof(options));
 
-        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > 100))
+        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > TelegramApiClientConstants.MaxPollOptionLength))
             throw new ArgumentException("Each option must be 1-100 characters", nameof(options));
 
         var payload = new
@@ -149,10 +151,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
-            var url = $"bot{_botToken}/sendPoll";
+            var url = string.Format(
+                CultureInfo.InvariantCulture,
+                TelegramApiClientConstants.BotApiUrlFormat,
+                _botToken,
+                TelegramApiClientConstants.SendPollMethod);
 
             var json = JsonUtility.Serialize(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var content = new StringContent(json, Encoding.UTF8, TelegramApiClientConstants.JsonContentType);
 
             var response = await client.PostAsync(url, content).ConfigureAwait(false);
 
@@ -195,7 +201,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
-        if (items == null || items.Count < 2 || items.Count > 10)
+        if (items == null
+            || items.Count < TelegramApiClientConstants.MinMediaGroupItems
+            || items.Count > TelegramApiClientConstants.MaxMediaGroupItems)
             throw new ArgumentException("Must provide 2-10 media items", nameof(items));
 
         if (items.Any(item => item == null || string.IsNullOrWhiteSpace(item.FileIdOrUrl)))
@@ -230,9 +238,13 @@ public sealed class TelegramApiClient : ITelegramApiClient
             };
 
             var json = JsonUtility.Serialize(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var content = new StringContent(json, Encoding.UTF8, TelegramApiClientConstants.JsonContentType);
 
-            var url = $"bot{_botToken}/sendMediaGroup";
+            var url = string.Format(
+                CultureInfo.InvariantCulture,
+                TelegramApiClientConstants.BotApiUrlFormat,
+                _botToken,
+                TelegramApiClientConstants.SendMediaGroupMethod);
             var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -282,7 +294,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     public async Task<string?> GetMeAsync()
     {
-        return await GetApiRequestAsync("getMe").ConfigureAwait(false);
+        return await GetApiRequestAsync(TelegramApiClientConstants.GetMeMethod).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -294,7 +306,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
             throw new ArgumentException("Callback query ID cannot be empty", nameof(callbackQueryId));
 
         var payload = new { callback_query_id = callbackQueryId, text = notificationText };
-        return await SendApiRequestAsync("answerCallbackQuery", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(
+            TelegramApiClientConstants.AnswerCallbackQueryMethod,
+            payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -306,7 +320,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             throw new ArgumentException("Invalid webhook URL", nameof(webhookUrl));
 
         var payload = new { url = webhookUrl };
-        return await SendApiRequestAsync("setWebhook", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.SetWebhookMethod, payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -314,7 +328,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     public async Task<bool> RemoveWebhookAsync()
     {
-        return await SendApiRequestAsync("setWebhook", new { url = string.Empty }).ConfigureAwait(false);
+        return await SendApiRequestAsync(
+            TelegramApiClientConstants.SetWebhookMethod,
+            new { url = string.Empty }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -330,7 +346,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
             commands = commands.Select(c => new { command = c.Command, description = c.Description })
         };
 
-        return await SendApiRequestAsync("setMyCommands", payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(
+            TelegramApiClientConstants.SetMyCommandsMethod,
+            payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -339,9 +357,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="offset">Identifier of the first update to return; pass the last processed update ID + 1 to avoid duplicates.</param>
     /// <param name="timeoutSeconds">Long-polling timeout in seconds.</param>
     /// <returns>The raw update objects returned by Telegram, or an empty list if the call failed.</returns>
-    public async Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = 30)
+    public async Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(
+        long offset = 0,
+        int timeoutSeconds = TelegramApiClientConstants.DefaultGetUpdatesTimeoutSeconds)
     {
-        var method = $"getUpdates?offset={offset.ToString(CultureInfo.InvariantCulture)}&timeout={timeoutSeconds.ToString(CultureInfo.InvariantCulture)}";
+        var method = string.Format(
+            CultureInfo.InvariantCulture,
+            TelegramApiClientConstants.GetUpdatesQueryStringFormat,
+            offset,
+            timeoutSeconds);
         var json = await GetApiRequestAsync(method).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(json))
@@ -381,7 +405,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
-            var url = $"bot{_botToken}/getFile?file_id={Uri.EscapeDataString(fileId)}";
+            var url = string.Format(
+                CultureInfo.InvariantCulture,
+                TelegramApiClientConstants.GetFileUrlFormat,
+                _botToken,
+                Uri.EscapeDataString(fileId));
 
             var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
@@ -447,10 +475,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
-            var url = $"bot{_botToken}/{method}";
+            var url = string.Format(
+                CultureInfo.InvariantCulture,
+                TelegramApiClientConstants.BotApiUrlFormat,
+                _botToken,
+                method);
 
             var json = JsonUtility.Serialize(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var content = new StringContent(json, Encoding.UTF8, TelegramApiClientConstants.JsonContentType);
 
             // Determine if method is idempotent (safe to retry)
             var isIdempotent = IsIdempotentMethod(method);
@@ -495,7 +527,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
-            var url = $"bot{_botToken}/{method}";
+            var url = string.Format(
+                CultureInfo.InvariantCulture,
+                TelegramApiClientConstants.BotApiUrlFormat,
+                _botToken,
+                method);
 
             // GET requests are generally idempotent
             var response = await _retryHandler.ExecuteGetWithRetryAsync(
@@ -536,86 +572,12 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <returns>True if the method is idempotent, false otherwise.</returns>
     private bool IsIdempotentMethod(string method)
     {
-        // Methods that are generally safe to retry (idempotent)
-        var idempotentMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "getMe",
-            "getUpdates",
-            "getFile",
-            "getChat",
-            "getChatAdministrators",
-            "getChatMemberCount",
-            "getChatMembersCount",
-            "getUserProfilePhotos",
-            "getChatAdministrators",
-            "getStickerSet",
-            "getStickers",
-            "answerInlineQuery",
-            "getMyCommands",
-            "getMyDescription",
-            "getMyShortDescription",
-            "getMyName",
-            "getUserChatBoosts",
-            "getChatMenuButton",
-            "getMyDefaultAdministratorRights"
-        };
-
         // Methods that modify state and should not be retried blindly
-        var nonIdempotentMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "sendMessage",
-            "forwardMessage",
-            "copyMessage",
-            "sendPhoto",
-            "sendAudio",
-            "sendDocument",
-            "sendVideo",
-            "sendAnimation",
-            "sendVoice",
-            "sendVideoNote",
-            "sendMediaGroup",
-            "sendLocation",
-            "sendVenue",
-            "sendContact",
-            "sendPoll",
-            "sendDice",
-            "sendChatAction",
-            "editMessageText",
-            "editMessageCaption",
-            "editMessageMedia",
-            "editMessageReplyMarkup",
-            "editMessageLiveLocation",
-            "stopMessageLiveLocation",
-            "deleteMessage",
-            "sendSticker",
-            "answerCallbackQuery",
-            "setChatTitle",
-            "setChatDescription",
-            "setChatPermissions",
-            "pinChatMessage",
-            "unpinChatMessage",
-            "leaveChat",
-            "promoteChatMember",
-            "setChatAdministratorCustomTitle",
-            "banChatMember",
-            "unbanChatMember",
-            "restrictChatMember",
-            "setMyCommands",
-            "deleteMyCommands",
-            "setMyDescription",
-            "setMyShortDescription",
-            "setMyName",
-            "setChatMenuButton",
-            "setWebhook",
-            "deleteWebhook"
-        };
-
-        // If it's explicitly marked as non-idempotent, return false
-        if (nonIdempotentMethods.Contains(method))
+        if (TelegramApiClientConstants.NonIdempotentMethods.Contains(method))
             return false;
 
-        // If it's explicitly marked as idempotent, return true
-        if (idempotentMethods.Contains(method))
+        // Methods that are generally safe to retry (idempotent)
+        if (TelegramApiClientConstants.IdempotentMethods.Contains(method))
             return true;
 
         // Default to non-idempotent for safety (don't retry methods that modify state)
