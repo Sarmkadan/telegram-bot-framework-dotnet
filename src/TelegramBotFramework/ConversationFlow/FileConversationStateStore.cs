@@ -25,7 +25,7 @@ public sealed class FileConversationStateStore : IConversationStateStore, IDispo
 {
     private readonly string _directory;
     private readonly ILogger<FileConversationStateStore> _logger;
-    private readonly SemaphoreSlim _fileLock = new(1, 1);
+    private readonly SemaphoreSlim _fileLock;
     private bool _disposed;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -48,10 +48,15 @@ public sealed class FileConversationStateStore : IConversationStateStore, IDispo
         ILogger<FileConversationStateStore>? logger = null)
     {
         if (string.IsNullOrWhiteSpace(directory))
-            throw new ArgumentException("Directory path cannot be empty.", nameof(directory));
+            throw new ArgumentException(
+                FileConversationStateStoreConstants.DirectoryPathEmptyError,
+                nameof(directory));
 
         _directory = directory;
         _logger    = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<FileConversationStateStore>.Instance;
+        _fileLock  = new SemaphoreSlim(
+            FileConversationStateStoreConstants.SingleAccessSemaphoreInitialCount,
+            FileConversationStateStoreConstants.SingleAccessSemaphoreMaxCount);
 
         Directory.CreateDirectory(_directory);
     }
@@ -138,7 +143,7 @@ public sealed class FileConversationStateStore : IConversationStateStore, IDispo
     /// <inheritdoc/>
     public async Task<IReadOnlyList<UserFlowState>> LoadAllActiveStatesAsync(CancellationToken cancellationToken = default)
     {
-        var files  = Directory.GetFiles(_directory, "*.json");
+        var files  = Directory.GetFiles(_directory, FileConversationStateStoreConstants.StateFileSearchPattern);
         var result = new List<UserFlowState>(files.Length);
 
         foreach (var file in files)
@@ -156,7 +161,7 @@ public sealed class FileConversationStateStore : IConversationStateStore, IDispo
     }
 
     public string GetFilePath(long userId) =>
-        Path.Combine(_directory, $"{userId}.json");
+        Path.Combine(_directory, $"{userId}{FileConversationStateStoreConstants.StateFileExtension}");
 
     private static void TryDeleteFile(string path)
     {
