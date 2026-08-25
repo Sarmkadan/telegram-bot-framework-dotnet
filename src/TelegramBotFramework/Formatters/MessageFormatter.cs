@@ -13,7 +13,7 @@ using TelegramBotFramework.Models;
 /// Formats messages for display and logging with support for different output formats.
 /// Handles markdown, plain text, and HTML formatting.
 /// </summary>
-public sealed class MessageFormatter
+public sealed class MessageFormatter : IMessageFormatter
 {
     /// <summary>
     /// Formats a message as plain text suitable for logging.
@@ -147,4 +147,20 @@ public sealed class MessageFormatter
             .Replace("\"", "&quot;")
             .Replace("'", "&#39;");
     }
+
+    // Explicit interface implementations delegate to the static helpers,
+    // preserving the existing static API while enabling DI-based consumption.
+    string IMessageFormatter.FormatAsPlainText(Message message) => FormatAsPlainText(message);
+
+    string IMessageFormatter.FormatAsMarkdown(Message message) => FormatAsMarkdown(message);
+
+    string IMessageFormatter.FormatAsHtml(Message message) => FormatAsHtml(message);
+
+    string IMessageFormatter.FormatAsConversation(IEnumerable<Message> messages, bool markdown)
+        => FormatAsConversation(messages, markdown);
+
+    string IMessageFormatter.TruncateForPreview(Message message, int maxLength)
+        => TruncateForPreview(message, maxLength);
+
+    string IMessageFormatter.FormatForDebug(Message message) => FormatForDebug(message);
 }
