@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using TelegramBotFramework.Constants;
+
 namespace TelegramBotFramework.Middleware;
 
 /// <summary>
@@ -43,7 +45,7 @@ public sealed class HttpErrorHandlingMiddleware
     {
         _logger.LogError(exception, "Unhandled exception in request processing");
 
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType = ApiConstants.ContentTypeJson;
 
         var (statusCode, errorCode, message) = MapException(exception);
         context.Response.StatusCode = statusCode;
@@ -65,13 +67,13 @@ public sealed class HttpErrorHandlingMiddleware
     {
         return ex switch
         {
-            ArgumentNullException => (400, "INVALID_ARGUMENT", "Required argument is null"),
-            ArgumentException => (400, "INVALID_ARGUMENT", ex.Message),
-            InvalidOperationException => (409, "INVALID_STATE", ex.Message),
-            TimeoutException => (408, "REQUEST_TIMEOUT", "Request processing timed out"),
-            NotImplementedException => (501, "NOT_IMPLEMENTED", "This feature is not yet implemented"),
-            Exceptions.BotFrameworkException bfe => (500, bfe.ErrorCode ?? "BOT_FRAMEWORK_ERROR", bfe.Message),
-            _ => (500, "INTERNAL_ERROR", "An unexpected error occurred. Please try again later.")
+            ArgumentNullException => (400, HttpErrorConstants.InvalidArgumentErrorCode, HttpErrorConstants.NullArgumentMessage),
+            ArgumentException => (400, HttpErrorConstants.InvalidArgumentErrorCode, ex.Message),
+            InvalidOperationException => (409, HttpErrorConstants.InvalidStateErrorCode, ex.Message),
+            TimeoutException => (408, HttpErrorConstants.RequestTimeoutErrorCode, HttpErrorConstants.RequestTimeoutMessage),
+            NotImplementedException => (501, HttpErrorConstants.NotImplementedErrorCode, HttpErrorConstants.NotImplementedMessage),
+            Exceptions.BotFrameworkException bfe => (500, bfe.ErrorCode ?? HttpErrorConstants.BotFrameworkErrorCode, bfe.Message),
+            _ => (500, HttpErrorConstants.InternalErrorCode, HttpErrorConstants.InternalErrorMessage)
         };
     }
 }

@@ -89,6 +89,26 @@ public static class ApiConstants
 }
 
 /// <summary>
+/// HTTP error handling constants.
+/// </summary>
+public static class HttpErrorConstants
+{
+    // Error codes returned to API clients
+    public const string InvalidArgumentErrorCode = "INVALID_ARGUMENT";
+    public const string InvalidStateErrorCode = "INVALID_STATE";
+    public const string RequestTimeoutErrorCode = "REQUEST_TIMEOUT";
+    public const string NotImplementedErrorCode = "NOT_IMPLEMENTED";
+    public const string BotFrameworkErrorCode = "BOT_FRAMEWORK_ERROR";
+    public const string InternalErrorCode = "INTERNAL_ERROR";
+
+    // Default error messages returned to API clients
+    public const string NullArgumentMessage = "Required argument is null";
+    public const string RequestTimeoutMessage = "Request processing timed out";
+    public const string NotImplementedMessage = "This feature is not yet implemented";
+    public const string InternalErrorMessage = "An unexpected error occurred. Please try again later.";
+}
+
+/// <summary>
 /// Database and storage constants.
 /// </summary>
 public static class StorageConstants
