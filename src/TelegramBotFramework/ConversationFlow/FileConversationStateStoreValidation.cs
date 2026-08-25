@@ -30,7 +30,7 @@ public static class FileConversationStateStoreValidation
         string directory = value.GetDirectory();
         if (string.IsNullOrWhiteSpace(directory))
         {
-            problems.Add("Directory path cannot be null or whitespace.");
+            problems.Add("FileConversationStateStoreValidationConstants.DirectoryPathCannotBeNullOrWhitespace");
         }
         else
         {
@@ -38,7 +38,7 @@ public static class FileConversationStateStoreValidation
             {
                 if (!Directory.Exists(directory) && !string.IsNullOrEmpty(directory))
                 {
-                    problems.Add("Configured directory does not exist and cannot be created automatically.");
+                    problems.Add("FileConversationStateStoreValidationConstants.ConfiguredDirectoryDoesNotExist");
                 }
             }
             catch (Exception ex) when (ex is not ArgumentNullException and not ArgumentException)
@@ -96,62 +96,62 @@ public static class FileConversationStateStoreValidation
         // Validate required string fields
         if (string.IsNullOrWhiteSpace(state.StateId))
         {
-            problems.Add("StateId cannot be null or whitespace.");
+            problems.Add("FileConversationStateStoreValidationConstants.StateIdCannotBeNullOrWhitespace");
         }
 
         if (string.IsNullOrWhiteSpace(state.FlowId))
         {
-            problems.Add("FlowId cannot be null or whitespace.");
+            problems.Add("FileConversationStateStoreValidationConstants.FlowIdCannotBeNullOrWhitespace");
         }
 
         if (state.UserId == default)
         {
-            problems.Add("UserId must be a non-default value (cannot be 0).");
+            problems.Add("FileConversationStateStoreValidationConstants.UserIdMustBeNonDefault");
         }
 
         if (state.ChatId == default)
         {
-            problems.Add("ChatId must be a non-default value (cannot be 0).");
+            problems.Add("FileConversationStateStoreValidationConstants.ChatIdMustBeNonDefault");
         }
 
         if (string.IsNullOrWhiteSpace(state.CurrentStepId))
         {
-            problems.Add("CurrentStepId cannot be null or whitespace.");
+            problems.Add("FileConversationStateStoreValidationConstants.CurrentStepIdCannotBeNullOrWhitespace");
         }
 
         // Validate dates
         if (state.StartedAt == default)
         {
-            problems.Add("StartedAt cannot be the default DateTime value.");
+            problems.Add("FileConversationStateStoreValidationConstants.StartedAtCannotBeDefault");
         }
         else if (state.StartedAt.Kind is not DateTimeKind.Utc)
         {
-            problems.Add("StartedAt must be in UTC timezone.");
+            problems.Add("FileConversationStateStoreValidationConstants.StartedAtMustBeUtc");
         }
 
         if (state.LastActivityAt == default)
         {
-            problems.Add("LastActivityAt cannot be the default DateTime value.");
+            problems.Add("FileConversationStateStoreValidationConstants.LastActivityAtCannotBeDefault");
         }
         else if (state.LastActivityAt.Kind is not DateTimeKind.Utc)
         {
-            problems.Add("LastActivityAt must be in UTC timezone.");
+            problems.Add("FileConversationStateStoreValidationConstants.LastActivityAtMustBeUtc");
         }
 
         if (state.CompletedAt.HasValue)
         {
             if (state.CompletedAt.Value == default)
             {
-                problems.Add("CompletedAt cannot be the default DateTime value when set.");
+                problems.Add("FileConversationStateStoreValidationConstants.CompletedAtCannotBeDefaultWhenSet");
             }
             else if (state.CompletedAt.Value.Kind is not DateTimeKind.Utc)
             {
-                problems.Add("CompletedAt must be in UTC timezone when set.");
+                problems.Add("FileConversationStateStoreValidationConstants.CompletedAtMustBeUtcWhenSet");
             }
 
             if (state.CompletedAt.Value < state.StartedAt)
             {
-                problems.Add("CompletedAt cannot be earlier than StartedAt.");
+                problems.Add("FileConversationStateStoreValidationConstants.CompletedAtCannotBeEarlierThanStartedAt");
             }
         }
 
@@ -164,12 +164,12 @@ public static class FileConversationStateStoreValidation
         // Validate collections
         if (state.Variables == null)
         {
-            problems.Add("Variables dictionary cannot be null.");
+            problems.Add("FileConversationStateStoreValidationConstants.VariablesDictionaryCannotBeNull");
         }
 
         if (state.History == null)
         {
-            problems.Add("History list cannot be null.");
+            problems.Add("FileConversationStateStoreValidationConstants.HistoryListCannotBeNull");
         }
 
         // Validate history entries
@@ -179,32 +179,32 @@ public static class FileConversationStateStoreValidation
             {
                 if (entry == null)
                 {
-                    problems.Add("History contains a null entry.");
+                    problems.Add("FileConversationStateStoreValidationConstants.HistoryContainsNullEntry");
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(entry.StepId))
                 {
-                    problems.Add("History entry StepId cannot be null or whitespace.");
+                    problems.Add("FileConversationStateStoreValidationConstants.HistoryEntryStepIdCannotBeNullOrWhitespace");
                 }
 
                 if (entry.EnteredAt == default)
                 {
-                    problems.Add("History entry EnteredAt cannot be the default DateTime value.");
+                    problems.Add("FileConversationStateStoreValidationConstants.HistoryEntryEnteredAtCannotBeDefault");
                 }
                 else if (entry.EnteredAt.Kind is not DateTimeKind.Utc)
                 {
-                    problems.Add("History entry EnteredAt must be in UTC timezone.");
+                    problems.Add("FileConversationStateStoreValidationConstants.HistoryEntryEnteredAtMustBeUtc");
                 }
 
                 if (entry.CompletedAt.HasValue && entry.CompletedAt.Value.Kind is not DateTimeKind.Utc)
                 {
-                    problems.Add("History entry CompletedAt must be in UTC timezone when set.");
+                    problems.Add("History entry FileConversationStateStoreValidationConstants.CompletedAtMustBeUtcWhenSet");
                 }
 
                 if (entry.CompletedAt.HasValue && entry.CompletedAt.Value < entry.EnteredAt)
                 {
-                    problems.Add("History entry CompletedAt cannot be earlier than EnteredAt.");
+                    problems.Add("FileConversationStateStoreValidationConstants.HistoryEntryCompletedAtCannotBeEarlierThanEnteredAt");
                 }
             }
         }
