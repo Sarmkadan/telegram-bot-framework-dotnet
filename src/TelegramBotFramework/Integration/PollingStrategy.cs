@@ -26,7 +26,8 @@ public sealed class PollingStrategy : IHostedService
     private Task? _pollingTask;
     private readonly List<Task> _inFlightHandlers = [];
     private readonly object _inFlightLock = new();
-    private TimeSpan _shutdownTimeout = TimeSpan.FromSeconds(30);
+    private readonly PollingOptions _options;
+    private TimeSpan _shutdownTimeout;
     private bool _isShuttingDown = false;
 
     // Update flood protection configuration
@@ -63,17 +64,19 @@ public sealed class PollingStrategy : IHostedService
     /// <param name="offsetStore">The offset store for persisting the last processed update.</param>
     /// <param name="logger">Optional logger for diagnostic messages.</param>
     /// <param name="eventPublisher">Optional event publisher for state change notifications.</param>
-    /// <param name="maxUpdatesPerBatch">Optional maximum updates to process per polling cycle. Defaults to 100.</param>
-    /// <param name="maxInFlightUpdates">Optional maximum concurrent in-flight updates. Defaults to 1000.</param>
+    /// <param name="maxUpdatesPerBatch">Optional maximum updates to process per polling cycle. Defaults to <see cref="PollingOptions.MaxUpdatesPerBatch"/>.</param>
+    /// <param name="maxInFlightUpdates">Optional maximum concurrent in-flight updates. Defaults to <see cref="PollingOptions.MaxInFlightUpdates"/>.</param>
+    /// <param name="options">Optional configuration options. When omitted, defaults matching the previous hardcoded behavior are used.</param>
     /// <exception cref="ArgumentNullException">Thrown when apiClient or offsetStore is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when maxUpdatesPerBatch or maxInFlightUpdates is less than 1.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when maxUpdatesPerBatch, maxInFlightUpdates, or an options value is invalid.</exception>
     public PollingStrategy(
         ITelegramApiClient apiClient,
         IUpdateOffsetStore offsetStore,
         ILogger<PollingStrategy>? logger = null,
         EventPublisher? eventPublisher = null,
         int? maxUpdatesPerBatch = null,
-        int? maxInFlightUpdates = null)
+        int? maxInFlightUpdates = null,
+        PollingOptions? options = null)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _offsetStore = offsetStore ?? throw new ArgumentNullException(nameof(offsetStore));
@@ -81,9 +84,23 @@ public sealed class PollingStrategy : IHostedService
         _webhookHandler = new WebhookHandler();
         _eventPublisher = eventPublisher ?? new EventPublisher(new InMemoryEventBus());
 
-        // Apply configured limits with validation
-        _maxUpdatesPerBatch = maxUpdatesPerBatch ?? 100;
-        _maxInFlightUpdates = maxInFlightUpdates ?? 1000;
+        // Apply configuration; defaults mirror the previously hardcoded values
+        _options = options ?? new PollingOptions();
+        _shutdownTimeout = _options.ShutdownTimeout;
+
+        // Explicit limits passed to the constructor take precedence over the options instance
+        _maxUpdatesPerBatch = maxUpdatesPerBatch ?? _options.MaxUpdatesPerBatch;
+        _maxInFlightUpdates = maxInFlightUpdates ?? _options.MaxInFlightUpdates;
+
+        if (_options.PollInterval <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Poll interval must be positive");
+        }
+
+        if (_options.ShutdownTimeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "Shutdown timeout must be positive");
+        }
 
         if (_maxUpdatesPerBatch < 1)
         {
@@ -118,7 +135,7 @@ public sealed class PollingStrategy : IHostedService
         }
 
         _cancellationTokenSource = new CancellationTokenSource();
-        var interval = pollInterval ?? TimeSpan.FromSeconds(1);
+        var interval = pollInterval ?? _options.PollInterval;
 
         _pollingTask = Task.Run(() => PollAsync(interval, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
 
