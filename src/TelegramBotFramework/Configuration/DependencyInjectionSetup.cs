@@ -51,6 +51,9 @@ services.AddSingleton<Services.ILocalizationService, Services.LocalizationServic
         // Register built-in command handlers
         services.AddTransient<Commands.ICommandHandler, Commands.HelpCommandHandler>();
 
+        // Register formatters
+        services.AddSingleton<Formatters.IMessageFormatter, Formatters.MessageFormatter>();
+
         // Register rate limiting strategy
         services.AddSingleton<Strategies.IRateLimitingStrategy, Strategies.InMemoryRateLimitingStrategy>();
 
