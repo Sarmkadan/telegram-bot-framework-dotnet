@@ -12,11 +12,11 @@ namespace TelegramBotFramework.Benchmarks;
 /// A benchmark class for measuring the performance of the Telegram Bot Framework.
 /// </summary>
 [MemoryDiagnoser]
-public class BotBenchmarks
+public class BotBenchmarks : IBotBenchmarks
 {
     /// <summary>
     /// The service provider used to resolve dependencies.
-    /// </summary>
+    /// </>
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
@@ -45,12 +45,12 @@ public class BotBenchmarks
             BotToken = "test-token",
             BotUsername = "test-bot"
         };
-        
+
         services.AddTelegramBotFramework(config);
-        
+
         // Mocking logging to be silent for benchmarks
         services.AddLogging(builder => builder.AddFilter("TelegramBotFramework", Microsoft.Extensions.Logging.LogLevel.None));
-        
+
         _serviceProvider = services.BuildServiceProvider();
         _botOrchestrator = _serviceProvider.GetRequiredService<IBotOrchestrator>();
     }
