@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Integration;
 /// Pass an instance to <c>services.AddWebhookMode(options)</c> or configure
 /// via <see cref="BotConfiguration.WebhookUrl"/> and <see cref="BotConfiguration.WebhookSecret"/>.
 /// </summary>
-public sealed class WebhookOptions : IEquatable<WebhookOptions>
+public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
 {
     /// <summary>
     /// Gets or sets the HTTPS URL Telegram will send updates to.
