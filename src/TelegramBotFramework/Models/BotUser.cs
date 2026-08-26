@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a Telegram user interacting with the bot.
 /// </summary>
-public sealed class BotUser
+public sealed class BotUser : IBotUser
 {
     public long TelegramId { get; set; }
 
