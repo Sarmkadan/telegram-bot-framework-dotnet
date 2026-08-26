@@ -14,7 +14,7 @@ using System.Text.Json;
 /// Handles incoming webhook updates from Telegram and processes them.
 /// Validates update authenticity and dispatches to appropriate handlers.
 /// </summary>
-public sealed class WebhookHandler
+public sealed class WebhookHandler : IWebhookHandler
 {
     // Maximum allowed lengths for various Telegram message components to prevent DoS attacks
     private const int MaxMessageTextLength = 10_000; // 10KB - Telegram's typical limit is 4096 chars
