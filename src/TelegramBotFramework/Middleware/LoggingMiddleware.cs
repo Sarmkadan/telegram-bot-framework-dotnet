@@ -4,6 +4,13 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+
 namespace TelegramBotFramework.Middleware;
 
 /// <summary>
@@ -25,6 +32,10 @@ public sealed class HttpLoggingMiddleware
     {
         var startTime = DateTime.UtcNow;
         var correlationId = GetOrCreateCorrelationId(context);
+
+        // Create a logging scope that carries correlation, user, chat and update identifiers.
+        using var scope = _logger.BeginScope(CreateLoggingScope(context, correlationId));
+
         var originalBodyStream = context.Response.Body;
 
         try
@@ -63,6 +74,32 @@ public sealed class HttpLoggingMiddleware
         var newCorrelationId = Guid.NewGuid().ToString();
         context.Response.Headers[headerName] = newCorrelationId;
         return newCorrelationId;
+    }
+
+    private static IDictionary<string, object?> CreateLoggingScope(HttpContext context, string correlationId)
+    {
+        var scope = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CorrelationId"] = correlationId
+        };
+
+        // Optional Telegram‑specific identifiers – added to the scope if present.
+        if (context.Request.Headers.TryGetValue("X-User-ID", out var userId))
+        {
+            scope["UserId"] = userId.ToString();
+        }
+
+        if (context.Request.Headers.TryGetValue("X-Chat-ID", out var chatId))
+        {
+            scope["ChatId"] = chatId.ToString();
+        }
+
+        if (context.Request.Headers.TryGetValue("X-Update-ID", out var updateId))
+        {
+            scope["UpdateId"] = updateId.ToString();
+        }
+
+        return scope;
     }
 
     private void LogRequestStart(HttpContext context, string correlationId)
