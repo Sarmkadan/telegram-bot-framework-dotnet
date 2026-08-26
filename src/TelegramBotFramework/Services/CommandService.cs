@@ -24,6 +24,10 @@ public sealed class CommandService : ICommandService
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
 private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations = new();
 
+    // Reflection results are immutable per type, so cache them process-wide
+    // to avoid repeated attribute discovery on every dispatch.
+    private static readonly ConcurrentDictionary<Type, Attributes.CooldownAttribute?> CooldownAttributeCache = new();
+
     public CommandService(
         Repositories.ICommandRepository commandRepository,
         IUserService userService,
@@ -123,10 +127,10 @@ private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations 
                 return context;
             }
 
-        // Check cooldown
-        var cooldownAttribute = context.Command.GetType()
-            .GetCustomAttributes(typeof(Attributes.CooldownAttribute), false)
-            .FirstOrDefault() as Attributes.CooldownAttribute;
+        // Check cooldown (attribute lookup cached once per command type)
+        var cooldownAttribute = CooldownAttributeCache.GetOrAdd(
+            context.Command.GetType(),
+            static type => type.GetCustomAttribute<Attributes.CooldownAttribute>(inherit: false));
 
         if (cooldownAttribute != null)
         {
