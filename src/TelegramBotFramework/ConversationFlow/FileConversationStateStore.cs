@@ -21,7 +21,7 @@ namespace TelegramBotFramework.ConversationFlow;
 /// This implementation is suited for low-to-medium traffic bots running on a single host.
 /// For high-concurrency or multi-node deployments consider a database-backed store.
 /// </remarks>
-public sealed class FileConversationStateStore : IConversationStateStore, IDisposable
+public sealed class FileConversationStateStore : IConversationStateStore, IFileConversationStateStore, IDisposable
 {
     private readonly string _directory;
     private readonly ILogger<FileConversationStateStore> _logger;
