@@ -13,7 +13,7 @@ using Utilities;
 /// Handles integration with external APIs for data enrichment and service calls.
 /// Provides retry logic, timeout handling, and response parsing.
 /// </summary>
-public sealed class ExternalApiIntegration
+public sealed class ExternalApiIntegration : IExternalApiIntegration
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly ILogger<ExternalApiIntegration> _logger;
