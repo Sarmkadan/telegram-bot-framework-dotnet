@@ -10,7 +10,7 @@ namespace TelegramBotFramework.Integration;
 /// Factory for creating and managing HTTP clients with pre-configured settings.
 /// Handles connection pooling, timeouts, and retry policies consistently.
 /// </summary>
-public sealed class HttpClientFactory
+public sealed class HttpClientFactory : IHttpClientFactory
 {
     private readonly Dictionary<string, HttpClient> _httpClients = new();
     private readonly object _lockObj = new();
