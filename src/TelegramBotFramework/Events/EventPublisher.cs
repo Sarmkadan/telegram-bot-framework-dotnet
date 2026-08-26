@@ -12,7 +12,7 @@ namespace TelegramBotFramework.Events;
 /// Helper class for publishing events to the event bus.
 /// Provides convenience methods and ensures consistent event publishing.
 /// </summary>
-public sealed class EventPublisher
+public sealed class EventPublisher : IEventPublisher
 {
     private readonly IEventBus _eventBus;
     private readonly ILogger<EventPublisher> _logger;
