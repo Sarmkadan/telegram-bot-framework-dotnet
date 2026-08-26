@@ -36,7 +36,7 @@ public enum FlowEvictionPolicy
 /// Bind this class from <c>appsettings.json</c> under the <c>ConversationFlow</c> section
 /// or configure it inline via <see cref="ConversationFlowExtensions.AddConversationFlows"/>.
 /// </summary>
-public sealed class ConversationFlowOptions
+public sealed class ConversationFlowOptions : IConversationFlowOptions
 {
     /// <summary>
     /// Gets or sets the inactivity timeout applied to flows that do not define their own
