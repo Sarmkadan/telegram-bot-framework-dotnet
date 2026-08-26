@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a bot command that can be executed by users.
 /// </summary>
-public sealed class Command
+public sealed class Command : ICommand
 {
     public string Name { get; set; } = string.Empty;
 
