@@ -13,7 +13,7 @@ namespace TelegramBotFramework.ConversationFlow;
 /// State is stored in a <see cref="ConcurrentDictionary{TKey,TValue}"/> and does not
 /// survive process restarts. Suitable for development and single-instance deployments.
 /// </summary>
-public sealed class InMemoryConversationStateStore : IConversationStateStore
+public sealed class InMemoryConversationStateStore : IConversationStateStore, IInMemoryConversationStateStore
 {
     private readonly ConcurrentDictionary<long, UserFlowState> _store = new();
 
