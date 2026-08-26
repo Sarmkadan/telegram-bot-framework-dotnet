@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents the execution context for a command or operation.
 /// </summary>
-public sealed class ExecutionContext
+public sealed class ExecutionContext : IExecutionContext
 {
     public string ContextId { get; set; } = Guid.NewGuid().ToString();
 
