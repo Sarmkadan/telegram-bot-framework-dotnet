@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an interactive menu interface in the bot.
 /// </summary>
-public sealed class Menu
+public sealed class Menu : IMenu
 {
     public string Id { get; set; } = string.Empty;
 
