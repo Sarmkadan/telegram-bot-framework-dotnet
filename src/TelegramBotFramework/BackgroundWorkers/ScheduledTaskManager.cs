@@ -12,7 +12,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Manages scheduled and recurring background tasks using timers.
 /// Supports one-time execution and recurring schedules with customizable intervals.
 /// </summary>
-public sealed class ScheduledTaskManager : IDisposable
+public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager
 {
     private readonly Dictionary<string, ScheduledTask> _scheduledTasks = new();
     private readonly ILogger<ScheduledTaskManager> _logger;
