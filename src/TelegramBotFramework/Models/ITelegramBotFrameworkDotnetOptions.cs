@@ -1,11 +1,9 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace TelegramBotFramework.Models
 {
     /// <summary>
     /// Options for the Telegram Bot Framework .NET.
     /// </summary>
-    public class TelegramBotFrameworkDotnetOptions : ITelegramBotFrameworkDotnetOptions
+    public interface ITelegramBotFrameworkDotnetOptions
     {
         /// <summary>
         /// The token for the Telegram bot.
@@ -13,8 +11,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// The bot token.
         /// </value>
-        [Required]
-        public string BotToken { get; set; } = null!;
+        string BotToken { get; set; }
 
         /// <summary>
         /// The username for the Telegram bot.
@@ -22,8 +19,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// The bot username.
         /// </value>
-        [Required]
-        public string BotUsername { get; set; } = null!;
+        string BotUsername { get; set; }
 
         /// <summary>
         /// The connection string for the database.
@@ -31,8 +27,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// The database connection string.
         /// </value>
-        [Url]
-        public string? DatabaseConnectionString { get; set; }
+        string? DatabaseConnectionString { get; set; }
 
         /// <summary>
         /// The timeout in minutes for user sessions.
@@ -43,8 +38,7 @@ namespace TelegramBotFramework.Models
         /// <remarks>
         /// The session will be automatically expired after this time.
         /// </remarks>
-        [Range(1, 60)]
-        public int SessionTimeoutMinutes { get; set; } = 30;
+        int SessionTimeoutMinutes { get; set; }
 
         /// <summary>
         /// The timeout in seconds for message processing.
@@ -55,8 +49,7 @@ namespace TelegramBotFramework.Models
         /// <remarks>
         /// The message will be automatically discarded after this time.
         /// </remarks>
-        [Range(1, 300)]
-        public int MessageProcessingTimeoutSeconds { get; set; } = 10;
+        int MessageProcessingTimeoutSeconds { get; set; }
 
         /// <summary>
         /// The maximum number of concurrent requests.
@@ -64,8 +57,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// The maximum concurrent requests.
         /// </value>
-        [Range(1, 100)]
-        public int MaxConcurrentRequests { get; set; } = 10;
+        int MaxConcurrentRequests { get; set; }
 
         /// <summary>
         /// Whether to enable logging.
@@ -73,7 +65,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// True if logging is enabled; otherwise, false.
         /// </value>
-        public bool EnableLogging { get; set; } = true;
+        bool EnableLogging { get; set; }
 
         /// <summary>
         /// Whether to enable rate limiting.
@@ -81,7 +73,7 @@ namespace TelegramBotFramework.Models
         /// <value>
         /// True if rate limiting is enabled; otherwise, false.
         /// </value>
-        public bool EnableRateLimiting { get; set; } = true;
+        bool EnableRateLimiting { get; set; }
 
         /// <summary>
         /// The rate limit per minute.
@@ -92,7 +84,6 @@ namespace TelegramBotFramework.Models
         /// <remarks>
         /// The bot will be automatically rate limited after this number of requests per minute.
         /// </remarks>
-        [Range(1, 600)]
-        public int RateLimitPerMinute { get; set; } = 30;
+        int RateLimitPerMinute { get; set; }
     }
 }
