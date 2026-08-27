@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Result of a broadcast operation containing success/failure information.
 /// </summary>
-public sealed class BroadcastResult
+public sealed class BroadcastResult : IBroadcastResult
 {
     /// <summary>
     /// Total number of chats in the broadcast.
