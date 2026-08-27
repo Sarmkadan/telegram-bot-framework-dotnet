@@ -13,7 +13,7 @@ namespace TelegramBotFramework.Commands;
 /// formatted list of available commands.
 /// </summary>
 [Attributes.Command("help", Description = "Show available commands")]
-public sealed class HelpCommandHandler : ICommandHandler
+public sealed class HelpCommandHandler : ICommandHandler, IHelpCommandHandler
 {
     private readonly IEnumerable<ICommandHandler> _handlers;
     private readonly Microsoft.Extensions.Logging.ILogger<HelpCommandHandler> _logger;
