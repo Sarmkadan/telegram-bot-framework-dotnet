@@ -5,7 +5,7 @@ namespace TelegramBotFramework.Models
     /// <summary>
     /// Options for the Telegram Bot Framework .NET.
     /// </summary>
-    public class TelegramBotFrameworkDotnetOptions
+    public class TelegramBotFrameworkDotnetOptions : ITelegramBotFrameworkDotnetOptions
     {
         /// <summary>
         /// The token for the Telegram bot.
