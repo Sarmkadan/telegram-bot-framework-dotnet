@@ -10,7 +10,7 @@ namespace TelegramBotFramework.Attributes;
 /// Marks a class as a handler for a specific bot command.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class CommandAttribute : Attribute
+public sealed class CommandAttribute : Attribute, ICommandAttribute
 {
     /// <summary>
     /// The command name (e.g. "start", "help"). Leading slash is optional.
