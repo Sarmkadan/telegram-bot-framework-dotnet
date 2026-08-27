@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a message in the bot system.
 /// </summary>
-public sealed class Message
+public sealed class Message : IMessage
 {
     public long MessageId { get; set; }
 
