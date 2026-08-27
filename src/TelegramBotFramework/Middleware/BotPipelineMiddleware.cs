@@ -7,11 +7,12 @@
 namespace TelegramBotFramework.Middleware;
 
 using TelegramBotFramework.Exceptions;
+using TelegramBotFramework.Models;
 
 /// <summary>
 /// Middleware for structured logging of bot execution contexts.
 /// </summary>
-public sealed class BotLoggingMiddleware : IBotMiddleware
+public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
 {
     private readonly ILogger<BotLoggingMiddleware> _logger;
 
