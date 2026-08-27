@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Models;
 /// Contains all configuration parameters for the Telegram bot including authentication,
 /// session management, logging, rate limiting, and webhook settings.
 /// </remarks>
-public sealed class BotConfiguration : IEquatable<BotConfiguration>
+public sealed class BotConfiguration : IEquatable<BotConfiguration>, IBotConfiguration
 {
     public string BotToken { get; set; } = string.Empty;
 
