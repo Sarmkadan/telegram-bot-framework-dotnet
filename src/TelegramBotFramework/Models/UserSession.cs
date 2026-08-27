@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a user's active session with state tracking.
 /// </summary>
-public sealed class UserSession
+public sealed class UserSession : IUserSession
 {
     public string SessionId { get; set; } = string.Empty;
 
