@@ -12,7 +12,7 @@ namespace TelegramBotFramework.Middleware;
 /// Global error handling middleware that catches all unhandled exceptions
 /// and returns consistent error responses to clients.
 /// </summary>
-public sealed class HttpErrorHandlingMiddleware
+public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<HttpErrorHandlingMiddleware> _logger;
