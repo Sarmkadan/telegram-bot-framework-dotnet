@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Statistics about rate limiting and broadcast performance.
 /// </summary>
-public sealed class RateLimitStats
+public sealed class RateLimitStats : IRateLimitStats
 {
     /// <summary>
     /// Configured messages per second limit.
