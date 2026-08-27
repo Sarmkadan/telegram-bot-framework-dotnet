@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an inline query received from a Telegram user.
 /// </summary>
-public sealed class InlineQuery
+public sealed class InlineQuery : IInlineQuery
 {
     /// <summary>Unique identifier supplied by Telegram for this query.</summary>
     public string QueryId { get; set; } = string.Empty;
