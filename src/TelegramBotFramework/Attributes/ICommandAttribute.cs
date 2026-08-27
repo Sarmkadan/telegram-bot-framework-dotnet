@@ -7,31 +7,22 @@
 namespace TelegramBotFramework.Attributes;
 
 /// <summary>
-/// Marks a class as a handler for a specific bot command.
+/// Interface for command attribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class CommandAttribute : Attribute, ICommandAttribute
+public interface ICommandAttribute
 {
     /// <summary>
     /// The command name (e.g. "start", "help"). Leading slash is optional.
     /// </summary>
-    public string Name { get; }
+    string Name { get; }
 
     /// <summary>
     /// Optional human-readable description shown in the /help listing.
     /// </summary>
-    public string? Description { get; set; }
+    string? Description { get; set; }
 
     /// <summary>
     /// Optional list of aliases for this command (e.g. ["start", "begin"]).
     /// </summary>
-    public string[] Aliases { get; set; } = Array.Empty<string>();
-
-    public CommandAttribute(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Command name must not be empty.", nameof(name));
-
-        Name = name.TrimStart('/');
-    }
+    string[] Aliases { get; set; }
 }
