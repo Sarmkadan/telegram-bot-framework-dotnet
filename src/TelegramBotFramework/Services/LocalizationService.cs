@@ -21,7 +21,7 @@ public class LocalizationService : ILocalizationService
     /// Initializes a new instance of the <see cref="LocalizationService"/> class.
     /// </summary>
     /// <param name="defaultLanguage">The default language code to use as fallback (e.g., "en").</param>
-    public LocalizationService(string defaultLanguage = "en")
+    public LocalizationService(string defaultLanguage = LocalizationServiceConstants.DefaultLanguage)
     {
         _defaultLanguage = defaultLanguage ?? throw new ArgumentNullException(nameof(defaultLanguage));
     }
@@ -35,10 +35,10 @@ public class LocalizationService : ILocalizationService
     public string? GetTemplate(string key, string language)
     {
         if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentException("Localization key cannot be null or empty", nameof(key));
+            throw new ArgumentException(LocalizationServiceConstants.LocalizationKeyCannotBeNullOrEmpty, nameof(key));
 
         if (string.IsNullOrWhiteSpace(language))
-            throw new ArgumentException("Language cannot be null or empty", nameof(language));
+            throw new ArgumentException(LocalizationServiceConstants.LanguageCannotBeNullOrEmpty, nameof(language));
 
         // Try to get the requested language
         if (_templates.TryGetValue(key, out var languageDict) &&
@@ -70,7 +70,7 @@ public class LocalizationService : ILocalizationService
         var template = GetTemplate(key, language);
         if (template is null)
         {
-            throw new KeyNotFoundException($"Localization key '{key}' not found for language '{language}' or default language '{_defaultLanguage}'");
+            throw new KeyNotFoundException(string.Format(LocalizationServiceConstants.LocalizationKeyNotFoundFormat, key, language, _defaultLanguage));
         }
 
         try
@@ -79,7 +79,7 @@ public class LocalizationService : ILocalizationService
         }
         catch (FormatException ex)
         {
-            throw new FormatException($"Failed to format localization key '{key}' with {args.Length} arguments. Template: '{template}'", ex);
+            throw new FormatException(string.Format(LocalizationServiceConstants.LocalizationFormatFailedFormat, key, args.Length, template), ex);
         }
     }
 
@@ -109,7 +109,7 @@ public class LocalizationService : ILocalizationService
             throw new ArgumentException("Language cannot be null or empty", nameof(language));
 
         if (string.IsNullOrWhiteSpace(template))
-            throw new ArgumentException("Template cannot be null or empty", nameof(template));
+            throw new ArgumentException(LocalizationServiceConstants.TemplateCannotBeNullOrEmpty, nameof(template));
 
         var languageDict = _templates.GetOrAdd(key, _ => new ConcurrentDictionary<string, string>());
         languageDict.AddOrUpdate(language, template, (_, _) => template);
