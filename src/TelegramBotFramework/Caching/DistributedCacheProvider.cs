@@ -14,7 +14,7 @@ using TelegramBotFramework.Integration;
 /// Provides serialization/deserialization and common cache operations.
 /// Subclass this for specific distributed cache implementations.
 /// </summary>
-public abstract class DistributedCacheProvider : ICacheProvider
+public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCacheProvider
 {
     protected readonly ILogger<DistributedCacheProvider> _logger;
 
