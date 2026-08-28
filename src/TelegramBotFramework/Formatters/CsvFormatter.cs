@@ -14,7 +14,7 @@ using TelegramBotFramework.Models;
 /// Formats data as CSV output for exports and data interchange.
 /// Handles escaping, quoted fields, and supports generic collections.
 /// </summary>
-public sealed class CsvFormatter : IOutputFormatter
+public sealed class CsvFormatter : IOutputFormatter, ICsvFormatter
 {
     private const string FieldSeparator = ",";
     private const string LineEnding = "\r\n";
