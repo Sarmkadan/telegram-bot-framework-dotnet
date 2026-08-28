@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Repositories;
 /// <summary>
 /// In-memory implementation of message repository.
 /// </summary>
-public sealed class InMemoryMessageRepository : IMessageRepository
+public sealed class InMemoryMessageRepository : IMessageRepository, IInMemoryMessageRepository
 {
     private readonly Dictionary<long, Models.Message> _messages = new();
     private long _messageIdCounter = 1;
