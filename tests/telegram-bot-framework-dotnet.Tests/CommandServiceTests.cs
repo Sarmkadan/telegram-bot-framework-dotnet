@@ -17,7 +17,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Tests for the CommandService class.
 /// </summary>
-public sealed class CommandServiceTests
+public sealed class CommandServiceTests : ICommandServiceTests
 {
     private readonly Mock<ICommandRepository> _mockRepository = new();
     private readonly Mock<IUserService> _mockUserService = new();
