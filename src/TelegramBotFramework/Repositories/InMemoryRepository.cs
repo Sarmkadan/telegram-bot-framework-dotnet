@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Repositories;
 /// <summary>
 /// In-memory implementation of user repository.
 /// </summary>
-public sealed class InMemoryUserRepository : IUserRepository
+public sealed class InMemoryUserRepository : IUserRepository, IInMemoryUserRepository
 {
     private readonly Dictionary<long, Models.BotUser> _users = new();
     private readonly object _lockObj = new();
