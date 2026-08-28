@@ -10,10 +10,7 @@ namespace TelegramBotFramework.Services
     public static class SessionServiceJsonExtensions
     {
         // Cached serializer options – camelCase property names.
-        private static readonly JsonSerializerOptions _options = new(JsonSerializerDefaults.Web)
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        private static readonly JsonSerializerOptions _options = SessionServiceJsonExtensionsConstants.DefaultJsonSerializerOptions;
 
         /// <summary>
         /// Serializes the <see cref="SessionService"/> instance to a JSON string.
