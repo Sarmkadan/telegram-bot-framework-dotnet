@@ -45,7 +45,7 @@ public sealed class AuthorizationMiddleware : IBotMiddleware
         {
             context.AddError("User not found in context for authorization.");
             _logger.LogWarning("AuthorizationMiddleware: User not found for UserId: {UserId}", context.UserId);
-            return await next(context).ConfigureAwait(false);
+            return context;
         }
 
         if (context.Command != null)
