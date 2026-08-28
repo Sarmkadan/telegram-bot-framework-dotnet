@@ -11,7 +11,7 @@ using Xunit;
 /// <summary>
 /// Tests for the ExecutionContext class.
 /// </summary>
-public sealed class ExecutionContextTests
+public sealed class ExecutionContextTests : IExecutionContextTests
 {
     /// <summary>
     /// Tests that the ExecutionContext constructor initializes correctly with default values.
