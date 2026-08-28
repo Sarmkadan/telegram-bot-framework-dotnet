@@ -13,7 +13,7 @@ namespace TelegramBotFramework.Strategies;
 /// This implementation is suitable for single-instance applications or for testing purposes.
 /// For distributed applications, a distributed cache (e.g., Redis) should be used.
 /// </summary>
-public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy
+public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy, IInMemoryRateLimitingStrategy
 {
     private readonly ConcurrentDictionary<string, ConcurrentQueue<DateTime>> _requests = new();
     private static readonly object _lock = new();
