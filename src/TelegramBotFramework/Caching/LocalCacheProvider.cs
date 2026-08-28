@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 /// Suitable for single-instance deployments and development.
 /// Automatically removes expired entries on access.
 /// </summary>
-public sealed class LocalCacheProvider : ICacheProvider
+public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
     private readonly ILogger<LocalCacheProvider>? _logger;
