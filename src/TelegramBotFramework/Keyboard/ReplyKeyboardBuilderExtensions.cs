@@ -11,7 +11,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace TelegramBotFramework.Keyboard;
 
 /// <summary>
-/// Extension methods for <see cref="ReplyKeyboardBuilder"/> that provide additional
+/// Extension methods for <see cref="IReplyKeyboardBuilder"/> that provide additional
 /// fluent APIs for common keyboard construction patterns.
 /// </summary>
 public static class ReplyKeyboardBuilderExtensions
@@ -25,7 +25,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="texts"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddButtons(this ReplyKeyboardBuilder builder, IEnumerable<string> texts)
+    public static IReplyKeyboardBuilder AddButtons(this IReplyKeyboardBuilder builder, IEnumerable<string> texts)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(texts);
@@ -48,7 +48,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="buttonConfigs"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddButtons(this ReplyKeyboardBuilder builder, IEnumerable<(string Text, Action<ReplyKeyboardButton> Configure)> buttonConfigs)
+    public static IReplyKeyboardBuilder AddButtons(this IReplyKeyboardBuilder builder, IEnumerable<(string Text, Action<ReplyKeyboardButton> Configure)> buttonConfigs)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(buttonConfigs);
@@ -70,7 +70,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="texts"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddRow(this ReplyKeyboardBuilder builder, IEnumerable<string> texts)
+    public static IReplyKeyboardBuilder AddRow(this IReplyKeyboardBuilder builder, IEnumerable<string> texts)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(texts);
@@ -88,7 +88,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="buttonConfigs"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddRow(this ReplyKeyboardBuilder builder, IEnumerable<(string Text, Action<ReplyKeyboardButton> Configure)> buttonConfigs)
+    public static IReplyKeyboardBuilder AddRow(this IReplyKeyboardBuilder builder, IEnumerable<(string Text, Action<ReplyKeyboardButton> Configure)> buttonConfigs)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(buttonConfigs);
@@ -109,7 +109,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="text"/> is null, empty, or whitespace.
     /// </exception>
-    public static ReplyKeyboardBuilder AddContactButton(this ReplyKeyboardBuilder builder, string text)
+    public static IReplyKeyboardBuilder AddContactButton(this IReplyKeyboardBuilder builder, string text)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -128,7 +128,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="text"/> is null, empty, or whitespace.
     /// </exception>
-    public static ReplyKeyboardBuilder AddLocationButton(this ReplyKeyboardBuilder builder, string text)
+    public static IReplyKeyboardBuilder AddLocationButton(this IReplyKeyboardBuilder builder, string text)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -144,7 +144,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="texts"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddContactButtons(this ReplyKeyboardBuilder builder, IEnumerable<string> texts)
+    public static IReplyKeyboardBuilder AddContactButtons(this IReplyKeyboardBuilder builder, IEnumerable<string> texts)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(texts);
@@ -166,7 +166,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> or <paramref name="texts"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddLocationButtons(this ReplyKeyboardBuilder builder, IEnumerable<string> texts)
+    public static IReplyKeyboardBuilder AddLocationButtons(this IReplyKeyboardBuilder builder, IEnumerable<string> texts)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(texts);
@@ -191,7 +191,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddCommonActions(this ReplyKeyboardBuilder builder,
+    public static IReplyKeyboardBuilder AddCommonActions(this IReplyKeyboardBuilder builder,
         bool includeHome = true,
         bool includeBack = true,
         bool includeMenu = true,
@@ -218,7 +218,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder OneTimeResize(this ReplyKeyboardBuilder builder)
+    public static IReplyKeyboardBuilder OneTimeResize(this IReplyKeyboardBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -233,7 +233,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder PersistentNoResize(this ReplyKeyboardBuilder builder)
+    public static IReplyKeyboardBuilder PersistentNoResize(this IReplyKeyboardBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -252,7 +252,7 @@ public static class ReplyKeyboardBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="builder"/> is <see langword="null"/>.
     /// </exception>
-    public static ReplyKeyboardBuilder AddNumericKeypad(this ReplyKeyboardBuilder builder,
+    public static IReplyKeyboardBuilder AddNumericKeypad(this IReplyKeyboardBuilder builder,
         bool includeZero = true,
         bool includeClear = true,
         bool includeEnter = true)
