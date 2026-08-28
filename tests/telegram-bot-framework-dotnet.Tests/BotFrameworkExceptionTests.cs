@@ -4,7 +4,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class BotFrameworkExceptionTests
+public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
 {
     [Fact]
     public void BotFrameworkException_ShouldSetPropertiesCorrectly()
