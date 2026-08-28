@@ -15,7 +15,7 @@ namespace TelegramBotFramework.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class BotController : ControllerBase
+public sealed class BotController : ControllerBase, IBotController
 {
     private readonly IUserService _userService;
     private readonly ICommandService _commandService;
