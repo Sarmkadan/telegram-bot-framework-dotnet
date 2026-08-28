@@ -13,7 +13,7 @@ using TelegramBotFramework.Models;
 /// Formats data as XML output for exports and interoperability.
 /// Handles proper XML escaping and hierarchical structures.
 /// </summary>
-public sealed class XmlFormatter : IOutputFormatter
+public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 {
     private readonly bool _pretty;
 
