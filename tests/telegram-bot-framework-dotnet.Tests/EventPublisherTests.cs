@@ -8,7 +8,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class EventPublisherTests
+public class EventPublisherTests : IEventPublisherTests
 {
     private readonly Mock<IEventBus> _eventBusMock;
     private readonly Mock<ILogger<EventPublisher>> _loggerMock;
