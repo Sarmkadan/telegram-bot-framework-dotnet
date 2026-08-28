@@ -33,8 +33,15 @@ public sealed class HttpLoggingMiddleware
         var startTime = DateTime.UtcNow;
         var correlationId = GetOrCreateCorrelationId(context);
 
-        // Create a logging scope that carries correlation, user, chat and update identifiers.
-        using var scope = _logger.BeginScope(CreateLoggingScope(context, correlationId));
+        // Create a logging scope only when any of the levels we use are enabled.
+        // This avoids allocating the dictionary (and any ToString calls) when logging is disabled.
+        IDisposable? scope = null;
+        if (_logger.IsEnabled(LogLevel.Information) ||
+            _logger.IsEnabled(LogLevel.Warning) ||
+            _logger.IsEnabled(LogLevel.Error))
+        {
+            scope = _logger.BeginScope(CreateLoggingScope(context, correlationId));
+        }
 
         var originalBodyStream = context.Response.Body;
 
@@ -58,6 +65,8 @@ public sealed class HttpLoggingMiddleware
         }
         finally
         {
+            // Dispose the scope if it was created.
+            scope?.Dispose();
             context.Response.Body = originalBodyStream;
         }
     }
@@ -104,14 +113,17 @@ public sealed class HttpLoggingMiddleware
 
     private void LogRequestStart(HttpContext context, string correlationId)
     {
+        // Guard against unnecessary work when the level is disabled.
+        if (!_logger.IsEnabled(LogLevel.Information))
+            return;
+
         var request = context.Request;
         _logger.LogInformation(
             "HTTP Request started - CorrelationID: {CorrelationId}, Method: {Method}, Path: {Path}, IP: {IP}",
             correlationId,
             request.Method,
             request.Path,
-            context.Connection.RemoteIpAddress
-        );
+            context.Connection.RemoteIpAddress);
     }
 
     private void LogRequestComplete(HttpContext context, string correlationId, DateTime startTime)
@@ -119,10 +131,14 @@ public sealed class HttpLoggingMiddleware
         var elapsed = DateTime.UtcNow - startTime;
         var response = context.Response;
 
-        // Log based on status code severity
+        // Determine log level based on status code.
         var logLevel = response.StatusCode >= 500 ? LogLevel.Error :
                        response.StatusCode >= 400 ? LogLevel.Warning :
                        LogLevel.Information;
+
+        // Guard against logging when the determined level is disabled.
+        if (!_logger.IsEnabled(logLevel))
+            return;
 
         _logger.Log(
             logLevel,
@@ -131,17 +147,19 @@ public sealed class HttpLoggingMiddleware
             correlationId,
             response.StatusCode,
             elapsed.TotalMilliseconds,
-            response.ContentType
-        );
+            response.ContentType);
     }
 
     private void LogException(Exception ex, string correlationId)
     {
+        // Guard against logging when error level is disabled.
+        if (!_logger.IsEnabled(LogLevel.Error))
+            return;
+
         _logger.LogError(
             ex,
             "HTTP Request failed - CorrelationID: {CorrelationId}, Exception: {ExceptionType}",
             correlationId,
-            ex.GetType().Name
-        );
+            ex.GetType().Name);
     }
 }
