@@ -34,10 +34,10 @@ public static class QuizFlowExtensions
             throw new ArgumentNullException(nameof(services));
 
         if (string.IsNullOrWhiteSpace(quizId))
-            throw new ArgumentException("Quiz ID cannot be empty.", nameof(quizId));
+            throw new ArgumentException(QuizFlowExtensionsConstants.QuizIdEmptyExceptionMessage, nameof(quizId));
 
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Quiz name cannot be empty.", nameof(name));
+            throw new ArgumentException(QuizFlowExtensionsConstants.QuizNameEmptyExceptionMessage, nameof(name));
 
         if (configureQuestions == null)
             throw new ArgumentNullException(nameof(configureQuestions));
@@ -63,15 +63,15 @@ public static class QuizFlowExtensions
         var completionMenuId = quizHelper.GetType().GetProperty("CompletionMenuId")?.GetValue(quizHelper) as string;
 
         var steps = new List<FlowStep>();
-        var initialStepId = $"{quizHelper.FlowId}_start";
-        var questionStepIdPrefix = $"{quizHelper.FlowId}_question_";
-        var resultStepId = $"{quizHelper.FlowId}_result";
+        var initialStepId = $"{quizHelper.FlowId}{QuizFlowExtensionsConstants.StepIdStartSuffix}";
+        var questionStepIdPrefix = $"{quizHelper.FlowId}{QuizFlowExtensionsConstants.StepIdQuestionPrefixSuffix}";
+        var resultStepId = $"{quizHelper.FlowId}{QuizFlowExtensionsConstants.StepIdResultSuffix}";
 
         // Welcome step
         steps.Add(new FlowStep
         {
             StepId = initialStepId,
-            Prompt = $"📚 **{quizHelper.Name}**\n\nWelcome to the quiz! You will be asked {questions.Count} questions.\n\nType /start to begin.",
+            Prompt = string.Format(QuizFlowExtensionsConstants.WelcomeMessageFormat, quizHelper.Name, questions.Count),
             InputType = FlowInputType.Confirmation,
             IsTerminal = false,
             QuickReplies = new[] { "/start" }
@@ -85,10 +85,10 @@ public static class QuizFlowExtensions
 
             var validation = new FlowValidation
             {
-                MinLength = 1,
-                MaxLength = 1,
+                MinLength = QuizFlowExtensionsConstants.ValidationMinLength,
+                MaxLength = QuizFlowExtensionsConstants.ValidationMaxLength,
                 AllowedValues = Enumerable.Range(1, question.Options.Count).Select(x => x.ToString()).ToList(),
-                ErrorMessage = $"Please select a valid option (1-{question.Options.Count})"
+                ErrorMessage = string.Format(QuizFlowExtensionsConstants.ValidationErrorMessageFormat, question.Options.Count)
             };
 
             var quickReplies = question.Options.Select((opt, idx) => $"{idx + 1}").ToList();
@@ -107,9 +107,9 @@ public static class QuizFlowExtensions
 
         // Result step (terminal)
         var resultPromptBuilder = new System.Text.StringBuilder();
-        resultPromptBuilder.AppendLine("🎉 **Quiz Completed!**");
+        resultPromptBuilder.AppendLine(QuizFlowExtensionsConstants.QuizCompletedMessage);
         resultPromptBuilder.AppendLine();
-        resultPromptBuilder.AppendLine("Your results are being calculated...");
+        resultPromptBuilder.AppendLine(QuizFlowExtensionsConstants.QuizResultsCalculatingMessage);
 
         steps.Add(new FlowStep
         {
@@ -174,8 +174,8 @@ public static class QuizFlowExtensions
             CompletionMenuId = completionMenuId,
             Metadata = new Dictionary<string, string>
             {
-                ["QuizType"] = "MultipleChoice",
-                ["QuestionCount"] = questions.Count.ToString()
+                [QuizFlowExtensionsConstants.MetadataQuizTypeKey] = QuizFlowExtensionsConstants.QuizTypeValue,
+                [QuizFlowExtensionsConstants.MetadataQuestionCountKey] = questions.Count.ToString()
             }
         };
     }
