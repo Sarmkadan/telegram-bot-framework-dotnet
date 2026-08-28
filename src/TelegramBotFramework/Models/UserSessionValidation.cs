@@ -28,49 +28,49 @@ public static class UserSessionValidation
         // Validate SessionId
         if (string.IsNullOrWhiteSpace(value.SessionId))
         {
-            errors.Add("SessionId cannot be null or whitespace.");
+            errors.Add(UserSessionValidationConstants.SessionIdCannotBeNullOrWhitespace);
         }
-        else if (value.SessionId.Length > 100)
+        else if (value.SessionId.Length > UserSessionValidationConstants.SessionIdMaxLength)
         {
-            errors.Add("SessionId cannot exceed 100 characters.");
+            errors.Add(string.Format(UserSessionValidationConstants.SessionIdCannotExceedMaxLength, UserSessionValidationConstants.SessionIdMaxLength));
         }
 
         // Validate UserId
         if (value.UserId <= 0)
         {
-            errors.Add("UserId must be a positive integer greater than zero.");
+            errors.Add(UserSessionValidationConstants.UserIdMustBePositive);
         }
 
         // Validate ChatId
         if (value.ChatId <= 0)
         {
-            errors.Add("ChatId must be a positive integer greater than zero.");
+            errors.Add(UserSessionValidationConstants.ChatIdMustBePositive);
         }
 
         // Validate CurrentContext
         if (string.IsNullOrWhiteSpace(value.CurrentContext))
         {
-            errors.Add("CurrentContext cannot be null or whitespace.");
+            errors.Add(UserSessionValidationConstants.CurrentContextCannotBeNullOrWhitespace);
         }
-        else if (value.CurrentContext.Length > 50)
+        else if (value.CurrentContext.Length > UserSessionValidationConstants.CurrentContextMaxLength)
         {
-            errors.Add("CurrentContext cannot exceed 50 characters.");
+            errors.Add(string.Format(UserSessionValidationConstants.CurrentContextCannotExceedMaxLength, UserSessionValidationConstants.CurrentContextMaxLength));
         }
 
         // Validate CurrentMenuId
-        if (value.CurrentMenuId?.Length > 50)
+        if (value.CurrentMenuId?.Length > UserSessionValidationConstants.CurrentMenuIdMaxLength)
         {
-            errors.Add("CurrentMenuId cannot exceed 50 characters.");
+            errors.Add(string.Format(UserSessionValidationConstants.CurrentMenuIdCannotExceedMaxLength, UserSessionValidationConstants.CurrentMenuIdMaxLength));
         }
 
         // Validate CreatedAt
         if (value.CreatedAt == default)
         {
-            errors.Add("CreatedAt must be set to a valid DateTime.");
+            errors.Add(UserSessionValidationConstants.CreatedAtMustBeSet);
         }
-        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(UserSessionValidationConstants.CreatedAtFutureMinutesThreshold))
         {
-            errors.Add("CreatedAt cannot be in the future.");
+            errors.Add(UserSessionValidationConstants.CreatedAtCannotBeInFuture);
         }
 
         // Validate LastActivityAt
@@ -79,15 +79,15 @@ public static class UserSessionValidation
             var lastActivity = value.LastActivityAt.Value;
             if (lastActivity == default)
             {
-                errors.Add("LastActivityAt must be a valid DateTime if set.");
+                errors.Add(UserSessionValidationConstants.LastActivityAtMustBeValidIfSet);
             }
-            else if (lastActivity > DateTime.UtcNow.AddMinutes(5))
+            else if (lastActivity > DateTime.UtcNow.AddMinutes(UserSessionValidationConstants.CreatedAtFutureMinutesThreshold))
             {
-                errors.Add("LastActivityAt cannot be in the future.");
+                errors.Add(UserSessionValidationConstants.LastActivityAtCannotBeInFuture);
             }
             else if (lastActivity < value.CreatedAt)
             {
-                errors.Add("LastActivityAt cannot be before CreatedAt.");
+                errors.Add(UserSessionValidationConstants.LastActivityAtCannotBeBeforeCreatedAt);
             }
         }
 
@@ -97,24 +97,24 @@ public static class UserSessionValidation
             var expiresAt = value.ExpiresAt.Value;
             if (expiresAt == default)
             {
-                errors.Add("ExpiresAt must be a valid DateTime if set.");
+                errors.Add(UserSessionValidationConstants.ExpiresAtMustBeValidIfSet);
             }
             else if (expiresAt < value.CreatedAt)
             {
-                errors.Add("ExpiresAt cannot be before CreatedAt.");
+                errors.Add(UserSessionValidationConstants.ExpiresAtCannotBeBeforeCreatedAt);
             }
-            else if (expiresAt > DateTime.UtcNow.AddYears(1))
+            else if (expiresAt > DateTime.UtcNow.AddYears(UserSessionValidationConstants.ExpiresAtFutureYearsThreshold))
             {
-                errors.Add("ExpiresAt cannot be more than 1 year in the future.");
+                errors.Add(UserSessionValidationConstants.ExpiresAtCannotBeMoreThanOneYearInFuture);
             }
         }
 
         // Validate ContextData
         if (value.ContextData is not null)
         {
-            if (value.ContextData.Count > 1000)
+            if (value.ContextData.Count > UserSessionValidationConstants.ContextDataMaxEntries)
             {
-                errors.Add("ContextData dictionary cannot contain more than 1000 entries.");
+                errors.Add(string.Format(UserSessionValidationConstants.ContextDataCannotContainMoreThanMaxEntries, UserSessionValidationConstants.ContextDataMaxEntries));
             }
             else
             {
@@ -122,25 +122,25 @@ public static class UserSessionValidation
                 {
                     if (string.IsNullOrWhiteSpace(kvp.Key))
                     {
-                        errors.Add("ContextData contains an entry with null or whitespace key.");
+                        errors.Add(UserSessionValidationConstants.ContextDataContainsEntryWithNullOrWhitespaceKey);
                         break;
                     }
 
-                    if (kvp.Key.Length > 100)
+                    if (kvp.Key.Length > UserSessionValidationConstants.ContextDataKeyMaxLength)
                     {
-                        errors.Add("ContextData key cannot exceed 100 characters.");
+                        errors.Add(string.Format(UserSessionValidationConstants.ContextDataKeyCannotExceedMaxLength, UserSessionValidationConstants.ContextDataKeyMaxLength));
                         break;
                     }
 
                     if (string.IsNullOrWhiteSpace(kvp.Value))
                     {
-                        errors.Add($"ContextData key '{kvp.Key}' has null or whitespace value.");
+                        errors.Add(string.Format(UserSessionValidationConstants.ContextDataKeyHasNullOrWhitespaceValue, kvp.Key));
                         break;
                     }
 
-                    if (kvp.Value.Length > 1000)
+                    if (kvp.Value.Length > UserSessionValidationConstants.ContextDataValueMaxLength)
                     {
-                        errors.Add($"ContextData value for key '{kvp.Key}' cannot exceed 1000 characters.");
+                        errors.Add(string.Format(UserSessionValidationConstants.ContextDataValueForKeyCannotExceedMaxLength, kvp.Key, UserSessionValidationConstants.ContextDataValueMaxLength));
                         break;
                     }
                 }
@@ -150,9 +150,9 @@ public static class UserSessionValidation
         // Validate CommandHistory
         if (value.CommandHistory is not null)
         {
-            if (value.CommandHistory.Count > 50)
+            if (value.CommandHistory.Count > UserSessionValidationConstants.CommandHistoryMaxEntries)
             {
-                errors.Add("CommandHistory cannot contain more than 50 entries.");
+                errors.Add(string.Format(UserSessionValidationConstants.CommandHistoryCannotContainMoreThanMaxEntries, UserSessionValidationConstants.CommandHistoryMaxEntries));
             }
             else
             {
@@ -160,13 +160,13 @@ public static class UserSessionValidation
                 {
                     if (string.IsNullOrWhiteSpace(command))
                     {
-                        errors.Add("CommandHistory contains null or whitespace entry.");
+                        errors.Add(UserSessionValidationConstants.CommandHistoryContainsNullOrWhitespaceEntry);
                         break;
                     }
 
-                    if (command.Length > 200)
+                    if (command.Length > UserSessionValidationConstants.CommandHistoryEntryMaxLength)
                     {
-                        errors.Add("CommandHistory entry cannot exceed 200 characters.");
+                        errors.Add(string.Format(UserSessionValidationConstants.CommandHistoryEntryCannotExceedMaxLength, UserSessionValidationConstants.CommandHistoryEntryMaxLength));
                         break;
                     }
                 }
@@ -176,13 +176,13 @@ public static class UserSessionValidation
         // Validate InteractionCount
         if (value.InteractionCount < 0)
         {
-            errors.Add("InteractionCount cannot be negative.");
+            errors.Add(UserSessionValidationConstants.InteractionCountCannotBeNegative);
         }
 
         // Validate UserInput
-        if (value.UserInput?.Length > 1000)
+        if (value.UserInput?.Length > UserSessionValidationConstants.UserInputMaxLength)
         {
-            errors.Add("UserInput cannot exceed 1000 characters.");
+            errors.Add(string.Format(UserSessionValidationConstants.UserInputCannotExceedMaxLength, UserSessionValidationConstants.UserInputMaxLength));
         }
 
         return errors.AsReadOnly();
