@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Tests for <see cref="MessageService"/> class.
 /// </summary>
-public sealed class MessageServiceTests
+public sealed class MessageServiceTests : IMessageServiceTests
 {
     private readonly Mock<IMessageRepository> _mockMessageRepository = new();
     private readonly Mock<ITelegramApiClient> _mockTelegramApiClient = new();
