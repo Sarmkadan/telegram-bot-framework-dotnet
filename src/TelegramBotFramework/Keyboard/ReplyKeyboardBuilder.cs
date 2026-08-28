@@ -30,7 +30,7 @@ namespace TelegramBotFramework.Keyboard;
 /// await apiClient.SendMessageWithReplyKeyboardAsync(chatId, "Choose an option:", keyboard);
 /// </code>
 /// </example>
-public sealed class ReplyKeyboardBuilder
+public sealed class ReplyKeyboardBuilder : IReplyKeyboardBuilder
 {
     private readonly List<List<ReplyKeyboardButton>> _rows = new();
     private List<ReplyKeyboardButton> _currentRow = new();
@@ -67,7 +67,7 @@ public sealed class ReplyKeyboardBuilder
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="text"/> is null, empty, or whitespace.
     /// </exception>
-    public ReplyKeyboardBuilder AddButton(string text)
+    public IReplyKeyboardBuilder AddButton(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Button text cannot be empty.", nameof(text));
@@ -82,7 +82,7 @@ public sealed class ReplyKeyboardBuilder
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public ReplyKeyboardBuilder AddButton(string text, Action<ReplyKeyboardButton> configure)
+    public IReplyKeyboardBuilder AddButton(string text, Action<ReplyKeyboardButton> configure)
     {
         if (configure == null)
             throw new ArgumentNullException(nameof(configure));
@@ -98,7 +98,7 @@ public sealed class ReplyKeyboardBuilder
     /// <summary>
     /// Forces the next button(s) onto a new row, even if the current row is not full.
     /// </summary>
-    public ReplyKeyboardBuilder NewRow()
+    public IReplyKeyboardBuilder NewRow()
     {
         FlushCurrentRow();
         return this;
@@ -112,7 +112,7 @@ public sealed class ReplyKeyboardBuilder
     /// Sets the keyboard to be one-time, meaning it will automatically be removed
     /// from the chat after the user selects a button.
     /// </summary>
-    public ReplyKeyboardBuilder OneTime()
+    public IReplyKeyboardBuilder OneTime()
     {
         _isPersistent = false;
         return this;
@@ -122,7 +122,7 @@ public sealed class ReplyKeyboardBuilder
     /// Sets the keyboard to be persistent, meaning it will remain visible after
     /// the user selects a button.
     /// </summary>
-    public ReplyKeyboardBuilder Persistent()
+    public IReplyKeyboardBuilder Persistent()
     {
         _isPersistent = true;
         return this;
@@ -132,7 +132,7 @@ public sealed class ReplyKeyboardBuilder
     /// Sets the keyboard to be resized to fit its content, instead of always
     /// using the maximum size.
     /// </summary>
-    public ReplyKeyboardBuilder Resize()
+    public IReplyKeyboardBuilder Resize()
     {
         _resize = true;
         return this;
@@ -141,7 +141,7 @@ public sealed class ReplyKeyboardBuilder
     /// <summary>
     /// Sets the keyboard to use the full width of the screen.
     /// </summary>
-    public ReplyKeyboardBuilder NoResize()
+    public IReplyKeyboardBuilder NoResize()
     {
         _resize = false;
         return this;

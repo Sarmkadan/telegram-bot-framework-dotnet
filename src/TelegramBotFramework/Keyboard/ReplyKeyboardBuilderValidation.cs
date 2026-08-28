@@ -8,13 +8,13 @@
 namespace TelegramBotFramework.Keyboard;
 
 /// <summary>
-/// Provides validation helpers for <see cref="ReplyKeyboardBuilder"/> to ensure
+/// Provides validation helpers for <see cref="IReplyKeyboardBuilder"/> to ensure
 /// keyboard configurations are valid before building or using them.
 /// </summary>
 public static class ReplyKeyboardBuilderValidation
 {
     /// <summary>
-    /// Validates the current state of a <see cref="ReplyKeyboardBuilder"/> and returns
+    /// Validates the current state of an <see cref="IReplyKeyboardBuilder"/> and returns
     /// a list of human-readable problems found.
     /// </summary>
     /// <param name="value">The builder instance to validate.</param>
@@ -25,16 +25,22 @@ public static class ReplyKeyboardBuilderValidation
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
-    public static IReadOnlyList<string> Validate(this ReplyKeyboardBuilder value)
+    public static IReadOnlyList<string> Validate(this IReplyKeyboardBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
+        // We need to cast to ReplyKeyboardBuilder to access Build method
+        if (value is not ReplyKeyboardBuilder builder)
+        {
+            throw new ArgumentException("Validator only works with ReplyKeyboardBuilder instances", nameof(value));
+        }
 
         var errors = new List<string>();
 
         // Validate that we can build the keyboard (checks for empty keyboard)
         try
         {
-            _ = value.Build();
+            _ = builder.Build();
         }
         catch (InvalidOperationException ex)
         {
@@ -43,7 +49,7 @@ public static class ReplyKeyboardBuilderValidation
         }
 
         // Validate the built markup if successful
-        var markup = value.Build();
+        var markup = builder.Build();
 
         // Validate each row in the built markup
         var rowIndex = 0;
@@ -80,7 +86,7 @@ public static class ReplyKeyboardBuilderValidation
     }
 
     /// <summary>
-    /// Determines whether the specified <see cref="ReplyKeyboardBuilder"/> is in a valid state.
+    /// Determines whether the specified <see cref="IReplyKeyboardBuilder"/> is in a valid state.
     /// </summary>
     /// <param name="value">The builder instance to validate.</param>
     /// <returns>
@@ -89,14 +95,14 @@ public static class ReplyKeyboardBuilderValidation
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
-    public static bool IsValid(this ReplyKeyboardBuilder value)
+    public static bool IsValid(this IReplyKeyboardBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
     /// <summary>
-    /// Ensures that the specified <see cref="ReplyKeyboardBuilder"/> is in a valid state,
+    /// Ensures that the specified <see cref="IReplyKeyboardBuilder"/> is in a valid state,
     /// throwing an <see cref="ArgumentException"/> with a detailed message listing all
     /// validation failures if it is not.
     /// </summary>
@@ -108,7 +114,7 @@ public static class ReplyKeyboardBuilderValidation
     /// Thrown when the builder contains validation errors. The exception message
     /// lists all problems found.
     /// </exception>
-    public static void EnsureValid(this ReplyKeyboardBuilder value)
+    public static void EnsureValid(this IReplyKeyboardBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
