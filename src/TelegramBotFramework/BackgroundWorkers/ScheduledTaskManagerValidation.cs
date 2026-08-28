@@ -29,19 +29,19 @@ public static class ScheduledTaskManagerValidation
         // Validate Id
         if (string.IsNullOrWhiteSpace(value.Id))
         {
-            problems.Add("Id is null or whitespace.");
+            problems.Add(ScheduledTaskManagerValidationConstants.IdIsNullOrWhitespace);
         }
 
         // Validate Name
         if (string.IsNullOrWhiteSpace(value.Name))
         {
-            problems.Add("Name is null or whitespace.");
+            problems.Add(ScheduledTaskManagerValidationConstants.NameIsNullOrWhitespace);
         }
 
         // Validate TaskFunc - can be null (valid state)
         if (value.TaskFunc is null)
         {
-            problems.Add("TaskFunc is null.");
+            problems.Add(ScheduledTaskManagerValidationConstants.TaskFuncIsNull);
         }
 
         // Validate IsRecurring
@@ -50,17 +50,17 @@ public static class ScheduledTaskManagerValidation
         // Validate Interval
         if (value.Interval.TotalMilliseconds <= 0)
         {
-            problems.Add("Interval must be greater than zero.");
+            problems.Add(ScheduledTaskManagerValidationConstants.IntervalMustBeGreaterThanZero);
         }
 
         // Validate CreatedAt
         if (value.CreatedAt == default)
         {
-            problems.Add("CreatedAt is default (DateTime.MinValue).");
+            problems.Add(ScheduledTaskManagerValidationConstants.CreatedAtIsDefault);
         }
-        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(ScheduledTaskManagerValidationConstants.FutureCheckMinutes))
         {
-            problems.Add("CreatedAt is in the future.");
+            problems.Add(ScheduledTaskManagerValidationConstants.CreatedAtIsInTheFuture);
         }
 
         // Validate LastExecutedAt (if set)
@@ -68,15 +68,15 @@ public static class ScheduledTaskManagerValidation
         {
             if (value.LastExecutedAt.Value == default)
             {
-                problems.Add("LastExecutedAt is default (DateTime.MinValue).");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastExecutedAtIsDefault);
             }
-            else if (value.LastExecutedAt.Value > DateTime.UtcNow.AddMinutes(5))
+            else if (value.LastExecutedAt.Value > DateTime.UtcNow.AddMinutes(ScheduledTaskManagerValidationConstants.FutureCheckMinutes))
             {
-                problems.Add("LastExecutedAt is in the future.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastExecutedAtIsInTheFuture);
             }
             else if (value.LastExecutedAt.Value < value.CreatedAt)
             {
-                problems.Add("LastExecutedAt cannot be before CreatedAt.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastExecutedAtCannotBeBeforeCreatedAt);
             }
         }
 
@@ -85,22 +85,22 @@ public static class ScheduledTaskManagerValidation
         {
             if (value.LastSuccessAt.Value == default)
             {
-                problems.Add("LastSuccessAt is default (DateTime.MinValue).");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastSuccessAtIsDefault);
             }
-            else if (value.LastSuccessAt.Value > DateTime.UtcNow.AddMinutes(5))
+            else if (value.LastSuccessAt.Value > DateTime.UtcNow.AddMinutes(ScheduledTaskManagerValidationConstants.FutureCheckMinutes))
             {
-                problems.Add("LastSuccessAt is in the future.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastSuccessAtIsInTheFuture);
             }
             else if (value.LastSuccessAt.Value < value.CreatedAt)
             {
-                problems.Add("LastSuccessAt cannot be before CreatedAt.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastSuccessAtCannotBeBeforeCreatedAt);
             }
 
             // If LastSuccessAt is set, LastExecutedAt should also be set and not after it
             if (value.LastExecutedAt.HasValue && value.LastSuccessAt.HasValue
                 && value.LastExecutedAt.Value > value.LastSuccessAt.Value)
             {
-                problems.Add("LastExecutedAt cannot be after LastSuccessAt.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastExecutedAtCannotBeAfterLastSuccessAt);
             }
         }
 
@@ -109,41 +109,41 @@ public static class ScheduledTaskManagerValidation
         {
             if (value.LastErrorAt.Value == default)
             {
-                problems.Add("LastErrorAt is default (DateTime.MinValue).");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastErrorAtIsDefault);
             }
-            else if (value.LastErrorAt.Value > DateTime.UtcNow.AddMinutes(5))
+            else if (value.LastErrorAt.Value > DateTime.UtcNow.AddMinutes(ScheduledTaskManagerValidationConstants.FutureCheckMinutes))
             {
-                problems.Add("LastErrorAt is in the future.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastErrorAtIsInTheFuture);
             }
             else if (value.LastErrorAt.Value < value.CreatedAt)
             {
-                problems.Add("LastErrorAt cannot be before CreatedAt.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastErrorAtCannotBeBeforeCreatedAt);
             }
 
             // If LastErrorAt is set, LastExecutedAt should also be set and not before it
             if (value.LastExecutedAt.HasValue && value.LastErrorAt.HasValue
                 && value.LastExecutedAt.Value < value.LastErrorAt.Value)
             {
-                problems.Add("LastExecutedAt cannot be before LastErrorAt.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastExecutedAtCannotBeBeforeLastErrorAt);
             }
 
             // If LastErrorAt is set, LastError should also be set
             if (string.IsNullOrWhiteSpace(value.LastError))
             {
-                problems.Add("LastError must be set when LastErrorAt is set.");
+                problems.Add(ScheduledTaskManagerValidationConstants.LastErrorMustBeSetWhenLastErrorAtIsSet);
             }
         }
 
         // Validate ExecutionCount
         if (value.ExecutionCount < 0)
         {
-            problems.Add("ExecutionCount cannot be negative.");
+            problems.Add(ScheduledTaskManagerValidationConstants.ExecutionCountCannotBeNegative);
         }
 
         // Validate LastError (if LastErrorAt is set, this is already validated above)
         if (value.LastError is not null && string.IsNullOrWhiteSpace(value.LastError))
         {
-            problems.Add("LastError is empty but not null.");
+            problems.Add(ScheduledTaskManagerValidationConstants.LastErrorIsEmptyButNotNull);
         }
 
         return problems.AsReadOnly();
