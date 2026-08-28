@@ -23,7 +23,7 @@ namespace TelegramBotFramework.Keyboard;
 ///     .Build();
 /// </code>
 /// </example>
-public sealed class InlineQueryResultBuilder
+public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
 {
     private readonly List<InlineQueryResult> _results = new();
     private readonly HashSet<string> _usedIds = new();
