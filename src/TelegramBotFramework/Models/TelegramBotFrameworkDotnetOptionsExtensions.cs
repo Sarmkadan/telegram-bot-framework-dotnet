@@ -19,12 +19,12 @@ namespace TelegramBotFramework.Models
 
             if (string.IsNullOrWhiteSpace(options.BotToken))
             {
-                throw new InvalidOperationException("BotToken cannot be null or empty.");
+                throw new InvalidOperationException(TelegramBotFrameworkDotnetOptionsExtensionsConstants.BotTokenNullOrEmptyExceptionMessage);
             }
 
             if (string.IsNullOrWhiteSpace(options.BotUsername))
             {
-                throw new InvalidOperationException("BotUsername cannot be null or empty.");
+                throw new InvalidOperationException(TelegramBotFrameworkDotnetOptionsExtensionsConstants.BotUsernameNullOrEmptyExceptionMessage);
             }
         }
 
