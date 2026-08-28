@@ -33,7 +33,7 @@ public static class ScheduledTaskManagerExtensions
         var delay = runAt - DateTime.UtcNow;
         if (delay.TotalMilliseconds <= 0)
         {
-            throw new ArgumentException("Run time must be in the future.", nameof(runAt));
+            throw new ArgumentException(ScheduledTaskManagerExtensionsConstants.FutureRunTimeErrorMessage, nameof(runAt));
         }
 
         return taskManager.ScheduleOnce(taskFunc, delay, taskName);
@@ -58,7 +58,7 @@ public static class ScheduledTaskManagerExtensions
         var timesList = timesOfDay.ToList();
         if (timesList.Count == 0)
         {
-            throw new ArgumentException("At least one time of day must be specified.", nameof(timesOfDay));
+            throw new ArgumentException(ScheduledTaskManagerExtensionsConstants.AtLeastOneTimeOfDayRequired, nameof(timesOfDay));
         }
 
         // Calculate next run times for each specified time of day
@@ -71,7 +71,7 @@ public static class ScheduledTaskManagerExtensions
 
         if (nextRunTimes.Count == 0)
         {
-            throw new InvalidOperationException("Could not determine valid run time from provided times.");
+            throw new InvalidOperationException(ScheduledTaskManagerExtensionsConstants.CouldNotDetermineValidRunTime);
         }
 
         // Schedule individual one-time tasks for each time of day
@@ -162,7 +162,7 @@ public static class ScheduledTaskManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(taskManager);
 
-        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(ScheduledTaskManagerExtensionsConstants.DefaultWaitTimeoutSeconds));
         var stopwatch = Stopwatch.StartNew();
 
         try
@@ -177,12 +177,12 @@ public static class ScheduledTaskManagerExtensions
                     return true;
                 }
 
-                if (stopwatch.Elapsed >= (timeout ?? TimeSpan.FromSeconds(30)))
+                if (stopwatch.Elapsed >= (timeout ?? TimeSpan.FromSeconds(ScheduledTaskManagerExtensionsConstants.DefaultWaitTimeoutSeconds)))
                 {
                     return false;
                 }
 
-                await Task.Delay(100, cts.Token).ConfigureAwait(false);
+                await Task.Delay(ScheduledTaskManagerExtensionsConstants.TaskDelayMilliseconds, cts.Token).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
