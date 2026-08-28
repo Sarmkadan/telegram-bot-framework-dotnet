@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Represents progress information for a broadcast operation.
 /// </summary>
-public sealed class BroadcastProgress
+public sealed class BroadcastProgress : IBroadcastProgress
 {
     /// <summary>
     /// Total number of chats in the broadcast.
