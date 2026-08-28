@@ -43,7 +43,7 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, "Unhandled exception in request processing");
+        _logger.LogError(exception, HttpErrorHandlingMiddlewareConstants.UnhandledExceptionLogMessage);
 
         context.Response.ContentType = ApiConstants.ContentTypeJson;
 
@@ -67,13 +67,13 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
     {
         return ex switch
         {
-            ArgumentNullException => (400, HttpErrorConstants.InvalidArgumentErrorCode, HttpErrorConstants.NullArgumentMessage),
-            ArgumentException => (400, HttpErrorConstants.InvalidArgumentErrorCode, ex.Message),
-            InvalidOperationException => (409, HttpErrorConstants.InvalidStateErrorCode, ex.Message),
-            TimeoutException => (408, HttpErrorConstants.RequestTimeoutErrorCode, HttpErrorConstants.RequestTimeoutMessage),
-            NotImplementedException => (501, HttpErrorConstants.NotImplementedErrorCode, HttpErrorConstants.NotImplementedMessage),
-            Exceptions.BotFrameworkException bfe => (500, bfe.ErrorCode ?? HttpErrorConstants.BotFrameworkErrorCode, bfe.Message),
-            _ => (500, HttpErrorConstants.InternalErrorCode, HttpErrorConstants.InternalErrorMessage)
+            ArgumentNullException => (HttpErrorHandlingMiddlewareConstants.BadRequestStatusCode, HttpErrorConstants.InvalidArgumentErrorCode, HttpErrorConstants.NullArgumentMessage),
+            ArgumentException => (HttpErrorHandlingMiddlewareConstants.BadRequestStatusCode, HttpErrorConstants.InvalidArgumentErrorCode, ex.Message),
+            InvalidOperationException => (HttpErrorHandlingMiddlewareConstants.ConflictStatusCode, HttpErrorConstants.InvalidStateErrorCode, ex.Message),
+            TimeoutException => (HttpErrorHandlingMiddlewareConstants.RequestTimeoutStatusCode, HttpErrorConstants.RequestTimeoutErrorCode, HttpErrorConstants.RequestTimeoutMessage),
+            NotImplementedException => (HttpErrorHandlingMiddlewareConstants.NotImplementedStatusCode, HttpErrorConstants.NotImplementedErrorCode, HttpErrorConstants.NotImplementedMessage),
+            Exceptions.BotFrameworkException bfe => (HttpErrorHandlingMiddlewareConstants.InternalServerErrorStatusCode, bfe.ErrorCode ?? HttpErrorConstants.BotFrameworkErrorCode, bfe.Message),
+            _ => (HttpErrorHandlingMiddlewareConstants.InternalServerErrorStatusCode, HttpErrorConstants.InternalErrorCode, HttpErrorConstants.InternalErrorMessage)
         };
     }
 }
