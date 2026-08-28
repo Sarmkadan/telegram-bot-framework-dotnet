@@ -18,7 +18,7 @@ namespace TelegramBotFramework.Tests;
 /// Unit tests for <see cref="SessionService"/> which provides session management functionality
 /// for tracking user interactions and maintaining conversation state in a Telegram bot framework.
 /// </summary>
-public sealed class SessionServiceTests
+public sealed class SessionServiceTests : ISessionServiceTests
 {
     /// <summary>
     /// Mock repository for testing session persistence operations.
