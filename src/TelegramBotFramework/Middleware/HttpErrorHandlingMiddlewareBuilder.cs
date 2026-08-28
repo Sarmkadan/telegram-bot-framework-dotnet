@@ -113,5 +113,23 @@ namespace TelegramBotFramework.Middleware
             ArgumentException.ThrowIfNullOrEmpty(_middleware.Message);
             return _middleware;
         }
+
+        /// <summary>
+        /// Composes the middleware into a <see cref="RequestDelegate"/> for pipeline execution.
+        /// Invariant: The resulting delegate should be composed once at startup and cached,
+        /// not recreated per update or request.
+        /// </summary>
+        /// <param name="next">The next delegate in the pipeline.</param>
+        /// <returns>A <see cref="RequestDelegate"/> that invokes the configured middleware.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="next"/> is null.</exception>
+        public RequestDelegate BuildPipeline(RequestDelegate next)
+        {
+            ArgumentNullException.ThrowIfNull(next);
+            var middleware = Build();
+            return async context =>
+            {
+                await middleware.InvokeAsync(context);
+            };
+        }
     }
 }
