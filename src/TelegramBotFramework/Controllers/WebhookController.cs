@@ -16,7 +16,7 @@ namespace TelegramBotFramework.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/webhook")]
-public sealed class WebhookController : ControllerBase
+public sealed class WebhookController : ControllerBase, IWebhookController
 {
     private readonly WebhookService _webhookService;
     private readonly ILogger<WebhookController> _logger;
