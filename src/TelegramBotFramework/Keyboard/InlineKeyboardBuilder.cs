@@ -24,7 +24,7 @@ namespace TelegramBotFramework.Keyboard;
 /// await apiClient.SendMessageWithInlineKeyboardAsync(chatId, "Choose:", keyboard);
 /// </code>
 /// </example>
-public sealed class InlineKeyboardBuilder
+public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
 {
     private readonly List<List<InlineKeyboardButton>> _rows = new();
     private List<InlineKeyboardButton> _currentRow = new();
@@ -47,6 +47,21 @@ public sealed class InlineKeyboardBuilder
 
     /// <summary>Creates a new builder instance with the default row width.</summary>
     public static InlineKeyboardBuilder Create(int maxButtonsPerRow = 3) => new(maxButtonsPerRow);
+
+    /// <summary>
+    /// Gets the rows of buttons that compose the keyboard.
+    /// </summary>
+    public IReadOnlyList<IReadOnlyList<InlineKeyboardButton>> InlineKeyboard
+    {
+        get
+        {
+            FlushCurrentRow();
+            return _rows
+                .Select(row => (IReadOnlyList<InlineKeyboardButton>)row.AsReadOnly())
+                .ToList()
+                .AsReadOnly();
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Button adders
