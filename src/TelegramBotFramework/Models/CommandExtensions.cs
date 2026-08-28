@@ -56,18 +56,19 @@ public static class CommandExtensions
         var patterns = command.GetCommandPatterns().ToList();
         var patternText = patterns.Count > 0
             ? string.Join(", ", patterns.Select(p => $"'{p}'"))
-            : "no patterns";
+            : CommandExtensionsConstants.NoPatterns;
 
         var parametersText = command.HasParameters()
             ? $"with {command.Parameters!.Count} parameter(s)"
-            : "without parameters";
+            : CommandExtensionsConstants.WithoutParameters;
 
         var rateLimitText = command.RateLimitPerMinute.HasValue
             ? $"rate limited to {command.RateLimitPerMinute} per minute"
-            : "no rate limit";
+            : CommandExtensionsConstants.NoRateLimit;
 
+        var createdAtString = command.CreatedAt.ToString(CommandExtensionsConstants.DateFormat);
         return $"Command '{command.Name}' ({command.Type}) - {command.Description} " +
                $"[{patternText}, {parametersText}, {rateLimitText}] " +
-               $"[Created: {command.CreatedAt:yyyy-MM-dd}, Executions: {command.ExecutionCount}]";
+               $"[Created: {createdAtString}, Executions: {command.ExecutionCount}]";
     }
 }
