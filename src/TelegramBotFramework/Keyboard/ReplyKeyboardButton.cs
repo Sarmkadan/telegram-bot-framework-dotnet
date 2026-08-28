@@ -10,7 +10,7 @@ namespace TelegramBotFramework.Keyboard;
 /// <summary>
 /// Represents a single button within a <see cref="ReplyKeyboardMarkup"/>.
 /// </summary>
-public sealed class ReplyKeyboardButton
+public sealed class ReplyKeyboardButton : IReplyKeyboardButton
 {
     /// <summary>Gets the label displayed to the user.</summary>
     public string Text { get; init; } = string.Empty;
