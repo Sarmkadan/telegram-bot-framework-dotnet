@@ -11,7 +11,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Tests for <see cref="MessageFormatter"/>.
 /// </summary>
-public sealed class MessageFormatterTests
+public sealed class MessageFormatterTests : IMessageFormatterTests
 {
     private static Message CreateMessage(
         long userId = 123,
