@@ -25,7 +25,7 @@ namespace TelegramBotFramework.Tests;
 /// Tests various scenarios for building inline keyboard markup including different button types,
 /// automatic row wrapping, manual row control, and error conditions.
 /// </summary>
-public sealed class InlineKeyboardBuilderTests
+public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 {
 	/// <summary>
 	/// Tests that building a keyboard with a single callback button creates a markup with one row and one button.
