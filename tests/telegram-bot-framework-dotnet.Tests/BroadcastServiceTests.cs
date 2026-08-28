@@ -12,7 +12,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
-public class BroadcastServiceTests
+public class BroadcastServiceTests : IBroadcastServiceTests
 {
     private readonly Mock<ITelegramApiClient> _mockApiClient;
     private readonly BroadcastService _broadcastService;
