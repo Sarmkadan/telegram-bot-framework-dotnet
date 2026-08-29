@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents the execution context for a command or operation.
 /// </summary>
-public sealed class ExecutionContext : IExecutionContext
+public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionContext>
 {
     public string ContextId { get; set; } = Guid.NewGuid().ToString();
 
@@ -158,4 +158,70 @@ public sealed class ExecutionContext : IExecutionContext
     /// </summary>
     public TimeSpan GetDuration() =>
         DateTime.UtcNow - CreatedAt;
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(ExecutionContext? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return ContextId == other.ContextId
+               && UserId == other.UserId
+               && ChatId == other.ChatId
+               && Equals(User, other.User)
+               && Equals(Session, other.Session)
+               && Equals(Command, other.Command)
+               && Equals(Message, other.Message)
+               && Equals(Parameters, other.Parameters);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ExecutionContext)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(ContextId, UserId, ChatId, User, Session, Command, Message, Parameters);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="ExecutionContext"/> objects are equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
+    public static bool operator ==(ExecutionContext? left, ExecutionContext? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (ReferenceEquals(null, left)) return false;
+        if (ReferenceEquals(null, right)) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="ExecutionContext"/> objects are not equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
+    public static bool operator !=(ExecutionContext? left, ExecutionContext? right)
+    {
+        return !(left == right);
+    }
 }
