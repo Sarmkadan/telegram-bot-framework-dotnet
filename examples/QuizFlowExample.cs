@@ -20,7 +20,7 @@ namespace TelegramBotFramework.Examples;
 /// - Generating quiz results
 /// - Handling user interactions
 /// </summary>
-public class QuizFlowExample
+public class QuizFlowExample : IQuizFlowExample
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IConversationFlowEngine _flowEngine;
