@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace TelegramBotFramework.Tests;
 
-public class UserSessionValidationTests
+public class UserSessionValidationTests : IUserSessionValidationTests
 {
     private UserSession CreateValidSession()
     {
