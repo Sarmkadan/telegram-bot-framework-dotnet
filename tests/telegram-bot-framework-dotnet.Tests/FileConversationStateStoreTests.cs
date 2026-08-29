@@ -13,7 +13,7 @@ using Xunit;
 /// <summary>
 /// Tests for the FileConversationStateStore class.
 /// </summary>
-public sealed class FileConversationStateStoreTests : IDisposable
+public sealed class FileConversationStateStoreTests : IDisposable, IFileConversationStateStoreTests
 {
     private readonly string _tempDirectory;
     private readonly FileConversationStateStore _store;
