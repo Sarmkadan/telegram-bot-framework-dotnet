@@ -21,12 +21,12 @@ public static class DateTimeExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the resulting timestamp would overflow long.</exception>
     public static long ToUnixTimestamp(this DateTime dateTime)
     {
-        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var epoch = DateTimeExtensionsConstants.UnixEpoch;
         var result = dateTime - epoch;
 
         if (result.TotalSeconds > long.MaxValue || result.TotalSeconds < long.MinValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(dateTime), "The DateTime value is outside the valid range for Unix timestamp conversion.");
+            throw new ArgumentOutOfRangeException(nameof(dateTime), DateTimeExtensionsConstants.UnixTimestampOutOfRangeErrorMessage);
         }
 
         return (long)result.TotalSeconds;
@@ -39,7 +39,7 @@ public static class DateTimeExtensions
     /// <returns>The corresponding DateTime.</returns>
     public static DateTime FromUnixTimestamp(long timestamp)
     {
-        return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timestamp);
+        return DateTimeExtensionsConstants.UnixEpoch.AddSeconds(timestamp);
     }
 
     /// <summary>
@@ -134,12 +134,12 @@ public static class DateTimeExtensions
     {
         var timeSpan = DateTime.UtcNow - dateTime;
 
-        return timeSpan.TotalSeconds < 60 ? "just now" :
-               timeSpan.TotalMinutes < 60 ? $"{(int)timeSpan.TotalMinutes}m ago" :
-               timeSpan.TotalHours < 24 ? $"{(int)timeSpan.TotalHours}h ago" :
-               timeSpan.TotalDays < 30 ? $"{(int)timeSpan.TotalDays}d ago" :
-               timeSpan.TotalDays < 365 ? $"{(int)(timeSpan.TotalDays / 30)}mo ago" :
-               $"{(int)(timeSpan.TotalDays / 365)}y ago";
+        return timeSpan.TotalSeconds < DateTimeExtensionsConstants.SecondsInMinute ? DateTimeExtensionsConstants.JustNow :
+               timeSpan.TotalMinutes < DateTimeExtensionsConstants.MinutesInHour ? $"{(int)timeSpan.TotalMinutes}{DateTimeExtensionsConstants.MinutesAgoFormat}" :
+               timeSpan.TotalHours < DateTimeExtensionsConstants.HoursInDay ? $"{(int)timeSpan.TotalHours}{DateTimeExtensionsConstants.HoursAgoFormat}" :
+               timeSpan.TotalDays < DateTimeExtensionsConstants.DaysInMonthApprox ? $"{(int)timeSpan.TotalDays}{DateTimeExtensionsConstants.DaysAgoFormat}" :
+               timeSpan.TotalDays < DateTimeExtensionsConstants.DaysInYear ? $"{(int)(timeSpan.TotalDays / DateTimeExtensionsConstants.DaysInMonthApprox)}{DateTimeExtensionsConstants.MonthsAgoFormat}" :
+               $"{(int)(timeSpan.TotalDays / DateTimeExtensionsConstants.DaysInYear)}{DateTimeExtensionsConstants.YearsAgoFormat}";
     }
 
     /// <summary>
