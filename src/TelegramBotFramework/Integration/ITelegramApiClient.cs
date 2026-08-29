@@ -86,8 +86,9 @@ public interface ITelegramApiClient
 
     /// <summary>Sets the list of bot commands shown in the Telegram UI.</summary>
     /// <param name="commands">Collection of command name / description pairs.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>True if the request succeeded, false otherwise.</returns>
-    Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands);
+    Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default);
 
 /// <summary>
 /// Gets information about a file stored on Telegram servers.

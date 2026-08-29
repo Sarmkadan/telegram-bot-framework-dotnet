@@ -25,11 +25,13 @@ public sealed class CommandMenuSyncService
     /// Collects all commands defined with <c>CommandAttribute</c> and synchronises
     /// them with Telegram.
     /// </summary>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>True if the Telegram API accepted the command list.</returns>
-    public async Task<bool> SyncAsync()
+    public async Task<bool> SyncAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var commands = CollectCommands();
-        return await _apiClient.SetMyCommandsAsync(commands);
+        return await _apiClient.SetMyCommandsAsync(commands, cancellationToken);
     }
 
     private static IReadOnlyList<BotCommand> CollectCommands()
