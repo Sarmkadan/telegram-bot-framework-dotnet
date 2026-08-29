@@ -73,7 +73,7 @@ public class WebhookServiceTests
         var service = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
 
         // Act
-        var result = await service.ParseAndValidateAsync("{}", "invalid-token");
+        var result = await service.ParseAndValidateAsync("{}", "invalid-token", CancellationToken.None);
 
         // Assert
         result.Should().BeNull();

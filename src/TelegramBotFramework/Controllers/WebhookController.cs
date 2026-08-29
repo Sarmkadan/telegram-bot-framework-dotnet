@@ -77,7 +77,7 @@ public sealed class WebhookController : ControllerBase, IWebhookController
 
         _logger.LogDebug("Validating webhook request with secret token");
 
-        var update = await _webhookService.ParseAndValidateAsync(body, secretToken)
+        var update = await _webhookService.ParseAndValidateAsync(body, secretToken, cancellationToken)
             .ConfigureAwait(false);
 
         if (update is null)

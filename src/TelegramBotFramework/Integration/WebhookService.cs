@@ -175,16 +175,20 @@ public sealed class WebhookService : IWebhookService, IHostedService
     /// <param name="secretTokenHeader">
     /// Value of the <c>X-Telegram-Bot-Api-Secret-Token</c> header, if present.
     /// </param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     public async Task<TelegramUpdate?> ParseAndValidateAsync(
         string jsonBody,
-        string? secretTokenHeader)
+        string? secretTokenHeader,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (!_webhookHandler.ValidateSecretToken(secretTokenHeader, _options.SecretToken))
         {
             _logger.LogWarning("Rejected webhook request: secret token validation failed");
             return null;
         }
 
-        return await _webhookHandler.ProcessUpdateAsync(jsonBody).ConfigureAwait(false);
+        return await _webhookHandler.ProcessUpdateAsync(jsonBody, cancellationToken).ConfigureAwait(false);
     }
 }
