@@ -7,7 +7,7 @@ namespace TelegramBotFramework.Tests.Models;
 /// <summary>
 /// Tests for the <see cref="TelegramBotFrameworkDotnetOptionsExtensions"/> extension methods.
 /// </summary>
-public class TelegramBotFrameworkDotnetOptionsExtensionsTests
+public class TelegramBotFrameworkDotnetOptionsExtensionsTests : ITelegramBotFrameworkDotnetOptionsExtensionsTests
 {
     /// <summary>
     /// Verifies that calling <see cref="TelegramBotFrameworkDotnetOptionsExtensions.Validate(TelegramBotFramework.Models.TelegramBotFrameworkDotnetOptions)"/>
