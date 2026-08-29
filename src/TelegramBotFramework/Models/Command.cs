@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a bot command that can be executed by users.
 /// </summary>
-public sealed class Command : ICommand
+public sealed class Command : ICommand, IEquatable<Command>
 {
     public string Name { get; set; } = string.Empty;
 
@@ -93,6 +93,72 @@ public sealed class Command : ICommand
     /// </summary>
     public bool IsRateLimited(int executionsInLastMinute) =>
         RateLimitPerMinute.HasValue && executionsInLastMinute >= RateLimitPerMinute.Value;
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(Command? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Name == other.Name
+               && Description == other.Description
+               && HandlerType == other.HandlerType
+               && Type == other.Type
+               && RequiresAdmin == other.RequiresAdmin
+               && IsEnabled == other.IsEnabled
+               && ExecutionCount == other.ExecutionCount
+               && Equals(Parameters, other.Parameters);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((Command)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Name, Description, HandlerType, Type, RequiresAdmin, IsEnabled, ExecutionCount, Parameters);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="Command"/> objects are equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
+    public static bool operator ==(Command? left, Command? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (ReferenceEquals(null, left)) return false;
+        if (ReferenceEquals(null, right)) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="Command"/> objects are not equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
+    public static bool operator !=(Command? left, Command? right)
+    {
+        return !(left == right);
+    }
 }
 
 public enum CommandType
