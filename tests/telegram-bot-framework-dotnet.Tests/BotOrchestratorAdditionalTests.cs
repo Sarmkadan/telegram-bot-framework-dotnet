@@ -18,7 +18,7 @@ namespace TelegramBotFramework.Tests;
 /// Contains additional test cases for the <see cref="BotOrchestrator"/> class.
 /// Tests edge cases, boundary conditions, and specific scenarios not covered in the main test suite.
 /// </summary>
-public sealed class BotOrchestratorAdditionalTests
+public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalTests
 {
     private readonly Mock<IUserService> _mockUserService = new();
     private readonly Mock<ICommandService> _mockCommandService = new();
