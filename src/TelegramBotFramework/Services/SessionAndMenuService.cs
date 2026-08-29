@@ -143,6 +143,7 @@ public sealed class SessionService : ISessionService
 
     public async Task<Models.UserSession?> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
     }
 
