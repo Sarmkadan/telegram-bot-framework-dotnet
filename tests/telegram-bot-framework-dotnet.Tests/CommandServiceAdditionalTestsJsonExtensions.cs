@@ -24,15 +24,15 @@ public static class CommandServiceAdditionalTestsJsonExtensions
         _jsonOptions = new(JsonSerializerDefaults.Web)
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false,
-            PropertyNameCaseInsensitive = true
+            WriteIndented = CommandServiceAdditionalTestsJsonExtensionsConstants.CompactWriteIndented,
+            PropertyNameCaseInsensitive = CommandServiceAdditionalTestsJsonExtensionsConstants.PropertyNameCaseInsensitive
         };
 
         _indentedJsonOptions = new(JsonSerializerDefaults.Web)
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true
+            WriteIndented = CommandServiceAdditionalTestsJsonExtensionsConstants.IndentedWriteIndented,
+            PropertyNameCaseInsensitive = CommandServiceAdditionalTestsJsonExtensionsConstants.PropertyNameCaseInsensitive
         };
     }
 
@@ -43,7 +43,9 @@ public static class CommandServiceAdditionalTestsJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this CommandServiceAdditionalTests value, bool indented = false)
+    public static string ToJson(
+        this CommandServiceAdditionalTests value,
+        bool indented = CommandServiceAdditionalTestsJsonExtensionsConstants.DefaultIndented)
     {
         ArgumentNullException.ThrowIfNull(value);
 
