@@ -16,7 +16,7 @@ namespace TelegramBotFramework.Tests;
 /// Edge-case tests for <see cref="TelegramBotFramework.Keyboard.InlineKeyboardBuilder"/> class.
 /// Tests boundary conditions, edge cases, and unusual scenarios.
 /// </summary>
-public sealed class InlineKeyboardBuilderEdgeCaseTests
+public sealed class InlineKeyboardBuilderEdgeCaseTests : IInlineKeyboardBuilderEdgeCaseTests
 {
     /// <summary>
     /// Tests that building with an empty builder throws InvalidOperationException.
