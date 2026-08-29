@@ -18,7 +18,7 @@ namespace TelegramBotFramework.Tests;
 /// Unit tests for the <see cref="UserService"/> class.
 /// Tests the user management functionality including creation, retrieval, updating, and deletion.
 /// </summary>
-public sealed class UserServiceTests
+public sealed class UserServiceTests : IUserServiceTests
 {
     /// <summary>
     /// Mock repository for testing user persistence operations.
