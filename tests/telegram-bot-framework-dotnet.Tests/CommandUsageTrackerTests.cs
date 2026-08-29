@@ -12,7 +12,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Tests for the CommandUsageTracker class.
 /// </summary>
-public sealed class CommandUsageTrackerTests
+public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
 {
     private readonly CommandUsageTracker _tracker = new();
 
