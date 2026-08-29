@@ -7,7 +7,7 @@ namespace TelegramBotFramework.Tests.Models;
 /// <summary>
 /// Provides unit tests for message extension methods that test various message operations and behaviors.
 /// </summary>
-public class MessageExtensionsTests
+public class MessageExtensionsTests : IMessageExtensionsTests
 {
     [Fact]
     public void IsCommand_MessageIsCommand_ReturnsTrue()
