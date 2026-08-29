@@ -119,8 +119,15 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// <summary>
     /// Makes a request with custom headers.
     /// </summary>
-    public async Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers)
+    public Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers)
     {
+        return GetWithHeadersAsync(url, headers, CancellationToken.None);
+    }
+
+    public async Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
             return null;
 
@@ -128,12 +135,16 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
         {
             var uri = new Uri(url);
             var client = _httpClientFactory.GetClientWithHeaders(uri.Scheme + "://" + uri.Host, headers);
-            var response = await client.GetAsync(uri.PathAndQuery).ConfigureAwait(false);
+            var response = await client.GetAsync(uri.PathAndQuery, cancellationToken).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
             return null;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
