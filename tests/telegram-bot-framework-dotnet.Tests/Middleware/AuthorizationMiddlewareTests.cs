@@ -15,6 +15,8 @@ using ExecutionContext = TelegramBotFramework.Models.ExecutionContext;
 
 namespace TelegramBotFramework.Middleware.Tests;
 
+using static AuthorizationMiddlewareTestsConstants;
+
 /// <summary>
 /// Tests for the AuthorizationMiddleware class.
 /// </summary>
@@ -46,9 +48,9 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 0, // Invalid
-            ChatId = 456,
-            User = new BotUser { TelegramId = 123, FirstName = "Test" },
+            UserId = InvalidUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = RegularUserId, FirstName = "Test" },
             IsValid = false
         };
 
@@ -83,8 +85,8 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
+            UserId = RegularUserId,
+            ChatId = TestChatId,
             User = null,
             IsValid = true
         };
@@ -122,9 +124,9 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 123, FirstName = "Regular", Role = UserRole.User },
+            UserId = RegularUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = RegularUserId, FirstName = RegularUserFirstName, Role = UserRole.User },
             IsValid = true
         };
 
@@ -159,9 +161,9 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 999,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 999, FirstName = "Admin", Role = UserRole.Admin },
+            UserId = AdminUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = AdminUserId, FirstName = AdminUserFirstName, Role = UserRole.Admin },
             IsValid = true
         };
 
@@ -190,14 +192,14 @@ public sealed class AuthorizationMiddlewareTests
         // Arrange
         var command = new Command
         {
-            Name = "/admincommand",
-            Description = "Admin command",
-            HandlerType = "AdminHandler",
+            Name = AdminCommandName,
+            Description = AdminCommandDescription,
+            HandlerType = AdminCommandHandlerType,
             RequiresAdmin = true,
             IsEnabled = true
         };
 
-        _commandServiceMock.Setup(x => x.GetCommandAsync("/admincommand", It.IsAny<CancellationToken>()))
+        _commandServiceMock.Setup(x => x.GetCommandAsync(AdminCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         var middleware = new AuthorizationMiddleware(
@@ -208,10 +210,10 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 123, FirstName = "Regular", Role = UserRole.User },
-            Command = new Command { Name = "/admincommand" },
+            UserId = RegularUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = RegularUserId, FirstName = RegularUserFirstName, Role = UserRole.User },
+            Command = new Command { Name = AdminCommandName },
             IsValid = true
         };
 
@@ -228,7 +230,7 @@ public sealed class AuthorizationMiddlewareTests
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeFalse(); // next should not be called
-        context.Errors.Should().ContainSingle(e => e.Contains("not authorized to execute command"));
+        context.Errors.Should().ContainSingle(e => e.Contains(UnauthorizedCommandErrorFragment));
         context.IsValid.Should().BeFalse();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("denied access to command")));
@@ -243,14 +245,14 @@ public sealed class AuthorizationMiddlewareTests
         // Arrange
         var command = new Command
         {
-            Name = "/admincommand",
-            Description = "Admin command",
-            HandlerType = "AdminHandler",
+            Name = AdminCommandName,
+            Description = AdminCommandDescription,
+            HandlerType = AdminCommandHandlerType,
             RequiresAdmin = true,
             IsEnabled = true
         };
 
-        _commandServiceMock.Setup(x => x.GetCommandAsync("/admincommand", It.IsAny<CancellationToken>()))
+        _commandServiceMock.Setup(x => x.GetCommandAsync(AdminCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         var middleware = new AuthorizationMiddleware(
@@ -261,10 +263,10 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 999,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 999, FirstName = "Admin", Role = UserRole.Admin },
-            Command = new Command { Name = "/admincommand" },
+            UserId = AdminUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = AdminUserId, FirstName = AdminUserFirstName, Role = UserRole.Admin },
+            Command = new Command { Name = AdminCommandName },
             IsValid = true
         };
 
@@ -293,14 +295,14 @@ public sealed class AuthorizationMiddlewareTests
         // Arrange
         var command = new Command
         {
-            Name = "/admincommand",
-            Description = "Admin command",
-            HandlerType = "AdminHandler",
+            Name = AdminCommandName,
+            Description = AdminCommandDescription,
+            HandlerType = AdminCommandHandlerType,
             RequiresAdmin = true,
             IsEnabled = true
         };
 
-        _commandServiceMock.Setup(x => x.GetCommandAsync("/admincommand", It.IsAny<CancellationToken>()))
+        _commandServiceMock.Setup(x => x.GetCommandAsync(AdminCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         var middleware = new AuthorizationMiddleware(
@@ -311,10 +313,10 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 500,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 500, FirstName = "Moderator", Role = UserRole.Moderator },
-            Command = new Command { Name = "/admincommand" },
+            UserId = ModeratorUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = ModeratorUserId, FirstName = "Moderator", Role = UserRole.Moderator },
+            Command = new Command { Name = AdminCommandName },
             IsValid = true
         };
 
@@ -331,7 +333,7 @@ public sealed class AuthorizationMiddlewareTests
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeFalse(); // next should not be called
-        context.Errors.Should().ContainSingle(e => e.Contains("not authorized to execute command"));
+        context.Errors.Should().ContainSingle(e => e.Contains(UnauthorizedCommandErrorFragment));
         context.IsValid.Should().BeFalse();
     }
 
@@ -344,14 +346,14 @@ public sealed class AuthorizationMiddlewareTests
         // Arrange
         var command = new Command
         {
-            Name = "/admincommand",
-            Description = "Admin command",
-            HandlerType = "AdminHandler",
+            Name = AdminCommandName,
+            Description = AdminCommandDescription,
+            HandlerType = AdminCommandHandlerType,
             RequiresAdmin = true,
             IsEnabled = true
         };
 
-        _commandServiceMock.Setup(x => x.GetCommandAsync("/admincommand", It.IsAny<CancellationToken>()))
+        _commandServiceMock.Setup(x => x.GetCommandAsync(AdminCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         var middleware = new AuthorizationMiddleware(
@@ -362,10 +364,10 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 999,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 999, FirstName = "Admin", Role = UserRole.Administrator },
-            Command = new Command { Name = "/admincommand" },
+            UserId = AdminUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = AdminUserId, FirstName = AdminUserFirstName, Role = UserRole.Administrator },
+            Command = new Command { Name = AdminCommandName },
             IsValid = true
         };
 
@@ -400,9 +402,9 @@ public sealed class AuthorizationMiddlewareTests
 
         var context = new ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { TelegramId = 123, FirstName = "User", Role = UserRole.User },
+            UserId = RegularUserId,
+            ChatId = TestChatId,
+            User = new BotUser { TelegramId = RegularUserId, FirstName = "User", Role = UserRole.User },
             IsValid = true
         };
 
@@ -436,7 +438,7 @@ public sealed class AuthorizationMiddlewareTests
         );
 
         // Act & Assert
-        middleware.Priority.Should().Be(30);
+        middleware.Priority.Should().Be(ExpectedMiddlewarePriority);
     }
 
     /// <summary>
