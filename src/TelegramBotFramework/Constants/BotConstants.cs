@@ -129,8 +129,8 @@ public static class StorageConstants
 /// </summary>
 public static class LocalizationConstants
 {
-    public const string DefaultLanguage = "en";
-    public const string EnglishLanguageCode = "en";
+    public const string DefaultLanguage = BotConstantsConstants.EnglishLanguage;
+    public const string EnglishLanguageCode = BotConstantsConstants.EnglishLanguage;
     public const string UkrainianLanguageCode = "uk";
 
     public const string DateTimeFormatFull = "yyyy-MM-dd HH:mm:ss";
