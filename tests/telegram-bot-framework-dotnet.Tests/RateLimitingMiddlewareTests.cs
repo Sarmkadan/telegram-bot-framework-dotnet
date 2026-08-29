@@ -19,7 +19,7 @@ namespace TelegramBotFramework.Middleware.Tests;
 /// <summary>
 /// Tests for the RateLimitingMiddleware class.
 /// </summary>
-public sealed class RateLimitingMiddlewareTests
+public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
 {
     private readonly Mock<ICommandService> _commandServiceMock;
     private readonly Mock<ILogger<RateLimitingMiddleware>> _loggerMock;
