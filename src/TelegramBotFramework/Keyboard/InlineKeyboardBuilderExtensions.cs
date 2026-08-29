@@ -93,13 +93,13 @@ public static class InlineKeyboardBuilderExtensions
     /// <param name="cancelCallbackData">Callback data for the cancel button.</param>
     /// <returns>The builder for fluent chaining.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
-    public static InlineKeyboardBuilder AddConfirmationRow(this InlineKeyboardBuilder builder, string confirmCallbackData = "confirm", string cancelCallbackData = "cancel")
+    public static InlineKeyboardBuilder AddConfirmationRow(this InlineKeyboardBuilder builder, string confirmCallbackData = InlineKeyboardBuilderExtensionsConstants.ConfirmCallbackData, string cancelCallbackData = InlineKeyboardBuilderExtensionsConstants.CancelCallbackData)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder
-            .AddButton("✅ Confirm", confirmCallbackData)
-            .AddButton("❌ Cancel", cancelCallbackData);
+            .AddButton(InlineKeyboardBuilderExtensionsConstants.ConfirmButtonText, confirmCallbackData)
+            .AddButton(InlineKeyboardBuilderExtensionsConstants.CancelButtonText, cancelCallbackData);
     }
 
     /// <summary>
@@ -117,20 +117,20 @@ public static class InlineKeyboardBuilderExtensions
         bool hasPrevious,
         bool hasNext,
         int pageNumber,
-        string baseCallbackData = "page")
+        string baseCallbackData = InlineKeyboardBuilderExtensionsConstants.PaginationBaseCallbackData)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         if (hasPrevious)
         {
-            builder.AddButton("⬅️ Previous", $"{baseCallbackData}_{pageNumber - 1}");
+            builder.AddButton(InlineKeyboardBuilderExtensionsConstants.PreviousPageButtonText, $"{baseCallbackData}_{pageNumber - 1}");
         }
 
-        builder.AddButton($"📄 Page {pageNumber}", $"{baseCallbackData}_{pageNumber}_current");
+        builder.AddButton(string.Format(InlineKeyboardBuilderExtensionsConstants.CurrentPageButtonTextFormat, pageNumber), $"{baseCallbackData}_{pageNumber}{InlineKeyboardBuilderExtensionsConstants.CurrentPageSuffix}");
 
         if (hasNext)
         {
-            builder.AddButton("Next ➡️", $"{baseCallbackData}_{pageNumber + 1}");
+            builder.AddButton(InlineKeyboardBuilderExtensionsConstants.NextPageButtonText, $"{baseCallbackData}_{pageNumber + 1}");
         }
 
         return builder;
@@ -169,7 +169,7 @@ public static class InlineKeyboardBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
-        builder.AddButton(text, callbackData ?? "noop");
+        builder.AddButton(text, callbackData ?? InlineKeyboardBuilderExtensionsConstants.NoOpCallbackData);
 
         return builder.NewRow();
     }
@@ -305,14 +305,14 @@ public static class InlineKeyboardBuilderExtensions
     /// <returns>The builder for fluent chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown if builder or secret is null.</exception>
     /// <exception cref="ArgumentException">Thrown if secret is empty or whitespace.</exception>
-    public static InlineKeyboardBuilder AddSignedConfirmationRow(this InlineKeyboardBuilder builder, string secret, string confirmCallbackData = "confirm", string cancelCallbackData = "cancel")
+    public static InlineKeyboardBuilder AddSignedConfirmationRow(this InlineKeyboardBuilder builder, string secret, string confirmCallbackData = InlineKeyboardBuilderExtensionsConstants.ConfirmCallbackData, string cancelCallbackData = InlineKeyboardBuilderExtensionsConstants.CancelCallbackData)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(secret);
 
         return builder
-            .AddSignedButton("✅ Confirm", confirmCallbackData, secret)
-            .AddSignedButton("❌ Cancel", cancelCallbackData, secret);
+            .AddSignedButton(InlineKeyboardBuilderExtensionsConstants.ConfirmButtonText, confirmCallbackData, secret)
+            .AddSignedButton(InlineKeyboardBuilderExtensionsConstants.CancelButtonText, cancelCallbackData, secret);
     }
 
     /// <summary>
@@ -334,7 +334,7 @@ public static class InlineKeyboardBuilderExtensions
         bool hasPrevious,
         bool hasNext,
         int pageNumber,
-        string baseCallbackData = "page")
+        string baseCallbackData = InlineKeyboardBuilderExtensionsConstants.PaginationBaseCallbackData)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(secret);
@@ -342,16 +342,16 @@ public static class InlineKeyboardBuilderExtensions
         if (hasPrevious)
         {
             var prevData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber - 1}", secret);
-            builder.AddButton("⬅️ Previous", prevData);
+            builder.AddButton(InlineKeyboardBuilderExtensionsConstants.PreviousPageButtonText, prevData);
         }
 
-        var currentData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber}_current", secret);
-        builder.AddButton($"📄 Page {pageNumber}", currentData);
+        var currentData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber}{InlineKeyboardBuilderExtensionsConstants.CurrentPageSuffix}", secret);
+        builder.AddButton(string.Format(InlineKeyboardBuilderExtensionsConstants.CurrentPageButtonTextFormat, pageNumber), currentData);
 
         if (hasNext)
         {
             var nextData = CallbackDataSigner.Sign($"{baseCallbackData}_{pageNumber + 1}", secret);
-            builder.AddButton("Next ➡️", nextData);
+            builder.AddButton(InlineKeyboardBuilderExtensionsConstants.NextPageButtonText, nextData);
         }
 
         return builder;
