@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TelegramBotFramework.Tests;
 
-public class CryptoUtilityTests
+public class CryptoUtilityTests : ICryptoUtilityTests
 {
     [Theory]
     [InlineData("hello")]
