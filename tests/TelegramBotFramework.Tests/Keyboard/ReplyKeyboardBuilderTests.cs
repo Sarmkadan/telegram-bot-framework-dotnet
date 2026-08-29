@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramBotFramework.Tests.Keyboard;
 
-public class ReplyKeyboardBuilderTests
+public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
 {
     [Fact]
     public void Create_ShouldReturnNewBuilderInstance()
