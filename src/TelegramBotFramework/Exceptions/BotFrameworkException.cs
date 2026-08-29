@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Exceptions;
 /// <summary>
 /// Base exception for all bot framework errors.
 /// </summary>
-public class BotFrameworkException : Exception, IBotFrameworkException
+public class BotFrameworkException : Exception, IBotFrameworkException, IEquatable<BotFrameworkException>
 {
     public string? ErrorCode { get; set; }
 
@@ -36,6 +36,39 @@ public class BotFrameworkException : Exception, IBotFrameworkException
         : base(message, innerException)
     {
         ErrorCode = errorCode;
+    }
+
+    public bool Equals(BotFrameworkException? other)
+    {
+        if (other is null)
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
+        return ErrorCode == other.ErrorCode;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is BotFrameworkException other)
+            return Equals(other);
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(ErrorCode);
+    }
+
+    public static bool operator ==(BotFrameworkException? left, BotFrameworkException? right)
+    {
+        if (left is null)
+            return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(BotFrameworkException? left, BotFrameworkException? right)
+    {
+        return !(left == right);
     }
 }
 
