@@ -244,6 +244,49 @@ public sealed class PollingStrategy : IHostedService
 
     public DateTime? LastPollTime { get; private set; }
 
+    public bool Equals(PollingStrategy? other)
+    {
+        if (other is null)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        // Compare IsRunning: computed from _pollingTask
+        bool thisIsRunning = _pollingTask is not null && !_pollingTask.IsCompleted;
+        bool otherIsRunning = other._pollingTask is not null && !other._pollingTask.IsCompleted;
+
+        return thisIsRunning == otherIsRunning &&
+               _lastUpdateId == other._lastUpdateId &&
+               LastPollTime == other.LastPollTime;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is PollingStrategy other)
+            return Equals(other);
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        // Compute IsRunning for hash code
+        bool isRunning = _pollingTask is not null && !_pollingTask.IsCompleted;
+        return HashCode.Combine(isRunning, _lastUpdateId, LastPollTime);
+    }
+
+    public static bool operator ==(PollingStrategy? left, PollingStrategy? right)
+    {
+        if (left is null)
+            return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(PollingStrategy? left, PollingStrategy? right)
+    {
+        return !(left == right);
+    }
+
     private async Task PollAsync(TimeSpan interval, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
