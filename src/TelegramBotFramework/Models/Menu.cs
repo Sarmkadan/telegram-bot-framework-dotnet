@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an interactive menu interface in the bot.
 /// </summary>
-public sealed class Menu : IMenu
+public sealed class Menu : IMenu, IEquatable<Menu>
 {
     public string Id { get; set; } = string.Empty;
 
@@ -158,6 +158,41 @@ public sealed class Menu : IMenu
             arranged.Add(currentRow);
 
         return arranged;
+    }
+
+    public bool Equals(Menu? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id &&
+               Title == other.Title &&
+               Description == other.Description &&
+               Type == other.Type &&
+               Buttons == other.Buttons &&
+               IsActive == other.IsActive &&
+               DisplayOrder == other.DisplayOrder &&
+               CreatedAt == other.CreatedAt;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Menu);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Title, Description, Type, Buttons, IsActive, DisplayOrder, CreatedAt);
+    }
+
+    public static bool operator ==(Menu? left, Menu? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(Menu? left, Menu? right)
+    {
+        return !Equals(left, right);
     }
 }
 
