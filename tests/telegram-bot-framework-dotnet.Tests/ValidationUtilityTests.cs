@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Tests;
 /// Contains unit tests for ValidationUtility methods.
 /// Tests cover valid, invalid, null, and boundary inputs for each validator.
 /// </summary>
-public sealed class ValidationUtilityTests
+public sealed class ValidationUtilityTests : IValidationUtilityTests
 {
     #region Telegram User ID Validation
 
