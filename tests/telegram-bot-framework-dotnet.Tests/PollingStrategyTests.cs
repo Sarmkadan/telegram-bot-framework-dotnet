@@ -13,7 +13,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Integration;
 
-public class PollingStrategyTests
+public class PollingStrategyTests : IPollingStrategyTests
 {
     private readonly Mock<ITelegramApiClient> _mockApiClient = new();
     private readonly Mock<ILogger<PollingStrategy>> _mockLogger = new();
