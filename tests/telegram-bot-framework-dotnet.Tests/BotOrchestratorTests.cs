@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Tests;
 /// Provides unit tests for the <see cref="BotOrchestrator"/> class.
 /// Tests various scenarios including message processing, command execution, menu handling, and session management.
 /// </summary>
-public sealed class BotOrchestratorTests
+public sealed class BotOrchestratorTests : IBotOrchestratorTests
 {
     /// <summary>
     /// Mock implementation of <see cref="IUserService"/> for testing purposes.
