@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a user's active session with state tracking.
 /// </summary>
-public sealed class UserSession : IUserSession
+public sealed class UserSession : IUserSession, IEquatable<UserSession>
 {
     public string SessionId { get; set; } = string.Empty;
 
@@ -132,6 +132,41 @@ public sealed class UserSession : IUserSession
             throw new InvalidOperationException("ChatId must be positive");
 
         return true;
+    }
+
+    public bool Equals(UserSession? other)
+    {
+        if (other is null)
+            return false;
+
+        return SessionId == other.SessionId &&
+               UserId == other.UserId &&
+               ChatId == other.ChatId &&
+               State == other.State &&
+               CurrentContext == other.CurrentContext &&
+               CurrentMenuId == other.CurrentMenuId &&
+               CreatedAt == other.CreatedAt &&
+               LastActivityAt == other.LastActivityAt;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as UserSession);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(SessionId, UserId, ChatId, State, CurrentContext, CurrentMenuId, CreatedAt, LastActivityAt);
+    }
+
+    public static bool operator ==(UserSession? left, UserSession? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(UserSession? left, UserSession? right)
+    {
+        return !Equals(left, right);
     }
 }
 
