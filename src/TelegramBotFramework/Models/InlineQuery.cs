@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents an inline query received from a Telegram user.
 /// </summary>
-public sealed class InlineQuery : IInlineQuery
+public sealed class InlineQuery : IInlineQuery, IEquatable<InlineQuery>
 {
     /// <summary>Unique identifier supplied by Telegram for this query.</summary>
     public string QueryId { get; set; } = string.Empty;
@@ -59,6 +59,25 @@ public sealed class InlineQuery : IInlineQuery
 
         return true;
     }
+
+    public bool Equals(InlineQuery? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return QueryId == other.QueryId
+            && UserId == other.UserId
+            && Query == other.Query
+            && Offset == other.Offset
+            && Status == other.Status
+            && ReceivedAt == other.ReceivedAt
+            && AnsweredAt == other.AnsweredAt
+            && EqualityComparer<Dictionary<string, object>?>.Default.Equals(Metadata, other.Metadata);
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as InlineQuery);
+    public override int GetHashCode() => HashCode.Combine(QueryId, UserId, Query, Offset, Status, ReceivedAt, AnsweredAt, Metadata);
+    public static bool operator ==(InlineQuery? left, InlineQuery? right) => EqualityComparer<InlineQuery>.Default.Equals(left, right);
+    public static bool operator !=(InlineQuery? left, InlineQuery? right) => !(left == right);
 
     /// <summary>Returns processing duration in milliseconds, or -1 if the query has not been answered yet.</summary>
     public long GetProcessingDurationMs() =>
