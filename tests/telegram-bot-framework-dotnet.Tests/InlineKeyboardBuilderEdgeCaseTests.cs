@@ -8,6 +8,7 @@
 using FluentAssertions;
 using TelegramBotFramework.Keyboard;
 using Xunit;
+using static TelegramBotFramework.Tests.InlineKeyboardBuilderEdgeCaseTestsConstants;
 
 namespace TelegramBotFramework.Tests;
 
@@ -27,7 +28,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
         var act = () => InlineKeyboardBuilder.Create().Build();
 
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*empty keyboard*");
+            .WithMessage(EmptyKeyboardMessagePattern);
     }
 
     /// <summary>
@@ -37,10 +38,10 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void Build_MaxButtonsPerRowOne_CreatesOneButtonPerRow()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 1)
-            .AddButton("Button1", "data1")
-            .AddButton("Button2", "data2")
-            .AddButton("Button3", "data3")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: MinimumButtonsPerRow)
+            .AddButton("Button1", FirstCallbackData)
+            .AddButton("Button2", SecondCallbackData)
+            .AddButton("Button3", ThirdCallbackData)
             .Build();
 
         markup.RowCount.Should().Be(3);
@@ -57,10 +58,10 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void Build_MaxButtonsPerRowLarge_AllButtonsInOneRow()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 100)
-            .AddButton("Btn1", "data1")
-            .AddButton("Btn2", "data2")
-            .AddButton("Btn3", "data3")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: LargeButtonsPerRow)
+            .AddButton(FirstButtonText, FirstCallbackData)
+            .AddButton(SecondButtonText, SecondCallbackData)
+            .AddButton(ThirdButtonText, ThirdCallbackData)
             .Build();
 
         markup.RowCount.Should().Be(1);
@@ -76,7 +77,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void Build_AfterNewRowWithNoButtons_DoesNotCreateEmptyRow()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Btn1", "data1")
+            .AddButton(FirstButtonText, FirstCallbackData)
             .NewRow()
             .Build();
 
@@ -92,7 +93,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void Build_MultipleConsecutiveNewRows_DoesNotCreateEmptyRows()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Btn1", "data1")
+            .AddButton(FirstButtonText, FirstCallbackData)
             .NewRow()
             .NewRow()
             .NewRow()
@@ -110,16 +111,16 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddButton_DuplicateCallbackData_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Button A", "same_data")
-            .AddButton("Button B", "same_data")
-            .AddButton("Button C", "same_data")
+            .AddButton("Button A", DuplicateCallbackData)
+            .AddButton("Button B", DuplicateCallbackData)
+            .AddButton("Button C", DuplicateCallbackData)
             .Build();
 
         markup.RowCount.Should().Be(1);
         markup.TotalButtonCount.Should().Be(3);
-        markup.InlineKeyboard[0][0].CallbackData.Should().Be("same_data");
-        markup.InlineKeyboard[0][1].CallbackData.Should().Be("same_data");
-        markup.InlineKeyboard[0][2].CallbackData.Should().Be("same_data");
+        markup.InlineKeyboard[0][0].CallbackData.Should().Be(DuplicateCallbackData);
+        markup.InlineKeyboard[0][1].CallbackData.Should().Be(DuplicateCallbackData);
+        markup.InlineKeyboard[0][2].CallbackData.Should().Be(DuplicateCallbackData);
     }
 
     /// <summary>
@@ -130,16 +131,16 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddButton_DuplicateText_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("OK", "ok1")
-            .AddButton("OK", "ok2")
-            .AddButton("OK", "ok3")
+            .AddButton(DuplicateButtonText, "ok1")
+            .AddButton(DuplicateButtonText, "ok2")
+            .AddButton(DuplicateButtonText, "ok3")
             .Build();
 
         markup.RowCount.Should().Be(1);
         markup.TotalButtonCount.Should().Be(3);
-        markup.InlineKeyboard[0][0].Text.Should().Be("OK");
-        markup.InlineKeyboard[0][1].Text.Should().Be("OK");
-        markup.InlineKeyboard[0][2].Text.Should().Be("OK");
+        markup.InlineKeyboard[0][0].Text.Should().Be(DuplicateButtonText);
+        markup.InlineKeyboard[0][1].Text.Should().Be(DuplicateButtonText);
+        markup.InlineKeyboard[0][2].Text.Should().Be(DuplicateButtonText);
     }
 
     /// <summary>
@@ -149,10 +150,10 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddButton_VeryLongText_Allowed()
     {
-        var longText = new string('A', 1000);
+        var longText = new string(LongTextCharacter, LongButtonTextLength);
 
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton(longText, "data")
+            .AddButton(longText, DefaultCallbackData)
             .Build();
 
         markup.RowCount.Should().Be(1);
@@ -167,7 +168,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddButton_WhitespaceText_ThrowsArgumentException()
     {
-        var act = () => InlineKeyboardBuilder.Create().AddButton("   ", "data");
+        var act = () => InlineKeyboardBuilder.Create().AddButton(WhitespaceValue, DefaultCallbackData);
 
         act.Should().Throw<ArgumentException>();
     }
@@ -179,7 +180,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddButton_NullText_ThrowsArgumentException()
     {
-        var act = () => InlineKeyboardBuilder.Create().AddButton(null!, "data");
+        var act = () => InlineKeyboardBuilder.Create().AddButton(null!, DefaultCallbackData);
 
         act.Should().Throw<ArgumentException>();
     }
@@ -191,7 +192,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddUrlButton_NullUrl_ThrowsArgumentException()
     {
-        var act = () => InlineKeyboardBuilder.Create().AddUrlButton("Text", null!);
+        var act = () => InlineKeyboardBuilder.Create().AddUrlButton(UrlButtonText, null!);
 
         act.Should().Throw<ArgumentException>();
     }
@@ -203,7 +204,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddUrlButton_WhitespaceUrl_ThrowsArgumentException()
     {
-        var act = () => InlineKeyboardBuilder.Create().AddUrlButton("Text", "   ");
+        var act = () => InlineKeyboardBuilder.Create().AddUrlButton(UrlButtonText, WhitespaceValue);
 
         act.Should().Throw<ArgumentException>();
     }
@@ -216,7 +217,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddSwitchInlineButton_EmptyQuery_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddSwitchInlineButton("Search", "")
+            .AddSwitchInlineButton(SearchButtonText, EmptyValue)
             .Build();
 
         markup.RowCount.Should().Be(1);
@@ -232,12 +233,12 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddSwitchInlineButton_WhitespaceQuery_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddSwitchInlineButton("Search", "   ")
+            .AddSwitchInlineButton(SearchButtonText, WhitespaceValue)
             .Build();
 
         markup.RowCount.Should().Be(1);
         markup.TotalButtonCount.Should().Be(1);
-        markup.InlineKeyboard[0][0].SwitchInlineQuery.Should().Be("   ");
+        markup.InlineKeyboard[0][0].SwitchInlineQuery.Should().Be(WhitespaceValue);
     }
 
     /// <summary>
@@ -247,9 +248,9 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddButton_CallbackData64Bytes_Allowed()
     {
-        var callbackData64 = new string('x', 64);
+        var callbackData64 = new string(CallbackDataCharacter, CallbackDataByteLimit);
 
-        var act = () => InlineKeyboardBuilder.Create().AddButton("Test", callbackData64);
+        var act = () => InlineKeyboardBuilder.Create().AddButton(TestButtonText, callbackData64);
 
         act.Should().NotThrow();
     }
@@ -261,12 +262,12 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void AddButton_CallbackData65Bytes_ThrowsArgumentException()
     {
-        var callbackData65 = new string('x', 65);
+        var callbackData65 = new string(CallbackDataCharacter, CallbackDataLengthOverLimit);
 
-        var act = () => InlineKeyboardBuilder.Create().AddButton("Test", callbackData65);
+        var act = () => InlineKeyboardBuilder.Create().AddButton(TestButtonText, callbackData65);
 
         act.Should().Throw<ArgumentException>()
-            .WithMessage("*64*byte*");
+            .WithMessage(CallbackDataByteLimitMessagePattern);
     }
 
     /// <summary>
@@ -277,9 +278,9 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddButton_UnicodeCallbackData_CorrectByteCount()
     {
         // "café" is 5 characters but 6 bytes in UTF-8
-        var unicodeCallback = "café";
+        var unicodeCallback = UnicodeCallbackData;
 
-        var act = () => InlineKeyboardBuilder.Create().AddButton("Test", unicodeCallback);
+        var act = () => InlineKeyboardBuilder.Create().AddButton(TestButtonText, unicodeCallback);
 
         act.Should().NotThrow();
     }
@@ -293,14 +294,14 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     {
         // Create a string that's 64 bytes but contains Unicode
         var builder = new System.Text.StringBuilder();
-        while (System.Text.Encoding.UTF8.GetByteCount(builder.ToString()) < 64)
+        while (System.Text.Encoding.UTF8.GetByteCount(builder.ToString()) < CallbackDataByteLimit)
         {
-            builder.Append('é'); // 2 bytes per character
+            builder.Append(UnicodeCharacter); // 2 bytes per character
         }
         var callbackData = builder.ToString();
 
         // This should be exactly at or near 64 bytes
-        var act = () => InlineKeyboardBuilder.Create().AddButton("Test", callbackData);
+        var act = () => InlineKeyboardBuilder.Create().AddButton(TestButtonText, callbackData);
 
         // Should either succeed or fail depending on exact byte count
         try
@@ -320,24 +321,24 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void ToButtonLabels_MultiRowKeyboard_ReturnsCorrectStructure()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-            .AddButton("A", "a")
-            .AddButton("B", "b")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: TwoButtonsPerRow)
+            .AddButton(LabelA, CallbackDataA)
+            .AddButton(LabelB, CallbackDataB)
             .NewRow()
-            .AddButton("C", "c")
-            .AddButton("D", "d")
-            .AddButton("E", "e")
+            .AddButton(LabelC, CallbackDataC)
+            .AddButton(LabelD, CallbackDataD)
+            .AddButton(LabelE, CallbackDataE)
             .NewRow()
-            .AddButton("F", "f")
+            .AddButton(LabelF, CallbackDataF)
             .Build();
 
         var labels = markup.ToButtonLabels();
 
         labels.Should().HaveCount(4);
-        labels[0].Should().BeEquivalentTo(new[] { "A", "B" });
-        labels[1].Should().BeEquivalentTo(new[] { "C", "D" });
-        labels[2].Should().BeEquivalentTo(new[] { "E" });
-        labels[3].Should().BeEquivalentTo(new[] { "F" });
+        labels[0].Should().BeEquivalentTo(new[] { LabelA, LabelB });
+        labels[1].Should().BeEquivalentTo(new[] { LabelC, LabelD });
+        labels[2].Should().BeEquivalentTo(new[] { LabelE });
+        labels[3].Should().BeEquivalentTo(new[] { LabelF });
     }
 
     /// <summary>
@@ -348,14 +349,14 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void ToButtonLabels_EmptyRow_NotIncludedInOutput()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Btn1", "data1")
+            .AddButton(FirstButtonText, FirstCallbackData)
             .NewRow()
             .Build();
 
         var labels = markup.ToButtonLabels();
 
         labels.Should().HaveCount(1);
-        labels[0].Should().BeEquivalentTo(new[] { "Btn1" });
+        labels[0].Should().BeEquivalentTo(new[] { FirstButtonText });
     }
 
     /// <summary>
@@ -365,15 +366,15 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void TotalButtonCount_CalculatesCorrectly()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 3)
-            .AddButton("1", "a")
-            .AddButton("2", "b")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: ThreeButtonsPerRow)
+            .AddButton("1", CallbackDataA)
+            .AddButton("2", CallbackDataB)
             .NewRow()
-            .AddButton("3", "c")
-            .AddButton("4", "d")
-            .AddButton("5", "e")
+            .AddButton("3", CallbackDataC)
+            .AddButton("4", CallbackDataD)
+            .AddButton("5", CallbackDataE)
             .NewRow()
-            .AddButton("6", "f")
+            .AddButton("6", CallbackDataF)
             .Build();
 
         markup.TotalButtonCount.Should().Be(6);
@@ -386,11 +387,11 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void RowCount_ReturnsCorrectRowCount()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-            .AddButton("A", "a")
-            .AddButton("B", "b")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: TwoButtonsPerRow)
+            .AddButton(LabelA, CallbackDataA)
+            .AddButton(LabelB, CallbackDataB)
             .NewRow()
-            .AddButton("C", "c")
+            .AddButton(LabelC, CallbackDataC)
             .Build();
 
         markup.RowCount.Should().Be(2);
@@ -403,18 +404,18 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void FluentInterface_ChainingMultipleOperations_WorksCorrectly()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-            .AddButton("Btn1", "data1")
-            .AddButton("Btn2", "data2")
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: TwoButtonsPerRow)
+            .AddButton(FirstButtonText, FirstCallbackData)
+            .AddButton(SecondButtonText, SecondCallbackData)
             .NewRow()
-            .AddUrlButton("Url1", "https://example.com/1")
-            .AddUrlButton("Url2", "https://example.com/2")
+            .AddUrlButton("Url1", FirstUrl)
+            .AddUrlButton("Url2", SecondUrl)
             .NewRow()
             .AddSwitchInlineButton("Switch1", "query1")
             .AddSwitchInlineButton("Switch2", "query2")
             .AddSwitchInlineButton("Switch3", "query3")
             .NewRow()
-            .AddButton("Btn3", "data3")
+            .AddButton(ThirdButtonText, ThirdCallbackData)
             .Build();
 
         markup.RowCount.Should().Be(5);
@@ -428,7 +429,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void Constructor_MaxButtonsPerRowZero_ThrowsArgumentOutOfRangeException()
     {
-        var act = () => new InlineKeyboardBuilder(maxButtonsPerRow: 0);
+        var act = () => new InlineKeyboardBuilder(maxButtonsPerRow: InvalidZeroButtonsPerRow);
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -440,7 +441,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void Constructor_NegativeMaxButtonsPerRow_ThrowsArgumentOutOfRangeException()
     {
-        var act = () => new InlineKeyboardBuilder(maxButtonsPerRow: -1);
+        var act = () => new InlineKeyboardBuilder(maxButtonsPerRow: InvalidNegativeButtonsPerRow);
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -453,7 +454,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddButton_EmptyCallbackData_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Btn", "")
+            .AddButton(GenericButtonText, EmptyValue)
             .Build();
 
         markup.RowCount.Should().Be(1);
@@ -469,7 +470,7 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void AddButton_NullCallbackData_Allowed()
     {
         var markup = InlineKeyboardBuilder.Create()
-            .AddButton("Btn", null!)
+            .AddButton(GenericButtonText, null!)
             .Build();
 
         markup.RowCount.Should().Be(1);
@@ -484,9 +485,9 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     [Fact]
     public void Build_MixedButtonTypesInSameRow_Correctly()
     {
-        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 3)
+        var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: ThreeButtonsPerRow)
             .AddButton("Callback", "cb_data")
-            .AddUrlButton("URL", "https://example.com")
+            .AddUrlButton("URL", ExampleUrl)
             .AddSwitchInlineButton("Switch", "query")
             .Build();
 
@@ -506,13 +507,13 @@ public sealed class InlineKeyboardBuilderEdgeCaseTests
     public void ToMenu_WithEmptyRows_CountsAllButtons()
     {
         var menu = InlineKeyboardBuilder.Create()
-            .AddButton("Btn1", "data1")
+            .AddButton(FirstButtonText, FirstCallbackData)
             .NewRow()
-            .AddButton("Btn2", "data2")
+            .AddButton(SecondButtonText, SecondCallbackData)
             .ToMenu("test_menu", "Test Menu");
 
         menu.Buttons.Should().HaveCount(2);
-        menu.Buttons[0].Label.Should().Be("Btn1");
-        menu.Buttons[1].Label.Should().Be("Btn2");
+        menu.Buttons[0].Label.Should().Be(FirstButtonText);
+        menu.Buttons[1].Label.Should().Be(SecondButtonText);
     }
 }
