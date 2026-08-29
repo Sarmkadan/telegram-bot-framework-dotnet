@@ -11,7 +11,7 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Services;
 
-public class InlineQueryServiceTests
+public class InlineQueryServiceTests : IInlineQueryServiceTests
 {
     private readonly Mock<ICacheProvider> _cacheMock = new();
     private readonly Mock<ILogger<InlineQueryService>> _loggerMock = new();
