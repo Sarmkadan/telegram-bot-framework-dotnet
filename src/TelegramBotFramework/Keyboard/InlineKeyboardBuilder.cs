@@ -37,16 +37,16 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// Maximum buttons placed on a row before automatically starting a new one.
     /// Defaults to <c>3</c>. Use <see cref="NewRow"/> to force an earlier row break.
     /// </param>
-    public InlineKeyboardBuilder(int maxButtonsPerRow = 3)
+    public InlineKeyboardBuilder(int maxButtonsPerRow = InlineKeyboardBuilderConstants.DefaultMaxButtonsPerRow)
     {
         if (maxButtonsPerRow < 1)
-            throw new ArgumentOutOfRangeException(nameof(maxButtonsPerRow), "Must be at least 1.");
+            throw new ArgumentOutOfRangeException(nameof(maxButtonsPerRow), InlineKeyboardBuilderConstants.MaxButtonsPerRowMustBeAtLeastOne);
 
         _maxButtonsPerRow = maxButtonsPerRow;
     }
 
     /// <summary>Creates a new builder instance with the default row width.</summary>
-    public static InlineKeyboardBuilder Create(int maxButtonsPerRow = 3) => new(maxButtonsPerRow);
+    public static InlineKeyboardBuilder Create(int maxButtonsPerRow = InlineKeyboardBuilderConstants.DefaultMaxButtonsPerRow) => new(maxButtonsPerRow);
 
     /// <summary>
     /// Gets the rows of buttons that compose the keyboard.
@@ -81,7 +81,7 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     public InlineKeyboardBuilder AddButton(string text, string callbackData)
     {
         if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Button text cannot be empty.", nameof(text));
+            throw new ArgumentException(InlineKeyboardBuilderConstants.ButtonTextCannotBeEmpty, nameof(text));
 
         ValidateCallbackData(callbackData);
 
@@ -99,10 +99,10 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     public InlineKeyboardBuilder AddUrlButton(string text, string url)
     {
         if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Button text cannot be empty.", nameof(text));
+            throw new ArgumentException(InlineKeyboardBuilderConstants.ButtonTextCannotBeEmpty, nameof(text));
 
         if (string.IsNullOrWhiteSpace(url))
-            throw new ArgumentException("URL cannot be empty.", nameof(url));
+            throw new ArgumentException(InlineKeyboardBuilderConstants.UrlCannotBeEmpty, nameof(url));
 
         return AppendButton(new InlineKeyboardButton
         {
@@ -151,7 +151,7 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
         FlushCurrentRow();
 
         if (_rows.Count == 0)
-            throw new InvalidOperationException("Cannot build an empty keyboard — add at least one button.");
+            throw new InvalidOperationException(InlineKeyboardBuilderConstants.CannotBuildEmptyKeyboard);
 
         var rows = _rows
             .Select(row => (IReadOnlyList<InlineKeyboardButton>)row.AsReadOnly())
@@ -169,9 +169,9 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     public Models.Menu ToMenu(string menuId, string title)
     {
         if (string.IsNullOrWhiteSpace(menuId))
-            throw new ArgumentException("Menu ID cannot be empty.", nameof(menuId));
+            throw new ArgumentException(InlineKeyboardBuilderConstants.MenuIdCannotBeEmpty, nameof(menuId));
         if (string.IsNullOrWhiteSpace(title))
-            throw new ArgumentException("Title cannot be empty.", nameof(title));
+            throw new ArgumentException(InlineKeyboardBuilderConstants.TitleCannotBeEmpty, nameof(title));
 
         var markup  = Build();
         var menu    = new Models.Menu
