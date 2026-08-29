@@ -30,7 +30,7 @@ public interface ICacheProvider
     /// <summary>
     /// Checks if a key exists in cache.
     /// </summary>
-    Task<bool> ExistsAsync(string key);
+    Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets value from cache or calls factory if not present.
@@ -45,7 +45,7 @@ public interface ICacheProvider
     /// <summary>
     /// Gets cache statistics for monitoring.
     /// </summary>
-    Task<CacheStatistics> GetStatisticsAsync();
+    Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

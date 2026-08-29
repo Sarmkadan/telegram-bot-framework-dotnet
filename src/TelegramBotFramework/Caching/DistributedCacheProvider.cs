@@ -74,14 +74,20 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
         }
     }
 
-    public virtual async Task<bool> ExistsAsync(string key)
+    Task<bool> ICacheProvider.ExistsAsync(string key, CancellationToken cancellationToken) => ExistsAsync(key, cancellationToken);
+
+    Task<bool> IDistributedCacheProvider.ExistsAsync(string key, CancellationToken cancellationToken) => ExistsAsync(key, cancellationToken);
+
+    public virtual async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(key))
             return false;
 
         try
         {
-            return await KeyExistsAsync(key).ConfigureAwait(false);
+            return await KeyExistsAsync(key, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -113,11 +119,17 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
         }
     }
 
-    public virtual async Task<CacheStatistics> GetStatisticsAsync()
+    Task<CacheStatistics> ICacheProvider.GetStatisticsAsync(CancellationToken cancellationToken) => GetStatisticsAsync(cancellationToken);
+
+    Task<CacheStatistics> IDistributedCacheProvider.GetStatisticsAsync(CancellationToken cancellationToken) => GetStatisticsAsync(cancellationToken);
+
+    public virtual async Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         try
         {
-            return await GetStatsAsync().ConfigureAwait(false);
+            return await GetStatsAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -146,6 +158,12 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
     /// </summary>
     protected abstract Task<bool> KeyExistsAsync(string key);
 
+    protected virtual Task<bool> KeyExistsAsync(string key, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return KeyExistsAsync(key);
+    }
+
     /// <summary>
     /// Subclasses must implement this to flush all cache entries.
     /// </summary>
@@ -158,6 +176,12 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
     {
         return Task.FromResult(new CacheStatistics());
     }
+
+    protected virtual Task<CacheStatistics> GetStatsAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return GetStatsAsync();
+    }
 }
 
 /// <summary>
@@ -169,7 +193,7 @@ public sealed class NoOpCacheProvider : ICacheProvider
     public Task<T?> GetAsync<T>(string key) => Task.FromResult<T?>(default);
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) => Task.CompletedTask;
     public Task RemoveAsync(string key) => Task.CompletedTask;
-    public Task<bool> ExistsAsync(string key) => Task.FromResult(false);
+    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(false);
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
@@ -177,5 +201,5 @@ public sealed class NoOpCacheProvider : ICacheProvider
     }
 
     public Task FlushAsync() => Task.CompletedTask;
-    public Task<CacheStatistics> GetStatisticsAsync() => Task.FromResult(new CacheStatistics());
+    public Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default) => Task.FromResult(new CacheStatistics());
 }
