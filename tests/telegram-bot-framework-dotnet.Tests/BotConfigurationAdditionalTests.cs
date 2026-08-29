@@ -15,7 +15,7 @@ namespace TelegramBotFramework.Tests;
 /// Contains additional test cases for <see cref="BotConfiguration"/> class functionality.
 /// Focuses on edge cases, null handling, and validation scenarios not covered in main test classes.
 /// </summary>
-public sealed class BotConfigurationAdditionalTests
+public sealed class BotConfigurationAdditionalTests : IBotConfigurationAdditionalTests
 {
     /// <summary>
     /// Tests that <see cref="BotConfiguration.AddAdmin(long)"/> properly initializes the AdminIds list when it's null.
