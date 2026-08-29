@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a message in the bot system.
 /// </summary>
-public sealed class Message : IMessage
+public sealed class Message : IMessage, IEquatable<Message>
 {
     public long MessageId { get; set; }
 
@@ -105,6 +105,33 @@ public sealed class Message : IMessage
 
         return true;
     }
+
+    public bool Equals(Message? other)
+    {
+        if (other is null) return false;
+        return MessageId == other.MessageId &&
+               UserId == other.UserId &&
+               ChatId == other.ChatId &&
+               Content == other.Content &&
+               Type == other.Type &&
+               Status == other.Status &&
+               CreatedAt == other.CreatedAt &&
+               ProcessedAt == other.ProcessedAt;
+    }
+
+    public override bool Equals(object? obj) =>
+        Equals(obj as Message);
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(MessageId, UserId, ChatId, Content, Type, Status, CreatedAt, ProcessedAt);
+    }
+
+    public static bool operator ==(Message? left, Message? right) =>
+        EqualityComparer<Message>.Default.Equals(left, right);
+
+    public static bool operator !=(Message? left, Message? right) =>
+        !(left == right);
 }
 
 public enum MessageType
