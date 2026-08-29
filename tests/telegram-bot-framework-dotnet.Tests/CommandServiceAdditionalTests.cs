@@ -19,7 +19,7 @@ namespace TelegramBotFramework.Tests;
 /// Additional test suite for <see cref="CommandService"/> functionality covering advanced scenarios
 /// such as role-based command filtering, command execution tracking, and rate limiting.
 /// </summary>
-public sealed class CommandServiceAdditionalTests
+public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTests
 {
     private readonly Mock<ICommandRepository> _mockRepository = new();
     private readonly Mock<IUserService> _mockUserService = new();
