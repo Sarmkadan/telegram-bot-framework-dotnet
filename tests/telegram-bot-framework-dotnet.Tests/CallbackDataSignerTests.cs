@@ -15,7 +15,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Unit tests for <see cref="CallbackDataSigner"/>.
 /// </summary>
-public sealed class CallbackDataSignerTests
+public sealed class CallbackDataSignerTests : ICallbackDataSignerTests
 {
     [Fact]
     public void Sign_WithValidDataAndSecret_ReturnsSignedData()
