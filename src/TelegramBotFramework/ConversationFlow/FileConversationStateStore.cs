@@ -169,6 +169,24 @@ public sealed class FileConversationStateStore : IConversationStateStore, IFileC
         catch { /* best-effort */ }
     }
 
+    private static async Task TryDeleteFileAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await Task.Run(() => File.Delete(path), cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // best-effort
+        }
+    }
+
     /// <summary>
     /// Releases the internal synchronisation primitive used to guard file access.
     /// </summary>
