@@ -25,7 +25,7 @@ public static class StringExtensions
     /// <returns>The truncated string, or the original string if it's shorter than maxLength.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="suffix"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxLength"/> is negative.</exception>
-    public static string Truncate(this string value, int maxLength, string suffix = "…")
+    public static string Truncate(this string value, int maxLength, string suffix = StringExtensionsConstants.DefaultSuffix)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxLength);
         ArgumentNullException.ThrowIfNull(suffix);
@@ -57,13 +57,13 @@ public static class StringExtensions
         slug = RemoveDiacritics(slug);
 
         // Remove invalid characters (keep only letters, numbers, spaces, and dashes)
-        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, StringExtensionsConstants.InvalidSlugCharactersPattern, "");
 
         // Replace multiple spaces with single dash
-        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"\s+", "-");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, StringExtensionsConstants.MultipleSpacesPattern, "-");
 
         // Remove multiple consecutive dashes
-        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-+", "-");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, StringExtensionsConstants.MultipleDashesPattern, "-");
 
         // Trim dashes
         return slug.Trim('-');
@@ -109,8 +109,7 @@ public static class StringExtensions
 
         try
         {
-            var pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            return System.Text.RegularExpressions.Regex.IsMatch(value, pattern);
+            return System.Text.RegularExpressions.Regex.IsMatch(value, StringExtensionsConstants.EmailValidationPattern);
         }
         catch
         {
