@@ -13,7 +13,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
     /// Contains unit tests for string extension methods.
     /// </summary>
-    public sealed class StringExtensionTests
+    public sealed class StringExtensionTests : IStringExtensionTests
     {
     /// <summary>
     /// Tests that the Truncate method correctly truncates strings to the specified maximum length.
