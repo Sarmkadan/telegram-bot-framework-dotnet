@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using TelegramBotFramework.Configuration;
 using TelegramBotFramework.Models;
 using TelegramBotFramework.Services;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace TelegramBotFramework.Benchmarks;
 
@@ -36,7 +38,7 @@ public class BotBenchmarks : IBotBenchmarks
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BotBenchmarks"/> class.
-    /// </summary>
+    /// </>
     public BotBenchmarks()
     {
         var services = new ServiceCollection();
@@ -73,13 +75,29 @@ public class BotBenchmarks : IBotBenchmarks
     }
 
     /// <summary>
+    /// Provides cancellation token values for benchmark methods.
+    /// </summary>
+    public static IEnumerable<object[]> CancellationTokenValues()
+    {
+        yield return new object[] { CancellationToken.None };
+    }
+
+    /// <summary>
     /// Measures the performance of processing a user message.
     /// </summary>
     /// <returns>The execution context of the processed message.</returns>
     [Benchmark]
-    public async Task<TelegramBotFramework.Models.ExecutionContext> ProcessMessageBenchmark()
+    [ArgumentsSource(nameof(CancellationTokenValues))]
+    public async Task<TelegramBotFramework.Models.ExecutionContext> ProcessMessageBenchmark(CancellationToken cancellationToken)
     {
-        return await _botOrchestrator.ProcessUserMessageAsync(_userId, _chatId, "/echo", "TestUser");
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _botOrchestrator.ProcessUserMessageAsync(
+            userId: _userId,
+            chatId: _chatId,
+            content: "/echo",
+            firstName: "TestUser",
+            lastName: null,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -87,9 +105,11 @@ public class BotBenchmarks : IBotBenchmarks
     /// </summary>
     /// <returns>The user session for the specified user ID.</returns>
     [Benchmark]
-    public async Task<TelegramBotFramework.Models.UserSession> GetUserSessionBenchmark()
+    [ArgumentsSource(nameof(CancellationTokenValues))]
+    public async Task<TelegramBotFramework.Models.UserSession> GetUserSessionBenchmark(CancellationToken cancellationToken)
     {
-        return await _botOrchestrator.GetUserSessionAsync(_userId);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _botOrchestrator.GetUserSessionAsync(_userId, cancellationToken);
     }
 
     /// <summary>
@@ -97,9 +117,11 @@ public class BotBenchmarks : IBotBenchmarks
     /// </summary>
     /// <returns>A boolean indicating whether the session was ended successfully.</returns>
     [Benchmark]
-    public async Task<bool> EndUserSessionBenchmark()
+    [ArgumentsSource(nameof(CancellationTokenValues))]
+    public async Task<bool> EndUserSessionBenchmark(CancellationToken cancellationToken)
     {
-        return await _botOrchestrator.EndUserSessionAsync(_userId);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _botOrchestrator.EndUserSessionAsync(_userId, cancellationToken);
     }
 }
 
