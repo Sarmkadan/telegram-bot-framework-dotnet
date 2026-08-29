@@ -24,7 +24,7 @@ namespace TelegramBotFramework.Tests;
 /// Tests cover basic CRUD operations, expiration behavior, cache statistics tracking,
 /// and thread-safe operations on the cache provider.
 /// </remarks>
-public sealed class LocalCacheProviderTests
+public sealed class LocalCacheProviderTests : ILocalCacheProviderTests
 {
     private readonly LocalCacheProvider _cache = new();
 
