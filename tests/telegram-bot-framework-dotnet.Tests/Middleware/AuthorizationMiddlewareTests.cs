@@ -20,7 +20,7 @@ using static AuthorizationMiddlewareTestsConstants;
 /// <summary>
 /// Tests for the AuthorizationMiddleware class.
 /// </summary>
-public sealed class AuthorizationMiddlewareTests
+public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 {
     private readonly Mock<IUserService> _userServiceMock;
     private readonly Mock<ICommandService> _commandServiceMock;
