@@ -8,7 +8,7 @@ namespace TelegramBotFramework.Tests.Models;
 /// Provides extension methods for testing command-related functionality in the Telegram Bot Framework.
 /// Contains unit tests for verifying the behavior of command extensions and their methods.
 /// </summary>
-public class CommandExtensionsTests
+public class CommandExtensionsTests : ICommandExtensionsTests
 {
     /// <summary>
     /// Tests that <see cref="Command.HasParameters()"/> returns true when the command has parameters.
