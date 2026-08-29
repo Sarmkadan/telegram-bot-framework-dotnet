@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Tests.Integration;
 /// <summary>
 /// Contains unit tests for the <see cref="WebhookHandler"/> extension methods.
 /// </summary>
-public class WebhookHandlerExtensionsTests
+public class WebhookHandlerExtensionsTests : IWebhookHandlerExtensionsTests
 {
     /// <summary>
     /// Verifies that <see cref="WebhookHandler.GetMessageText"/> returns <c>null</c>
