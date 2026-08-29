@@ -100,8 +100,10 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider
         return Task.CompletedTask;
     }
 
-    public Task<bool> ExistsAsync(string key)
+    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(key))
             return Task.FromResult(false);
 
@@ -141,8 +143,10 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider
         return Task.CompletedTask;
     }
 
-    public Task<CacheStatistics> GetStatisticsAsync()
+    public Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Clean up expired entries while gathering stats
         var expiredKeys = _cache
             .Where(kvp => kvp.Value.ExpiredAt.HasValue && DateTime.UtcNow > kvp.Value.ExpiredAt)
