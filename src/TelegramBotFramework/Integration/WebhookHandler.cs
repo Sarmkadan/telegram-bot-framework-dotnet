@@ -35,8 +35,10 @@ public sealed class WebhookHandler : IWebhookHandler
     /// <summary>
     /// Processes incoming webhook JSON data from Telegram.
     /// </summary>
-    public async Task<TelegramUpdate?> ProcessUpdateAsync(string jsonData)
+    public async Task<TelegramUpdate?> ProcessUpdateAsync(string jsonData, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(jsonData))
         {
             _logger.LogWarning("Received empty webhook data");

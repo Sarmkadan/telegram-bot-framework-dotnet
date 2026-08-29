@@ -17,7 +17,7 @@ public interface IWebhookHandler
     /// <summary>
     /// Processes incoming webhook JSON data from Telegram.
     /// </summary>
-    Task<TelegramUpdate?> ProcessUpdateAsync(string jsonData);
+    Task<TelegramUpdate?> ProcessUpdateAsync(string jsonData, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Validates the webhook request authenticity by comparing the X-Telegram-Bot-Api-Secret-Token header
