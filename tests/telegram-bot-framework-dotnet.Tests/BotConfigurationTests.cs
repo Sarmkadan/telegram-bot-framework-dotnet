@@ -10,7 +10,7 @@ namespace TelegramBotFramework.Tests;
 /// Contains unit tests for the <see cref="BotConfiguration"/> class.
 /// Tests configuration validation, default values, and various helper methods.
 /// </summary>
-public sealed class BotConfigurationTests
+public sealed class BotConfigurationTests : IBotConfigurationTests
 {
     /// <summary>
     /// Tests that a new <see cref="BotConfiguration"/> instance has correct default values for all properties.
