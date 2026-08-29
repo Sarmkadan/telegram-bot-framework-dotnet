@@ -54,15 +54,15 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456,
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
 
         _mockSessionRepository
-            .Setup(r => r.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetActiveSessionAsync(SessionServiceTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
 
         // Act
@@ -82,11 +82,11 @@ public sealed class SessionServiceTests : ISessionServiceTests
     {
         // Arrange
         _mockSessionRepository
-            .Setup(r => r.GetActiveSessionAsync(999, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetActiveSessionAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
         // Act
-        var result = await _sessionService.GetActiveSessionAsync(999).ConfigureAwait(false);
+        var result = await _sessionService.GetActiveSessionAsync(It.IsAny<long>()).ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -105,14 +105,14 @@ public sealed class SessionServiceTests : ISessionServiceTests
             .ReturnsAsync((UserSession s, CancellationToken _) => s);
 
         // Act
-        var result = await _sessionService.CreateSessionAsync(123, 456).ConfigureAwait(false);
+        var result = await _sessionService.CreateSessionAsync(SessionServiceTestsConstants.TestUserId, SessionServiceTestsConstants.TestChatId).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.UserId.Should().Be(123);
-        result.ChatId.Should().Be(456);
+        result.UserId.Should().Be(SessionServiceTestsConstants.TestUserId);
+        result.ChatId.Should().Be(SessionServiceTestsConstants.TestChatId);
         result.IsActive.Should().BeTrue();
-        result.SessionId.Should().StartWith("session_");
+        result.SessionId.Should().StartWith(SessionServiceTestsConstants.SessionIdPrefix);
         _mockSessionRepository.Verify(r => r.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -127,8 +127,8 @@ public sealed class SessionServiceTests : ISessionServiceTests
         var newSession = new UserSession
         {
             SessionId = "new-session-123",
-            UserId = 123,
-            ChatId = 456,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddMinutes(60)
@@ -139,7 +139,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
             .ReturnsAsync(newSession);
 
         // Act
-        var result = await _sessionService.CreateSessionAsync(123, 456, TimeSpan.FromHours(1)).ConfigureAwait(false);
+        var result = await _sessionService.CreateSessionAsync(SessionServiceTestsConstants.TestUserId, SessionServiceTestsConstants.TestChatId, SessionServiceTestsConstants.OneHourTimeout).ConfigureAwait(false);
 
         // Assert
         result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddHours(1), TimeSpan.FromSeconds(5));
@@ -155,24 +155,24 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456,
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
-            InteractionCount = 5
+            InteractionCount = SessionServiceTestsConstants.InitialInteractionCount
         };
         var updatedSession = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456,
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
-            InteractionCount = 6,
+            InteractionCount = SessionServiceTestsConstants.UpdatedInteractionCount,
             LastActivityAt = DateTime.UtcNow
         };
 
         _mockSessionRepository
-            .Setup(r => r.GetByIdAsync("session-123", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(SessionServiceTestsConstants.TestSessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
         _mockSessionRepository
             .Setup(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
@@ -183,7 +183,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
 
         // Assert
         _mockSessionRepository.Verify(r => r.UpdateAsync(It.Is<UserSession>(s =>
-            s.InteractionCount == 6 &&
+            s.InteractionCount == SessionServiceTestsConstants.UpdatedInteractionCount &&
             s.LastActivityAt.HasValue
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -197,7 +197,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
     {
         // Arrange
         _mockSessionRepository
-            .Setup(r => r.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(SessionServiceTestsConstants.NonExistentSessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
         // Act & Assert
@@ -273,7 +273,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
     {
         // Arrange
         _mockSessionRepository
-            .Setup(r => r.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(SessionServiceTestsConstants.NonExistentSessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
         // Act
@@ -295,19 +295,19 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456,
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
-            CurrentMenuId = "old_menu"
+            CurrentMenuId = SessionServiceTestsConstants.OldMenuId
         };
         var updatedSession = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456,
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId,
             IsActive = true,
-            CurrentMenuId = "new_menu"
+            CurrentMenuId = SessionServiceTestsConstants.NewMenuId
         };
 
         _mockSessionRepository
@@ -318,11 +318,11 @@ public sealed class SessionServiceTests : ISessionServiceTests
             .ReturnsAsync(updatedSession);
 
         // Act
-        await _sessionService.NavigateToMenuAsync("session-123", "new_menu").ConfigureAwait(false);
+        await _sessionService.NavigateToMenuAsync(SessionServiceTestsConstants.TestSessionId, SessionServiceTestsConstants.NewMenuId).ConfigureAwait(false);
 
         // Assert
         _mockSessionRepository.Verify(r => r.UpdateAsync(It.Is<UserSession>(s =>
-            s.CurrentMenuId == "new_menu"
+            s.CurrentMenuId == SessionServiceTestsConstants.NewMenuId
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -338,9 +338,9 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "session-123",
-            UserId = 123,
-            ChatId = 456
+            SessionId = SessionServiceTestsConstants.TestSessionId,
+            UserId = SessionServiceTestsConstants.TestUserId,
+            ChatId = SessionServiceTestsConstants.TestChatId
         };
 
         _mockSessionRepository
@@ -365,7 +365,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
     {
         // Arrange
         _mockSessionRepository
-            .Setup(r => r.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(SessionServiceTestsConstants.NonExistentSessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
         // Act
@@ -386,8 +386,8 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var activeSessions = new List<UserSession>
         {
-            new UserSession { SessionId = "session-1", UserId = 1, IsActive = true },
-            new UserSession { SessionId = "session-2", UserId = 2, IsActive = true }
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId1, UserId = 1, IsActive = true },
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId2, UserId = 2, IsActive = true }
         };
 
         _mockSessionRepository
@@ -414,8 +414,8 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var userSessions = new List<UserSession>
         {
-            new UserSession { SessionId = "session-1", UserId = 123, IsActive = true },
-            new UserSession { SessionId = "session-2", UserId = 123, IsActive = false }
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId1, UserId = SessionServiceTestsConstants.TestUserId, IsActive = true },
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId2, UserId = SessionServiceTestsConstants.TestUserId, IsActive = false }
         };
 
         _mockSessionRepository
@@ -485,9 +485,9 @@ public sealed class SessionServiceTests : ISessionServiceTests
         // Arrange
         var sessions = new List<UserSession>
         {
-            new UserSession { SessionId = "session-1", UserId = 1, IsActive = true, LastActivityAt = DateTime.UtcNow.AddDays(-1) },
-            new UserSession { SessionId = "session-2", UserId = 2, IsActive = true, LastActivityAt = DateTime.UtcNow.AddDays(-2) },
-            new UserSession { SessionId = "session-3", UserId = 3, IsActive = false }
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId1, UserId = 1, IsActive = true, LastActivityAt = DateTime.UtcNow.AddDays(-1) },
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId2, UserId = 2, IsActive = true, LastActivityAt = DateTime.UtcNow.AddDays(-2) },
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId3, UserId = 3, IsActive = false }
         };
 
         _mockSessionRepository
@@ -498,7 +498,7 @@ public sealed class SessionServiceTests : ISessionServiceTests
             .ReturnsAsync((UserSession s, CancellationToken _) => s);
 
         // Act
-        var result = await _sessionService.ExpireInactiveSessionsAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
+        var result = await _sessionService.ExpireInactiveSessionsAsync(SessionServiceTestsConstants.TwentyFourHoursTimeout).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(2);
@@ -517,9 +517,9 @@ public sealed class SessionServiceTests : ISessionServiceTests
         var now = DateTime.UtcNow;
         var sessions = new List<UserSession>
         {
-            new UserSession { SessionId = "session-1", UserId = 1, IsActive = true, ExpiresAt = now.AddDays(-1) }, // Expired
-            new UserSession { SessionId = "session-2", UserId = 2, IsActive = true, ExpiresAt = now.AddDays(1) }, // Not expired
-            new UserSession { SessionId = "session-3", UserId = 3, IsActive = true, ExpiresAt = now.AddDays(-2) } // Expired
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId1, UserId = 1, IsActive = true, ExpiresAt = now.AddDays(-1) }, // Expired
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId2, UserId = 2, IsActive = true, ExpiresAt = now.AddDays(1) }, // Not expired
+            new UserSession { SessionId = SessionServiceTestsConstants.SessionId3, UserId = 3, IsActive = true, ExpiresAt = now.AddDays(-2) } // Expired
         };
 
         _mockSessionRepository
