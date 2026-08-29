@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Models;
 /// <summary>
 /// Represents a Telegram user interacting with the bot.
 /// </summary>
-public sealed class BotUser : IBotUser
+public sealed class BotUser : IBotUser, IEquatable<BotUser>
 {
     public long TelegramId { get; set; }
 
@@ -102,6 +102,69 @@ public sealed class BotUser : IBotUser
     /// </summary>
     public string? GetMetadata(string key) =>
         Metadata?.TryGetValue(key, out var value) == true ? value : null;
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(BotUser? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return TelegramId == other.TelegramId
+            && string.Equals(FirstName, other.FirstName, StringComparison.Ordinal)
+            && string.Equals(LastName, other.LastName, StringComparison.Ordinal)
+            && string.Equals(Username, other.Username, StringComparison.Ordinal)
+            && string.Equals(PhoneNumber, other.PhoneNumber, StringComparison.Ordinal)
+            && Status == other.Status
+            && Role == other.Role
+            && CreatedAt.Equals(other.CreatedAt);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((BotUser)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(TelegramId, FirstName, LastName, Username, PhoneNumber, Status, Role, CreatedAt);
+    }
+
+    /// <summary>
+    /// Implements the operator ==.
+    /// </summary>
+    /// <param name="left">The left-hand side.</param>
+    /// <param name="right">The right-hand side.</param>
+    /// <returns>true if the values are equal; otherwise, false.</returns>
+    public static bool operator ==(BotUser? left, BotUser? right)
+    {
+        return Equals(left, right);
+    }
+
+    /// <summary>
+    /// Implements the operator !=.
+    /// </summary>
+    /// <param name="left">The left-hand side.</param>
+    /// <param name="right">The right-hand side.</param>
+    /// <returns>true if the values are not equal; otherwise, false.</returns>
+    public static bool operator !=(BotUser? left, BotUser? right)
+    {
+        return !Equals(left, right);
+    }
 }
 
 public enum UserStatus
