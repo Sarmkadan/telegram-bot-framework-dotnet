@@ -17,7 +17,7 @@ namespace TelegramBotFramework.Middleware.Tests;
 /// <summary>
 /// Tests for the AuthenticationMiddleware class.
 /// </summary>
-public sealed class AuthenticationMiddlewareTests
+public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTests
 {
     private readonly Mock<ILogger<AuthenticationMiddleware>> _loggerMock;
 
