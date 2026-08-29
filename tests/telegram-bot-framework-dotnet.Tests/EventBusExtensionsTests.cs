@@ -13,7 +13,7 @@ namespace TelegramBotFramework.Tests;
 /// Tests edge cases for event publishing scenarios including zero handlers, exception handling,
 /// and middleware execution.
 /// </summary>
-public class EventBusExtensionsTests
+public class EventBusExtensionsTests : IEventBusExtensionsTests
 {
     private readonly Mock<ILogger<EventBus>> _loggerMock;
     private readonly EventBus _eventBus;
