@@ -3,6 +3,7 @@
 using FluentAssertions;
 using TelegramBotFramework.Models;
 using Xunit;
+using static TelegramBotFramework.Tests.BotConfigurationTestsConstants;
 
 namespace TelegramBotFramework.Tests;
 
@@ -24,11 +25,11 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
         config.BotUsername.Should().BeEmpty();
         config.OwnerId.Should().BeNull();
         config.DatabaseConnectionString.Should().BeEmpty();
-        config.SessionTimeoutMinutes.Should().Be(30);
-        config.MessageProcessingTimeoutSeconds.Should().Be(10);
+        config.SessionTimeoutMinutes.Should().Be(DefaultSessionTimeoutMinutes);
+        config.MessageProcessingTimeoutSeconds.Should().Be(DefaultMessageProcessingTimeoutSeconds);
         config.EnableLogging.Should().BeTrue();
         config.LogLevel.Should().Be(LogLevel.Info);
-        config.MaxConcurrentRequests.Should().Be(10);
+        config.MaxConcurrentRequests.Should().Be(DefaultMaxConcurrentRequests);
         config.EnableWebhook.Should().BeFalse();
         config.ApiKey.Should().BeNull();
         config.WebhookUrl.Should().BeNull();
@@ -36,8 +37,8 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
         config.CustomSettings.Should().NotBeNull().And.BeEmpty();
         config.AdminIds.Should().NotBeNull().And.BeEmpty();
         config.EnableRateLimiting.Should().BeTrue();
-        config.RateLimitPerMinute.Should().Be(30);
-        config.LocalizationLanguage.Should().Be("en");
+        config.RateLimitPerMinute.Should().Be(DefaultRateLimitPerMinute);
+        config.LocalizationLanguage.Should().Be(DefaultLocalizationLanguage);
     }
 
     /// <summary>
@@ -48,10 +49,10 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            SessionTimeoutMinutes = 5,
-            MaxConcurrentRequests = 20
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            SessionTimeoutMinutes = ValidSessionTimeoutMinutes,
+            MaxConcurrentRequests = ValidMaxConcurrentRequests
         };
 
         var result = config.Validate();
@@ -67,13 +68,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "",
-            BotUsername = "TestBot"
+            BotToken = EmptyValue,
+            BotUsername = TestBotUsername
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotToken is required");
+            .WithMessage(BotTokenRequiredMessage);
     }
 
     /// <summary>
@@ -84,13 +85,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = ""
+            BotToken = TestBotToken,
+            BotUsername = EmptyValue
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotUsername is required");
+            .WithMessage(BotUsernameRequiredMessage);
     }
 
     /// <summary>
@@ -101,13 +102,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "   ",
-            BotUsername = "TestBot"
+            BotToken = WhitespaceValue,
+            BotUsername = TestBotUsername
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotToken is required");
+            .WithMessage(BotTokenRequiredMessage);
     }
 
     /// <summary>
@@ -118,14 +119,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            SessionTimeoutMinutes = 0
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            SessionTimeoutMinutes = ZeroValue
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("SessionTimeoutMinutes must be at least 1");
+            .WithMessage(SessionTimeoutRequiredMessage);
     }
 
     /// <summary>
@@ -136,14 +137,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            SessionTimeoutMinutes = -5
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            SessionTimeoutMinutes = NegativeSessionTimeoutMinutes
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("SessionTimeoutMinutes must be at least 1");
+            .WithMessage(SessionTimeoutRequiredMessage);
     }
 
     /// <summary>
@@ -154,14 +155,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            MaxConcurrentRequests = 0
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            MaxConcurrentRequests = ZeroValue
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("MaxConcurrentRequests must be at least 1");
+            .WithMessage(MaxConcurrentRequestsRequiredMessage);
     }
 
     /// <summary>
@@ -172,14 +173,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            MaxConcurrentRequests = -1
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            MaxConcurrentRequests = NegativeMaxConcurrentRequests
         };
 
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("MaxConcurrentRequests must be at least 1");
+            .WithMessage(MaxConcurrentRequestsRequiredMessage);
     }
 
     /// <summary>
@@ -190,12 +191,12 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            OwnerId = 12345
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            OwnerId = TestOwnerId
         };
 
-        var isAdmin = config.IsAdmin(12345);
+        var isAdmin = config.IsAdmin(TestOwnerId);
 
         isAdmin.Should().BeTrue();
     }
@@ -208,12 +209,12 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 12345, 67890 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { TestOwnerId, TestAdminId }
         };
 
-        var isAdmin = config.IsAdmin(12345);
+        var isAdmin = config.IsAdmin(TestOwnerId);
 
         isAdmin.Should().BeTrue();
     }
@@ -226,13 +227,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            OwnerId = 12345,
-            AdminIds = new List<long> { 67890 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            OwnerId = TestOwnerId,
+            AdminIds = new List<long> { TestAdminId }
         };
 
-        var isAdmin = config.IsAdmin(99999);
+        var isAdmin = config.IsAdmin(NonAdminId);
 
         isAdmin.Should().BeFalse();
     }
@@ -245,13 +246,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            OwnerId = 12345,
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            OwnerId = TestOwnerId,
             AdminIds = null
         };
 
-        var isAdmin = config.IsAdmin(12345);
+        var isAdmin = config.IsAdmin(TestOwnerId);
 
         isAdmin.Should().BeTrue();
     }
@@ -264,14 +265,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 12345 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { TestOwnerId }
         };
 
-        config.AddAdmin(67890);
+        config.AddAdmin(TestAdminId);
 
-        config.AdminIds.Should().HaveCount(2).And.Contain(67890);
+        config.AdminIds.Should().HaveCount(ExpectedTwoItemCount).And.Contain(TestAdminId);
     }
 
     /// <summary>
@@ -282,14 +283,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 12345 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { TestOwnerId }
         };
 
-        config.AddAdmin(12345);
+        config.AddAdmin(TestOwnerId);
 
-        config.AdminIds.Should().HaveCount(1);
+        config.AdminIds.Should().HaveCount(ExpectedSingleItemCount);
     }
 
     /// <summary>
@@ -300,14 +301,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             AdminIds = null
         };
 
-        config.AddAdmin(12345);
+        config.AddAdmin(TestOwnerId);
 
-        config.AdminIds.Should().NotBeNull().And.HaveCount(1).And.Contain(12345);
+        config.AdminIds.Should().NotBeNull().And.HaveCount(ExpectedSingleItemCount).And.Contain(TestOwnerId);
     }
 
     /// <summary>
@@ -318,15 +319,15 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 12345, 67890 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { TestOwnerId, TestAdminId }
         };
 
-        var result = config.RemoveAdmin(12345);
+        var result = config.RemoveAdmin(TestOwnerId);
 
         result.Should().BeTrue();
-        config.AdminIds.Should().HaveCount(1).And.NotContain(12345);
+        config.AdminIds.Should().HaveCount(ExpectedSingleItemCount).And.NotContain(TestOwnerId);
     }
 
     /// <summary>
@@ -337,15 +338,15 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 12345 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { TestOwnerId }
         };
 
-        var result = config.RemoveAdmin(99999);
+        var result = config.RemoveAdmin(NonAdminId);
 
         result.Should().BeFalse();
-        config.AdminIds.Should().HaveCount(1);
+        config.AdminIds.Should().HaveCount(ExpectedSingleItemCount);
     }
 
     /// <summary>
@@ -356,12 +357,12 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             AdminIds = null
         };
 
-        var result = config.RemoveAdmin(12345);
+        var result = config.RemoveAdmin(TestOwnerId);
 
         result.Should().BeFalse();
     }
@@ -374,12 +375,12 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            SessionTimeoutMinutes = 45
+            SessionTimeoutMinutes = TestSessionTimeoutMinutes
         };
 
         var timeout = config.GetSessionTimeout();
 
-        timeout.Should().Be(TimeSpan.FromMinutes(45));
+        timeout.Should().Be(TimeSpan.FromMinutes(TestSessionTimeoutMinutes));
     }
 
     /// <summary>
@@ -392,14 +393,14 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
         {
             CustomSettings = new Dictionary<string, string>
             {
-                { "api_key", "secret123" },
-                { "endpoint", "https://api.example.com" }
+                { ApiKeySettingKey, ApiKeySettingValue },
+                { EndpointSettingKey, EndpointSettingValue }
             }
         };
 
-        var value = config.GetCustomSetting("api_key");
+        var value = config.GetCustomSetting(ApiKeySettingKey);
 
-        value.Should().Be("secret123");
+        value.Should().Be(ApiKeySettingValue);
     }
 
     /// <summary>
@@ -412,11 +413,11 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
         {
             CustomSettings = new Dictionary<string, string>
             {
-                { "api_key", "secret123" }
+                { ApiKeySettingKey, ApiKeySettingValue }
             }
         };
 
-        var value = config.GetCustomSetting("nonexistent");
+        var value = config.GetCustomSetting(NonexistentSettingKey);
 
         value.Should().BeNull();
     }
@@ -432,7 +433,7 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
             CustomSettings = null
         };
 
-        var value = config.GetCustomSetting("any_key");
+        var value = config.GetCustomSetting(ArbitrarySettingKey);
 
         value.Should().BeNull();
     }
@@ -445,9 +446,10 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration();
 
-        config.SetCustomSetting("new_key", "new_value");
+        config.SetCustomSetting(NewSettingKey, NewSettingValue);
 
-        config.CustomSettings.Should().HaveCount(1).And.ContainKey("new_key").WhoseValue.Should().Be("new_value");
+        config.CustomSettings.Should().HaveCount(ExpectedSingleItemCount).And.ContainKey(NewSettingKey)
+            .WhoseValue.Should().Be(NewSettingValue);
     }
 
     /// <summary>
@@ -458,12 +460,13 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration
         {
-            CustomSettings = new Dictionary<string, string> { { "key", "old_value" } }
+            CustomSettings = new Dictionary<string, string> { { ExistingSettingKey, OldSettingValue } }
         };
 
-        config.SetCustomSetting("key", "new_value");
+        config.SetCustomSetting(ExistingSettingKey, NewSettingValue);
 
-        config.CustomSettings.Should().HaveCount(1).And.ContainKey("key").WhoseValue.Should().Be("new_value");
+        config.CustomSettings.Should().HaveCount(ExpectedSingleItemCount).And.ContainKey(ExistingSettingKey)
+            .WhoseValue.Should().Be(NewSettingValue);
     }
 
     /// <summary>
@@ -474,8 +477,8 @@ public sealed class BotConfigurationTests : IBotConfigurationTests
     {
         var config = new BotConfiguration();
 
-        config.SetCustomSetting("key", "value");
+        config.SetCustomSetting(ExistingSettingKey, SettingValue);
 
-        config.CustomSettings.Should().NotBeNull().And.HaveCount(1).And.ContainKey("key");
+        config.CustomSettings.Should().NotBeNull().And.HaveCount(ExpectedSingleItemCount).And.ContainKey(ExistingSettingKey);
     }
 }
