@@ -6,6 +6,7 @@
 // =============================================================================
 
 using FluentAssertions;
+using static TelegramBotFramework.Tests.CallbackDataSignerTestsConstants;
 using TelegramBotFramework.Utilities;
 using Xunit;
 
@@ -16,9 +17,6 @@ namespace TelegramBotFramework.Tests;
 /// </summary>
 public sealed class CallbackDataSignerTests
 {
-    private const string TestSecret = "test-secret-key-123";
-    private const string TestData = "user_action:123";
-
     [Fact]
     public void Sign_WithValidDataAndSecret_ReturnsSignedData()
     {
@@ -28,7 +26,7 @@ public sealed class CallbackDataSignerTests
         // Assert
         signed.Should().NotBeNullOrEmpty();
         signed.Should().Contain(TestData);
-        signed.Should().Contain("|");
+        signed.Should().Contain(SignedDataSeparator);
     }
 
     [Fact]
@@ -63,14 +61,14 @@ public sealed class CallbackDataSignerTests
     public void Sign_WithWhitespaceData_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => CallbackDataSigner.Sign("   ", TestSecret));
+        Assert.Throws<ArgumentException>(() => CallbackDataSigner.Sign(WhitespaceValue, TestSecret));
     }
 
     [Fact]
     public void Sign_WithWhitespaceSecret_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => CallbackDataSigner.Sign(TestData, "   "));
+        Assert.Throws<ArgumentException>(() => CallbackDataSigner.Sign(TestData, WhitespaceValue));
     }
 
     [Fact]
@@ -92,7 +90,7 @@ public sealed class CallbackDataSignerTests
     {
         // Arrange
         var signed = CallbackDataSigner.Sign(TestData, TestSecret);
-        var wrongSecret = "wrong-secret";
+        var wrongSecret = WrongSecret;
 
         // Act
         var result = CallbackDataSigner.TryValidate(signed, wrongSecret, out var extractedData);
@@ -109,7 +107,7 @@ public sealed class CallbackDataSignerTests
         var signed = CallbackDataSigner.Sign(TestData, TestSecret);
 
         // Tamper with it
-        var tampered = signed.Replace("|", ";");
+        var tampered = signed.Replace(SignedDataSeparator, TamperedDataSeparator);
 
         // Act
         var result = CallbackDataSigner.TryValidate(tampered, TestSecret, out var extractedData);
@@ -173,7 +171,7 @@ public sealed class CallbackDataSignerTests
     public void TryValidate_WithMissingSeparator_ReturnsFalse()
     {
         // Arrange - manually create data without separator
-        var dataWithoutSeparator = "invalid_signed_data";
+        var dataWithoutSeparator = DataWithoutSeparator;
 
         // Act
         var result = CallbackDataSigner.TryValidate(dataWithoutSeparator, TestSecret, out var extractedData);
@@ -187,7 +185,7 @@ public sealed class CallbackDataSignerTests
     public void TryValidate_WithSeparatorAtEnd_ReturnsFalse()
     {
         // Arrange - manually create data with separator at end
-        var dataWithSeparatorAtEnd = "data|";
+        var dataWithSeparatorAtEnd = DataWithSeparatorAtEnd;
 
         // Act
         var result = CallbackDataSigner.TryValidate(dataWithSeparatorAtEnd, TestSecret, out var extractedData);
@@ -201,8 +199,8 @@ public sealed class CallbackDataSignerTests
     public void Sign_ProducesDifferentOutputForSameInputWithDifferentSecrets()
     {
         // Arrange
-        var secret1 = "secret1";
-        var secret2 = "secret2";
+        var secret1 = FirstDistinctSecret;
+        var secret2 = SecondDistinctSecret;
 
         // Act
         var signed1 = CallbackDataSigner.Sign(TestData, secret1);
@@ -210,15 +208,15 @@ public sealed class CallbackDataSignerTests
 
         // Assert
         signed1.Should().NotBe(signed2);
-        signed1.Should().Contain("|");
-        signed2.Should().Contain("|");
+        signed1.Should().Contain(SignedDataSeparator);
+        signed2.Should().Contain(SignedDataSeparator);
     }
 
     [Fact]
     public void Sign_ProducesSameOutputForSameInputAndSecret()
     {
         // Arrange
-        var secret = "consistent-secret";
+        var secret = ConsistentSecret;
 
         // Act
         var signed1 = CallbackDataSigner.Sign(TestData, secret);
@@ -234,8 +232,8 @@ public sealed class CallbackDataSignerTests
         // Arrange - use a reasonably long but valid data string
         // Max data length: 64 - separator (1 byte) - signature (16 hex chars = 8 bytes) = 47 bytes
         // But we need to account for UTF-8 encoding overhead, so use 40 chars to be safe
-        var longData = new string('x', 40);
-        var secret = "test-secret";
+        var longData = new string(RepeatedDataCharacter, LongDataLength);
+        var secret = LengthLimitTestSecret;
 
         // Act
         var signed = CallbackDataSigner.Sign(longData, secret);
@@ -243,7 +241,7 @@ public sealed class CallbackDataSignerTests
 
         // Assert
         var byteLength = System.Text.Encoding.UTF8.GetByteCount(signed);
-        byteLength.Should().BeLessOrEqualTo(64);
+        byteLength.Should().BeLessOrEqualTo(TelegramCallbackDataByteLimit);
         isValid.Should().BeTrue();
         extracted.Should().Be(longData);
     }
@@ -253,8 +251,8 @@ public sealed class CallbackDataSignerTests
     {
         // Arrange - create data that would exceed limit when signed
         // Max data length: 64 - separator - signature (16 chars) = ~47 chars
-        var veryLongData = new string('x', 100);
-        var secret = "test-secret";
+        var veryLongData = new string(RepeatedDataCharacter, ExcessiveDataLength);
+        var secret = LengthLimitTestSecret;
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => CallbackDataSigner.Sign(veryLongData, secret));
@@ -267,7 +265,7 @@ public sealed class CallbackDataSignerTests
         // doesn't propagate and instead returns false
 
         // Arrange - create malformed data
-        var malformed = "incomplete|sig";
+        var malformed = MalformedSignedData;
 
         // Act
         var result = CallbackDataSigner.TryValidate(malformed, TestSecret, out var extracted);
@@ -281,8 +279,8 @@ public sealed class CallbackDataSignerTests
     public void Sign_AndValidate_RoundTripWorksCorrectly()
     {
         // Arrange
-        var originalData = "command:delete_user:12345";
-        var secret = "my-secret-key";
+        var originalData = RoundTripData;
+        var secret = RoundTripSecret;
 
         // Act
         var signed = CallbackDataSigner.Sign(originalData, secret);
