@@ -12,7 +12,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Background task worker for executing long-running operations without blocking requests.
 /// Uses a queue to manage tasks and workers for execution.
 /// </summary>
-public sealed class BackgroundTaskWorker : IBackgroundTaskWorker, IDisposable
+public sealed class BackgroundTaskWorker : IBackgroundTaskWorker, IDisposable, IEquatable<BackgroundTaskWorker>
 {
     private readonly Queue<BackgroundTask> _taskQueue = new();
     private readonly SemaphoreSlim _taskAvailable;
@@ -192,6 +192,67 @@ public sealed class BackgroundTaskWorker : IBackgroundTaskWorker, IDisposable
     {
         _taskAvailable?.Dispose();
         _cancellationTokenSource?.Dispose();
+    }
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+    public bool Equals(BackgroundTaskWorker? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id
+            && Name == other.Name
+            && EqualityComparer<Func<CancellationToken, Task>?>.Default.Equals(TaskFunc, other.TaskFunc)
+            && QueuedAt == other.QueuedAt
+            && StartedAt == other.StartedAt
+            && CompletedAt == other.CompletedAt
+            && QueuedTaskCount == other.QueuedTaskCount
+            && RunningTaskCount == other.RunningTaskCount;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as BackgroundTaskWorker);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, TaskFunc, QueuedAt, StartedAt, CompletedAt, QueuedTaskCount, RunningTaskCount);
+    }
+
+    /// <summary>
+    /// Determines whether two specified objects are equal.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the specified objects are equal; otherwise, false.</returns>
+    public static bool operator ==(BackgroundTaskWorker? left, BackgroundTaskWorker? right)
+    {
+        return EqualityComparer<BackgroundTaskWorker>.Default.Equals(left, right);
+    }
+
+    /// <summary>
+    /// Determines whether two specified objects are not equal.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the specified objects are not equal; otherwise, false.</returns>
+    public static bool operator !=(BackgroundTaskWorker? left, BackgroundTaskWorker? right)
+    {
+        return !(left == right);
     }
 }
 
