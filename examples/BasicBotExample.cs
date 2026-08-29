@@ -34,7 +34,7 @@ public sealed class BasicBotExample
 
         public async Task RunAsync()
         {
-            _logger.LogInformation("Starting BasicBotExample");
+            _logger.LogInformation(BasicBotExampleConstants.StartingLogMessage);
 
             try
             {
@@ -43,16 +43,16 @@ public sealed class BasicBotExample
                 await RegisterHelpCommandAsync().ConfigureAwait(false);
                 await RegisterEchoCommandAsync().ConfigureAwait(false);
 
-                _logger.LogInformation("Bot is running. Commands registered: /start, /help, /echo");
+                _logger.LogInformation(BasicBotExampleConstants.RunningLogMessage);
 
                 // Simulate incoming message
-                await HandleIncomingMessageAsync(123456789, 123456789, "/start").ConfigureAwait(false);
-                await HandleIncomingMessageAsync(123456789, 123456789, "Hello bot!").ConfigureAwait(false);
-                await HandleIncomingMessageAsync(123456789, 123456789, "/echo Test message").ConfigureAwait(false);
+                await HandleIncomingMessageAsync(BasicBotExampleConstants.SampleUserId, BasicBotExampleConstants.SampleChatId, BasicBotExampleConstants.StartCommandName).ConfigureAwait(false);
+                await HandleIncomingMessageAsync(BasicBotExampleConstants.SampleUserId, BasicBotExampleConstants.SampleChatId, BasicBotExampleConstants.SampleMessage).ConfigureAwait(false);
+                await HandleIncomingMessageAsync(BasicBotExampleConstants.SampleUserId, BasicBotExampleConstants.SampleChatId, BasicBotExampleConstants.SampleEchoMessage).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in BasicBotExample");
+                _logger.LogError(ex, BasicBotExampleConstants.ErrorLogMessage);
                 throw;
             }
         }
@@ -61,74 +61,74 @@ public sealed class BasicBotExample
         {
             var command = new Command
             {
-                Name = "/start",
-                Description = "Welcome message and bot introduction",
-                HandlerType = "StartCommandHandler",
+                Name = BasicBotExampleConstants.StartCommandName,
+                Description = BasicBotExampleConstants.StartCommandDescription,
+                HandlerType = BasicBotExampleConstants.StartCommandHandlerType,
                 Type = CommandType.Standard,
                 IsEnabled = true,
                 RequiresAdmin = false,
-                RateLimitPerMinute = 60,
+                RateLimitPerMinute = BasicBotExampleConstants.StandardCommandRateLimitPerMinute,
                 Parameters = new List<CommandParameter>()
             };
 
             await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
-            _logger.LogInformation("Registered /start command");
+            _logger.LogInformation(BasicBotExampleConstants.StartCommandRegisteredLogMessage);
         }
 
         private async Task RegisterHelpCommandAsync()
         {
             var command = new Command
             {
-                Name = "/help",
-                Description = "Display available commands and usage information",
-                HandlerType = "HelpCommandHandler",
+                Name = BasicBotExampleConstants.HelpCommandName,
+                Description = BasicBotExampleConstants.HelpCommandDescription,
+                HandlerType = BasicBotExampleConstants.HelpCommandHandlerType,
                 Type = CommandType.Standard,
                 IsEnabled = true,
                 RequiresAdmin = false,
-                RateLimitPerMinute = 60,
+                RateLimitPerMinute = BasicBotExampleConstants.StandardCommandRateLimitPerMinute,
                 Parameters = new List<CommandParameter>()
             };
 
             await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
-            _logger.LogInformation("Registered /help command");
+            _logger.LogInformation(BasicBotExampleConstants.HelpCommandRegisteredLogMessage);
         }
 
         private async Task RegisterEchoCommandAsync()
         {
             var command = new Command
             {
-                Name = "/echo",
-                Description = "Echo back the provided text",
-                HandlerType = "EchoCommandHandler",
+                Name = BasicBotExampleConstants.EchoCommandName,
+                Description = BasicBotExampleConstants.EchoCommandDescription,
+                HandlerType = BasicBotExampleConstants.EchoCommandHandlerType,
                 Type = CommandType.Standard,
                 IsEnabled = true,
                 RequiresAdmin = false,
-                RateLimitPerMinute = 30,
+                RateLimitPerMinute = BasicBotExampleConstants.EchoCommandRateLimitPerMinute,
                 Parameters = new List<CommandParameter>
                 {
                     new CommandParameter
                     {
-                        Name = "text",
-                        Type = "string",
+                        Name = BasicBotExampleConstants.EchoParameterName,
+                        Type = BasicBotExampleConstants.EchoParameterType,
                         IsRequired = true,
-                        Description = "Text to echo"
+                        Description = BasicBotExampleConstants.EchoParameterDescription
                     }
                 }
             };
 
             await _commandService.RegisterCommandAsync(command).ConfigureAwait(false);
-            _logger.LogInformation("Registered /echo command");
+            _logger.LogInformation(BasicBotExampleConstants.EchoCommandRegisteredLogMessage);
         }
 
         private async Task HandleIncomingMessageAsync(long userId, long chatId, string content)
         {
-            _logger.LogInformation("Handling message: {Content}", content);
+            _logger.LogInformation(BasicBotExampleConstants.HandlingMessageLogTemplate, content);
 
             try
             {
                 // Get or create user
-                var user = await _userService.GetOrCreateUserAsync(userId, "User", "Test").ConfigureAwait(false);
-                _logger.LogInformation("User {UserId} retrieved/created", user.Id);
+                var user = await _userService.GetOrCreateUserAsync(userId, BasicBotExampleConstants.DefaultFirstName, BasicBotExampleConstants.DefaultLastName).ConfigureAwait(false);
+                _logger.LogInformation(BasicBotExampleConstants.UserRetrievedLogTemplate, user.Id);
 
                 // Process message
                 var message = new Message
@@ -139,16 +139,16 @@ public sealed class BasicBotExample
                     Type = MessageType.Text,
                     Metadata = new Dictionary<string, object>
                     {
-                        { "source", "direct" }
+                        { BasicBotExampleConstants.MetadataSourceKey, BasicBotExampleConstants.MetadataSourceDirect }
                     }
                 };
 
                 var result = await _messageService.ProcessIncomingMessageAsync(message).ConfigureAwait(false);
-                _logger.LogInformation("Message processed with status: {Status}", result.Status);
+                _logger.LogInformation(BasicBotExampleConstants.MessageProcessedLogTemplate, result.Status);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message");
+                _logger.LogError(ex, BasicBotExampleConstants.MessageProcessingErrorLogMessage);
             }
         }
     }
