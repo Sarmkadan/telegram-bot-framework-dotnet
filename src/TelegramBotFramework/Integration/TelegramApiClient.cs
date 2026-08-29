@@ -347,10 +347,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Sets the list of bot commands shown in the Telegram UI.
     /// </summary>
-    public async Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands)
+    /// <param name="commands">Collection of command name / description pairs.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>True if the request succeeded, false otherwise.</returns>
+    public async Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default)
     {
         if (commands == null)
             throw new ArgumentNullException(nameof(commands));
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var payload = new
         {
@@ -359,7 +364,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         return await SendApiRequestAsync(
             TelegramApiClientConstants.SetMyCommandsMethod,
-            payload).ConfigureAwait(false);
+            payload,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
