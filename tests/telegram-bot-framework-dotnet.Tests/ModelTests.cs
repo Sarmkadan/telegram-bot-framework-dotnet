@@ -14,7 +14,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Unit tests for the <see cref="BotUser"/> class.
 /// </summary>
-public sealed class BotUserTests
+public sealed class BotUserTests : IBotUserTests
 {
 	/// <summary>
 	/// Tests that GetDisplayName returns the full name when both first and last names are provided.
