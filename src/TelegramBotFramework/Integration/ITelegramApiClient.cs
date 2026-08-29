@@ -46,19 +46,19 @@ public record BotCommand(string Command, string Description);
 public interface ITelegramApiClient
 {
     /// <summary>Sends a plain text message to a chat.</summary>
-    Task<bool> SendMessageAsync(long chatId, string text);
+    Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default);
 
     /// <summary>Sends a message with an inline keyboard.</summary>
-    Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels);
+    Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default);
 
     /// <summary>Edits a previously sent message.</summary>
-    Task<bool> EditMessageAsync(long chatId, int messageId, string newText);
+    Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default);
 
     /// <summary>Deletes a message from a chat.</summary>
-    Task<bool> DeleteMessageAsync(long chatId, int messageId);
+    Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default);
 
     /// <summary>Sends a poll to a chat.</summary>
-    Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false);
+    Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a media group (album) to a chat.
