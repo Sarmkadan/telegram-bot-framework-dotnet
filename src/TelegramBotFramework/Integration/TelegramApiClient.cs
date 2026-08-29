@@ -55,7 +55,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Sends a simple text message to a chat.
     /// </summary>
-    public async Task<bool> SendMessageAsync(long chatId, string text)
+    public async Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -63,17 +63,21 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Message text cannot be empty", nameof(text));
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var payload = new { chat_id = chatId, text = text };
-        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Sends a message with inline keyboard buttons.
     /// </summary>
-    public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels)
+    public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var buttons = buttonLabels.Select(row =>
             row.Select(label => new { text = label, callback_data = label }).ToArray()
@@ -86,13 +90,13 @@ public sealed class TelegramApiClient : ITelegramApiClient
             reply_markup = new { inline_keyboard = buttons }
         };
 
-        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.SendMessageMethod, payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Edits a previously sent message.
     /// </summary>
-    public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText)
+    public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -100,20 +104,24 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (messageId <= 0)
             throw new ArgumentException("Message ID must be positive", nameof(messageId));
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var payload = new { chat_id = chatId, message_id = messageId, text = newText };
-        return await SendApiRequestAsync(TelegramApiClientConstants.EditMessageTextMethod, payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.EditMessageTextMethod, payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Deletes a message from a chat.
     /// </summary>
-    public async Task<bool> DeleteMessageAsync(long chatId, int messageId)
+    public async Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var payload = new { chat_id = chatId, message_id = messageId };
-        return await SendApiRequestAsync(TelegramApiClientConstants.DeleteMessageMethod, payload).ConfigureAwait(false);
+        return await SendApiRequestAsync(TelegramApiClientConstants.DeleteMessageMethod, payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -123,8 +131,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="question">Poll question (1-256 characters)</param>
     /// <param name="options">List of answer options (2-10 options, each 1-100 characters)</param>
     /// <param name="allowsMultipleAnswers">Whether users can select multiple answers</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Message ID of the sent poll if successful, null otherwise</returns>
-    public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false)
+    public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -139,6 +148,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > TelegramApiClientConstants.MaxPollOptionLength))
             throw new ArgumentException("Each option must be 1-100 characters", nameof(options));
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var payload = new
         {
@@ -160,11 +171,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
             var json = JsonUtility.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, TelegramApiClientConstants.JsonContentType);
 
-            var response = await client.PostAsync(url, content).ConfigureAwait(false);
+            var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 using var doc = JsonDocument.Parse(responseContent);
                 var root = doc.RootElement;
 
@@ -176,7 +187,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 }
             }
 
-            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning("Poll send failed: Status: {StatusCode}, Error: {Error}",
                 response.StatusCode, errorContent);
 
@@ -470,7 +481,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         };
     }
 
-    private async Task<bool> SendApiRequestAsync<T>(string method, T payload) where T : class
+    private async Task<bool> SendApiRequestAsync<T>(string method, T payload, CancellationToken cancellationToken = default) where T : class
     {
         try
         {
@@ -492,7 +503,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 url,
                 content,
                 method,
-                isIdempotent).ConfigureAwait(false);
+                isIdempotent,
+                cancellationToken).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -500,7 +512,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 return true;
             }
 
-            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning("Telegram API call failed: {Method}, Status: {StatusCode}, Error: {Error}", method, response.StatusCode, errorContent);
 
             return false;
