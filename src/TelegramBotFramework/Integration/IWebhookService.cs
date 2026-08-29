@@ -42,6 +42,21 @@ public interface IWebhookService
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     Task DispatchUpdateAsync(TelegramUpdate update, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Parses and validates a raw JSON payload received at the webhook endpoint.
+    /// Returns the parsed update, or <c>null</c> if the payload is invalid or the
+    /// secret-token check fails.
+    /// </summary>
+    /// <param name="jsonBody">The raw request body.</param>
+    /// <param name="secretTokenHeader">
+    /// Value of the <c>X-Telegram-Bot-Api-Secret-Token</c> header, if present.
+    /// </param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    Task<TelegramUpdate?> ParseAndValidateAsync(
+        string jsonBody,
+        string? secretTokenHeader,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Gets current runtime info about the webhook.</summary>
     WebhookInfo GetInfo();
 }
