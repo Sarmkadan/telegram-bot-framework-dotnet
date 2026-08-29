@@ -68,14 +68,14 @@ public sealed class MessageFormatterTests : IMessageFormatterTests
     public void FormatAsPlainText_IncludesTimestampAndEditedFlag()
     {
         // Arrange
-        var created = new DateTime(2023, 5, 10, 14, 30, 0, DateTimeKind.Utc);
-        var message = CreateMessage(userId: 42, content: "Plain text", createdAt: created, isEdited: true);
+        var created = MessageFormatterTestsConstants.DefaultTestCreatedAt;
+        var message = CreateMessage(userId: MessageFormatterTestsConstants.DefaultTestUserId, content: "Plain text", createdAt: created, isEdited: true);
 
         // Act
         var result = MessageFormatter.FormatAsPlainText(message);
 
         // Assert
-        result.Should().Contain($"[{created:yyyy-MM-dd HH:mm:ss}] 42:");
+        result.Should().Contain($"[{created:yyyy-MM-dd HH:mm:ss}] {MessageFormatterTestsConstants.DefaultTestUserId}:");
         result.Should().Contain("Plain text");
         result.Should().Contain("(Edited)");
     }
@@ -84,8 +84,8 @@ public sealed class MessageFormatterTests : IMessageFormatterTests
     public void FormatAsMarkdown_ProducesCorrectTemplate()
     {
         // Arrange
-        var created = new DateTime(2023, 5, 10, 14, 30, 0, DateTimeKind.Utc);
-        var message = CreateMessage(userId: 42, content: "Markdown *content*", createdAt: created, isEdited: false);
+        var created = MessageFormatterTestsConstants.DefaultTestCreatedAt;
+        var message = CreateMessage(userId: MessageFormatterTestsConstants.DefaultTestUserId, content: "Markdown *content*", createdAt: created, isEdited: false);
 
         // Act
         var result = MessageFormatter.FormatAsMarkdown(message);
@@ -93,7 +93,7 @@ public sealed class MessageFormatterTests : IMessageFormatterTests
         // Assert
         var escapeMethod = typeof(MessageFormatter)
             .GetMethod("EscapeMarkdown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-        var expectedUserId = escapeMethod.Invoke(null, new object[] { "42" }) as string;
+        var expectedUserId = escapeMethod.Invoke(null, new object[] { MessageFormatterTestsConstants.DefaultTestUserId.ToString() }) as string;
 
         result.Should().StartWith($"**[{created:HH:mm}]** _{expectedUserId}_: ");
         result.Should().Contain("Markdown \\*content\\*");
