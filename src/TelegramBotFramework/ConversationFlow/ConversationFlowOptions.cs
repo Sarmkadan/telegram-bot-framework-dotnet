@@ -36,7 +36,7 @@ public enum FlowEvictionPolicy
 /// Bind this class from <c>appsettings.json</c> under the <c>ConversationFlow</c> section
 /// or configure it inline via <see cref="ConversationFlowExtensions.AddConversationFlows"/>.
 /// </summary>
-public sealed class ConversationFlowOptions : IConversationFlowOptions
+public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatable<ConversationFlowOptions>
 {
     /// <summary>
     /// Gets or sets the inactivity timeout applied to flows that do not define their own
@@ -124,4 +124,77 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions
     /// or as a general eviction hook for the other policies.
     /// </summary>
     public Func<UserFlowState, CancellationToken, Task>? OnEviction { get; set; }
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(ConversationFlowOptions? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return DefaultFlowTimeout == other.DefaultFlowTimeout &&
+               MaxActiveFlowsPerUser == other.MaxActiveFlowsPerUser &&
+               AutoResumeOnSessionRestore == other.AutoResumeOnSessionRestore &&
+               MaxHistoryPerUser == other.MaxHistoryPerUser &&
+               string.Equals(FlowAbandonedMessage, other.FlowAbandonedMessage, StringComparison.Ordinal) &&
+               string.Equals(FlowTimeoutMessage, other.FlowTimeoutMessage, StringComparison.Ordinal) &&
+               EnableFlowEvents == other.EnableFlowEvents &&
+               CleanupIntervalMinutes == other.CleanupIntervalMinutes;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ConversationFlowOptions)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            DefaultFlowTimeout,
+            MaxActiveFlowsPerUser,
+            AutoResumeOnSessionRestore,
+            MaxHistoryPerUser,
+            FlowAbandonedMessage,
+            FlowTimeoutMessage,
+            EnableFlowEvents,
+            CleanupIntervalMinutes);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="ConversationFlowOptions"/> objects are equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
+    public static bool operator ==(ConversationFlowOptions? left, ConversationFlowOptions? right)
+    {
+        if (ReferenceEquals(left, null))
+            return ReferenceEquals(right, null);
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Returns a value that indicates whether the values of two <see cref="ConversationFlowOptions"/> objects are not equal.
+    /// </summary>
+    /// <param name="left">The first value to compare.</param>
+    /// <param name="right">The second value to compare.</param>
+    /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
+    public static bool operator !=(ConversationFlowOptions? left, ConversationFlowOptions? right)
+    {
+        return !(left == right);
+    }
 }
