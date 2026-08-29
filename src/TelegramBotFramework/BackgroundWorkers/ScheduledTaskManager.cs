@@ -12,11 +12,20 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// Manages scheduled and recurring background tasks using timers.
 /// Supports one-time execution and recurring schedules with customizable intervals.
 /// </summary>
-public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager
+public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager, IEquatable<ScheduledTaskManager>
 {
     private readonly Dictionary<string, ScheduledTask> _scheduledTasks = new();
     private readonly ILogger<ScheduledTaskManager> _logger;
     private readonly object _lockObj = new();
+
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public Func<Task>? TaskFunc { get; set; }
+    public bool IsRecurring { get; set; }
+    public TimeSpan Interval { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastExecutedAt { get; set; }
+    public DateTime? LastSuccessAt { get; set; }
 
     public ScheduledTaskManager(ILogger<ScheduledTaskManager>? logger = null)
     {
@@ -210,6 +219,41 @@ public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager
     public void Dispose()
     {
         StopAll();
+    }
+
+    public bool Equals(ScheduledTaskManager? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id
+            && Name == other.Name
+            && EqualityComparer<Func<Task>?>.Default.Equals(TaskFunc, other.TaskFunc)
+            && IsRecurring == other.IsRecurring
+            && Interval == other.Interval
+            && CreatedAt == other.CreatedAt
+            && LastExecutedAt == other.LastExecutedAt
+            && LastSuccessAt == other.LastSuccessAt;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ScheduledTaskManager);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, TaskFunc, IsRecurring, Interval, CreatedAt, LastExecutedAt, LastSuccessAt);
+    }
+
+    public static bool operator ==(ScheduledTaskManager? left, ScheduledTaskManager? right)
+    {
+        return EqualityComparer<ScheduledTaskManager>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(ScheduledTaskManager? left, ScheduledTaskManager? right)
+    {
+        return !(left == right);
     }
 }
 
