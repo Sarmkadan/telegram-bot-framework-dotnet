@@ -14,7 +14,7 @@ using System.Text.Json;
 /// Handles incoming webhook updates from Telegram and processes them.
 /// Validates update authenticity and dispatches to appropriate handlers.
 /// </summary>
-public sealed class WebhookHandler : IWebhookHandler
+public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
 {
     // Maximum allowed lengths for various Telegram message components to prevent DoS attacks
     private const int MaxMessageTextLength = 10_000; // 10KB - Telegram's typical limit is 4096 chars
@@ -27,9 +27,51 @@ public sealed class WebhookHandler : IWebhookHandler
 
     private readonly ILogger<WebhookHandler> _logger;
 
+    public long UpdateId { get; set; }
+    public UpdateType MessageType { get; set; }
+    public DateTime Timestamp { get; set; }
+    public TelegramMessage? Message { get; set; }
+    public string? CallbackData { get; set; }
+    public string? CallbackQueryId { get; set; }
+    public string? InlineQuery { get; set; }
+    public long MessageId { get; set; }
+
     public WebhookHandler(ILogger<WebhookHandler>? logger = null)
     {
         _logger = logger ?? new ConsoleLogger<WebhookHandler>();
+    }
+
+    public bool Equals(WebhookHandler? other)
+    {
+        return other is not null &&
+               UpdateId == other.UpdateId &&
+               MessageType == other.MessageType &&
+               Timestamp == other.Timestamp &&
+               EqualityComparer<TelegramMessage?>.Default.Equals(Message, other.Message) &&
+               CallbackData == other.CallbackData &&
+               CallbackQueryId == other.CallbackQueryId &&
+               InlineQuery == other.InlineQuery &&
+               MessageId == other.MessageId;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is WebhookHandler other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(UpdateId, MessageType, Timestamp, Message, CallbackData, CallbackQueryId, InlineQuery, MessageId);
+    }
+
+    public static bool operator ==(WebhookHandler? left, WebhookHandler? right)
+    {
+        return EqualityComparer<WebhookHandler?>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(WebhookHandler? left, WebhookHandler? right)
+    {
+        return !(left == right);
     }
 
     /// <summary>
