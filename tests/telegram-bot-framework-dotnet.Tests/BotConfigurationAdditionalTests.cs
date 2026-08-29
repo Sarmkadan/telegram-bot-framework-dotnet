@@ -5,6 +5,7 @@
 // =============================================================================
 
 using FluentAssertions;
+using static TelegramBotFramework.Tests.BotConfigurationAdditionalTestsConstants;
 using TelegramBotFramework.Models;
 using Xunit;
 
@@ -26,18 +27,18 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             AdminIds = null
         };
 
         // Act
-        config.AddAdmin(12345);
+        config.AddAdmin(TestAdminId);
 
         // Assert
         config.AdminIds.Should().NotBeNull();
-        config.AdminIds.Should().HaveCount(1);
-        config.AdminIds.Should().Contain(12345);
+        config.AdminIds.Should().HaveCount(SingleItemCount);
+        config.AdminIds.Should().Contain(TestAdminId);
     }
 
     /// <summary>
@@ -50,18 +51,18 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             CustomSettings = null
         };
 
         // Act
-        config.SetCustomSetting("key", "value");
+        config.SetCustomSetting(CustomSettingKey, CustomSettingValue);
 
         // Assert
         config.CustomSettings.Should().NotBeNull();
-        config.CustomSettings.Should().HaveCount(1);
-        config.CustomSettings.Should().ContainKey("key").WhoseValue.Should().Be("value");
+        config.CustomSettings.Should().HaveCount(SingleItemCount);
+        config.CustomSettings.Should().ContainKey(CustomSettingKey).WhoseValue.Should().Be(CustomSettingValue);
     }
 
     /// <summary>
@@ -74,18 +75,18 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             CustomSettings = new Dictionary<string, string>()
         };
 
         // Act
-        config.SetCustomSetting("key", "value");
+        config.SetCustomSetting(CustomSettingKey, CustomSettingValue);
 
         // Assert
         config.CustomSettings.Should().NotBeNull();
-        config.CustomSettings.Should().HaveCount(1);
-        config.CustomSettings.Should().ContainKey("key").WhoseValue.Should().Be("value");
+        config.CustomSettings.Should().HaveCount(SingleItemCount);
+        config.CustomSettings.Should().ContainKey(CustomSettingKey).WhoseValue.Should().Be(CustomSettingValue);
     }
 
     /// <summary>
@@ -98,13 +99,13 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             AdminIds = new List<long>()
         };
 
         // Act
-        var result = config.IsAdmin(12345);
+        var result = config.IsAdmin(TestAdminId);
 
         // Assert
         result.Should().BeFalse();
@@ -120,14 +121,14 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
-            OwnerId = 12345,
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            OwnerId = TestAdminId,
             AdminIds = new List<long>()
         };
 
         // Act
-        var result = config.IsAdmin(12345);
+        var result = config.IsAdmin(TestAdminId);
 
         // Assert
         result.Should().BeTrue();
@@ -143,15 +144,15 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot"
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername
         };
 
         // Act
         var timeout = config.GetSessionTimeout();
 
         // Assert
-        timeout.Should().Be(TimeSpan.FromMinutes(30));
+        timeout.Should().Be(DefaultSessionTimeout);
     }
 
     /// <summary>
@@ -164,16 +165,16 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
-            SessionTimeoutMinutes = 60
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            SessionTimeoutMinutes = CustomSessionTimeoutMinutes
         };
 
         // Act
         var timeout = config.GetSessionTimeout();
 
         // Assert
-        timeout.Should().Be(TimeSpan.FromMinutes(60));
+        timeout.Should().Be(CustomSessionTimeout);
     }
 
     /// <summary>
@@ -186,14 +187,14 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = " "
+            BotToken = ValidTestBotToken,
+            BotUsername = WhitespaceValue
         };
 
         // Act & Assert
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotUsername is required");
+            .WithMessage(BotUsernameRequiredMessage);
     }
 
     /// <summary>
@@ -206,14 +207,14 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = " ",
-            BotUsername = "TestBot"
+            BotToken = WhitespaceValue,
+            BotUsername = TestBotUsername
         };
 
         // Act & Assert
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotToken is required");
+            .WithMessage(BotTokenRequiredMessage);
     }
 
     /// <summary>
@@ -226,14 +227,14 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "x",
-            BotUsername = "TestBot"
+            BotToken = SingleCharacterBotToken,
+            BotUsername = TestBotUsername
         };
 
         // Act & Assert
         config.Invoking(c => c.Validate())
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("BotToken is required");
+            .WithMessage(BotTokenRequiredMessage);
     }
 
     /// <summary>
@@ -246,9 +247,9 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            MaxConcurrentRequests = 100
+            BotToken = ValidTestBotToken,
+            BotUsername = TestBotUsername,
+            MaxConcurrentRequests = MaximumConcurrentRequests
         };
 
         // Act
@@ -268,9 +269,9 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            MaxConcurrentRequests = 1
+            BotToken = ValidTestBotToken,
+            BotUsername = TestBotUsername,
+            MaxConcurrentRequests = MinimumValidValue
         };
 
         // Act
@@ -290,9 +291,9 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token-123",
-            BotUsername = "TestBot",
-            SessionTimeoutMinutes = 1
+            BotToken = ValidTestBotToken,
+            BotUsername = TestBotUsername,
+            SessionTimeoutMinutes = MinimumValidValue
         };
 
         // Act
@@ -312,15 +313,15 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            CustomSettings = new Dictionary<string, string> { { "key", "old_value" } }
+            CustomSettings = new Dictionary<string, string> { { CustomSettingKey, OldCustomSettingValue } }
         };
 
         // Act
-        config.SetCustomSetting("key", "new_value");
+        config.SetCustomSetting(CustomSettingKey, NewCustomSettingValue);
 
         // Assert
-        config.CustomSettings.Should().HaveCount(1);
-        config.CustomSettings["key"].Should().Be("new_value");
+        config.CustomSettings.Should().HaveCount(SingleItemCount);
+        config.CustomSettings[CustomSettingKey].Should().Be(NewCustomSettingValue);
     }
 
     /// <summary>
@@ -333,13 +334,13 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
             AdminIds = new List<long>()
         };
 
         // Act
-        var result = config.RemoveAdmin(12345);
+        var result = config.RemoveAdmin(TestAdminId);
 
         // Assert
         result.Should().BeFalse();
@@ -355,19 +356,19 @@ public sealed class BotConfigurationAdditionalTests
         // Arrange
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "TestBot",
-            AdminIds = new List<long> { 111, 222, 333 }
+            BotToken = TestBotToken,
+            BotUsername = TestBotUsername,
+            AdminIds = new List<long> { FirstAdminId, AdminIdToRemove, ThirdAdminId }
         };
 
         // Act
-        var result = config.RemoveAdmin(222);
+        var result = config.RemoveAdmin(AdminIdToRemove);
 
         // Assert
         result.Should().BeTrue();
-        config.AdminIds.Should().HaveCount(2);
-        config.AdminIds.Should().NotContain(222);
-        config.AdminIds.Should().Contain(111);
-        config.AdminIds.Should().Contain(333);
+        config.AdminIds.Should().HaveCount(RemainingAdminCount);
+        config.AdminIds.Should().NotContain(AdminIdToRemove);
+        config.AdminIds.Should().Contain(FirstAdminId);
+        config.AdminIds.Should().Contain(ThirdAdminId);
     }
 }
