@@ -5,7 +5,7 @@ namespace TelegramBotFramework.Models
     /// <summary>
     /// Options for the Telegram Bot Framework .NET.
     /// </summary>
-    public class TelegramBotFrameworkDotnetOptions : ITelegramBotFrameworkDotnetOptions
+    public class TelegramBotFrameworkDotnetOptions : ITelegramBotFrameworkDotnetOptions, IEquatable<TelegramBotFrameworkDotnetOptions>
     {
         /// <summary>
         /// The token for the Telegram bot.
@@ -94,5 +94,70 @@ namespace TelegramBotFramework.Models
         /// </remarks>
         [Range(1, 600)]
         public int RateLimitPerMinute { get; set; } = 30;
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the other parameter; otherwise, false.</returns>
+        public bool Equals(TelegramBotFrameworkDotnetOptions? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return BotToken == other.BotToken &&
+                   BotUsername == other.BotUsername &&
+                   DatabaseConnectionString == other.DatabaseConnectionString &&
+                   SessionTimeoutMinutes == other.SessionTimeoutMinutes &&
+                   MessageProcessingTimeoutSeconds == other.MessageProcessingTimeoutSeconds &&
+                   MaxConcurrentRequests == other.MaxConcurrentRequests &&
+                   EnableLogging == other.EnableLogging &&
+                   EnableRateLimiting == other.EnableRateLimiting;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object.</param>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((TelegramBotFrameworkDotnetOptions)obj);
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        /// <returns>A hash code for the current object.</returns>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(BotToken, BotUsername, DatabaseConnectionString, SessionTimeoutMinutes, MessageProcessingTimeoutSeconds, MaxConcurrentRequests, EnableLogging, EnableRateLimiting);
+        }
+
+        /// <summary>
+        /// Returns a value that indicates whether the values of two <see cref="TelegramBotFrameworkDotnetOptions"/> objects are equal.
+        /// </summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
+        public static bool operator ==(TelegramBotFrameworkDotnetOptions? left, TelegramBotFrameworkDotnetOptions? right)
+        {
+            if (ReferenceEquals(left, null))
+                return ReferenceEquals(right, null);
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Returns a value that indicates whether the values of two <see cref="TelegramBotFrameworkDotnetOptions"/> objects are not equal.
+        /// </summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
+        public static bool operator !=(TelegramBotFrameworkDotnetOptions? left, TelegramBotFrameworkDotnetOptions? right)
+        {
+            return !(left == right);
+        }
     }
 }
