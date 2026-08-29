@@ -15,7 +15,7 @@ namespace TelegramBotFramework.Tests;
 /// <summary>
 /// Tests for <see cref="ScheduledMessageService"/>.
 /// </summary>
-public sealed class ScheduledMessageServiceTests : IDisposable
+public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessageServiceTests
 {
     private readonly Mock<ITelegramApiClient> _mockTelegramApiClient;
     private readonly Mock<ILogger<ScheduledMessageService>> _mockLogger;
