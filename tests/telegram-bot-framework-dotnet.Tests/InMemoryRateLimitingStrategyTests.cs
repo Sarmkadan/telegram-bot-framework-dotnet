@@ -13,7 +13,7 @@ namespace TelegramBotFramework.Strategies.Tests;
 /// <summary>
 /// Tests for the InMemoryRateLimitingStrategy class.
 /// </summary>
-public sealed class InMemoryRateLimitingStrategyTests
+public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStrategyTests
 {
     /// <summary>
     /// Tests that requests exactly at the window boundary are properly expired.
