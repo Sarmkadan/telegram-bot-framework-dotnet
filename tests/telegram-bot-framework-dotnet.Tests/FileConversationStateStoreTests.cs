@@ -347,4 +347,34 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         // Assert
         act.Should().NotThrow();
     }
+
+    /// <summary>
+    /// Tests that constructor throws ArgumentException when directory is null or whitespace (async overload).
+    /// </summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Constructor_InvalidDirectory_ThrowsArgumentExceptionAsync(string? invalidDirectory)
+    {
+        // Act
+        Func<Task> act = async () => { var store = new FileConversationStateStore(invalidDirectory!); store.Dispose(); };
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that Dispose can be called multiple times without error (async overload).
+    /// </summary>
+    [Fact]
+    public async Task Dispose_MultipleTimes_DoesNotThrowAsync()
+    {
+        // Act
+        _store.Dispose();
+        Func<Task> act = async () => { _store.Dispose(); };
+
+        // Assert
+        await act.Should().NotThrowAsync();
+    }
 }

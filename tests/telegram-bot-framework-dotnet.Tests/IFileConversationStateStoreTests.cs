@@ -16,6 +16,8 @@ public interface IFileConversationStateStoreTests
     Task LoadAllActiveStatesAsync_NoFiles_ReturnsEmptyList();
     Task SaveStateAsync_NullState_ThrowsArgumentNullException();
     void Constructor_InvalidDirectory_ThrowsArgumentException(string? invalidDirectory);
+    Task Constructor_InvalidDirectory_ThrowsArgumentExceptionAsync(string? invalidDirectory);
     void GetFilePath_ReturnsCorrectPath();
     void Dispose_MultipleTimes_DoesNotThrow();
+    Task Dispose_MultipleTimes_DoesNotThrowAsync();
 }
