@@ -100,7 +100,8 @@ public sealed class CommandNotFoundException : BotFrameworkException
     public string? CommandName { get; set; }
 
     public CommandNotFoundException(string commandName)
-        : base($"Command '{commandName}' not found", BotFrameworkExceptionConstants.CommandNotFound)
+        : base(string.Format(BotFrameworkExceptionConstants.CommandNotFoundMessageFormat, commandName),
+            BotFrameworkExceptionConstants.CommandNotFound)
     {
         CommandName = commandName;
     }
@@ -116,7 +117,8 @@ public sealed class InsufficientPermissionException : BotFrameworkException
     public string? RequiredPermission { get; set; }
 
     public InsufficientPermissionException(long userId, string? requiredPermission = null)
-        : base($"User {userId} does not have required permissions", BotFrameworkExceptionConstants.InsufficientPermission)
+        : base(string.Format(BotFrameworkExceptionConstants.InsufficientPermissionMessageFormat, userId),
+            BotFrameworkExceptionConstants.InsufficientPermission)
     {
         UserId = userId;
         RequiredPermission = requiredPermission;
@@ -173,7 +175,8 @@ public sealed class RateLimitExceededException : BotFrameworkException
     public int? RetryAfterSeconds { get; set; }
 
     public RateLimitExceededException(long? userId = null, int? retryAfter = null)
-        : base("Rate limit exceeded", BotFrameworkExceptionConstants.RateLimitExceeded)
+        : base(BotFrameworkExceptionConstants.RateLimitExceededMessage,
+            BotFrameworkExceptionConstants.RateLimitExceeded)
     {
         UserId = userId;
         RetryAfterSeconds = retryAfter;
