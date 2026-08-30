@@ -24,9 +24,43 @@ namespace TelegramBotFramework.Tests;
 /// Tests cover basic CRUD operations, expiration behavior, cache statistics tracking,
 /// and thread-safe operations on the cache provider.
 /// </remarks>
-public sealed class LocalCacheProviderTests : ILocalCacheProviderTests
+public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatable<LocalCacheProviderTests>
 {
     private readonly LocalCacheProvider _cache = new();
+
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public List<int> Values { get; set; } = new();
+    public Dictionary<string, string> Metadata { get; set; } = new();
+
+    public bool Equals(LocalCacheProviderTests? other)
+    {
+        return other is not null
+            && Id == other.Id
+            && Name == other.Name
+            && EqualityComparer<List<int>>.Default.Equals(Values, other.Values)
+            && EqualityComparer<Dictionary<string, string>>.Default.Equals(Metadata, other.Metadata);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is LocalCacheProviderTests other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, Values, Metadata);
+    }
+
+    public static bool operator ==(LocalCacheProviderTests? left, LocalCacheProviderTests? right)
+    {
+        return EqualityComparer<LocalCacheProviderTests>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(LocalCacheProviderTests? left, LocalCacheProviderTests? right)
+    {
+        return !(left == right);
+    }
 
     /// <summary>
     /// Tests that a value stored with SetAsync can be retrieved with GetAsync and returns the expected value.
