@@ -15,12 +15,12 @@ namespace TelegramBotFramework.Integration;
 /// </summary>
 public static class HttpClientFactoryJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(HttpClientFactoryJsonExtensionsConstants.SerializerDefaults)
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        PropertyNamingPolicy = HttpClientFactoryJsonExtensionsConstants.PropertyNamingPolicy,
+        WriteIndented = HttpClientFactoryJsonExtensionsConstants.DefaultWriteIndented,
+        DefaultIgnoreCondition = HttpClientFactoryJsonExtensionsConstants.DefaultIgnoreCondition,
+        Converters = { new JsonStringEnumConverter(HttpClientFactoryJsonExtensionsConstants.EnumNamingPolicy) }
     };
 
     /// <summary>
@@ -30,7 +30,9 @@ public static class HttpClientFactoryJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the HttpClientFactory.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this HttpClientFactory value, bool indented = false)
+    public static string ToJson(
+        this HttpClientFactory value,
+        bool indented = HttpClientFactoryJsonExtensionsConstants.DefaultWriteIndented)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -89,7 +91,7 @@ public static class HttpClientFactoryJsonExtensions
     {
         var options = new JsonSerializerOptions(_jsonSerializerOptions)
         {
-            WriteIndented = true
+            WriteIndented = HttpClientFactoryJsonExtensionsConstants.IndentedWriteIndented
         };
         return options;
     }
