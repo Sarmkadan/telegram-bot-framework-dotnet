@@ -18,7 +18,7 @@ public static class CommandServiceJsonExtensions
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
+        WriteIndented = CommandServiceJsonExtensionsConstants.DefaultWriteIndented,
         TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
         ReferenceHandler = ReferenceHandler.IgnoreCycles,
         NumberHandling = JsonNumberHandling.AllowReadingFromString
@@ -36,7 +36,7 @@ public static class CommandServiceJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = CommandServiceJsonExtensionsConstants.IndentedWriteIndented }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
