@@ -80,13 +80,13 @@ public sealed class CommandExecutionException : BotFrameworkException
     public string? CommandName { get; set; }
 
     public CommandExecutionException(string message, string? commandName = null)
-        : base(message, "COMMAND_EXECUTION_ERROR")
+        : base(message, BotFrameworkExceptionConstants.CommandExecutionError)
     {
         CommandName = commandName;
     }
 
     public CommandExecutionException(string message, string? commandName, Exception innerException)
-        : base(message, "COMMAND_EXECUTION_ERROR", innerException)
+        : base(message, BotFrameworkExceptionConstants.CommandExecutionError, innerException)
     {
         CommandName = commandName;
     }
@@ -100,7 +100,7 @@ public sealed class CommandNotFoundException : BotFrameworkException
     public string? CommandName { get; set; }
 
     public CommandNotFoundException(string commandName)
-        : base($"Command '{commandName}' not found", "COMMAND_NOT_FOUND")
+        : base($"Command '{commandName}' not found", BotFrameworkExceptionConstants.CommandNotFound)
     {
         CommandName = commandName;
     }
@@ -116,7 +116,7 @@ public sealed class InsufficientPermissionException : BotFrameworkException
     public string? RequiredPermission { get; set; }
 
     public InsufficientPermissionException(long userId, string? requiredPermission = null)
-        : base($"User {userId} does not have required permissions", "INSUFFICIENT_PERMISSION")
+        : base($"User {userId} does not have required permissions", BotFrameworkExceptionConstants.InsufficientPermission)
     {
         UserId = userId;
         RequiredPermission = requiredPermission;
@@ -131,13 +131,13 @@ public sealed class SessionException : BotFrameworkException
     public string? SessionId { get; set; }
 
     public SessionException(string message, string? sessionId = null)
-        : base(message, "SESSION_ERROR")
+        : base(message, BotFrameworkExceptionConstants.SessionError)
     {
         SessionId = sessionId;
     }
 
     public SessionException(string message, string? sessionId, Exception innerException)
-        : base(message, "SESSION_ERROR", innerException)
+        : base(message, BotFrameworkExceptionConstants.SessionError, innerException)
     {
         SessionId = sessionId;
     }
@@ -151,13 +151,13 @@ public sealed class UserException : BotFrameworkException
     public long? UserId { get; set; }
 
     public UserException(string message, long? userId = null)
-        : base(message, "USER_ERROR")
+        : base(message, BotFrameworkExceptionConstants.UserError)
     {
         UserId = userId;
     }
 
     public UserException(string message, long? userId, Exception innerException)
-        : base(message, "USER_ERROR", innerException)
+        : base(message, BotFrameworkExceptionConstants.UserError, innerException)
     {
         UserId = userId;
     }
@@ -173,7 +173,7 @@ public sealed class RateLimitExceededException : BotFrameworkException
     public int? RetryAfterSeconds { get; set; }
 
     public RateLimitExceededException(long? userId = null, int? retryAfter = null)
-        : base("Rate limit exceeded", "RATE_LIMIT_EXCEEDED")
+        : base("Rate limit exceeded", BotFrameworkExceptionConstants.RateLimitExceeded)
     {
         UserId = userId;
         RetryAfterSeconds = retryAfter;
@@ -186,12 +186,12 @@ public sealed class RateLimitExceededException : BotFrameworkException
 public sealed class ConfigurationException : BotFrameworkException
 {
     public ConfigurationException(string message)
-        : base(message, "CONFIGURATION_ERROR")
+        : base(message, BotFrameworkExceptionConstants.ConfigurationError)
     {
     }
 
     public ConfigurationException(string message, Exception innerException)
-        : base(message, "CONFIGURATION_ERROR", innerException)
+        : base(message, BotFrameworkExceptionConstants.ConfigurationError, innerException)
     {
     }
 }
@@ -204,13 +204,13 @@ public sealed class DuplicateUpdateException : BotFrameworkException
     public long? UpdateId { get; set; }
 
     public DuplicateUpdateException(string message, long? updateId = null)
-        : base(message, "DUPLICATE_UPDATE")
+        : base(message, BotFrameworkExceptionConstants.DuplicateUpdate)
     {
         UpdateId = updateId;
     }
 
     public DuplicateUpdateException(string message, long? updateId, Exception innerException)
-        : base(message, "DUPLICATE_UPDATE", innerException)
+        : base(message, BotFrameworkExceptionConstants.DuplicateUpdate, innerException)
     {
         UpdateId = updateId;
     }
