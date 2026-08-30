@@ -17,8 +17,11 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IEquatable<LocalCacheProvider>
 {
+    private const int CleanupBatchSize = 32;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
+    private readonly object _cleanupLock = new();
     private readonly ILogger<LocalCacheProvider>? _logger;
+    private IEnumerator<KeyValuePair<string, CacheEntry>>? _cleanupEnumerator;
     private long _hitCount = 0;
     private long _missCount = 0;
     private long _setCount = 0;
@@ -74,6 +77,7 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
 
         _cache[key] = entry;
         Interlocked.Increment(ref _setCount);
+        CleanupExpiredEntries();
 
         if (_logger?.IsEnabled(LogLevel.Debug) == true)
         {
@@ -137,6 +141,11 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
     public Task FlushAsync()
     {
         _cache.Clear();
+        lock (_cleanupLock)
+        {
+            _cleanupEnumerator?.Dispose();
+            _cleanupEnumerator = null;
+        }
         Interlocked.Exchange(ref _hitCount, 0);
         Interlocked.Exchange(ref _missCount, 0);
         Interlocked.Exchange(ref _setCount, 0);
@@ -293,6 +302,31 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
             };
         }
         return total;
+    }
+
+    private void CleanupExpiredEntries()
+    {
+        lock (_cleanupLock)
+        {
+            _cleanupEnumerator ??= _cache.GetEnumerator();
+            var now = DateTime.UtcNow;
+
+            for (var scanned = 0; scanned < CleanupBatchSize; scanned++)
+            {
+                if (!_cleanupEnumerator.MoveNext())
+                {
+                    _cleanupEnumerator.Dispose();
+                    _cleanupEnumerator = null;
+                    break;
+                }
+
+                var entry = _cleanupEnumerator.Current;
+                if (entry.Value.ExpiredAt.HasValue && now > entry.Value.ExpiredAt)
+                {
+                    _cache.TryRemove(entry.Key, out _);
+                }
+            }
+        }
     }
 
     private class CacheEntry
