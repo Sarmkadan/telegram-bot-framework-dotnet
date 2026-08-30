@@ -44,8 +44,8 @@ public class BotBenchmarks : IBotBenchmarks
         var services = new ServiceCollection();
         var config = new BotConfiguration
         {
-            BotToken = "test-token",
-            BotUsername = "test-bot"
+            BotToken = BotBenchmarksConstants.TestBotToken,
+            BotUsername = BotBenchmarksConstants.TestBotUsername
         };
 
         services.AddTelegramBotFramework(config);
@@ -70,7 +70,7 @@ public class BotBenchmarks : IBotBenchmarks
         }
         catch
         {
-            _botOrchestrator.ProcessUserMessageAsync(_userId, _chatId, "/start", "TestUser").GetAwaiter().GetResult();
+            _botOrchestrator.ProcessUserMessageAsync(_userId, _chatId, BotBenchmarksConstants.StartCommand, BotBenchmarksConstants.TestFirstName).GetAwaiter().GetResult();
         }
     }
 
@@ -94,7 +94,7 @@ public class BotBenchmarks : IBotBenchmarks
         return await _botOrchestrator.ProcessUserMessageAsync(
             userId: _userId,
             chatId: _chatId,
-            content: "/echo",
+            content: BotBenchmarksConstants.EchoCommand,
             firstName: "TestUser",
             lastName: null,
             cancellationToken: cancellationToken);
