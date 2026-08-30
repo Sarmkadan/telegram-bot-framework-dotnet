@@ -23,57 +23,57 @@ namespace TelegramBotFramework.Models
             // BotToken validation
             if (string.IsNullOrWhiteSpace(value.BotToken))
             {
-                problems.Add("BotToken must not be null or whitespace.");
+                problems.Add(BotConfigurationValidationConstants.BotTokenNullOrWhitespace);
             }
-            else if (value.BotToken.Trim().Length < 2)
+            else if (value.BotToken.Trim().Length < BotConfigurationValidationConstants.MinBotTokenUsernameLength)
             {
-                problems.Add("BotToken must be at least 2 characters long.");
+                problems.Add(BotConfigurationValidationConstants.BotTokenMinLength);
             }
 
             // BotUsername validation
             if (string.IsNullOrWhiteSpace(value.BotUsername))
             {
-                problems.Add("BotUsername must not be null or whitespace.");
+                problems.Add(BotConfigurationValidationConstants.BotUsernameNullOrWhitespace);
             }
-            else if (value.BotUsername.Trim().Length < 2)
+            else if (value.BotUsername.Trim().Length < BotConfigurationValidationConstants.MinBotTokenUsernameLength)
             {
-                problems.Add("BotUsername must be at least 2 characters long.");
+                problems.Add(BotConfigurationValidationConstants.BotUsernameMinLength);
             }
 
             // OwnerId validation (if specified)
             if (value.OwnerId.HasValue && value.OwnerId.Value <= 0)
             {
-                problems.Add("OwnerId must be a positive number if specified.");
+                problems.Add(BotConfigurationValidationConstants.OwnerIdMustBePositive);
             }
 
             // DatabaseConnectionString validation (if specified)
             if (string.IsNullOrWhiteSpace(value.DatabaseConnectionString))
             {
-                problems.Add("DatabaseConnectionString must not be null or whitespace.");
+                problems.Add(BotConfigurationValidationConstants.DatabaseConnectionStringNullOrWhitespace);
             }
 
             // SessionTimeoutMinutes validation
-            if (value.SessionTimeoutMinutes < 1)
+            if (value.SessionTimeoutMinutes < BotConfigurationValidationConstants.MinPositiveInteger)
             {
-                problems.Add("SessionTimeoutMinutes must be at least 1.");
+                problems.Add(BotConfigurationValidationConstants.SessionTimeoutMinutesMin);
             }
 
             // MessageProcessingTimeoutSeconds validation
-            if (value.MessageProcessingTimeoutSeconds < 1)
+            if (value.MessageProcessingTimeoutSeconds < BotConfigurationValidationConstants.MinPositiveInteger)
             {
-                problems.Add("MessageProcessingTimeoutSeconds must be at least 1.");
+                problems.Add(BotConfigurationValidationConstants.MessageProcessingTimeoutSecondsMin);
             }
 
             // MaxConcurrentRequests validation
-            if (value.MaxConcurrentRequests < 1)
+            if (value.MaxConcurrentRequests < BotConfigurationValidationConstants.MinPositiveInteger)
             {
-                problems.Add("MaxConcurrentRequests must be at least 1.");
+                problems.Add(BotConfigurationValidationConstants.MaxConcurrentRequestsMin);
             }
 
             // RateLimitPerMinute validation (if rate limiting is enabled)
-            if (value.EnableRateLimiting && value.RateLimitPerMinute < 1)
+            if (value.EnableRateLimiting && value.RateLimitPerMinute < BotConfigurationValidationConstants.MinPositiveInteger)
             {
-                problems.Add("RateLimitPerMinute must be at least 1 when rate limiting is enabled.");
+                problems.Add(BotConfigurationValidationConstants.RateLimitPerMinuteMinWhenEnabled);
             }
 
             // WebhookUrl validation (if webhook is enabled and URL is specified)
@@ -81,18 +81,18 @@ namespace TelegramBotFramework.Models
             {
                 if (!Uri.TryCreate(value.WebhookUrl, UriKind.Absolute, out var uri))
                 {
-                    problems.Add("WebhookUrl must be a valid absolute URI when specified.");
+                    problems.Add(BotConfigurationValidationConstants.WebhookUrlMustBeValidAbsoluteUri);
                 }
                 else if (uri.Scheme != Uri.UriSchemeHttps)
                 {
-                    problems.Add("WebhookUrl must use HTTPS protocol.");
+                    problems.Add(BotConfigurationValidationConstants.WebhookUrlMustUseHttps);
                 }
             }
 
             // WebhookSecret validation (if webhook is enabled and secret is specified)
             if (value.EnableWebhook && string.IsNullOrWhiteSpace(value.WebhookSecret))
             {
-                problems.Add("WebhookSecret must not be null or whitespace when webhook is enabled.");
+                problems.Add(BotConfigurationValidationConstants.WebhookSecretNullOrWhitespaceWhenEnabled);
             }
 
             // AdminIds validation
@@ -102,7 +102,7 @@ namespace TelegramBotFramework.Models
                 {
                     if (value.AdminIds[i] <= 0)
                     {
-                        problems.Add($"AdminIds[{i}] must be a positive number.");
+                        problems.Add(string.Format(BotConfigurationValidationConstants.AdminIdMustBePositive, i));
                     }
                 }
             }
@@ -110,11 +110,11 @@ namespace TelegramBotFramework.Models
             // LocalizationLanguage validation (if specified)
             if (string.IsNullOrWhiteSpace(value.LocalizationLanguage))
             {
-                problems.Add("LocalizationLanguage must not be null or whitespace.");
+                problems.Add(BotConfigurationValidationConstants.LocalizationLanguageNullOrWhitespace);
             }
-            else if (value.LocalizationLanguage.Length != 2)
+            else if (value.LocalizationLanguage.Length != BotConfigurationValidationConstants.LocalizationLanguageLength)
             {
-                problems.Add("LocalizationLanguage must be a 2-letter ISO language code.");
+                problems.Add(BotConfigurationValidationConstants.LocalizationLanguageMustBeTwoLetterIso);
             }
 
             return problems.AsReadOnly();
