@@ -16,7 +16,7 @@ namespace TelegramBotFramework.Examples
     /// State management example showing how to handle complex user flows with form data,
     /// multi-step processes, and conversation state tracking.
     /// </summary>
-public sealed class StateManagementExample : IStateManagementExample
+public sealed class StateManagementExample : IStateManagementExample, IEquatable<StateManagementExample>
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<StateManagementExample> _logger;
@@ -147,6 +147,37 @@ public sealed class StateManagementExample : IStateManagementExample
                 return Activator.CreateInstance<T>();
 
             return JsonSerializer.Deserialize<T>(json) ?? Activator.CreateInstance<T>();
+        }
+
+        public bool Equals(StateManagementExample? other)
+        {
+            if (other is null) return false;
+            return FirstName == other.FirstName &&
+                   Email == other.Email &&
+                   PhoneNumber == other.PhoneNumber &&
+                   SatisfactionLevel == other.SatisfactionLevel &&
+                   ImprovementSuggestions == other.ImprovementSuggestions &&
+                   WouldRecommend == other.WouldRecommend;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as StateManagementExample);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FirstName, Email, PhoneNumber, SatisfactionLevel, ImprovementSuggestions, WouldRecommend);
+        }
+
+        public static bool operator ==(StateManagementExample? left, StateManagementExample? right)
+        {
+            return EqualityComparer<StateManagementExample>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(StateManagementExample? left, StateManagementExample? right)
+        {
+            return !(left == right);
         }
 
         private class RegistrationForm
