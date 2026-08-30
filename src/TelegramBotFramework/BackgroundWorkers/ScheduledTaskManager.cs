@@ -37,6 +37,8 @@ public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager, I
     /// </summary>
     public string ScheduleOnce(Func<Task> taskFunc, TimeSpan delay, string? taskName = null)
     {
+        ArgumentNullException.ThrowIfNull(taskFunc);
+
         var id = Guid.NewGuid().ToString();
         taskName ??= $"OneTimeTask_{id[..8]}";
 
@@ -75,6 +77,8 @@ public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager, I
     /// </summary>
     public string ScheduleRecurring(Func<Task> taskFunc, TimeSpan interval, string? taskName = null)
     {
+        ArgumentNullException.ThrowIfNull(taskFunc);
+
         if (interval.TotalMilliseconds < 100)
         {
             _logger.LogWarning("Scheduled task interval is very short ({IntervalMs}ms), this may cause performance issues",
@@ -119,6 +123,8 @@ public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager, I
     /// </summary>
     public bool CancelTask(string taskId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(taskId);
+
         lock (_lockObj)
         {
             if (_scheduledTasks.TryGetValue(taskId, out var task))
@@ -151,6 +157,8 @@ public sealed class ScheduledTaskManager : IDisposable, IScheduledTaskManager, I
     /// </summary>
     public ScheduledTask? GetTask(string taskId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(taskId);
+
         lock (_lockObj)
         {
             _scheduledTasks.TryGetValue(taskId, out var task);
