@@ -242,7 +242,7 @@ public sealed class AdminController : ControllerBase
     /// <summary>
     /// Delete command.
     /// </summary>
-    [HttpDelete("commands/{commandName}")]
+    [HttpDelete(AdminControllerConstants.CommandsRouteTemplate)]
     public async Task<IActionResult> DeleteCommand(string commandName, CancellationToken cancellationToken = default)
     {
         try
