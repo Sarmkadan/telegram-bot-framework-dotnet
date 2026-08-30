@@ -29,12 +29,12 @@ public class BotBenchmarks : IBotBenchmarks
     /// <summary>
     /// The user ID used for benchmarking.
     /// </summary>
-    private readonly long _userId = 12345;
+    private readonly long _userId = BotBenchmarksConstants.TestUserId;
 
     /// <summary>
     /// The chat ID used for benchmarking.
     /// </summary>
-    private readonly long _chatId = 67890;
+    private readonly long _chatId = BotBenchmarksConstants.TestChatId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BotBenchmarks"/> class.
@@ -51,7 +51,7 @@ public class BotBenchmarks : IBotBenchmarks
         services.AddTelegramBotFramework(config);
 
         // Mocking logging to be silent for benchmarks
-        services.AddLogging(builder => builder.AddFilter("TelegramBotFramework", Microsoft.Extensions.Logging.LogLevel.None));
+        services.AddLogging(builder => builder.AddFilter(BotBenchmarksConstants.FrameworkLoggingCategory, Microsoft.Extensions.Logging.LogLevel.None));
 
         _serviceProvider = services.BuildServiceProvider();
         _botOrchestrator = _serviceProvider.GetRequiredService<IBotOrchestrator>();
@@ -95,7 +95,7 @@ public class BotBenchmarks : IBotBenchmarks
             userId: _userId,
             chatId: _chatId,
             content: BotBenchmarksConstants.EchoCommand,
-            firstName: "TestUser",
+            firstName: BotBenchmarksConstants.TestFirstName,
             lastName: null,
             cancellationToken: cancellationToken);
     }
