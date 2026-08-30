@@ -12,6 +12,8 @@ public class CryptoUtilityTests : ICryptoUtilityTests
     [InlineData("world")]
     public void HashSHA256_ShouldBeDeterministic(string input)
     {
+        ArgumentException.ThrowIfNullOrEmpty(input);
+
         var hash1 = CryptoUtility.HashSHA256(input);
         var hash2 = CryptoUtility.HashSHA256(input);
         
@@ -89,6 +91,9 @@ public class CryptoUtilityTests : ICryptoUtilityTests
     [InlineData("message", "key")]
     public void ComputeHmacSHA256_Deterministic(string message, string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         var hmac1 = CryptoUtility.ComputeHmacSHA256(message, key);
         var hmac2 = CryptoUtility.ComputeHmacSHA256(message, key);
         
