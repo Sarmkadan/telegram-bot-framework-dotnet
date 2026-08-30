@@ -68,11 +68,11 @@ public static class MessageServiceExtensions
         this MessageService messageService,
         long userId,
         string? contentFilter = null,
-        int limit = 50,
+        int limit = MessageServiceExtensionsConstants.DefaultMessageLimit,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(messageService);
-        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, MessageServiceExtensionsConstants.MinimumMessageLimit);
 
         var userMessages = await messageService.GetUserMessagesAsync(userId, limit, cancellationToken).ConfigureAwait(false);
 
@@ -101,7 +101,7 @@ public static class MessageServiceExtensions
     {
         ArgumentNullException.ThrowIfNull(messageService);
 
-        var messages = await messageService.GetUserMessagesAsync(0, int.MaxValue, cancellationToken).ConfigureAwait(false);
+        var messages = await messageService.GetUserMessagesAsync(0, MessageServiceExtensionsConstants.MaximumMessageLimit, cancellationToken).ConfigureAwait(false);
 
         return messages.Count(m => m.Status == status);
     }
