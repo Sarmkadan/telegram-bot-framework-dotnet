@@ -79,7 +79,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting statistics");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving administrators");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -112,7 +112,7 @@ public sealed class AdminController : ControllerBase
             var result = await _userService.PromoteToAdminAsync(userId, cancellationToken);
             if (!result)
             {
-                return NotFound($"User {userId} not found");
+                return NotFound(string.Format(AdminControllerConstants.UserNotFoundFormat, userId));
             }
 
             _logger.LogInformation("User promoted to admin: {UserId}", userId);
@@ -121,7 +121,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error promoting user");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -136,7 +136,7 @@ public sealed class AdminController : ControllerBase
             var result = await _userService.DemoteAdminAsync(userId, cancellationToken);
             if (!result)
             {
-                return NotFound($"Administrator {userId} not found");
+                return NotFound(string.Format(AdminControllerConstants.AdministratorNotFoundFormat, userId));
             }
 
             _logger.LogInformation("Admin demoted to user: {UserId}", userId);
@@ -145,7 +145,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error demoting admin");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -160,7 +160,7 @@ public sealed class AdminController : ControllerBase
             var result = await _userService.BanUserAsync(userId, cancellationToken);
             if (!result)
             {
-                return NotFound($"User {userId} not found");
+                return NotFound(string.Format(AdminControllerConstants.UserNotFoundFormat, userId));
             }
 
             _logger.LogWarning("User banned: {UserId}", userId);
@@ -169,7 +169,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error banning user");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -184,7 +184,7 @@ public sealed class AdminController : ControllerBase
             var result = await _userService.UnbanUserAsync(userId, cancellationToken);
             if (!result)
             {
-                return NotFound($"User {userId} not found");
+                return NotFound(string.Format(AdminControllerConstants.UserNotFoundFormat, userId));
             }
 
             _logger.LogInformation("User unbanned: {UserId}", userId);
@@ -193,7 +193,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error unbanning user");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -212,14 +212,14 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error registering command");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
     /// <summary>
     /// Get command by name.
     /// </summary>
-    [HttpGet("commands/{commandName}")]
+    [HttpGet(AdminControllerConstants.CommandsRouteTemplate)]
     public async Task<IActionResult> GetCommand(string commandName, CancellationToken cancellationToken = default)
     {
         try
@@ -227,7 +227,7 @@ public sealed class AdminController : ControllerBase
             var command = await _commandService.GetCommandAsync(commandName, cancellationToken);
             if (command  is null)
             {
-                return NotFound($"Command {commandName} not found");
+                return NotFound(string.Format(AdminControllerConstants.CommandNotFoundFormat, commandName));
             }
 
             return Ok(command);
@@ -235,7 +235,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving command");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -250,7 +250,7 @@ public sealed class AdminController : ControllerBase
             var result = await _commandService.UnregisterCommandAsync(commandName, cancellationToken);
             if (!result)
             {
-                return NotFound($"Command {commandName} not found");
+                return NotFound(string.Format(AdminControllerConstants.CommandNotFoundFormat, commandName));
             }
 
             _logger.LogInformation("Command deleted: {CommandName}", commandName);
@@ -259,7 +259,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting command");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -277,7 +277,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving menus");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 
@@ -296,7 +296,7 @@ public sealed class AdminController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error closing expired sessions");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = AdminControllerConstants.InternalServerErrorMessage });
         }
     }
 }
