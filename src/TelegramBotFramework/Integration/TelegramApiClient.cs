@@ -63,6 +63,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Message text cannot be empty", nameof(text));
 
+        if (text.Length > TelegramApiClientConstants.MaxMessageTextLength)
+            throw new ArgumentException("Message text cannot exceed 4096 characters", nameof(text));
+
         cancellationToken.ThrowIfCancellationRequested();
 
         var payload = new { chat_id = chatId, text = text };
@@ -76,6 +79,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
+
+        if (text.Length > TelegramApiClientConstants.MaxMessageTextLength)
+            throw new ArgumentException("Message text cannot exceed 4096 characters", nameof(text));
 
         cancellationToken.ThrowIfCancellationRequested();
 
