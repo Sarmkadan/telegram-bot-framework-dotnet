@@ -64,6 +64,9 @@ internal static class TelegramApiClientConstants
     // Validation limits
     // ------------------------------------------------------------------
 
+    /// <summary>Maximum allowed length of a text message.</summary>
+    public const int MaxMessageTextLength = 4096;
+
     /// <summary>Maximum allowed length of a poll question.</summary>
     public const int MaxPollQuestionLength = 256;
 
