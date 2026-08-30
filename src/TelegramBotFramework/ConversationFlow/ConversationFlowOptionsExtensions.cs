@@ -22,7 +22,7 @@ namespace TelegramBotFramework.ConversationFlow
             ArgumentNullException.ThrowIfNull(options);
             if (timeout <= TimeSpan.Zero)
             {
-                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(timeout), ConversationFlowOptionsExtensionsConstants.DefaultFlowTimeoutMustBeGreaterThanZero);
             }
 
             options.DefaultFlowTimeout = timeout;
@@ -42,7 +42,7 @@ namespace TelegramBotFramework.ConversationFlow
             ArgumentNullException.ThrowIfNull(options);
             if (maxActiveFlows < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(maxActiveFlows), "There must be at least one active flow per user.");
+                throw new ArgumentOutOfRangeException(nameof(maxActiveFlows), ConversationFlowOptionsExtensionsConstants.MaxActiveFlowsPerUserAtLeastOne);
             }
 
             options.MaxActiveFlowsPerUser = maxActiveFlows;
@@ -90,32 +90,32 @@ namespace TelegramBotFramework.ConversationFlow
 
             if (options.DefaultFlowTimeout <= TimeSpan.Zero)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.DefaultFlowTimeout), "DefaultFlowTimeout must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(options.DefaultFlowTimeout), ConversationFlowOptionsExtensionsConstants.DefaultFlowTimeoutMustBeGreaterThanZero);
             }
 
             if (options.MaxActiveFlowsPerUser < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.MaxActiveFlowsPerUser), "MaxActiveFlowsPerUser must be at least 1.");
+                throw new ArgumentOutOfRangeException(nameof(options.MaxActiveFlowsPerUser), ConversationFlowOptionsExtensionsConstants.MaxActiveFlowsPerUserMustBeAtLeastOne);
             }
 
             if (options.MaxHistoryPerUser < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.MaxHistoryPerUser), "MaxHistoryPerUser cannot be negative.");
+                throw new ArgumentOutOfRangeException(nameof(options.MaxHistoryPerUser), ConversationFlowOptionsExtensionsConstants.MaxHistoryPerUserCannotBeNegative);
             }
 
             if (options.CleanupIntervalMinutes < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.CleanupIntervalMinutes), "CleanupIntervalMinutes must be at least 1.");
+                throw new ArgumentOutOfRangeException(nameof(options.CleanupIntervalMinutes), ConversationFlowOptionsExtensionsConstants.CleanupIntervalMinutesMustBeAtLeastOne);
             }
 
             if (options.AbortKeyword is { Length: > 0 } keyword && string.IsNullOrWhiteSpace(keyword))
             {
-                throw new ArgumentException("AbortKeyword cannot be empty when provided.", nameof(options.AbortKeyword));
+                throw new ArgumentException(ConversationFlowOptionsExtensionsConstants.AbortKeywordCannotBeEmptyWhenProvided, nameof(options.AbortKeyword));
             }
 
             if (options.AbortAcknowledgementMessage is { Length: > 0 } message && string.IsNullOrWhiteSpace(message))
             {
-                throw new ArgumentException("AbortAcknowledgementMessage cannot be empty when provided.", nameof(options.AbortAcknowledgementMessage));
+                throw new ArgumentException(ConversationFlowOptionsExtensionsConstants.AbortAcknowledgementMessageCannotBeEmptyWhenProvided, nameof(options.AbortAcknowledgementMessage));
             }
         }
     }
