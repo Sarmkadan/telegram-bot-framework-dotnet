@@ -35,17 +35,17 @@ public sealed class HttpClientFactory : IHttpClientFactory
 
             var client = new HttpClient(new SocketsHttpHandler
             {
-                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+                PooledConnectionLifetime = HttpClientFactoryConstants.PooledConnectionLifetime,
+                PooledConnectionIdleTimeout = HttpClientFactoryConstants.PooledConnectionIdleTimeout,
                 AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
             })
             {
                 BaseAddress = new Uri(baseUrl),
-                Timeout = timeout ?? TimeSpan.FromSeconds(30)
+                Timeout = timeout ?? HttpClientFactoryConstants.DefaultTimeout
             };
 
-            client.DefaultRequestHeaders.Add("User-Agent", "TelegramBotFramework/1.0");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.UserAgentHeaderName, HttpClientFactoryConstants.UserAgentHeaderValue);
+            client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.AcceptHeaderName, HttpClientFactoryConstants.AcceptHeaderValue);
 
             configure?.Invoke(client);
 
@@ -59,8 +59,7 @@ public sealed class HttpClientFactory : IHttpClientFactory
     /// </summary>
     public HttpClient GetTelegramClient()
     {
-        const string telegramBaseUrl = "https://api.telegram.org";
-        return GetClient(telegramBaseUrl, TimeSpan.FromSeconds(45));
+        return GetClient(HttpClientFactoryConstants.TelegramBaseUrl, HttpClientFactoryConstants.TelegramTimeout);
     }
 
     /// <summary>
