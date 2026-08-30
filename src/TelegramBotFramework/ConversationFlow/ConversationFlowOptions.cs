@@ -42,7 +42,7 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatab
     /// Gets or sets the inactivity timeout applied to flows that do not define their own
     /// via <see cref="FlowDefinition.Timeout"/>. Defaults to 30 minutes.
     /// </summary>
-    public TimeSpan DefaultFlowTimeout { get; set; } = TimeSpan.FromMinutes(30);
+    public TimeSpan DefaultFlowTimeout { get; set; } = TimeSpan.FromMinutes(ConversationFlowOptionsConstants.DefaultFlowTimeoutInMinutes);
 
     /// <summary>
     /// Gets or sets the maximum number of concurrent active flows per user.
@@ -50,7 +50,7 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatab
     /// starting a new flow while one is active aborts the existing one regardless of this setting.
     /// Defaults to 1.
     /// </summary>
-    public int MaxActiveFlowsPerUser { get; set; } = 1;
+    public int MaxActiveFlowsPerUser { get; set; } = ConversationFlowOptionsConstants.MaxActiveFlowsPerUserDefault;
 
     /// <summary>
     /// Gets or sets a value indicating whether the engine should attempt to restore an
@@ -65,21 +65,21 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatab
     /// retained in memory per user. Oldest records are evicted when the limit is exceeded.
     /// Defaults to 50.
     /// </summary>
-    public int MaxHistoryPerUser { get; set; } = 50;
+    public int MaxHistoryPerUser { get; set; } = ConversationFlowOptionsConstants.MaxHistoryPerUserDefault;
 
     /// <summary>
     /// Gets or sets the message sent to users when the engine aborts their flow due to a
     /// system-initiated interruption (e.g., a new flow starting). Defaults to a generic notice.
     /// </summary>
     public string FlowAbandonedMessage { get; set; } =
-        "Your conversation was interrupted. You can start over at any time.";
+        ConversationFlowOptionsConstants.FlowAbandonedMessageDefault;
 
     /// <summary>
     /// Gets or sets the message sent to users whose active flow was automatically terminated
     /// because the inactivity timeout elapsed. Defaults to a generic timeout notice.
     /// </summary>
     public string FlowTimeoutMessage { get; set; } =
-        "Your session has timed out due to inactivity. Please start the conversation again.";
+        ConversationFlowOptionsConstants.FlowTimeoutMessageDefault;
 
     /// <summary>
     /// Gets or sets a value indicating whether the engine publishes lifecycle events
@@ -94,21 +94,21 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatab
     /// Gets or sets the interval in minutes between periodic cleanup sweeps that remove
     /// timed-out flow states from memory. Defaults to 60 minutes.
     /// </summary>
-    public int CleanupIntervalMinutes { get; set; } = 60;
+    public int CleanupIntervalMinutes { get; set; } = ConversationFlowOptionsConstants.CleanupIntervalMinutesDefault;
 
     /// <summary>
     /// Gets or sets the keyword a user can type at any step to immediately abort the active flow.
     /// Comparison is case-insensitive. Set to <c>null</c> or an empty string to disable
     /// the abort shortcut. Defaults to <c>/cancel</c>.
     /// </summary>
-    public string? AbortKeyword { get; set; } = "/cancel";
+    public string? AbortKeyword { get; set; } = ConversationFlowOptionsConstants.AbortKeywordDefault;
 
     /// <summary>
     /// Gets or sets the message sent to a user when they trigger the <see cref="AbortKeyword"/>.
     /// Defaults to a short confirmation message.
     /// </summary>
     public string AbortAcknowledgementMessage { get; set; } =
-        "Conversation cancelled. Use the menu to start again.";
+        ConversationFlowOptionsConstants.AbortAcknowledgementMessageDefault;
 
     /// <summary>
     /// Gets or sets the action taken when a cleanup sweep finds a timed-out flow state.
