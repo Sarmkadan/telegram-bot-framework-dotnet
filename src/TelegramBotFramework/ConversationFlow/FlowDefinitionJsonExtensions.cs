@@ -20,13 +20,7 @@ public static class FlowDefinitionJsonExtensions
     /// Gets the cached <see cref="JsonSerializerOptions"/> configured for camelCase
     /// property naming and handling of the conversation-flow model types.
     /// </summary>
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
-        WriteIndented = false
-    };
-
+    
     /// <summary>
     /// Serializes the <see cref="FlowDefinition"/> to a JSON string.
     /// </summary>
@@ -39,8 +33,8 @@ public static class FlowDefinitionJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
+            ? new JsonSerializerOptions(FlowDefinitionJsonExtensionsConstants.JsonOptions) { WriteIndented = true }
+            : FlowDefinitionJsonExtensionsConstants.JsonOptions;
 
         return JsonSerializer.Serialize(value, options);
     }
@@ -59,7 +53,7 @@ public static class FlowDefinitionJsonExtensions
             return null;
         }
 
-        return JsonSerializer.Deserialize<FlowDefinition>(json, _jsonOptions);
+        return JsonSerializer.Deserialize<FlowDefinition>(json, FlowDefinitionJsonExtensionsConstants.JsonOptions);
     }
 
     /// <summary>
@@ -80,7 +74,7 @@ public static class FlowDefinitionJsonExtensions
 
         try
         {
-            value = JsonSerializer.Deserialize<FlowDefinition>(json, _jsonOptions);
+            value = JsonSerializer.Deserialize<FlowDefinition>(json, FlowDefinitionJsonExtensionsConstants.JsonOptions);
             return value is not null;
         }
         catch (JsonException)
