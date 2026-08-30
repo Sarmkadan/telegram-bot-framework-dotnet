@@ -81,7 +81,7 @@ public static class ConversationFlowExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         if (string.IsNullOrWhiteSpace(stateDirectory))
-            throw new ArgumentException("State directory cannot be empty.", nameof(stateDirectory));
+            throw new ArgumentException(ConversationFlowExtensionsConstants.StateDirectoryCannotBeEmpty, nameof(stateDirectory));
 
         var options = new ConversationFlowOptions();
         configure?.Invoke(options);
@@ -177,9 +177,9 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     internal FlowDefinitionBuilder(string flowId, string name)
     {
         if (string.IsNullOrWhiteSpace(flowId))
-            throw new ArgumentException("FlowId must not be empty.", nameof(flowId));
+            throw new ArgumentException(ConversationFlowExtensionsConstants.FlowIdMustNotBeEmpty, nameof(flowId));
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name must not be empty.", nameof(name));
+            throw new ArgumentException(ConversationFlowExtensionsConstants.NameMustNotBeEmpty, nameof(name));
 
         _flowId = flowId;
         _name = name;
@@ -199,7 +199,7 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     public IFlowDefinitionBuilder WithTimeout(TimeSpan timeout)
     {
         if (timeout <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(timeout), ConversationFlowExtensionsConstants.TimeoutMustBePositive);
 
         _timeout = timeout;
         return this;
@@ -236,11 +236,11 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
         ArgumentNullException.ThrowIfNull(step);
 
         if (string.IsNullOrWhiteSpace(step.StepId))
-            throw new ArgumentException("Step.StepId must not be empty.", nameof(step));
+            throw new ArgumentException(ConversationFlowExtensionsConstants.StepIdMustNotBeEmpty, nameof(step));
 
         if (_steps.Any(s => s.StepId == step.StepId))
             throw new InvalidOperationException(
-                $"A step with StepId '{step.StepId}' has already been added to this flow.");
+                string.Format(ConversationFlowExtensionsConstants.DuplicateStepIdFormat, step.StepId));
 
         _steps.Add(step);
         return this;
@@ -263,26 +263,24 @@ internal sealed class FlowDefinitionBuilder : IFlowDefinitionBuilder
     {
         if (_steps.Count == 0)
             throw new InvalidOperationException(
-                $"Flow '{_flowId}' must have at least one step before building.");
+                string.Format(ConversationFlowExtensionsConstants.FlowMustHaveAtLeastOneStepFormat, _flowId));
 
         var initialStepId = _steps[0].StepId;
 
         // Validate all transition targets reference existing steps
-        var stepIds = _steps.Select(s => s.StepId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var stepIds = _steps.Select(s => s.StepId).ToHashSet(ConversationFlowExtensionsConstants.StepIdComparer);
         foreach (var step in _steps)
         {
             foreach (var transition in step.Transitions)
             {
                 if (!stepIds.Contains(transition.TargetStepId))
                     throw new InvalidOperationException(
-                        $"Step '{step.StepId}' has a transition to '{transition.TargetStepId}' " +
-                        $"which does not exist in flow '{_flowId}'.");
+                        string.Format(ConversationFlowExtensionsConstants.TransitionTargetDoesNotExistFormat, step.StepId, transition.TargetStepId, _flowId));
             }
 
             if (step.DefaultNextStepId is not null && !stepIds.Contains(step.DefaultNextStepId))
                 throw new InvalidOperationException(
-                    $"Step '{step.StepId}' references DefaultNextStepId '{step.DefaultNextStepId}' " +
-                    $"which does not exist in flow '{_flowId}'.");
+                    string.Format(ConversationFlowExtensionsConstants.DefaultNextStepIdDoesNotExistFormat, step.StepId, step.DefaultNextStepId, _flowId));
         }
 
         return new FlowDefinition
