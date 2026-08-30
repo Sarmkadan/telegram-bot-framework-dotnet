@@ -35,7 +35,7 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
         {
             await _next(context);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             await HandleExceptionAsync(context, ex);
         }
