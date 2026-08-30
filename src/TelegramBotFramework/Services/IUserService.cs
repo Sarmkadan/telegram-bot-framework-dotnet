@@ -175,9 +175,9 @@ public interface IMessageService
 
     Task<Models.Message?> GetMessageAsync(long messageId, CancellationToken cancellationToken = default);
 
-    Task<IList<Models.Message>> GetUserMessagesAsync(long userId, int limit = 50, CancellationToken cancellationToken = default);
+    Task<IList<Models.Message>> GetUserMessagesAsync(long userId, int limit = IUserServiceConstants.DefaultUserMessagesLimit, CancellationToken cancellationToken = default);
 
-    Task<IList<Models.Message>> GetFailedMessagesAsync(int limit = 100, CancellationToken cancellationToken = default);
+    Task<IList<Models.Message>> GetFailedMessagesAsync(int limit = IUserServiceConstants.DefaultFailedMessagesLimit, CancellationToken cancellationToken = default);
 
     Task<bool> MarkAsProcessedAsync(long messageId, CancellationToken cancellationToken = default);
 
@@ -185,7 +185,7 @@ public interface IMessageService
 
     Task<int> GetUnprocessedMessageCountAsync(CancellationToken cancellationToken = default);
 
-    Task ArchiveOldMessagesAsync(int daysOld = 30, CancellationToken cancellationToken = default);
+    Task ArchiveOldMessagesAsync(int daysOld = IUserServiceConstants.DefaultArchiveDaysOld, CancellationToken cancellationToken = default);
 
     Task<Models.Message?> SendPollAsync(
         long chatId,
