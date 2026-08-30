@@ -73,7 +73,7 @@ public sealed class QuizFlowHelper : IDisposable
 
         question.Validate();
         _questions.Add(question);
-        _logger?.LogDebug("Added question '{QuestionId}' to quiz '{FlowId}'", question.QuestionId, _flowId);
+        _logger?.LogDebug(QuizFlowHelperConstants.AddedQuestionLog, question.QuestionId, _flowId);
         return this;
     }
 
@@ -127,7 +127,7 @@ public sealed class QuizFlowHelper : IDisposable
 
         _isDisposed = true;
         _questions.Clear();
-        _logger?.LogDebug("QuizFlowHelper '{FlowId}' disposed", _flowId);
+        _logger?.LogDebug(QuizFlowHelperConstants.DisposedLog, _flowId);
     }
 }
 
