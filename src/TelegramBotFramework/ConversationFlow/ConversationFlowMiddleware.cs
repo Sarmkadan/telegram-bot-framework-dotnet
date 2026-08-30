@@ -28,7 +28,7 @@ public sealed class ConversationFlowMiddleware : IBotMiddleware
     /// Execution priority within the middleware pipeline.
     /// Higher values run earlier. 85 places this after authorization and before rate-limiting.
     /// </summary>
-    public int Priority => 85;
+    public int Priority => ConversationFlowMiddlewareConstants.Priority;
 
     private readonly IConversationFlowEngine _flowEngine;
     private readonly ILogger<ConversationFlowMiddleware> _logger;
