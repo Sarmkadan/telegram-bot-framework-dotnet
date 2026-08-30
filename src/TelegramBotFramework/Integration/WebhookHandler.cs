@@ -92,9 +92,31 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
             var doc = JsonDocument.Parse(jsonData);
             var root = doc.RootElement;
 
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                _logger.LogWarning("Received malformed webhook data");
+                return null;
+            }
+
+            if (!root.TryGetProperty("update_id", out var updateIdElement) ||
+                !updateIdElement.TryGetInt64(out var updateId))
+            {
+                _logger.LogWarning("Received webhook data without a valid update ID");
+                return null;
+            }
+
+            if (!root.TryGetProperty("message", out _) &&
+                !root.TryGetProperty("callback_query", out _) &&
+                !root.TryGetProperty("edited_message", out _) &&
+                !root.TryGetProperty("inline_query", out _))
+            {
+                _logger.LogWarning("Received webhook data with an unknown update type");
+                return null;
+            }
+
             var update = new TelegramUpdate
             {
-                UpdateId = root.GetProperty("update_id").GetInt64(),
+                UpdateId = updateId,
                 Timestamp = DateTime.UtcNow
             };
 
