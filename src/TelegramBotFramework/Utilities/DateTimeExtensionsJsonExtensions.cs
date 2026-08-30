@@ -14,13 +14,6 @@ namespace TelegramBotFramework.Utilities;
 /// </summary>
 public static class DateTimeExtensionsJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = false
-    };
-
     /// <summary>
     /// Serializes a DateTime value to a JSON string.
     /// </summary>
@@ -30,9 +23,9 @@ public static class DateTimeExtensionsJsonExtensions
     public static string ToJson(this DateTime value, bool indented = false)
     {
         var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
+            ? new JsonSerializerOptions(DateTimeExtensionsJsonExtensionsConstants.JsonSerializerOptions)
             { WriteIndented = true }
-            : _jsonSerializerOptions;
+            : DateTimeExtensionsJsonExtensionsConstants.JsonSerializerOptions;
 
         return JsonSerializer.Serialize(value, options);
     }
@@ -51,7 +44,7 @@ public static class DateTimeExtensionsJsonExtensions
 
         try
         {
-            return JsonSerializer.Deserialize<DateTime>(json, _jsonSerializerOptions);
+            return JsonSerializer.Deserialize<DateTime>(json, DateTimeExtensionsJsonExtensionsConstants.JsonSerializerOptions);
         }
         catch (JsonException ex)
         {
@@ -77,7 +70,7 @@ public static class DateTimeExtensionsJsonExtensions
 
         try
         {
-            value = JsonSerializer.Deserialize<DateTime>(json, _jsonSerializerOptions);
+            value = JsonSerializer.Deserialize<DateTime>(json, DateTimeExtensionsJsonExtensionsConstants.JsonSerializerOptions);
             return true;
         }
         catch (JsonException)
