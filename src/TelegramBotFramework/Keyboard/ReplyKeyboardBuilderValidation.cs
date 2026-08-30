@@ -32,7 +32,7 @@ public static class ReplyKeyboardBuilderValidation
         // We need to cast to ReplyKeyboardBuilder to access Build method
         if (value is not ReplyKeyboardBuilder builder)
         {
-            throw new ArgumentException("Validator only works with ReplyKeyboardBuilder instances", nameof(value));
+            throw new ArgumentException(ReplyKeyboardBuilderValidationConstants.ValidatorOnlyWorksWithReplyKeyboardBuilderInstances, nameof(value));
         }
 
         var errors = new List<string>();
@@ -69,11 +69,11 @@ public static class ReplyKeyboardBuilderValidation
                 // Validate button text
                 if (string.IsNullOrWhiteSpace(button.Text))
                 {
-                    errors.Add(string.Format("Button at row {0}, position {1} has empty or whitespace text.", rowIndex, buttonIndex));
+                    errors.Add(string.Format(ReplyKeyboardBuilderValidationConstants.ButtonEmptyTextFormat, rowIndex, buttonIndex));
                 }
-                else if (button.Text.Length > 64)
+                else if (button.Text.Length > ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength)
                 {
-                    errors.Add(string.Format("Button at row {0}, position {1} has text longer than 64 characters (length: {2}).", rowIndex, buttonIndex, button.Text.Length));
+                    errors.Add(string.Format(ReplyKeyboardBuilderValidationConstants.ButtonTextTooLongFormat, rowIndex, buttonIndex, ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength, button.Text.Length));
                 }
 
                 buttonIndex++;
