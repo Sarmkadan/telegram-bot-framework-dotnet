@@ -23,10 +23,10 @@ public sealed class AuthenticationMiddleware
         _logger = logger;
         _publicEndpoints = new HashSet<string>
         {
-            "/health",
-            "/api/webhook",
-            "/swagger",
-            "/api/v1/bot/update"
+            AuthenticationMiddlewareConstants.HealthEndpoint,
+            AuthenticationMiddlewareConstants.ApiWebhookEndpoint,
+            AuthenticationMiddlewareConstants.SwaggerEndpoint,
+            AuthenticationMiddlewareConstants.BotUpdateEndpoint
         };
     }
 
@@ -43,11 +43,11 @@ public sealed class AuthenticationMiddleware
 
         if (!ValidateApiKey(context, config.ApiKey))
         {
-            _logger.LogWarning("Unauthorized access attempt from {IP} to {Path}",
+            _logger.LogWarning(AuthenticationMiddlewareConstants.UnauthorizedLogMessage,
                 context.Connection.RemoteIpAddress, path);
 
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Unauthorized");
+            context.Response.StatusCode = AuthenticationMiddlewareConstants.UnauthorizedStatusCode;
+            await context.Response.WriteAsync(AuthenticationMiddlewareConstants.UnauthorizedMessage);
             return;
         }
 
@@ -62,20 +62,20 @@ public sealed class AuthenticationMiddleware
 
         // Check Authorization header (Bearer scheme)
         var authHeader = context.Request.Headers.Authorization.ToString();
-        if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (authHeader.StartsWith(AuthenticationMiddlewareConstants.BearerScheme, StringComparison.OrdinalIgnoreCase))
         {
-            var token = authHeader["Bearer ".Length..];
+            var token = authHeader[AuthenticationMiddlewareConstants.BearerScheme.Length..];
             return token.Equals(configuredKey, StringComparison.Ordinal);
         }
 
         // Check X-API-Key header
-        if (context.Request.Headers.TryGetValue("X-API-Key", out var apiKey))
+        if (context.Request.Headers.TryGetValue(AuthenticationMiddlewareConstants.ApiKeyHeader, out var apiKey))
         {
             return apiKey.ToString().Equals(configuredKey, StringComparison.Ordinal);
         }
 
         // Check query parameter (less secure, only for specific endpoints)
-        if (context.Request.Query.TryGetValue("api_key", out var queryKey))
+        if (context.Request.Query.TryGetValue(AuthenticationMiddlewareConstants.ApiKeyQueryParameter, out var queryKey))
         {
             return queryKey.ToString().Equals(configuredKey, StringComparison.Ordinal);
         }
