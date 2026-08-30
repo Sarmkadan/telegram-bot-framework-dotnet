@@ -44,6 +44,8 @@ public static class JsonUtility
     /// </summary>
     public static string Serialize<T>(T? obj, bool pretty = false)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+
         var options = pretty ? PrettyOptions : DefaultOptions;
         return JsonSerializer.Serialize(obj, options);
     }
@@ -53,6 +55,8 @@ public static class JsonUtility
     /// </summary>
     public static T? Deserialize<T>(string json)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         try
         {
             return JsonSerializer.Deserialize<T>(json, DefaultOptions);
@@ -68,6 +72,8 @@ public static class JsonUtility
     /// </summary>
     public static bool TryDeserialize<T>(string json, out T? result)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         try
         {
             result = JsonSerializer.Deserialize<T>(json, DefaultOptions);
@@ -85,6 +91,8 @@ public static class JsonUtility
     /// </summary>
     public static bool IsValidJson(string json)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         if (string.IsNullOrWhiteSpace(json))
             return false;
 
@@ -104,6 +112,8 @@ public static class JsonUtility
     /// </summary>
     public static JsonElement? ParseJson(string json)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -120,6 +130,9 @@ public static class JsonUtility
     /// </summary>
     public static string MergeJson(string json1, string json2)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json1);
+        ArgumentException.ThrowIfNullOrEmpty(json2);
+
         var obj1 = JsonSerializer.Deserialize<Dictionary<string, object>>(json1, DefaultOptions) ?? new();
         var obj2 = JsonSerializer.Deserialize<Dictionary<string, object>>(json2, DefaultOptions) ?? new();
 
@@ -135,6 +148,9 @@ public static class JsonUtility
     /// </summary>
     public static string? GetPropertyValue(string json, string propertyPath)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentException.ThrowIfNullOrEmpty(propertyPath);
+
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -161,6 +177,8 @@ public static class JsonUtility
     /// </summary>
     public static string PrettyPrint(string json)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -177,6 +195,8 @@ public static class JsonUtility
     /// </summary>
     public static string Minify(string json)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json);
+
         try
         {
             using var doc = JsonDocument.Parse(json);
