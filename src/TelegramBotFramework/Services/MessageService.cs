@@ -43,7 +43,7 @@ public sealed class MessageService : IMessageService
 
     public async Task<IList<Models.Message>> GetUserMessagesAsync(
         long userId,
-        int limit = 50,
+        int limit = MessageServiceConstants.DefaultUserMessageLimit,
         CancellationToken cancellationToken = default)
     {
         var userMessages = await _messageRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -54,7 +54,7 @@ public sealed class MessageService : IMessageService
     }
 
     public async Task<IList<Models.Message>> GetFailedMessagesAsync(
-        int limit = 100,
+        int limit = MessageServiceConstants.DefaultFailedMessageLimit,
         CancellationToken cancellationToken = default)
     {
         var failedMessages = await _messageRepository.GetByStatusAsync(Models.MessageStatus.Failed, cancellationToken).ConfigureAwait(false);
@@ -99,7 +99,7 @@ public sealed class MessageService : IMessageService
         return processingMessages.Count + receivedMessages.Count;
     }
 
-    public async Task ArchiveOldMessagesAsync(int daysOld = 30, CancellationToken cancellationToken = default)
+    public async Task ArchiveOldMessagesAsync(int daysOld = MessageServiceConstants.DefaultArchiveDaysOld, CancellationToken cancellationToken = default)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-daysOld);
         var allMessages = await _messageRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -137,14 +137,14 @@ public sealed class MessageService : IMessageService
         if (chatId <= 0)
             throw new ArgumentException("Chat ID must be positive", nameof(chatId));
 
-        if (string.IsNullOrWhiteSpace(question) || question.Length > 256)
-            throw new ArgumentException("Question must be 1-256 characters", nameof(question));
+        if (string.IsNullOrWhiteSpace(question) || question.Length > MessageServiceConstants.MaxPollQuestionLength)
+            throw new ArgumentException($"Question must be 1-{MessageServiceConstants.MaxPollQuestionLength} characters", nameof(question));
 
-        if (options == null || options.Length < 2 || options.Length > 10)
-            throw new ArgumentException("Must provide 2-10 options", nameof(options));
+        if (options == null || options.Length < MessageServiceConstants.MinPollOptionsCount || options.Length > MessageServiceConstants.MaxPollOptionsCount)
+            throw new ArgumentException($"Must provide {MessageServiceConstants.MinPollOptionsCount}-{MessageServiceConstants.MaxPollOptionsCount} options", nameof(options));
 
-        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > 100))
-            throw new ArgumentException("Each option must be 1-100 characters", nameof(options));
+        if (options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > MessageServiceConstants.MaxPollOptionLength))
+            throw new ArgumentException($"Each option must be 1-{MessageServiceConstants.MaxPollOptionLength} characters", nameof(options));
 
         try
         {
@@ -167,10 +167,10 @@ public sealed class MessageService : IMessageService
                     Status = Models.MessageStatus.Processed,
                     Metadata = new Dictionary<string, object>
                     {
-                        { "poll_type", "quiz" },
-                        { "options", options },
-                        { "allows_multiple_answers", allowsMultipleAnswers },
-                        { "message_id", messageId.Value }
+                        { MessageServiceConstants.PollTypeMetadataKey, MessageServiceConstants.PollTypeQuizValue },
+                        { MessageServiceConstants.PollOptionsMetadataKey, options },
+                        { MessageServiceConstants.PollAllowsMultipleAnswersMetadataKey, allowsMultipleAnswers },
+                        { MessageServiceConstants.PollMessageIdMetadataKey, messageId.Value }
                     }
                 };
 
@@ -207,8 +207,8 @@ public sealed class MessageService : IMessageService
         if (chatId <= 0)
             throw new ArgumentException("Chat ID must be positive", nameof(chatId));
 
-        if (items == null || items.Count < 2 || items.Count > 10)
-            throw new ArgumentException("Must provide 2-10 media items", nameof(items));
+        if (items == null || items.Count < MessageServiceConstants.MinMediaGroupItemsCount || items.Count > MessageServiceConstants.MaxMediaGroupItemsCount)
+            throw new ArgumentException($"Must provide {MessageServiceConstants.MinMediaGroupItemsCount}-{MessageServiceConstants.MaxMediaGroupItemsCount} media items", nameof(items));
 
         if (items.Any(item => item == null || string.IsNullOrWhiteSpace(item.FileIdOrUrl)))
             throw new ArgumentException("Each item must have a valid FileIdOrUrl", nameof(items));
@@ -236,21 +236,21 @@ public sealed class MessageService : IMessageService
                         Status = Models.MessageStatus.Processed,
                         Metadata = new Dictionary<string, object>
                         {
-                            { "media_type", item.Type.ToString().ToLower() },
-                            { "file_id_or_url", item.FileIdOrUrl },
-                            { "message_id", messageId },
-                            { "position", i }
+                            { MessageServiceConstants.MediaTypeMetadataKey, item.Type.ToString().ToLower() },
+                            { MessageServiceConstants.FileIdOrUrlMetadataKey, item.FileIdOrUrl },
+                            { MessageServiceConstants.PositionMetadataKey, i },
+                            { MessageServiceConstants.MessageIdMetadataKey, messageId }
                         }
                     };
 
                     // Store caption from parameter if provided, otherwise use item caption
                     if (!string.IsNullOrEmpty(caption))
                     {
-                        message.Metadata["caption"] = caption;
+                        message.Metadata[MessageServiceConstants.CaptionMetadataKey] = caption;
                     }
                     else if (!string.IsNullOrEmpty(item.Caption))
                     {
-                        message.Metadata["caption"] = item.Caption;
+                        message.Metadata[MessageServiceConstants.CaptionMetadataKey] = item.Caption;
                     }
 
                     var created = await _messageRepository.CreateAsync(message, cancellationToken).ConfigureAwait(false);
