@@ -160,12 +160,12 @@ public sealed class BotOrchestrator : IBotOrchestrator
         {
             await _messageService.MarkAsFailedAsync(
                 processedMessage.MessageId,
-                string.Join("; ", finalContext.Errors),
+                string.Join(IBotOrchestratorConstants.ErrorSeparator, finalContext.Errors),
                 cancellationToken);
         }
 
         _logger.LogInformation(
-            "Message processed - UserId: {UserId}, ContextId: {ContextId}, IsValid: {IsValid}",
+            IBotOrchestratorConstants.MessageProcessedLogTemplate,
             userId, finalContext.ContextId, finalContext.IsValid);
 
         return finalContext;
@@ -197,7 +197,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
 
         if (context.Command  is null)
         {
-            context.AddError($"Command '{commandName}' not found");
+            context.AddError(string.Format(IBotOrchestratorConstants.CommandNotFoundFormat, commandName));
             return context;
         }
 
@@ -209,7 +209,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         }
 
         _logger.LogInformation(
-            "Command executed - UserId: {UserId}, Command: {Command}, IsValid: {IsValid}",
+            IBotOrchestratorConstants.CommandExecutedLogTemplate,
             userId, commandName, context.IsValid);
 
         return context;
@@ -223,7 +223,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         var menu = await _menuService.GetMenuAsync(menuId, cancellationToken).ConfigureAwait(false);
         if (menu  is null)
         {
-            throw new InvalidOperationException($"Menu '{menuId}' not found");
+            throw new InvalidOperationException(string.Format(IBotOrchestratorConstants.MenuNotFoundFormat, menuId));
         }
 
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -232,7 +232,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
             await _sessionService.NavigateToMenuAsync(session.SessionId, menuId, cancellationToken).ConfigureAwait(false);
         }
 
-        _logger.LogInformation("Menu displayed - UserId: {UserId}, MenuId: {MenuId}", userId, menuId);
+        _logger.LogInformation(IBotOrchestratorConstants.MenuDisplayedLogTemplate, userId, menuId);
         return menu;
     }
 
@@ -245,17 +245,22 @@ public sealed class BotOrchestrator : IBotOrchestrator
         var button = await _menuService.GetButtonAsync(menuId, buttonCallbackData, cancellationToken).ConfigureAwait(false);
         if (button  is null)
         {
-            _logger.LogWarning("Button not found - MenuId: {MenuId}, CallbackData: {CallbackData}", menuId, buttonCallbackData);
+            _logger.LogWarning(IBotOrchestratorConstants.ButtonNotFoundLogTemplate, menuId, buttonCallbackData);
             return false;
         }
 
         var activeSession = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
-        var chatId = activeSession?.ChatId ?? 0;
+        var chatId = activeSession?.ChatId ?? IBotOrchestratorConstants.UnknownChatId;
 
         switch (button.Action)
         {
             case Models.ButtonAction.ExecuteCommand:
-                await ExecuteUserCommandAsync(userId, chatId, buttonCallbackData.TrimStart('/'), null, cancellationToken).ConfigureAwait(false);
+                await ExecuteUserCommandAsync(
+                    userId,
+                    chatId,
+                    buttonCallbackData.TrimStart(IBotOrchestratorConstants.CommandPrefix),
+                    null,
+                    cancellationToken).ConfigureAwait(false);
                 break;
 
             case Models.ButtonAction.NavigateMenu:
@@ -271,11 +276,11 @@ public sealed class BotOrchestrator : IBotOrchestrator
                 break;
 
             default:
-                _logger.LogWarning("Unknown button action - Action: {Action}", button.Action);
+                _logger.LogWarning(IBotOrchestratorConstants.UnknownButtonActionLogTemplate, button.Action);
                 return false;
         }
 
-        _logger.LogInformation("Button handled - UserId: {UserId}, CallbackData: {CallbackData}", userId, buttonCallbackData);
+        _logger.LogInformation(IBotOrchestratorConstants.ButtonHandledLogTemplate, userId, buttonCallbackData);
         return true;
     }
 
@@ -284,7 +289,8 @@ public sealed class BotOrchestrator : IBotOrchestrator
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (session  is null)
         {
-            throw new Exceptions.SessionException($"No active session for user {userId}");
+            throw new Exceptions.SessionException(
+                string.Format(IBotOrchestratorConstants.NoActiveSessionFormat, userId));
         }
 
         return session;
@@ -301,7 +307,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
         var result = await _sessionService.CloseSessionAsync(session.SessionId, cancellationToken).ConfigureAwait(false);
         if (result)
         {
-            _logger.LogInformation("Session ended - UserId: {UserId}, SessionId: {SessionId}", userId, session.SessionId);
+            _logger.LogInformation(IBotOrchestratorConstants.SessionEndedLogTemplate, userId, session.SessionId);
         }
 
         return result;
@@ -341,10 +347,12 @@ public sealed class BotOrchestrator : IBotOrchestrator
     internal static string ExtractCommandName(string messageContent)
     {
         var trimmed = messageContent.Trim();
-        if (trimmed.Length == 0 || trimmed[0] != '/')
+        if (trimmed.Length == 0 || trimmed[0] != IBotOrchestratorConstants.CommandPrefix)
             return string.Empty;
 
         var parts = trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length > 0 ? parts[0].TrimStart('/') : string.Empty;
+        return parts.Length > 0
+            ? parts[0].TrimStart(IBotOrchestratorConstants.CommandPrefix)
+            : string.Empty;
     }
 }
