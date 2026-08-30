@@ -66,9 +66,9 @@ public static class InlineKeyboardBuilderValidation
                 {
                     errors.Add($"Button at row {rowIndex}, position {buttonIndex} has empty or whitespace text.");
                 }
-                else if (button.Text.Length > 64)
+                else if (button.Text.Length > InlineKeyboardBuilderValidationConstants.MaxButtonTextLength)
                 {
-                    errors.Add($"Button at row {rowIndex}, position {buttonIndex} has text longer than 64 characters (length: {button.Text.Length}).");
+                    errors.Add($"Button at row {rowIndex}, position {buttonIndex} has text longer than {InlineKeyboardBuilderValidationConstants.MaxButtonTextLength} characters (length: {button.Text.Length}).");
                 }
 
                 // Validate button type-specific properties
@@ -98,9 +98,9 @@ public static class InlineKeyboardBuilderValidation
 
                     case InlineButtonType.SwitchInline:
                         // SwitchInlineQuery can be empty string, which is valid
-                        if (button.SwitchInlineQuery?.Length > 64)
+                        if (button.SwitchInlineQuery?.Length > InlineKeyboardBuilderValidationConstants.MaxButtonTextLength)
                         {
-                            errors.Add($"Switch-inline button at row {rowIndex}, position {buttonIndex} has SwitchInlineQuery exceeding 64 characters (length: {button.SwitchInlineQuery?.Length ?? 0}).");
+                            errors.Add($"Switch-inline button at row {rowIndex}, position {buttonIndex} has SwitchInlineQuery exceeding {InlineKeyboardBuilderValidationConstants.MaxButtonTextLength} characters (length: {button.SwitchInlineQuery?.Length ?? 0}).");
                         }
                         break;
                 }
