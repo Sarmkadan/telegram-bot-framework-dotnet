@@ -17,10 +17,10 @@ public static class StringExtensionsJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        ReferenceHandler = ReferenceHandler.IgnoreCycles
+        PropertyNamingPolicy = StringExtensionsJsonExtensionsConstants.NamingPolicy,
+        WriteIndented = StringExtensionsJsonExtensionsConstants.DefaultWriteIndented,
+        DefaultIgnoreCondition = StringExtensionsJsonExtensionsConstants.DefaultIgnoreCondition,
+        ReferenceHandler = StringExtensionsJsonExtensionsConstants.DefaultReferenceHandler
     };
 
     /// <summary>
