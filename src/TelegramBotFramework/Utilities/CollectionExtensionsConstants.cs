@@ -7,4 +7,6 @@ namespace TelegramBotFramework.Utilities;
 /// </summary>
 internal static class CollectionExtensionsConstants
 {
+    public const int FirstCollectionIndex = 0;
+    public const int SingleItemOffset = 1;
 }
