@@ -1,4 +1,5 @@
 #nullable enable
+// Pipeline order: authentication must run before authorization.
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect

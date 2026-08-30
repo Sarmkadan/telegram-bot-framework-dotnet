@@ -1,4 +1,5 @@
 #nullable enable
+// Pipeline order: authorization must run after authentication.
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -38,7 +39,7 @@ public sealed class AuthorizationMiddleware : IBotMiddleware
     {
         if (!context.IsValid)
         {
-            return await next(context).ConfigureAwait(false);
+            return context;
         }
 
         if (context.User == null)
