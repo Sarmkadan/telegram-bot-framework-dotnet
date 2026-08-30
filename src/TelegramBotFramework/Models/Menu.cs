@@ -83,6 +83,7 @@ public sealed class Menu : IMenu, IEquatable<Menu>
     /// </exception>
     public void AddButton(MenuButton button)
     {
+        ArgumentNullException.ThrowIfNull(button);
         ValidateCallbackData(button.CallbackData);
         Buttons.Add(button);
         UpdatedAt = DateTime.UtcNow;
@@ -109,6 +110,7 @@ public sealed class Menu : IMenu, IEquatable<Menu>
     /// </summary>
     public bool RemoveButton(string callbackData)
     {
+        ArgumentException.ThrowIfNullOrEmpty(callbackData);
         var removed = Buttons.RemoveAll(b => b.CallbackData == callbackData) > 0;
         if (removed)
             UpdatedAt = DateTime.UtcNow;
@@ -118,14 +120,19 @@ public sealed class Menu : IMenu, IEquatable<Menu>
     /// <summary>
     /// Gets button by callback data.
     /// </summary>
-    public MenuButton? GetButton(string callbackData) =>
-        Buttons.FirstOrDefault(b => b.CallbackData == callbackData);
+    public MenuButton? GetButton(string callbackData)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(callbackData);
+        return Buttons.FirstOrDefault(b => b.CallbackData == callbackData);
+    }
 
     /// <summary>
     /// Sets a variable for menu rendering.
     /// </summary>
     public void SetVariable(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentException.ThrowIfNullOrEmpty(value);
         Variables ??= new Dictionary<string, string>();
         Variables[key] = value;
     }
