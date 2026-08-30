@@ -9,7 +9,7 @@ namespace TelegramBotFramework.Services;
 /// <summary>
 /// Configuration options for broadcast operations.
 /// </summary>
-public sealed class BroadcastOptions : IBroadcastOptions
+public sealed class BroadcastOptions : IBroadcastOptions, IEquatable<BroadcastOptions>
 {
     /// <summary>
     /// Maximum messages per second (default: 25).
@@ -48,4 +48,82 @@ public sealed class BroadcastOptions : IBroadcastOptions
     /// Optional delay between batches when rate limiting is active.
     /// </summary>
     public TimeSpan? BatchDelay { get; set; }
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(BroadcastOptions? other)
+    {
+        if (ReferenceEquals(other, null))
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        return MessagesPerSecond == other.MessagesPerSecond
+            && MaxConcurrency == other.MaxConcurrency
+            && MaxRetryAttempts == other.MaxRetryAttempts
+            && RetryDelay.Equals(other.RetryDelay)
+            && ContinueOnError == other.ContinueOnError
+            && MessageFormatter == other.MessageFormatter
+            && BatchDelay == other.BatchDelay;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(obj, null))
+            return false;
+
+        if (ReferenceEquals(this, obj))
+            return true;
+
+        if (obj.GetType() != GetType())
+            return false;
+
+        return Equals((BroadcastOptions)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(MessagesPerSecond, MaxConcurrency, MaxRetryAttempts, RetryDelay, ContinueOnError, MessageFormatter, BatchDelay);
+    }
+
+    /// <summary>
+    /// Equality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if operands are equal; otherwise, false.</returns>
+    public static bool operator ==(BroadcastOptions? left, BroadcastOptions? right)
+    {
+        if (ReferenceEquals(left, right))
+            return true;
+
+        if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
+            return false;
+
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Inequality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if operands are not equal; otherwise, false.</returns>
+    public static bool operator !=(BroadcastOptions? left, BroadcastOptions? right)
+    {
+        return !(left == right);
+    }
 }
