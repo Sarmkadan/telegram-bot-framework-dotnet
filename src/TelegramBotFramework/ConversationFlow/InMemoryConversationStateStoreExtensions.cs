@@ -30,7 +30,7 @@ public static class InMemoryConversationStateStoreExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(store);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, InMemoryConversationStateStoreExtensionsConstants.UserIdValidationThreshold);
 
         return await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
     }
@@ -50,7 +50,7 @@ public static class InMemoryConversationStateStoreExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(store);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, InMemoryConversationStateStoreExtensionsConstants.UserIdValidationThreshold);
 
         return await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false) is not null;
     }
@@ -73,7 +73,7 @@ public static class InMemoryConversationStateStoreExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(store);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, InMemoryConversationStateStoreExtensionsConstants.UserIdValidationThreshold);
 
         var state = await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
         if (state is null)
@@ -151,7 +151,7 @@ public static class InMemoryConversationStateStoreExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(store);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(userId, InMemoryConversationStateStoreExtensionsConstants.UserIdValidationThreshold);
 
         var state = await store.LoadStateAsync(userId, cancellationToken).ConfigureAwait(false);
         if (state is null)
