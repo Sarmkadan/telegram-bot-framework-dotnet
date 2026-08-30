@@ -63,7 +63,7 @@ public static class FileDownloadHelper
             }
 
             // Step 3: Construct download URL
-            var baseUrl = "https://api.telegram.org/file/bot";
+            var baseUrl = FileDownloadHelperConstants.TelegramFileBaseUrl;
             var fileUrl = $"{baseUrl}{GetBotTokenFromClient(apiClient)}/{fileInfo.FilePath}";
 
             // Step 4: Download the file
