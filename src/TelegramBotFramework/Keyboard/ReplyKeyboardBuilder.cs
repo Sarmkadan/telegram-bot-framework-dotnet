@@ -43,9 +43,9 @@ public sealed class ReplyKeyboardBuilder : IReplyKeyboardBuilder
     /// </summary>
     /// <param name="maxButtonsPerRow">
     /// Maximum buttons placed on a row before automatically starting a new one.
-    /// Defaults to <c>2</c>. Use <see cref="NewRow"/> to force an earlier row break.
+    /// Defaults to <see cref="ReplyKeyboardBuilderConstants.DefaultMaxButtonsPerRow"/>. Use <see cref="NewRow"/> to force an earlier row break.
     /// </param>
-    public ReplyKeyboardBuilder(int maxButtonsPerRow = 2)
+    public ReplyKeyboardBuilder(int maxButtonsPerRow = ReplyKeyboardBuilderConstants.DefaultMaxButtonsPerRow)
     {
         if (maxButtonsPerRow < 1)
             throw new ArgumentOutOfRangeException(nameof(maxButtonsPerRow), "Must be at least 1.");
@@ -70,7 +70,7 @@ public sealed class ReplyKeyboardBuilder : IReplyKeyboardBuilder
     public IReplyKeyboardBuilder AddButton(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Button text cannot be empty.", nameof(text));
+            throw new ArgumentException("ReplyKeyboardBuilderConstants.ButtonTextCannotBeEmpty", nameof(text));
 
         return AppendButton(new ReplyKeyboardButton { Text = text });
     }
@@ -88,7 +88,7 @@ public sealed class ReplyKeyboardBuilder : IReplyKeyboardBuilder
             throw new ArgumentNullException(nameof(configure));
 
         if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Button text cannot be empty.", nameof(text));
+            throw new ArgumentException("ReplyKeyboardBuilderConstants.ButtonTextCannotBeEmpty", nameof(text));
 
         var button = new ReplyKeyboardButton { Text = text };
         configure(button);
