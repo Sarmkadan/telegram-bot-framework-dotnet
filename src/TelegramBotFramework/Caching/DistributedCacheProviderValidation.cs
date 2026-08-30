@@ -67,37 +67,37 @@ public static class DistributedCacheProviderValidation
 
         if (stats.HitCount is < 0)
         {
-            problems.Add($"CacheStatistics.HitCount must be non-negative, but was {stats.HitCount}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}HitCount{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.HitCount}.");
         }
 
         if (stats.MissCount is < 0)
         {
-            problems.Add($"CacheStatistics.MissCount must be non-negative, but was {stats.MissCount}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}MissCount{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.MissCount}.");
         }
 
         if (stats.SetCount is < 0)
         {
-            problems.Add($"CacheStatistics.SetCount must be non-negative, but was {stats.SetCount}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}SetCount{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.SetCount}.");
         }
 
         if (stats.RemoveCount is < 0)
         {
-            problems.Add($"CacheStatistics.RemoveCount must be non-negative, but was {stats.RemoveCount}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}RemoveCount{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.RemoveCount}.");
         }
 
         if (stats.ItemCount is < 0)
         {
-            problems.Add($"CacheStatistics.ItemCount must be non-negative, but was {stats.ItemCount}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}ItemCount{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.ItemCount}.");
         }
 
         if (stats.MemoryBytes is < 0)
         {
-            problems.Add($"CacheStatistics.MemoryBytes must be non-negative, but was {stats.MemoryBytes}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}MemoryBytes{DistributedCacheProviderValidationConstants.NonNegativeErrorMessageSuffix}{stats.MemoryBytes}.");
         }
 
-        if (stats.HitRate is < 0 or > 100)
+        if (stats.HitRate is < 0 or > DistributedCacheProviderValidationConstants.OneHundred)
         {
-            problems.Add($"CacheStatistics.HitRate must be between 0 and 100, but was {stats.HitRate:F2}.");
+            problems.Add($"{DistributedCacheProviderValidationConstants.CacheStatisticsPrefix}HitRate{DistributedCacheProviderValidationConstants.BetweenZeroAndOneHundredErrorMessageSuffix}{stats.HitRate:F2}.");
         }
     }
 }
