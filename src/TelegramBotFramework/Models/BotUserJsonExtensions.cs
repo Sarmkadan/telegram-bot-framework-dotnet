@@ -15,13 +15,7 @@ namespace TelegramBotFramework.Models;
 /// </summary>
 public static class BotUserJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
+    private static readonly JsonSerializerOptions _jsonOptions = BotUserJsonExtensionsConstants.BotUserJsonOptions;
 
     /// <summary>
     /// Serializes the <see cref="BotUser"/> instance to a JSON string.
