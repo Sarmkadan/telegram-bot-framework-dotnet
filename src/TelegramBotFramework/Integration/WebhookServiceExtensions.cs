@@ -29,8 +29,8 @@ public static class WebhookServiceExtensions
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> is less than or equal to 0, or <paramref name="retryDelayMs"/> is less than or equal to 0.</exception>
     public static async Task<bool> EnsureRegisteredAsync(
         this WebhookService service,
-        int maxRetries = 3,
-        int retryDelayMs = 1000,
+        int maxRetries = WebhookServiceExtensionsConstants.DefaultMaxRetries,
+        int retryDelayMs = WebhookServiceExtensionsConstants.DefaultRetryDelayMs,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -56,7 +56,7 @@ public static class WebhookServiceExtensions
             catch (Exception ex) when (attempt < maxRetries)
             {
                 service.GetLogger().LogWarning(ex,
-                    "Webhook registration attempt {Attempt} of {MaxRetries} failed, retrying...",
+                    WebhookServiceExtensionsConstants.LogWebhookRegistrationAttemptFailed,
                     attempt, maxRetries);
                 await Task.Delay(retryDelayMs, cancellationToken).ConfigureAwait(false);
             }
@@ -102,7 +102,7 @@ public static class WebhookServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
 
         var loggerField = typeof(WebhookService).GetField(
-            "_logger",
+            WebhookServiceExtensionsConstants.LoggerFieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         if (loggerField?.GetValue(service) is ILogger<WebhookService> logger)
@@ -110,7 +110,7 @@ public static class WebhookServiceExtensions
             return logger;
         }
 
-        throw new InvalidOperationException("Logger field not found or invalid.");
+        throw new InvalidOperationException(WebhookServiceExtensionsConstants.ExceptionLoggerNotFound);
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public static class WebhookServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
 
         var apiClientField = typeof(WebhookService).GetField(
-            "_apiClient",
+            WebhookServiceExtensionsConstants.ApiClientFieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         if (apiClientField?.GetValue(service) is TelegramApiClient apiClient)
@@ -133,7 +133,7 @@ public static class WebhookServiceExtensions
             return apiClient;
         }
 
-        throw new InvalidOperationException("API client field not found or invalid.");
+        throw new InvalidOperationException(WebhookServiceExtensionsConstants.ExceptionApiClientNotFound);
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ public static class WebhookServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
 
         var optionsField = typeof(WebhookService).GetField(
-            "_options",
+            WebhookServiceExtensionsConstants.OptionsFieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         if (optionsField?.GetValue(service) is WebhookOptions options)
@@ -156,7 +156,7 @@ public static class WebhookServiceExtensions
             return options;
         }
 
-        throw new InvalidOperationException("Options field not found or invalid.");
+        throw new InvalidOperationException(WebhookServiceExtensionsConstants.ExceptionOptionsNotFound);
     }
 
     /// <summary>
@@ -185,7 +185,7 @@ public static class WebhookServiceExtensions
             return new WebhookService(apiClient, options, logger);
         })
         .AddSingleton<IHostedService>(provider =>
-            provider.GetRequiredService<IWebhookService>() as IHostedService ?? throw new InvalidOperationException("WebhookService not found")
+            provider.GetRequiredService<IWebhookService>() as IHostedService ?? throw new InvalidOperationException(WebhookServiceExtensionsConstants.ExceptionWebhookServiceNotFound)
         );
 
         return services;
@@ -202,7 +202,7 @@ public static class WebhookServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
 
         var updatesDispatchedField = typeof(WebhookService).GetField(
-            "_updatesDispatched",
+            WebhookServiceExtensionsConstants.UpdatesDispatchedFieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         if (updatesDispatchedField?.GetValue(service) is long count)
