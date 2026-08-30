@@ -26,27 +26,27 @@ public static class HttpErrorHandlingMiddlewareValidation
 
         if (string.IsNullOrEmpty(value.ErrorCode))
         {
-            problems.Add("ErrorCode must not be null or empty.");
+            problems.Add(HttpErrorHandlingMiddlewareValidationConstants.ErrorCodeMustNotBeNullOrEmpty);
         }
 
         if (string.IsNullOrEmpty(value.Message))
         {
-            problems.Add("Message must not be null or empty.");
+            problems.Add(HttpErrorHandlingMiddlewareValidationConstants.MessageMustNotBeNullOrEmpty);
         }
 
         if (value.Timestamp == default)
         {
-            problems.Add("Timestamp must be set to a non-default value.");
+            problems.Add(HttpErrorHandlingMiddlewareValidationConstants.TimestampMustBeSetToNonDefaultValue);
         }
 
         if (string.IsNullOrEmpty(value.Path))
         {
-            problems.Add("Path must not be null or empty.");
+            problems.Add(HttpErrorHandlingMiddlewareValidationConstants.PathMustNotBeNullOrEmpty);
         }
 
         if (string.IsNullOrEmpty(value.TraceId))
         {
-            problems.Add("TraceId must not be null or empty.");
+            problems.Add(HttpErrorHandlingMiddlewareValidationConstants.TraceIdMustNotBeNullOrEmpty);
         }
 
         return problems.AsReadOnly();
@@ -74,7 +74,7 @@ public static class HttpErrorHandlingMiddlewareValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"HttpErrorHandlingMiddleware is invalid. Problems: {string.Join(" ", problems)}");
+                $"{HttpErrorHandlingMiddlewareValidationConstants.HttpErrorHandlingMiddlewareIsInvalidProblems}{string.Join(" ", problems)}");
         }
     }
 }
