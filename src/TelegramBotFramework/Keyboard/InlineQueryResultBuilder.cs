@@ -34,20 +34,20 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
     /// Initialises a new <see cref="InlineQueryResultBuilder"/>
     /// </summary>
     /// <param name="maxResults">Maximum number of results allowed (default: 50, Telegram limit).</param>
-    public InlineQueryResultBuilder(int maxResults = 50)
+    public InlineQueryResultBuilder(int maxResults = InlineQueryResultBuilderConstants.MaxResultsLimit)
     {
-        if (maxResults < 1 || maxResults > 50)
+        if (maxResults < 1 || maxResults > InlineQueryResultBuilderConstants.MaxResultsLimit)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(maxResults),
-                "Must be between 1 and 50 (Telegram inline query result limit).");
+                $"Must be between 1 and {InlineQueryResultBuilderConstants.MaxResultsLimit} (Telegram inline query result limit).");
         }
 
         _maxResults = maxResults;
     }
 
     /// <summary>Creates a new builder instance with the default result limit.</summary>
-    public static InlineQueryResultBuilder Create(int maxResults = 50) => new(maxResults);
+    public static InlineQueryResultBuilder Create(int maxResults = InlineQueryResultBuilderConstants.MaxResultsLimit) => new(maxResults);
 
     /// <summary>
     /// Adds an article result to the builder.
@@ -442,10 +442,10 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
         }
 
         var byteLength = System.Text.Encoding.UTF8.GetByteCount(id);
-        if (byteLength > 64)
+        if (byteLength > InlineQueryResultBuilderConstants.MaxIdLengthBytes)
         {
             throw new ArgumentException(
-                $"Result ID '{id}' is {byteLength} bytes, which exceeds Telegram's 64-byte limit.",
+                $"Result ID '{id}' is {byteLength} bytes, which exceeds Telegram's {InlineQueryResultBuilderConstants.MaxIdLengthBytes}-byte limit.",
                 nameof(id));
         }
 
@@ -462,10 +462,10 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
             throw new ArgumentException("Title cannot be null or whitespace.", nameof(title));
         }
 
-        if (title.Length > 64)
+        if (title.Length > InlineQueryResultBuilderConstants.MaxTitleLength)
         {
             throw new ArgumentException(
-                $"Title '{title}' is {title.Length} characters, which exceeds Telegram's 64-character limit.",
+                $"Title '{title}' is {title.Length} characters, which exceeds Telegram's {InlineQueryResultBuilderConstants.MaxTitleLength}-character limit.",
                 nameof(title));
         }
     }
@@ -477,10 +477,10 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
             throw new ArgumentException("Content cannot be null or whitespace.", nameof(content));
         }
 
-        if (content.Length > 1024)
+        if (content.Length > InlineQueryResultBuilderConstants.MaxContentLength)
         {
             throw new ArgumentException(
-                $"Content is {content.Length} characters, which exceeds Telegram's 1024-character limit.",
+                $"Content is {content.Length} characters, which exceeds Telegram's {InlineQueryResultBuilderConstants.MaxContentLength}-character limit.",
                 nameof(content));
         }
     }
@@ -572,27 +572,27 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
         {
             errors.Add($"Result at index {index} has null or empty ResultId.");
         }
-        else if (System.Text.Encoding.UTF8.GetByteCount(result.ResultId) > 64)
+        else if (System.Text.Encoding.UTF8.GetByteCount(result.ResultId) > InlineQueryResultBuilderConstants.MaxIdLengthBytes)
         {
-            errors.Add($"Result at index {index} has ResultId exceeding 64 bytes.");
+            errors.Add($"Result at index {index} has ResultId exceeding {InlineQueryResultBuilderConstants.MaxIdLengthBytes} bytes.");
         }
 
         if (string.IsNullOrWhiteSpace(result.Title))
         {
             errors.Add($"Result at index {index} has null or empty Title.");
         }
-        else if (result.Title.Length > 64)
+        else if (result.Title.Length > InlineQueryResultBuilderConstants.MaxTitleLength)
         {
-            errors.Add($"Result at index {index} has Title exceeding 64 characters (length: {result.Title.Length}).");
+            errors.Add($"Result at index {index} has Title exceeding {InlineQueryResultBuilderConstants.MaxTitleLength} characters (length: {result.Title.Length}).");
         }
 
         if (string.IsNullOrWhiteSpace(result.Content))
         {
             errors.Add($"Result at index {index} has null or empty Content.");
         }
-        else if (result.Content.Length > 1024)
+        else if (result.Content.Length > InlineQueryResultBuilderConstants.MaxContentLength)
         {
-            errors.Add($"Result at index {index} has Content exceeding 1024 characters (length: {result.Content.Length}).");
+            errors.Add($"Result at index {index} has Content exceeding {InlineQueryResultBuilderConstants.MaxContentLength} characters (length: {result.Content.Length}).");
         }
 
         // Validate type-specific fields
@@ -655,7 +655,7 @@ public sealed class InlineQueryResultBuilder : IInlineQueryResultBuilder
                 break;
 
             case InlineQueryResultType.Location:
-                if (string.IsNullOrWhiteSpace(result.Content) || !result.Content.Contains(','))
+                if (string.IsNullOrWhiteSpace(result.Content) || !result.Content.Contains(InlineQueryResultBuilderConstants.LocationCoordinateSeparator))
                 {
                     errors.Add($"Location result at index {index} has invalid coordinate format in Content: '{result.Content}'");
                 }
