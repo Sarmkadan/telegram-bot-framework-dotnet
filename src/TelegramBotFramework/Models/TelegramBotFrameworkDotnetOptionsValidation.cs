@@ -23,43 +23,43 @@ namespace TelegramBotFramework.Models
             // Validate BotToken
             if (string.IsNullOrWhiteSpace(value.BotToken))
             {
-                errors.Add("BotToken cannot be null or whitespace.");
+                errors.Add(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.BotTokenNullOrWhitespaceError);
             }
 
             // Validate BotUsername
             if (string.IsNullOrWhiteSpace(value.BotUsername))
             {
-                errors.Add("BotUsername cannot be null or whitespace.");
+                errors.Add(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.BotUsernameNullOrWhitespaceError);
             }
 
             // Validate DatabaseConnectionString (optional)
             if (value.DatabaseConnectionString is not null && string.IsNullOrWhiteSpace(value.DatabaseConnectionString))
             {
-                errors.Add("DatabaseConnectionString cannot be empty if specified.");
+                errors.Add(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.DatabaseConnectionStringEmptyError);
             }
 
             // Validate SessionTimeoutMinutes
-            if (value.SessionTimeoutMinutes is < 1 or > 60)
+            if (value.SessionTimeoutMinutes is < TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinSessionTimeoutMinutes or > TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxSessionTimeoutMinutes)
             {
-                errors.Add($"SessionTimeoutMinutes must be between 1 and 60 inclusive, but was {value.SessionTimeoutMinutes}.");
+                errors.Add(string.Format(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.SessionTimeoutMinutesOutOfRangeErrorFormat, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinSessionTimeoutMinutes, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxSessionTimeoutMinutes, value.SessionTimeoutMinutes));
             }
 
             // Validate MessageProcessingTimeoutSeconds
-            if (value.MessageProcessingTimeoutSeconds is < 1 or > 300)
+            if (value.MessageProcessingTimeoutSeconds is < TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinMessageProcessingTimeoutSeconds or > TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxMessageProcessingTimeoutSeconds)
             {
-                errors.Add($"MessageProcessingTimeoutSeconds must be between 1 and 300 inclusive, but was {value.MessageProcessingTimeoutSeconds}.");
+                errors.Add(string.Format(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MessageProcessingTimeoutSecondsOutOfRangeErrorFormat, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinMessageProcessingTimeoutSeconds, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxMessageProcessingTimeoutSeconds, value.MessageProcessingTimeoutSeconds));
             }
 
             // Validate MaxConcurrentRequests
-            if (value.MaxConcurrentRequests is < 1 or > 100)
+            if (value.MaxConcurrentRequests is < TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinMaxConcurrentRequests or > TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxMaxConcurrentRequests)
             {
-                errors.Add($"MaxConcurrentRequests must be between 1 and 100 inclusive, but was {value.MaxConcurrentRequests}.");
+                errors.Add(string.Format(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxConcurrentRequestsOutOfRangeErrorFormat, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinMaxConcurrentRequests, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxMaxConcurrentRequests, value.MaxConcurrentRequests));
             }
 
             // Validate RateLimitPerMinute
-            if (value.RateLimitPerMinute is < 1 or > 600)
+            if (value.RateLimitPerMinute is < TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinRateLimitPerMinute or > TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxRateLimitPerMinute)
             {
-                errors.Add($"RateLimitPerMinute must be between 1 and 600 inclusive, but was {value.RateLimitPerMinute}.");
+                errors.Add(string.Format(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.RateLimitPerMinuteOutOfRangeErrorFormat, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MinRateLimitPerMinute, TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.MaxRateLimitPerMinute, value.RateLimitPerMinute));
             }
 
             return errors.AsReadOnly();
@@ -88,7 +88,7 @@ namespace TelegramBotFramework.Models
             if (errors.Count > 0)
             {
                 throw new ArgumentException(
-                    $"TelegramBotFrameworkDotnetOptions is invalid. Validation errors:\n{string.Join("\n", errors)}",
+                    string.Format(TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants.EnsureOptionsInvalidErrorFormat, string.Join("\n", errors)),
                     nameof(value));
             }
         }
