@@ -41,7 +41,7 @@ public sealed record FlowDefinition
     /// Gets a value indicating whether a user can resume this flow after an interruption
     /// or session restart.
     /// </summary>
-    public bool AllowResume { get; init; } = true;
+    public bool AllowResume { get; init; } = FlowDefinitionConstants.DefaultAllowResume;
 
     /// <summary>Gets the menu identifier the orchestrator navigates to after successful completion.</summary>
     public string? CompletionMenuId { get; init; }
@@ -278,7 +278,7 @@ public sealed class UserFlowState
     public required string CurrentStepId { get; set; }
 
     /// <summary>Gets or sets the current lifecycle status of this flow execution.</summary>
-    public FlowStateStatus Status { get; set; } = FlowStateStatus.Active;
+    public FlowStateStatus Status { get; set; } = FlowDefinitionConstants.DefaultFlowStateStatus;
 
     /// <summary>Gets the UTC timestamp when this flow was initiated.</summary>
     public required DateTime StartedAt { get; init; }
