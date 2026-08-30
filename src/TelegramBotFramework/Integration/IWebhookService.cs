@@ -49,7 +49,7 @@ public interface IWebhookService
     /// </summary>
     /// <param name="jsonBody">The raw request body.</param>
     /// <param name="secretTokenHeader">
-    /// Value of the <c>X-Telegram-Bot-Api-Secret-Token</c> header, if present.
+    /// Value of the <see cref="IWebhookServiceConstants.TelegramSecretTokenHeaderName"/> header, if present.
     /// </param>
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     Task<TelegramUpdate?> ParseAndValidateAsync(
