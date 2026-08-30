@@ -165,24 +165,24 @@ public sealed class ConfigurationLoader
 
         var config = new Models.BotConfiguration
         {
-            BotToken = root.GetProperty("botToken").GetString() ?? string.Empty,
-            BotUsername = root.GetProperty("botUsername").GetString() ?? string.Empty,
-            DatabaseConnectionString = root.TryGetProperty("databaseConnectionString", out var dbProp)
+            BotToken = root.GetProperty(DependencyInjectionSetupConstants.BotTokenJsonProperty).GetString() ?? string.Empty,
+            BotUsername = root.GetProperty(DependencyInjectionSetupConstants.BotUsernameJsonProperty).GetString() ?? string.Empty,
+            DatabaseConnectionString = root.TryGetProperty(DependencyInjectionSetupConstants.DatabaseConnectionStringJsonProperty, out var dbProp)
                 ? dbProp.GetString() ?? string.Empty
                 : string.Empty,
-            SessionTimeoutMinutes = root.TryGetProperty("sessionTimeoutMinutes", out var timeoutProp)
+            SessionTimeoutMinutes = root.TryGetProperty(DependencyInjectionSetupConstants.SessionTimeoutMinutesJsonProperty, out var timeoutProp)
                 ? timeoutProp.GetInt32()
                 : Constants.BotConstants.DefaultSessionTimeoutMinutes,
-            MessageProcessingTimeoutSeconds = root.TryGetProperty("messageProcessingTimeoutSeconds", out var msgTimeoutProp)
+            MessageProcessingTimeoutSeconds = root.TryGetProperty(DependencyInjectionSetupConstants.MessageProcessingTimeoutSecondsJsonProperty, out var msgTimeoutProp)
                 ? msgTimeoutProp.GetInt32()
                 : Constants.BotConstants.DefaultMessageTimeoutSeconds,
-            MaxConcurrentRequests = root.TryGetProperty("maxConcurrentRequests", out var concurrentProp)
+            MaxConcurrentRequests = root.TryGetProperty(DependencyInjectionSetupConstants.MaxConcurrentRequestsJsonProperty, out var concurrentProp)
                 ? concurrentProp.GetInt32()
                 : Constants.BotConstants.DefaultMaxConcurrentRequests,
-            EnableLogging = root.TryGetProperty("enableLogging", out var loggingProp)
+            EnableLogging = root.TryGetProperty(DependencyInjectionSetupConstants.EnableLoggingJsonProperty, out var loggingProp)
                 ? loggingProp.GetBoolean()
                 : true,
-            EnableRateLimiting = root.TryGetProperty("enableRateLimiting", out var rateLimitProp)
+            EnableRateLimiting = root.TryGetProperty(DependencyInjectionSetupConstants.EnableRateLimitingJsonProperty, out var rateLimitProp)
                 ? rateLimitProp.GetBoolean()
                 : true,
         };
@@ -196,23 +196,23 @@ public sealed class ConfigurationLoader
     /// </summary>
     public static Models.BotConfiguration LoadFromEnvironment()
     {
-        var botToken = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN")
-            ?? throw new InvalidOperationException("TELEGRAM_BOT_TOKEN environment variable not set");
+        var botToken = Environment.GetEnvironmentVariable(DependencyInjectionSetupConstants.BotTokenEnvVariable)
+            ?? throw new InvalidOperationException($"{DependencyInjectionSetupConstants.BotTokenEnvVariable} environment variable not set");
 
-        var botUsername = Environment.GetEnvironmentVariable("TELEGRAM_BOT_USERNAME")
-            ?? throw new InvalidOperationException("TELEGRAM_BOT_USERNAME environment variable not set");
+        var botUsername = Environment.GetEnvironmentVariable(DependencyInjectionSetupConstants.BotUsernameEnvVariable)
+            ?? throw new InvalidOperationException($"{DependencyInjectionSetupConstants.BotUsernameEnvVariable} environment variable not set");
 
         var config = new Models.BotConfiguration
         {
             BotToken = botToken,
             BotUsername = botUsername,
-            DatabaseConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING") ?? string.Empty,
+            DatabaseConnectionString = Environment.GetEnvironmentVariable(DependencyInjectionSetupConstants.DatabaseConnectionStringEnvVariable) ?? string.Empty,
             SessionTimeoutMinutes = int.TryParse(
-                Environment.GetEnvironmentVariable("SESSION_TIMEOUT_MINUTES"), out var timeout)
+                Environment.GetEnvironmentVariable(DependencyInjectionSetupConstants.SessionTimeoutMinutesEnvVariable), out var timeout)
                 ? timeout
                 : Constants.BotConstants.DefaultSessionTimeoutMinutes,
             EnableLogging = bool.TryParse(
-                Environment.GetEnvironmentVariable("ENABLE_LOGGING"), out var logging)
+                Environment.GetEnvironmentVariable(DependencyInjectionSetupConstants.EnableLoggingEnvVariable), out var logging)
                 ? logging
                 : true,
         };
