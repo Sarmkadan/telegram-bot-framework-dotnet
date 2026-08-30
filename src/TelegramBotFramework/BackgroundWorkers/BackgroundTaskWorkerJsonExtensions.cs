@@ -14,11 +14,7 @@ namespace TelegramBotFramework.BackgroundWorkers;
 /// </summary>
 public static class BackgroundTaskWorkerJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
-    };
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = BackgroundTaskWorkerJsonExtensionsConstants.DefaultJsonSerializerOptions;
 
     /// <summary>
     /// Serializes the <see cref="BackgroundTaskWorker"/> instance to a JSON string.
@@ -34,7 +30,7 @@ public static class BackgroundTaskWorkerJsonExtensions
         var options = indented
             ? new JsonSerializerOptions(_jsonSerializerOptions)
             {
-                WriteIndented = true
+                WriteIndented = BackgroundTaskWorkerJsonExtensionsConstants.JsonWriteIndented
             }
             : _jsonSerializerOptions;
 
