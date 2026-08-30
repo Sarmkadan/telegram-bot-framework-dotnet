@@ -7,6 +7,7 @@
 namespace TelegramBotFramework.Caching;
 
 using System.Collections.Concurrent;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Suitable for single-instance deployments and development.
 /// Automatically removes expired entries on access.
 /// </summary>
-public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider
+public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IEquatable<LocalCacheProvider>
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
     private readonly ILogger<LocalCacheProvider>? _logger;
@@ -169,6 +170,109 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider
         };
 
         return Task.FromResult(stats);
+    }
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(LocalCacheProvider? other)
+    {
+        if (ReferenceEquals(other, null))
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        // Compare cache contents
+        if (_cache.Count != other._cache.Count)
+            return false;
+
+        // Compare each cache entry
+        foreach (var kvp in _cache)
+        {
+            if (!other._cache.TryGetValue(kvp.Key, out var otherEntry))
+                return false;
+
+            if (!object.Equals(kvp.Value.Value, otherEntry.Value))
+                return false;
+
+            if (kvp.Value.CreatedAt != otherEntry.CreatedAt)
+                return false;
+
+            if (kvp.Value.ExpiredAt != otherEntry.ExpiredAt)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(obj, null))
+            return false;
+
+        if (ReferenceEquals(this, obj))
+            return true;
+
+        if (obj.GetType() != GetType())
+            return false;
+
+        return Equals((LocalCacheProvider)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        var hash = 0;
+        foreach (var kvp in _cache.OrderBy(kvp => kvp.Key)) // Order by key for consistent hash
+        {
+            hash = HashCode.Combine(
+                hash,
+                kvp.Key,
+                kvp.Value.Value,
+                kvp.Value.CreatedAt,
+                kvp.Value.ExpiredAt);
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Equality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if operands are equal; otherwise, false.</returns>
+    public static bool operator ==(LocalCacheProvider? left, LocalCacheProvider? right)
+    {
+        if (ReferenceEquals(left, right))
+            return true;
+
+        if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
+            return false;
+
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Inequality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if operands are not equal; otherwise, false.</returns>
+    public static bool operator !=(LocalCacheProvider? left, LocalCacheProvider? right)
+    {
+        return !(left == right);
     }
 
     private long EstimateMemoryUsage()
