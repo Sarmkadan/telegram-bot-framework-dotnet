@@ -6,6 +6,16 @@ namespace TelegramBotFramework.Benchmarks;
 internal static class BotBenchmarksConstants
 {
     /// <summary>
+    /// The user ID used in benchmarks.
+    /// </summary>
+    public const long TestUserId = 12345;
+
+    /// <summary>
+    /// The chat ID used in benchmarks.
+    /// </summary>
+    public const long TestChatId = 67890;
+
+    /// <summary>
     /// The test bot token.
     /// </summary>
     public const string TestBotToken = "test-token";
@@ -14,6 +24,11 @@ internal static class BotBenchmarksConstants
     /// The test bot username.
     /// </summary>
     public const string TestBotUsername = "test-bot";
+
+    /// <summary>
+    /// The logging category disabled during benchmarks.
+    /// </summary>
+    public const string FrameworkLoggingCategory = "TelegramBotFramework";
 
     /// <summary>
     /// The start command used in benchmarks.
