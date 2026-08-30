@@ -17,13 +17,13 @@ using System.Text.Json;
 public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
 {
     // Maximum allowed lengths for various Telegram message components to prevent DoS attacks
-    private const int MaxMessageTextLength = 10_000; // 10KB - Telegram's typical limit is 4096 chars
-    private const int MaxCaptionLength = 10_000; // 10KB - same as message text
-    private const int MaxEntityCount = 100; // Maximum number of message entities (mentions, links, etc.)
-    private const int MaxInlineKeyboardRows = 100; // Maximum number of rows in inline keyboard
-    private const int MaxInlineKeyboardColumns = 10; // Maximum number of buttons per row
-    private const int MaxMessageLength = 20_000; // 20KB - overall message size limit
-    private const int MaxCallbackDataLength = 1_000; // 1KB - callback data limit
+    private const int MaxMessageTextLength = WebhookHandlerConstants.MaxMessageTextLength; // 10KB - Telegram's typical limit is 4096 chars
+    private const int MaxCaptionLength = WebhookHandlerConstants.MaxCaptionLength; // 10KB - same as message text
+    private const int MaxEntityCount = WebhookHandlerConstants.MaxEntityCount; // Maximum number of message entities (mentions, links, etc.)
+    private const int MaxInlineKeyboardRows = WebhookHandlerConstants.MaxInlineKeyboardRows; // Maximum number of rows in inline keyboard
+    private const int MaxInlineKeyboardColumns = WebhookHandlerConstants.MaxInlineKeyboardColumns; // Maximum number of buttons per row
+    private const int MaxMessageLength = WebhookHandlerConstants.MaxMessageLength; // 20KB - overall message size limit
+    private const int MaxCallbackDataLength = WebhookHandlerConstants.MaxCallbackDataLength; // 1KB - callback data limit
 
     private readonly ILogger<WebhookHandler> _logger;
 
@@ -111,7 +111,7 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
 
                 // Parse and validate callback query ID
                 var callbackQueryId = callbackElement.GetProperty("id").GetString();
-                if (callbackQueryId != null && callbackQueryId.Length > MaxCallbackDataLength)
+                if (callbackQueryId != null && callbackQueryId.Length > WebhookHandlerConstants.MaxCallbackDataLength)
                 {
                     _logger.LogWarning("Callback query ID too long ({Length} chars, max {MaxLength}). Truncating.", callbackQueryId.Length, MaxCallbackDataLength);
                     update.CallbackQueryId = callbackQueryId[..MaxCallbackDataLength];
@@ -200,7 +200,7 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
         // If header is missing but secret is configured, reject
         if (string.IsNullOrEmpty(secretTokenHeader))
         {
-            _logger.LogWarning("Webhook request rejected: X-Telegram-Bot-Api-Secret-Token header is missing");
+            _logger.LogWarning($"Webhook request rejected: {WebhookHandlerConstants.TelegramSecretTokenHeaderName} header is missing");
             return false;
         }
 
