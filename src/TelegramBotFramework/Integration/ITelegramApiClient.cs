@@ -64,7 +64,7 @@ public interface ITelegramApiClient
     /// Sends a media group (album) to a chat.
     /// </summary>
     /// <param name="chatId">Target chat identifier</param>
-    /// <param name="items">List of media items (2-10 items)</param>
+    /// <param name="items">List of media items (MediaGroupItemConstants.MinimumMediaGroupSize-MediaGroupItemConstants.MaximumMediaGroupSize items)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
     Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default);
@@ -82,7 +82,7 @@ public interface ITelegramApiClient
     Task<bool> RemoveWebhookAsync();
 
     /// <summary>Long-polls Telegram for new updates starting at <paramref name="offset"/>.</summary>
-    Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = 30);
+    Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = TelegramApiClientConstants.DefaultGetUpdatesTimeoutSeconds);
 
     /// <summary>Sets the list of bot commands shown in the Telegram UI.</summary>
     /// <param name="commands">Collection of command name / description pairs.</param>
