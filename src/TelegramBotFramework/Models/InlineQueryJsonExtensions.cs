@@ -15,13 +15,7 @@ namespace TelegramBotFramework.Models;
 /// </summary>
 public static class InlineQueryJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
+    private static readonly JsonSerializerOptions _jsonOptions = InlineQueryJsonExtensionsConstants.InlineQueryJsonOptions;
 
     /// <summary>
     /// Serializes the <see cref="InlineQuery"/> instance to a JSON string.
