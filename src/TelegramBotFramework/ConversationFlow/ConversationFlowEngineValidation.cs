@@ -34,7 +34,7 @@ public static class ConversationFlowEngineValidation
         {
             // Test that basic operations don't throw null reference exceptions
             _ = await value.GetAllFlowsAsync().ConfigureAwait(false);
-            _ = await value.GetActiveFlowStateAsync(12345).ConfigureAwait(false);
+            _ = await value.GetActiveFlowStateAsync(ConversationFlowEngineValidationConstants.DefaultTestUserId).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not ObjectDisposedException)
         {
