@@ -84,7 +84,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
 
         _flows[flow.FlowId] = flow;
 
-        _logger.LogInformation("Flow registered — Id: {FlowId}, Name: {FlowName}, Steps: {StepCount}",
+        _logger.LogInformation(ConversationFlowEngineConstants.FlowRegisteredLog,
             flow.FlowId, flow.Name, flow.Steps.Count);
 
         return Task.CompletedTask;
@@ -94,7 +94,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     public Task UnregisterFlowAsync(string flowId, CancellationToken cancellationToken = default)
     {
         _flows.TryRemove(flowId, out _);
-        _logger.LogInformation("Flow unregistered — Id: {FlowId}", flowId);
+        _logger.LogInformation(ConversationFlowEngineConstants.FlowUnregisteredLog, flowId);
         return Task.CompletedTask;
     }
 
@@ -124,13 +124,13 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         if (_activeStates.ContainsKey(userId))
         {
             _logger.LogDebug(
-                "Aborting existing flow for UserId {UserId} before starting '{FlowId}'", userId, flowId);
-            await AbortFlowAsync(userId, "Superseded by a new flow", cancellationToken).ConfigureAwait(false);
+                ConversationFlowEngineConstants.AbortingExistingFlowLog, userId, flowId);
+            await AbortFlowAsync(userId, ConversationFlowEngineConstants.SupersededByNewFlowReason, cancellationToken).ConfigureAwait(false);
         }
 
         var state = new UserFlowState
         {
-            StateId        = Guid.NewGuid().ToString("N"),
+            StateId        = Guid.NewGuid().ToString(ConversationFlowEngineConstants.GuidFormat),
             FlowId         = flowId,
             UserId         = userId,
             ChatId         = chatId,
@@ -167,7 +167,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
             await _eventBus.PublishAsync(new FlowStartedEvent(userId, chatId, flowId, state.StateId)).ConfigureAwait(false);
 
         _logger.LogInformation(
-            "Flow started — UserId: {UserId}, FlowId: {FlowId}, StateId: {StateId}",
+            ConversationFlowEngineConstants.FlowStartedLog,
             userId, flowId, state.StateId);
 
         return state;
@@ -241,7 +241,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         if (!isValid)
         {
             _logger.LogDebug(
-                "Validation failed — UserId: {UserId}, Step: {StepId}, Error: {Error}",
+                ConversationFlowEngineConstants.ValidationFailedLog,
                 userId, step.StepId, validationError);
 
             var errorPrompt = string.IsNullOrEmpty(step.HelpText)
@@ -297,13 +297,13 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
                     new FlowCompletedEvent(userId, state.ChatId, state.FlowId, state.StateId));
 
             _logger.LogInformation(
-                "Flow completed — UserId: {UserId}, FlowId: {FlowId}, Steps: {StepCount}",
+                ConversationFlowEngineConstants.FlowCompletedLog,
                 userId, state.FlowId, state.History.Count);
 
             return new FlowStepResult
             {
                 IsValid          = true,
-                Prompt           = "Completed.",
+                Prompt           = ConversationFlowEngineConstants.FlowCompletedPrompt,
                 IsCompleted      = true,
                 FlowState        = state,
                 CompletionMenuId = flow.CompletionMenuId
