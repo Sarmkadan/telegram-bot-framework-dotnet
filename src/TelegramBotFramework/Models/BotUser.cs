@@ -93,6 +93,9 @@ public sealed class BotUser : IBotUser, IEquatable<BotUser>
     /// </summary>
     public void SetMetadata(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentException.ThrowIfNullOrEmpty(value);
+
         Metadata ??= new Dictionary<string, string>();
         Metadata[key] = value;
     }
@@ -100,8 +103,12 @@ public sealed class BotUser : IBotUser, IEquatable<BotUser>
     /// <summary>
     /// Gets user metadata value.
     /// </summary>
-    public string? GetMetadata(string key) =>
-        Metadata?.TryGetValue(key, out var value) == true ? value : null;
+    public string? GetMetadata(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
+        return Metadata?.TryGetValue(key, out var value) == true ? value : null;
+    }
 
     /// <summary>
     /// Indicates whether the current object is equal to another object of the same type.
