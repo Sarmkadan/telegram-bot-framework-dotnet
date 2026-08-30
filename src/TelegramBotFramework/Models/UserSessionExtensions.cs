@@ -22,7 +22,7 @@ public static class UserSessionExtensions
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var timeout = idleTimeout ?? TimeSpan.FromMinutes(5);
+        var timeout = idleTimeout ?? UserSessionExtensionsConstants.DefaultIdleTimeout;
 
         return session.State != SessionState.Active ||
                !session.LastActivityAt.HasValue ||
@@ -40,7 +40,7 @@ public static class UserSessionExtensions
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var threshold = warningThreshold ?? TimeSpan.FromHours(1);
+        var threshold = warningThreshold ?? UserSessionExtensionsConstants.DefaultWarningThreshold;
 
         return session.ExpiresAt.HasValue &&
                session.ExpiresAt.Value - DateTime.UtcNow <= threshold;
