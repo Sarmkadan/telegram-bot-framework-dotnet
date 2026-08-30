@@ -24,7 +24,7 @@ public static class CollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(list);
 
-        if (index < 0 || index >= list.Count)
+        if (index < CollectionExtensionsConstants.FirstCollectionIndex || index >= list.Count)
             return defaultValue;
 
         return list[index];
@@ -65,9 +65,11 @@ public static class CollectionExtensions
         var list = source.ToList();
         var random = new Random();
 
-        for (int i = list.Count - 1; i > 0; i--)
+        for (int i = list.Count - CollectionExtensionsConstants.SingleItemOffset;
+             i > CollectionExtensionsConstants.FirstCollectionIndex;
+             i--)
         {
-            int randomIndex = random.Next(i + 1);
+            int randomIndex = random.Next(i + CollectionExtensionsConstants.SingleItemOffset);
             (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
         }
 
