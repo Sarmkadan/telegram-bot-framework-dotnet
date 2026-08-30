@@ -21,6 +21,8 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy, IInMem
     /// <inheritdoc/>
     public bool IsRequestAllowed(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
         lock (_lock)
         {
             var now = DateTime.UtcNow;
@@ -43,6 +45,8 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy, IInMem
     /// <inheritdoc/>
     public int GetRemainingRequests(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
         lock (_lock)
         {
             var now = DateTime.UtcNow;
@@ -61,6 +65,8 @@ public sealed class InMemoryRateLimitingStrategy : IRateLimitingStrategy, IInMem
     /// </summary>
     public Task<bool> IsActionAllowedAsync(string key, int limit, TimeSpan interval, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         lock (_lock)
         {
             var now = DateTime.UtcNow;
