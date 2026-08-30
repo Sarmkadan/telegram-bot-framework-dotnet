@@ -174,7 +174,7 @@ public static class FileConversationStateStoreExtensions
         ArgumentNullException.ThrowIfNull(store);
         if (inactivityThreshold < TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(inactivityThreshold), "Inactivity threshold cannot be negative.");
+            throw new ArgumentOutOfRangeException(nameof(inactivityThreshold), FileConversationStateStoreExtensionsConstants.InactivityThresholdCannotBeNegative);
         }
 
         var now = DateTime.UtcNow;
@@ -202,7 +202,7 @@ public static class FileConversationStateStoreExtensions
         ArgumentNullException.ThrowIfNull(store);
         if (maxAge < TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxAge), "Maximum age cannot be negative.");
+            throw new ArgumentOutOfRangeException(nameof(maxAge), FileConversationStateStoreExtensionsConstants.MaximumAgeCannotBeNegative);
         }
 
         var cutoff = DateTime.UtcNow - maxAge;
