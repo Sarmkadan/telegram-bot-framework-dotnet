@@ -49,9 +49,7 @@ public interface IInlineQueryService
 /// </summary>
 public sealed class InlineQueryService : IInlineQueryService
 {
-    private const string CacheKeyPrefix = "inline_query_";
-    private const int DefaultPageSize = 10;
-    private static readonly TimeSpan DefaultCacheExpiry = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan DefaultCacheExpiry = TimeSpan.FromMinutes(IInlineQueryServiceConstants.DefaultCacheExpiryInMinutes);
 
     private readonly Caching.ICacheProvider _cache;
     private readonly Microsoft.Extensions.Logging.ILogger<InlineQueryService> _logger;
@@ -119,7 +117,7 @@ public sealed class InlineQueryService : IInlineQueryService
     {
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         var allResults = await _cache.GetAsync<IList<Models.InlineQueryResult>>(BuildCacheKey(queryText)).ConfigureAwait(false);
-        return allResults  is null ? null : Paginate(allResults, pageNumber, DefaultPageSize);
+        return allResults  is null ? null : Paginate(allResults, pageNumber, IInlineQueryServiceConstants.DefaultPageSize);
     }
 
     /// <inheritdoc/>
@@ -140,7 +138,7 @@ public sealed class InlineQueryService : IInlineQueryService
     }
 
     private static string BuildCacheKey(string queryText) =>
-        $"{CacheKeyPrefix}{queryText.ToLowerInvariant().Trim()}";
+        $"{IInlineQueryServiceConstants.CacheKeyPrefix}{queryText.ToLowerInvariant().Trim()}";
 
     private static Models.PagedInlineQueryResult Paginate(
         IList<Models.InlineQueryResult> allResults,
