@@ -21,7 +21,7 @@ public sealed class InMemoryConversationStateStore : IConversationStateStore, II
     public Task SaveStateAsync(UserFlowState state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(state);
-        _store[state.UserId] = state;
+        _store.AddOrUpdate(state.UserId, state, (_, _) => state);
         return Task.CompletedTask;
     }
 
