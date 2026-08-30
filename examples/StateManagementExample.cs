@@ -44,8 +44,8 @@ public sealed class StateManagementExample : IStateManagementExample
 
             try
             {
-                var userId = 123456789L;
-                var chatId = 123456789L;
+                var userId = StateManagementExampleConstants.ExampleUserId;
+                var chatId = StateManagementExampleConstants.ExampleChatId;
 
                 // Create user and session
                 await _userService.GetOrCreateUserAsync(userId, "John", "Doe").ConfigureAwait(false);
@@ -74,32 +74,32 @@ public sealed class StateManagementExample : IStateManagementExample
 
             // Initialize form data
             var formData = new RegistrationForm();
-            session.SetContextData("registration_form", JsonSerializer.Serialize(formData));
-            session.SetContextData("registration_step", "1");
+            session.SetContextData(StateManagementExampleConstants.RegistrationFormContextKey, JsonSerializer.Serialize(formData));
+            session.SetContextData(StateManagementExampleConstants.RegistrationStepContextKey, StateManagementExampleConstants.FirstStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Step 1: Asking for first name");
-            var step1Form = GetFormData<RegistrationForm>(session, "registration_form");
+            var step1Form = GetFormData<RegistrationForm>(session, StateManagementExampleConstants.RegistrationFormContextKey);
             step1Form.FirstName = "John";
-            session.SetContextData("registration_form", JsonSerializer.Serialize(step1Form));
-            session.SetContextData("registration_step", "2");
+            session.SetContextData(StateManagementExampleConstants.RegistrationFormContextKey, JsonSerializer.Serialize(step1Form));
+            session.SetContextData(StateManagementExampleConstants.RegistrationStepContextKey, StateManagementExampleConstants.SecondStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Step 2: Asking for email");
-            var step2Form = GetFormData<RegistrationForm>(session, "registration_form");
+            var step2Form = GetFormData<RegistrationForm>(session, StateManagementExampleConstants.RegistrationFormContextKey);
             step2Form.Email = "john@example.com";
-            session.SetContextData("registration_form", JsonSerializer.Serialize(step2Form));
-            session.SetContextData("registration_step", "3");
+            session.SetContextData(StateManagementExampleConstants.RegistrationFormContextKey, JsonSerializer.Serialize(step2Form));
+            session.SetContextData(StateManagementExampleConstants.RegistrationStepContextKey, StateManagementExampleConstants.ThirdStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Step 3: Asking for phone");
-            var step3Form = GetFormData<RegistrationForm>(session, "registration_form");
+            var step3Form = GetFormData<RegistrationForm>(session, StateManagementExampleConstants.RegistrationFormContextKey);
             step3Form.PhoneNumber = "+1234567890";
-            session.SetContextData("registration_form", JsonSerializer.Serialize(step3Form));
-            session.SetContextData("registration_step", "complete");
+            session.SetContextData(StateManagementExampleConstants.RegistrationFormContextKey, JsonSerializer.Serialize(step3Form));
+            session.SetContextData(StateManagementExampleConstants.RegistrationStepContextKey, StateManagementExampleConstants.CompleteStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
-            var finalForm = GetFormData<RegistrationForm>(session, "registration_form");
+            var finalForm = GetFormData<RegistrationForm>(session, StateManagementExampleConstants.RegistrationFormContextKey);
             _logger.LogInformation("Registration completed: {FirstName} {Email} {Phone}",
                 finalForm.FirstName, finalForm.Email, finalForm.PhoneNumber);
         }
@@ -110,32 +110,32 @@ public sealed class StateManagementExample : IStateManagementExample
 
             // Initialize survey data
             var surveyData = new FeedbackSurvey();
-            session.SetContextData("survey_data", JsonSerializer.Serialize(surveyData));
-            session.SetContextData("survey_step", "1");
+            session.SetContextData(StateManagementExampleConstants.SurveyDataContextKey, JsonSerializer.Serialize(surveyData));
+            session.SetContextData(StateManagementExampleConstants.SurveyStepContextKey, StateManagementExampleConstants.FirstStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Question 1: How satisfied are you?");
-            var step1Survey = GetFormData<FeedbackSurvey>(session, "survey_data");
-            step1Survey.SatisfactionLevel = 5;
-            session.SetContextData("survey_data", JsonSerializer.Serialize(step1Survey));
-            session.SetContextData("survey_step", "2");
+            var step1Survey = GetFormData<FeedbackSurvey>(session, StateManagementExampleConstants.SurveyDataContextKey);
+            step1Survey.SatisfactionLevel = StateManagementExampleConstants.MaximumSatisfactionLevel;
+            session.SetContextData(StateManagementExampleConstants.SurveyDataContextKey, JsonSerializer.Serialize(step1Survey));
+            session.SetContextData(StateManagementExampleConstants.SurveyStepContextKey, StateManagementExampleConstants.SecondStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Question 2: What could be improved?");
-            var step2Survey = GetFormData<FeedbackSurvey>(session, "survey_data");
+            var step2Survey = GetFormData<FeedbackSurvey>(session, StateManagementExampleConstants.SurveyDataContextKey);
             step2Survey.ImprovementSuggestions = "Better user interface";
-            session.SetContextData("survey_data", JsonSerializer.Serialize(step2Survey));
-            session.SetContextData("survey_step", "3");
+            session.SetContextData(StateManagementExampleConstants.SurveyDataContextKey, JsonSerializer.Serialize(step2Survey));
+            session.SetContextData(StateManagementExampleConstants.SurveyStepContextKey, StateManagementExampleConstants.ThirdStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
             _logger.LogInformation("Question 3: Would you recommend this?");
-            var step3Survey = GetFormData<FeedbackSurvey>(session, "survey_data");
+            var step3Survey = GetFormData<FeedbackSurvey>(session, StateManagementExampleConstants.SurveyDataContextKey);
             step3Survey.WouldRecommend = true;
-            session.SetContextData("survey_data", JsonSerializer.Serialize(step3Survey));
-            session.SetContextData("survey_step", "complete");
+            session.SetContextData(StateManagementExampleConstants.SurveyDataContextKey, JsonSerializer.Serialize(step3Survey));
+            session.SetContextData(StateManagementExampleConstants.SurveyStepContextKey, StateManagementExampleConstants.CompleteStep);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
 
-            var finalSurvey = GetFormData<FeedbackSurvey>(session, "survey_data");
+            var finalSurvey = GetFormData<FeedbackSurvey>(session, StateManagementExampleConstants.SurveyDataContextKey);
             _logger.LogInformation("Survey completed: Satisfaction={Level}, Recommend={Recommend}",
                 finalSurvey.SatisfactionLevel, finalSurvey.WouldRecommend);
         }
