@@ -40,10 +40,10 @@ using System.Text;
 /// </remarks>
 public static class CallbackDataSigner
 {
-    private const char Separator = '|';
-    private const int MaxTotalBytes = 64;
-    private const int MaxDataBytes = 56; // Leave room for separator + signature
-    private const int SignatureBytes = 8; // 8 bytes = 16 hex chars
+    private const char Separator = CallbackDataSignerConstants.Separator;
+    private const int MaxTotalBytes = CallbackDataSignerConstants.MaxTotalBytes;
+    private const int MaxDataBytes = CallbackDataSignerConstants.MaxDataBytes; // Leave room for separator + signature
+    private const int SignatureBytes = CallbackDataSignerConstants.SignatureBytes; // 8 bytes = 16 hex chars
 
     /// <summary>
     /// Signs the data with HMAC-SHA256 and returns signed callback data.
