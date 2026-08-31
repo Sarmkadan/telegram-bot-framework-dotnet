@@ -1,7 +1,13 @@
+#nullable enable
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
 namespace TelegramBotFramework.Formatters;
 
 /// <summary>
-/// Constants for CsvFormatterExtensions.
+/// Constants for <see cref="CsvFormatterExtensions"/> to avoid magic values.
 /// </summary>
 internal static class CsvFormatterExtensionsConstants
 {
@@ -11,27 +17,27 @@ internal static class CsvFormatterExtensionsConstants
     public const string EmptyString = "";
 
     /// <summary>
-    /// The default field separator for CSV (comma).
+    /// Default field separator for CSV (comma).
     /// </summary>
-    public const string FieldSeparator = ",";
+    public const char FieldSeparator = ',';
 
     /// <summary>
-    /// The default delimiter character for CSV (comma).
+    /// Line ending used when constructing CSV rows.
+    /// </summary>
+    public const string LineEnding = "\r\n";
+
+    /// <summary>
+    /// Character used to quote fields that contain special characters.
+    /// </summary>
+    public const char QuoteChar = '"';
+
+    /// <summary>
+    /// Default delimiter used when a custom delimiter is not supplied.
     /// </summary>
     public const char DefaultDelimiter = ',';
 
     /// <summary>
-    /// The message when at least one header must be specified.
+    /// Error message when no headers are supplied to <c>FormatWithHeaders</c>.
     /// </summary>
-    public const string AtLeastOneHeaderMessage = "At least one header must be specified.";
-
-    /// <summary>
-    /// The line ending string for the current environment.
-    /// </summary>
-    public static readonly string LineEnding = System.Environment.NewLine;
-
-    /// <summary>
-    /// The quote character used for escaping fields in CSV (double quote).
-    /// </summary>
-    public const char QuoteChar = '\"';
+    public const string AtLeastOneHeaderMessage = "At least one header must be provided.";
 }
