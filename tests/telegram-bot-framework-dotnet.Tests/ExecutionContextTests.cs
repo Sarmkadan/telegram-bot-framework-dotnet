@@ -6,6 +6,7 @@
 
 using FluentAssertions;
 using TelegramBotFramework.Models;
+using TelegramBotFramework.Tests;
 using Xunit;
 
 /// <summary>
@@ -24,7 +25,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
 
         // Assert
         context.ContextId.Should().NotBeEmpty();
-        context.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        context.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, ExecutionContextTestsConstants.CreationTimeTolerance);
         context.IsValid.Should().BeTrue();
         context.Errors.Should().BeEmpty();
         context.States.Should().BeEmpty();
@@ -37,23 +38,23 @@ public sealed class ExecutionContextTests : IExecutionContextTests
     public void Constructor_WithUserAndSession_StoresReferences()
     {
         // Arrange
-        var user = new BotUser { TelegramId = 123, FirstName = "John" };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456 };
-        var message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "test" };
+        var user = new BotUser { TelegramId = ExecutionContextTestsConstants.DefaultUserId, FirstName = ExecutionContextTestsConstants.DefaultFirstName };
+        var session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId };
+        var message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId, Content = ExecutionContextTestsConstants.DefaultTestMessage };
 
         // Act
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
             User = user,
             Session = session,
             Message = message
         };
 
         // Assert
-        context.UserId.Should().Be(123);
-        context.ChatId.Should().Be(456);
+        context.UserId.Should().Be(ExecutionContextTestsConstants.DefaultUserId);
+        context.ChatId.Should().Be(ExecutionContextTestsConstants.DefaultChatId);
         context.User.Should().Be(user);
         context.Session.Should().Be(session);
         context.Message.Should().Be(message);
@@ -69,13 +70,13 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.AddError("Test error 1");
-        context.AddError("Test error 2");
+        context.AddError(ExecutionContextTestsConstants.TestErrorMessage1);
+        context.AddError(ExecutionContextTestsConstants.TestErrorMessage2);
 
         // Assert
-        context.Errors.Should().HaveCount(2);
-        context.Errors.Should().Contain("Test error 1");
-        context.Errors.Should().Contain("Test error 2");
+        context.Errors.Should().HaveCount(ExecutionContextTestsConstants.TwoItemCount);
+        context.Errors.Should().Contain(ExecutionContextTestsConstants.TestErrorMessage1);
+        context.Errors.Should().Contain(ExecutionContextTestsConstants.TestErrorMessage2);
     }
 
     /// <summary>
@@ -89,11 +90,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
 
         // Act
         context.AddError(null);
-        context.AddError("Valid error");
+        context.AddError(ExecutionContextTestsConstants.ValidErrorMessage);
 
         // Assert
-        context.Errors.Should().HaveCount(1);
-        context.Errors.Should().Contain("Valid error");
+        context.Errors.Should().HaveCount(ExecutionContextTestsConstants.SingleItemCount);
+        context.Errors.Should().Contain(ExecutionContextTestsConstants.ValidErrorMessage);
     }
 
     /// <summary>
@@ -106,12 +107,12 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.AddError("");
-        context.AddError("Valid error");
+        context.AddError(ExecutionContextTestsConstants.EmptyString);
+        context.AddError(ExecutionContextTestsConstants.ValidErrorMessage);
 
         // Assert
-        context.Errors.Should().HaveCount(1);
-        context.Errors.Should().Contain("Valid error");
+        context.Errors.Should().HaveCount(ExecutionContextTestsConstants.SingleItemCount);
+        context.Errors.Should().Contain(ExecutionContextTestsConstants.ValidErrorMessage);
     }
 
     /// <summary>
@@ -124,15 +125,15 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.SetState("key1", "value1");
-        context.SetState("key2", 123);
-        context.SetState("key3", true);
+        context.SetState(ExecutionContextTestsConstants.StateKey1, ExecutionContextTestsConstants.StateValue1);
+        context.SetState(ExecutionContextTestsConstants.StateKey2, ExecutionContextTestsConstants.NumericStateValue);
+        context.SetState(ExecutionContextTestsConstants.StateKey3, ExecutionContextTestsConstants.TrueValue);
 
         // Assert
-        context.States.Should().HaveCount(3);
-        context.States.Should().ContainKey("key1").WhoseValue.Should().Be("value1");
-        context.States.Should().ContainKey("key2").WhoseValue.Should().Be(123);
-        context.States.Should().ContainKey("key3").WhoseValue.Should().Be(true);
+        context.States.Should().HaveCount(ExecutionContextTestsConstants.ThreeItemCount);
+        context.States.Should().ContainKey(ExecutionContextTestsConstants.StateKey1).WhoseValue.Should().Be(ExecutionContextTestsConstants.StateValue1);
+        context.States.Should().ContainKey(ExecutionContextTestsConstants.StateKey2).WhoseValue.Should().Be(ExecutionContextTestsConstants.NumericStateValue);
+        context.States.Should().ContainKey(ExecutionContextTestsConstants.StateKey3).WhoseValue.Should().Be(true);
     }
 
     /// <summary>
@@ -145,12 +146,12 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.SetState("key", "old_value");
-        context.SetState("key", "new_value");
+        context.SetState(ExecutionContextTestsConstants.GenericStateKey, ExecutionContextTestsConstants.OldStateValue);
+        context.SetState(ExecutionContextTestsConstants.GenericStateKey, ExecutionContextTestsConstants.NewStateValue);
 
         // Assert
-        context.States.Should().HaveCount(1);
-        context.States["key"].Should().Be("new_value");
+        context.States.Should().HaveCount(ExecutionContextTestsConstants.SingleItemCount);
+        context.States[ExecutionContextTestsConstants.GenericStateKey].Should().Be(ExecutionContextTestsConstants.NewStateValue);
     }
 
     /// <summary>
@@ -163,12 +164,12 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.SetState(null, "value");
-        context.SetState("key", "value");
+        context.SetState(null, ExecutionContextTestsConstants.GenericStateValue);
+        context.SetState(ExecutionContextTestsConstants.GenericStateKey, ExecutionContextTestsConstants.GenericStateValue);
 
         // Assert
-        context.States.Should().HaveCount(1);
-        context.States.Should().ContainKey("key");
+        context.States.Should().HaveCount(ExecutionContextTestsConstants.SingleItemCount);
+        context.States.Should().ContainKey(ExecutionContextTestsConstants.GenericStateKey);
     }
 
     /// <summary>
@@ -181,12 +182,12 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.SetState("", "value");
-        context.SetState("key", "value");
+        context.SetState(ExecutionContextTestsConstants.EmptyString, ExecutionContextTestsConstants.GenericStateValue);
+        context.SetState(ExecutionContextTestsConstants.GenericStateKey, ExecutionContextTestsConstants.GenericStateValue);
 
         // Assert
-        context.States.Should().HaveCount(1);
-        context.States.Should().ContainKey("key");
+        context.States.Should().HaveCount(ExecutionContextTestsConstants.SingleItemCount);
+        context.States.Should().ContainKey(ExecutionContextTestsConstants.GenericStateKey);
     }
 
     /// <summary>
@@ -197,13 +198,13 @@ public sealed class ExecutionContextTests : IExecutionContextTests
     {
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext();
-        context.SetState("test_key", "test_value");
+        context.SetState(ExecutionContextTestsConstants.TestStateKey, ExecutionContextTestsConstants.TestStateValue);
 
         // Act
-        var result = context.GetState<string>("test_key");
+        var result = context.GetState<string>(ExecutionContextTestsConstants.TestStateKey);
 
         // Assert
-        result.Should().Be("test_value");
+        result.Should().Be(ExecutionContextTestsConstants.TestStateValue);
     }
 
     /// <summary>
@@ -216,7 +217,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        var result = context.GetState<string>("nonexistent");
+        var result = context.GetState<string>(ExecutionContextTestsConstants.NonExistentStateKey);
 
         // Assert
         result.Should().BeNull();
@@ -230,10 +231,10 @@ public sealed class ExecutionContextTests : IExecutionContextTests
     {
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext();
-        context.SetState("number_key", 123);
+        context.SetState(ExecutionContextTestsConstants.NumberStateKey, ExecutionContextTestsConstants.NumericStateValue);
 
         // Act
-        var result = context.GetState<string>("number_key");
+        var result = context.GetState<string>(ExecutionContextTestsConstants.NumberStateKey);
 
         // Assert
         result.Should().BeNull();
@@ -248,11 +249,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { UserId = 123, FirstName = "John" },
-            Session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456 },
-            Message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "test" }
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
+            User = new BotUser { UserId = ExecutionContextTestsConstants.DefaultUserId, FirstName = ExecutionContextTestsConstants.DefaultFirstName },
+            Session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId },
+            Message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId, Content = ExecutionContextTestsConstants.DefaultTestMessage }
         };
 
         // Act
@@ -274,11 +275,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
             User = null,
-            Session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456 },
-            Message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "test" }
+            Session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId },
+            Message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId, Content = ExecutionContextTestsConstants.DefaultTestMessage }
         };
 
         // Act
@@ -300,11 +301,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { UserId = 123, FirstName = "John" },
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
+            User = new BotUser { UserId = ExecutionContextTestsConstants.DefaultUserId, FirstName = ExecutionContextTestsConstants.DefaultFirstName },
             Session = null,
-            Message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "test" }
+            Message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId, Content = ExecutionContextTestsConstants.DefaultTestMessage }
         };
 
         // Act
@@ -327,10 +328,10 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
-            User = new BotUser { UserId = 123, FirstName = "John" },
-            Session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456 },
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
+            User = new BotUser { UserId = ExecutionContextTestsConstants.DefaultUserId, FirstName = ExecutionContextTestsConstants.DefaultFirstName },
+            Session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.DefaultChatId },
             Message = null
         };
 
@@ -351,11 +352,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 0,
-            ChatId = 456,
-            User = new BotUser { UserId = 0, FirstName = "John" },
-            Session = new UserSession { SessionId = "session-123", UserId = 0, ChatId = 456 },
-            Message = new Message { MessageId = 1, UserId = 0, ChatId = 456, Content = "test" }
+            UserId = ExecutionContextTestsConstants.ZeroId,
+            ChatId = ExecutionContextTestsConstants.DefaultChatId,
+            User = new BotUser { UserId = ExecutionContextTestsConstants.ZeroId, FirstName = ExecutionContextTestsConstants.DefaultFirstName },
+            Session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.ZeroId, ChatId = ExecutionContextTestsConstants.DefaultChatId },
+            Message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.ZeroId, ChatId = ExecutionContextTestsConstants.DefaultChatId, Content = ExecutionContextTestsConstants.DefaultTestMessage }
         };
 
         // Act
@@ -364,7 +365,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Assert
         result.Should().BeFalse();
         context.IsValid.Should().BeFalse();
-        context.Errors.Should().Contain(e => e.Contains("UserId"));
+        context.Errors.Should().Contain(e => e.Contains(ExecutionContextTestsConstants.UserIdErrorFragment));
     }
 
     /// <summary>
@@ -376,11 +377,11 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Arrange
         var context = new TelegramBotFramework.Models.ExecutionContext
         {
-            UserId = 123,
-            ChatId = 0,
-            User = new BotUser { UserId = 123, FirstName = "John" },
-            Session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 0 },
-            Message = new Message { MessageId = 1, UserId = 123, ChatId = 0, Content = "test" }
+            UserId = ExecutionContextTestsConstants.DefaultUserId,
+            ChatId = ExecutionContextTestsConstants.ZeroId,
+            User = new BotUser { UserId = ExecutionContextTestsConstants.DefaultUserId, FirstName = ExecutionContextTestsConstants.DefaultFirstName },
+            Session = new UserSession { SessionId = ExecutionContextTestsConstants.DefaultSessionId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.ZeroId },
+            Message = new Message { MessageId = ExecutionContextTestsConstants.DefaultMessageId, UserId = ExecutionContextTestsConstants.DefaultUserId, ChatId = ExecutionContextTestsConstants.ZeroId, Content = ExecutionContextTestsConstants.DefaultTestMessage }
         };
 
         // Act
@@ -389,7 +390,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         // Assert
         result.Should().BeFalse();
         context.IsValid.Should().BeFalse();
-        context.Errors.Should().Contain(e => e.Contains("ChatId"));
+        context.Errors.Should().Contain(e => e.Contains(ExecutionContextTestsConstants.ChatIdErrorFragment));
     }
 
     /// <summary>
@@ -419,13 +420,13 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var createdAt = context.CreatedAt;
 
         // Simulate some time passing
-        Thread.Sleep(10);
+        Thread.Sleep(ExecutionContextTestsConstants.ShortSleepDuration);
 
         // Act
         var duration = context.GetDuration();
 
         // Assert
-        duration.Should().BeCloseTo(DateTime.UtcNow - createdAt, TimeSpan.FromMilliseconds(50));
+        duration.Should().BeCloseTo(DateTime.UtcNow - createdAt, TimeSpan.FromMilliseconds(ExecutionContextTestsConstants.TimeToleranceMilliseconds));
         duration.Should().BeGreaterThan(TimeSpan.Zero);
     }
 
@@ -440,7 +441,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
 
         // Act
         context.AddError(null); // Won't add
-        context.AddError(""); // Won't add
+        context.AddError(ExecutionContextTestsConstants.EmptyString); // Won't add
 
         // Assert
         context.IsValid.Should().BeTrue();
@@ -456,7 +457,7 @@ public sealed class ExecutionContextTests : IExecutionContextTests
         var context = new TelegramBotFramework.Models.ExecutionContext();
 
         // Act
-        context.AddError("Error occurred");
+        context.AddError(ExecutionContextTestsConstants.ValidationErrorMessage);
 
         // Assert
         context.IsValid.Should().BeFalse();
