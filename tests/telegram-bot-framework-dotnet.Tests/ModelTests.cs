@@ -22,7 +22,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void GetDisplayName_WithFirstAndLastName_ReturnsFullName()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "John", LastName = "Doe" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = "John", LastName = "Doe" };
 
 		var name = user.GetDisplayName();
 
@@ -35,7 +35,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void GetDisplayName_WithoutLastName_ReturnsFirstNameOnly()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "Alice" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = "Alice" };
 
 		var name = user.GetDisplayName();
 
@@ -48,7 +48,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void Validate_WithNonPositiveTelegramId_ThrowsInvalidOperationException()
 	{
-		var user = new BotUser { TelegramId = 0, FirstName = "Test" };
+		var user = new BotUser { TelegramId = 0, FirstName = BotUserTestsConstants.TestFirstName };
 
 		var act = () => user.Validate();
 
@@ -74,12 +74,12 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void UpdateActivity_IncrementsMessagesCount()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "Test" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = BotUserTestsConstants.TestFirstName };
 		var before = user.MessagesCount;
 
 		user.UpdateActivity();
 
-		user.MessagesCount.Should().Be(before + 1);
+		user.MessagesCount.Should().Be(before + BotUserTestsConstants.SingleItemCount);
 	}
 
 	/// <summary>
@@ -88,7 +88,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void SetMetadata_AndGetMetadata_RoundTripsValue()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "Test" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = BotUserTestsConstants.TestFirstName };
 
 		user.SetMetadata("plan", "premium");
 
@@ -101,7 +101,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void GetMetadata_WhenKeyNotPresent_ReturnsNull()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "Test" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = BotUserTestsConstants.TestFirstName };
 
 		user.GetMetadata("missing").Should().BeNull();
 	}
@@ -112,7 +112,7 @@ public sealed class BotUserTests : IBotUserTests
 	[Fact]
 	public void SetMetadata_OverwritesExistingKey()
 	{
-		var user = new BotUser { TelegramId = 1, FirstName = "Test" };
+		var user = new BotUser { TelegramId = BotUserTestsConstants.DefaultTelegramId, FirstName = BotUserTestsConstants.TestFirstName };
 		user.SetMetadata("tier", "free");
 
 		user.SetMetadata("tier", "pro");
@@ -126,7 +126,7 @@ public sealed class CommandTests
 	[Fact]
 	public void CanExecuteBy_AdminCommandAndUserRole_ReturnsFalse()
 	{
-		var command = new Command { Name = "/ban", HandlerType = "Handler", RequiresAdmin = true, IsEnabled = true };
+		var command = new Command { Name = BotUserTestsConstants.BanCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, RequiresAdmin = true, IsEnabled = true };
 
 		command.CanExecuteBy(UserRole.User).Should().BeFalse();
 	}
@@ -134,7 +134,7 @@ public sealed class CommandTests
 	[Fact]
 	public void CanExecuteBy_AdminCommandAndModeratorRole_ReturnsFalse()
 	{
-		var command = new Command { Name = "/ban", HandlerType = "Handler", RequiresAdmin = true, IsEnabled = true };
+		var command = new Command { Name = BotUserTestsConstants.BanCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, RequiresAdmin = true, IsEnabled = true };
 
 		command.CanExecuteBy(UserRole.Moderator).Should().BeFalse();
 	}
@@ -142,7 +142,7 @@ public sealed class CommandTests
 	[Fact]
 	public void CanExecuteBy_AdminCommandAndAdminRole_ReturnsTrue()
 	{
-		var command = new Command { Name = "/ban", HandlerType = "Handler", RequiresAdmin = true, IsEnabled = true };
+		var command = new Command { Name = BotUserTestsConstants.BanCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, RequiresAdmin = true, IsEnabled = true };
 
 		command.CanExecuteBy(UserRole.Administrator).Should().BeTrue();
 	}
@@ -150,7 +150,7 @@ public sealed class CommandTests
 	[Fact]
 	public void CanExecuteBy_WhenCommandIsDisabled_ReturnsFalseForAnyRole()
 	{
-		var command = new Command { Name = "/start", HandlerType = "Handler", IsEnabled = false };
+		var command = new Command { Name = BotUserTestsConstants.StartCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, IsEnabled = false };
 
 		command.CanExecuteBy(UserRole.Owner).Should().BeFalse();
 	}
@@ -158,75 +158,75 @@ public sealed class CommandTests
 	[Fact]
 	public void RecordExecution_IncrementsExecutionCount()
 	{
-		var command = new Command { Name = "/test", HandlerType = "Handler" };
+		var command = new Command { Name = BotUserTestsConstants.TestCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType };
 
 		command.RecordExecution();
 
-		command.ExecutionCount.Should().Be(1);
+		command.ExecutionCount.Should().Be(BotUserTestsConstants.SingleItemCount);
 	}
 
 	[Fact]
 	public void RecordExecution_CalledMultipleTimes_AccumulatesCount()
 	{
-		var command = new Command { Name = "/test", HandlerType = "Handler" };
+		var command = new Command { Name = BotUserTestsConstants.TestCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType };
 
 		command.RecordExecution();
 		command.RecordExecution();
 		command.RecordExecution();
 
-		command.ExecutionCount.Should().Be(3);
+		command.ExecutionCount.Should().Be(BotUserTestsConstants.ThreeItemCount);
 	}
 
 	[Fact]
 	public void IsRateLimited_WhenExecutionsAtLimit_ReturnsTrue()
 	{
-		var command = new Command { Name = "/flood", HandlerType = "Handler", RateLimitPerMinute = 10 };
+		var command = new Command { Name = BotUserTestsConstants.FloodCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, RateLimitPerMinute = BotUserTestsConstants.RateLimitPerMinute };
 
-		command.IsRateLimited(10).Should().BeTrue();
+		command.IsRateLimited(BotUserTestsConstants.RateLimitPerMinute).Should().BeTrue();
 	}
 
 	[Fact]
 	public void IsRateLimited_WhenExecutionsBelowLimit_ReturnsFalse()
 	{
-		var command = new Command { Name = "/flood", HandlerType = "Handler", RateLimitPerMinute = 10 };
+		var command = new Command { Name = BotUserTestsConstants.FloodCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, RateLimitPerMinute = BotUserTestsConstants.RateLimitPerMinute };
 
-		command.IsRateLimited(9).Should().BeFalse();
+		command.IsRateLimited(BotUserTestsConstants.ExecutionsBelowRateLimit).Should().BeFalse();
 	}
 
 	[Fact]
 	public void IsRateLimited_WhenNoLimitConfigured_ReturnsFalseRegardlessOfCount()
 	{
-		var command = new Command { Name = "/open", HandlerType = "Handler", RateLimitPerMinute = null };
+		var command = new Command { Name = "/open", HandlerType = BotUserTestsConstants.CommandHandlerType, RateLimitPerMinute = null };
 
-		command.IsRateLimited(9999).Should().BeFalse();
+		command.IsRateLimited(BotUserTestsConstants.UnlimitedExecutionCount).Should().BeFalse();
 	}
 
 	[Fact]
 	public void GetCommandPatterns_WithAlias_ReturnsBothNameAndAlias()
 	{
-		var command = new Command { Name = "/start", HandlerType = "Handler", Aliases = new List<string> { "/go" } };
+		var command = new Command { Name = BotUserTestsConstants.StartCommandName, HandlerType = BotUserTestsConstants.CommandHandlerType, Aliases = new List<string> { "/go" } };
 
 		var patterns = command.GetCommandPatterns().ToList();
 
-		patterns.Should().HaveCount(2);
-		patterns.Should().ContainInOrder("/start", "/go");
+		patterns.Should().HaveCount(BotUserTestsConstants.TwoItemCount);
+		patterns.Should().ContainInOrder(BotUserTestsConstants.StartCommandName, "/go");
 	}
 
 	[Fact]
 	public void GetCommandPatterns_WithoutAlias_ReturnsOnlyName()
 	{
-		var command = new Command { Name = "/help", HandlerType = "Handler" };
+		var command = new Command { Name = "/help", HandlerType = BotUserTestsConstants.CommandHandlerType };
 
 		var patterns = command.GetCommandPatterns().ToList();
 
-		patterns.Should().HaveCount(1);
+		patterns.Should().HaveCount(BotUserTestsConstants.SingleItemCount);
 		patterns[0].Should().Be("/help");
 	}
 
 	[Fact]
 	public void Validate_StandardCommandMissingLeadingSlash_ThrowsInvalidOperationException()
 	{
-		var command = new Command { Name = "start", HandlerType = "Handler", Type = CommandType.Standard };
+		var command = new Command { Name = "start", HandlerType = BotUserTestsConstants.CommandHandlerType, Type = CommandType.Standard };
 
 		var act = () => command.Validate();
 
@@ -236,7 +236,7 @@ public sealed class CommandTests
 	[Fact]
 	public void Validate_CommandWithEmptyName_ThrowsInvalidOperationException()
 	{
-		var command = new Command { Name = "", HandlerType = "Handler" };
+		var command = new Command { Name = "", HandlerType = BotUserTestsConstants.CommandHandlerType };
 
 		var act = () => command.Validate();
 
@@ -251,10 +251,10 @@ public sealed class UserSessionTests
 	{
 		var session = new UserSession
 		{
-			SessionId = "abc123",
-			UserId = 1,
-			ChatId = 100,
-			ExpiresAt = DateTime.UtcNow.AddMinutes(-5)
+			SessionId = BotUserTestsConstants.SessionId,
+			UserId = BotUserTestsConstants.DefaultUserId,
+			ChatId = BotUserTestsConstants.SessionChatId,
+			ExpiresAt = DateTime.UtcNow.AddMinutes(BotUserTestsConstants.PastExpirationMinutes)
 		};
 
 		session.IsExpired().Should().BeTrue();
@@ -263,7 +263,7 @@ public sealed class UserSessionTests
 	[Fact]
 	public void IsExpired_WhenNoExpiresAtSet_ReturnsFalse()
 	{
-		var session = new UserSession { SessionId = "abc123", UserId = 1, ChatId = 100 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.SessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.SessionChatId };
 
 		session.IsExpired().Should().BeFalse();
 	}
@@ -273,10 +273,10 @@ public sealed class UserSessionTests
 	{
 		var session = new UserSession
 		{
-			SessionId = "abc123",
-			UserId = 1,
-			ChatId = 100,
-			ExpiresAt = DateTime.UtcNow.AddHours(1)
+			SessionId = BotUserTestsConstants.SessionId,
+			UserId = BotUserTestsConstants.DefaultUserId,
+			ChatId = BotUserTestsConstants.SessionChatId,
+			ExpiresAt = DateTime.UtcNow.AddHours(BotUserTestsConstants.FutureExpirationHours)
 		};
 
 		session.IsExpired().Should().BeFalse();
@@ -285,18 +285,18 @@ public sealed class UserSessionTests
 	[Fact]
 	public void UpdateActivity_CalledTwice_IncrementsInteractionCountToTwo()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 1, ChatId = 1 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
 
 		session.UpdateActivity();
 		session.UpdateActivity();
 
-		session.InteractionCount.Should().Be(2);
+		session.InteractionCount.Should().Be(BotUserTestsConstants.TwoItemCount);
 	}
 
 	[Fact]
 	public void SetContextData_AndGetContextData_StoresAndRetrieves()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 1, ChatId = 1 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
 
 		session.SetContextData("order_id", "ORD-42");
 
@@ -306,7 +306,7 @@ public sealed class UserSessionTests
 	[Fact]
 	public void RemoveContextData_WhenKeyExists_ReturnsTrueAndRemovesEntry()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 1, ChatId = 1 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
 		session.SetContextData("temp", "value");
 
 		var removed = session.RemoveContextData("temp");
@@ -318,31 +318,31 @@ public sealed class UserSessionTests
 	[Fact]
 	public void ClearContextData_AfterSettingMultipleKeys_EmptiesAllData()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 1, ChatId = 1 };
-		session.SetContextData("k1", "v1");
-		session.SetContextData("k2", "v2");
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
+		session.SetContextData(BotUserTestsConstants.FirstContextKey, "v1");
+		session.SetContextData(BotUserTestsConstants.SecondContextKey, "v2");
 
 		session.ClearContextData();
 
-		session.GetContextData("k1").Should().BeNull();
-		session.GetContextData("k2").Should().BeNull();
+		session.GetContextData(BotUserTestsConstants.FirstContextKey).Should().BeNull();
+		session.GetContextData(BotUserTestsConstants.SecondContextKey).Should().BeNull();
 	}
 
 	[Fact]
 	public void AddCommandToHistory_When55CommandsAdded_CapsAtFiftyEntries()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 1, ChatId = 1 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
 
-		for (int i = 0; i < 55; i++)
-			session.AddCommandToHistory($"/cmd{i}");
+		for (int i = 0; i < BotUserTestsConstants.CommandsAddedBeyondHistoryLimit; i++)
+			session.AddCommandToHistory(string.Format(BotUserTestsConstants.CommandHistoryFormat, i));
 
-		session.GetCommandHistory().Count().Should().Be(50);
+		session.GetCommandHistory().Count().Should().Be(BotUserTestsConstants.CommandHistoryLimit);
 	}
 
 	[Fact]
 	public void Validate_WhenSessionIdIsEmpty_ThrowsInvalidOperationException()
 	{
-		var session = new UserSession { SessionId = "", UserId = 1, ChatId = 1 };
+		var session = new UserSession { SessionId = "", UserId = BotUserTestsConstants.DefaultUserId, ChatId = BotUserTestsConstants.DefaultChatId };
 
 		var act = () => session.Validate();
 
@@ -352,7 +352,7 @@ public sealed class UserSessionTests
 	[Fact]
 	public void Validate_WhenUserIdIsZero_ThrowsInvalidOperationException()
 	{
-		var session = new UserSession { SessionId = "s1", UserId = 0, ChatId = 1 };
+		var session = new UserSession { SessionId = BotUserTestsConstants.ShortSessionId, UserId = 0, ChatId = BotUserTestsConstants.DefaultChatId };
 
 		var act = () => session.Validate();
 
@@ -365,31 +365,31 @@ public sealed class MenuTests
 	[Fact]
 	public void AddButton_IncreasesButtonCount()
 	{
-		var menu = new Menu { Id = "main", Title = "Main Menu" };
+		var menu = new Menu { Id = BotUserTestsConstants.MainMenuId, Title = "Main Menu" };
 
 		menu.AddButton(new MenuButton { Label = "Option 1", CallbackData = "opt1" });
 
-		menu.Buttons.Should().HaveCount(1);
+		menu.Buttons.Should().HaveCount(BotUserTestsConstants.SingleItemCount);
 	}
 
 	[Fact]
 	public void RemoveButton_ByCallbackData_RemovesCorrectButtonAndLeavesOthers()
 	{
-		var menu = new Menu { Id = "main", Title = "Main" };
+		var menu = new Menu { Id = BotUserTestsConstants.MainMenuId, Title = "Main" };
 		menu.AddButton(new MenuButton { Label = "A", CallbackData = "a" });
 		menu.AddButton(new MenuButton { Label = "B", CallbackData = "b" });
 
 		var removed = menu.RemoveButton("a");
 
 		removed.Should().BeTrue();
-		menu.Buttons.Should().HaveCount(1);
+		menu.Buttons.Should().HaveCount(BotUserTestsConstants.SingleItemCount);
 		menu.Buttons[0].CallbackData.Should().Be("b");
 	}
 
 	[Fact]
 	public void RemoveButton_WhenCallbackDataNotFound_ReturnsFalse()
 	{
-		var menu = new Menu { Id = "main", Title = "Main" };
+		var menu = new Menu { Id = BotUserTestsConstants.MainMenuId, Title = "Main" };
 		menu.AddButton(new MenuButton { Label = "A", CallbackData = "a" });
 
 		menu.RemoveButton("nonexistent").Should().BeFalse();
@@ -398,7 +398,7 @@ public sealed class MenuTests
 	[Fact]
 	public void GetButton_WithMatchingCallbackData_ReturnsCorrectButton()
 	{
-		var menu = new Menu { Id = "m", Title = "T" };
+		var menu = new Menu { Id = BotUserTestsConstants.CompactMenuId, Title = BotUserTestsConstants.CompactMenuTitle };
 		menu.AddButton(new MenuButton { Label = "Settings", CallbackData = "settings" });
 		menu.AddButton(new MenuButton { Label = "Help", CallbackData = "help" });
 
@@ -411,7 +411,7 @@ public sealed class MenuTests
 	[Fact]
 	public void GetButton_WhenCallbackDataNotFound_ReturnsNull()
 	{
-		var menu = new Menu { Id = "m", Title = "T" };
+		var menu = new Menu { Id = BotUserTestsConstants.CompactMenuId, Title = BotUserTestsConstants.CompactMenuTitle };
 
 		menu.GetButton("does-not-exist").Should().BeNull();
 	}
@@ -419,29 +419,29 @@ public sealed class MenuTests
 	[Fact]
 	public void GetArrangedButtons_WithFiveButtonsAndMaxTwoPerRow_ProducesThreeRows()
 	{
-		var menu = new Menu { Id = "m", Title = "T", MaxButtonsPerRow = 2 };
-		for (int i = 1; i <= 5; i++)
+		var menu = new Menu { Id = BotUserTestsConstants.CompactMenuId, Title = BotUserTestsConstants.CompactMenuTitle, MaxButtonsPerRow = BotUserTestsConstants.TwoButtonsPerRow };
+		for (int i = BotUserTestsConstants.SingleItemCount; i <= BotUserTestsConstants.FiveButtonCount; i++)
 			menu.AddButton(new MenuButton { Label = $"B{i}", CallbackData = $"b{i}" });
 
 		var rows = menu.GetArrangedButtons();
 
-		rows.Should().HaveCount(3);
-		rows[0].Should().HaveCount(2);
-		rows[1].Should().HaveCount(2);
-		rows[2].Should().HaveCount(1);
+		rows.Should().HaveCount(BotUserTestsConstants.ThreeItemCount);
+		rows[0].Should().HaveCount(BotUserTestsConstants.TwoItemCount);
+		rows[1].Should().HaveCount(BotUserTestsConstants.TwoItemCount);
+		rows[2].Should().HaveCount(BotUserTestsConstants.SingleItemCount);
 	}
 
 	[Fact]
 	public void GetArrangedButtons_WithExactMultipleOfMaxPerRow_ProducesEvenRows()
 	{
-		var menu = new Menu { Id = "m", Title = "T", MaxButtonsPerRow = 3 };
-		for (int i = 1; i <= 6; i++)
+		var menu = new Menu { Id = BotUserTestsConstants.CompactMenuId, Title = BotUserTestsConstants.CompactMenuTitle, MaxButtonsPerRow = BotUserTestsConstants.ThreeButtonsPerRow };
+		for (int i = BotUserTestsConstants.SingleItemCount; i <= BotUserTestsConstants.SixButtonCount; i++)
 			menu.AddButton(new MenuButton { Label = $"B{i}", CallbackData = $"b{i}" });
 
 		var rows = menu.GetArrangedButtons();
 
-		rows.Should().HaveCount(2);
-		rows.Should().AllSatisfy(r => r.Should().HaveCount(3));
+		rows.Should().HaveCount(BotUserTestsConstants.TwoItemCount);
+		rows.Should().AllSatisfy(r => r.Should().HaveCount(BotUserTestsConstants.ThreeItemCount));
 	}
 
 	[Fact]
@@ -457,7 +457,7 @@ public sealed class MenuTests
 	[Fact]
 	public void Validate_WithEmptyId_ThrowsInvalidOperationException()
 	{
-		var menu = new Menu { Id = "", Title = "T" };
+		var menu = new Menu { Id = "", Title = BotUserTestsConstants.CompactMenuTitle };
 		menu.AddButton(new MenuButton { Label = "X", CallbackData = "x" });
 
 		var act = () => menu.Validate();
@@ -482,21 +482,21 @@ public sealed class InMemoryUserRepositoryTests
 	public async Task CreateAsync_ValidUser_StoresAndReturnsUser()
 	{
 		var repo = new InMemoryUserRepository();
-		var user = CreateUser(1001, "Alice");
+		var user = CreateUser(BotUserTestsConstants.CreatedUserTelegramId, "Alice");
 
 		var result = await repo.CreateAsync(user).ConfigureAwait(false);
 
 		result.Should().NotBeNull();
-		result.TelegramId.Should().Be(1001);
+		result.TelegramId.Should().Be(BotUserTestsConstants.CreatedUserTelegramId);
 	}
 
 	[Fact]
 	public async Task GetByIdAsync_WhenUserExists_ReturnsUser()
 	{
 		var repo = new InMemoryUserRepository();
-		await repo.CreateAsync(CreateUser(2002, "Bob")).ConfigureAwait(false);
+		await repo.CreateAsync(CreateUser(BotUserTestsConstants.ExistingUserTelegramId, "Bob")).ConfigureAwait(false);
 
-		var result = await repo.GetByIdAsync(2002).ConfigureAwait(false);
+		var result = await repo.GetByIdAsync(BotUserTestsConstants.ExistingUserTelegramId).ConfigureAwait(false);
 
 		result.Should().NotBeNull();
 		result!.FirstName.Should().Be("Bob");
@@ -507,7 +507,7 @@ public sealed class InMemoryUserRepositoryTests
 	{
 		var repo = new InMemoryUserRepository();
 
-		var result = await repo.GetByIdAsync(9999).ConfigureAwait(false);
+		var result = await repo.GetByIdAsync(BotUserTestsConstants.MissingUserTelegramId).ConfigureAwait(false);
 
 		result.Should().BeNull();
 	}
@@ -516,12 +516,12 @@ public sealed class InMemoryUserRepositoryTests
 	public async Task DeleteAsync_WhenUserExists_ReturnsTrueAndRemovesEntry()
 	{
 		var repo = new InMemoryUserRepository();
-		await repo.CreateAsync(CreateUser(3003, "Carol")).ConfigureAwait(false);
+		await repo.CreateAsync(CreateUser(BotUserTestsConstants.DeletedUserTelegramId, "Carol")).ConfigureAwait(false);
 
-		var deleted = await repo.DeleteAsync(3003).ConfigureAwait(false);
+		var deleted = await repo.DeleteAsync(BotUserTestsConstants.DeletedUserTelegramId).ConfigureAwait(false);
 
 		deleted.Should().BeTrue();
-		(await repo.GetByIdAsync(3003)).Should().BeNull();
+		(await repo.GetByIdAsync(BotUserTestsConstants.DeletedUserTelegramId)).Should().BeNull();
 	}
 
 	[Fact]
@@ -529,7 +529,7 @@ public sealed class InMemoryUserRepositoryTests
 	{
 		var repo = new InMemoryUserRepository();
 
-		var deleted = await repo.DeleteAsync(99999).ConfigureAwait(false);
+		var deleted = await repo.DeleteAsync(BotUserTestsConstants.MissingDeletedUserTelegramId).ConfigureAwait(false);
 
 		deleted.Should().BeFalse();
 	}
@@ -544,7 +544,7 @@ public sealed class InMemoryUserRepositoryTests
 
 		var banned = await repo.GetByStatusAsync(UserStatus.Banned).ConfigureAwait(false);
 
-		banned.Should().HaveCount(1);
+		banned.Should().HaveCount(BotUserTestsConstants.SingleItemCount);
 		banned[0].FirstName.Should().Be("Banned");
 	}
 
@@ -558,7 +558,7 @@ public sealed class InMemoryUserRepositoryTests
 
 		var results = await repo.SearchAsync("alex").ConfigureAwait(false);
 
-		results.Should().HaveCount(2);
+		results.Should().HaveCount(BotUserTestsConstants.TwoItemCount);
 	}
 
 	[Fact]
@@ -571,6 +571,6 @@ public sealed class InMemoryUserRepositoryTests
 
 		var count = await repo.CountAsync().ConfigureAwait(false);
 
-		count.Should().Be(3);
+		count.Should().Be(BotUserTestsConstants.ThreeItemCount);
 	}
 }
