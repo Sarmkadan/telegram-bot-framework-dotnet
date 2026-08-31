@@ -52,14 +52,14 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser()
     {
         // Arrange
-        var existingUser = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Username = "johndoe" };
+        var existingUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
         // Act
-        var result = await _userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe").ConfigureAwait(false);
+        var result = await _userService.GetOrCreateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, UserServiceTestsConstants.LastNameDoe, UserServiceTestsConstants.UsernameJohnDoe).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(existingUser);
@@ -75,21 +75,21 @@ public sealed class UserServiceTests : IUserServiceTests
     {
         // Arrange
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
         _mockUserRepository
             .Setup(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser user, CancellationToken _) => user);
 
         // Act
-        var result = await _userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe").ConfigureAwait(false);
+        var result = await _userService.GetOrCreateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, UserServiceTestsConstants.LastNameDoe, UserServiceTestsConstants.UsernameJohnDoe).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.TelegramId.Should().Be(123);
-        result.FirstName.Should().Be("John");
-        result.LastName.Should().Be("Doe");
-        result.Username.Should().Be("johndoe");
+        result.TelegramId.Should().Be(UserServiceTestsConstants.ExistingUserId);
+        result.FirstName.Should().Be(UserServiceTestsConstants.FirstNameJohn);
+        result.LastName.Should().Be(UserServiceTestsConstants.LastNameDoe);
+        result.Username.Should().Be(UserServiceTestsConstants.UsernameJohnDoe);
         result.Status.Should().Be(UserStatus.Active);
         result.MessagesCount.Should().Be(0);
         result.LastActivityAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
@@ -105,18 +105,18 @@ public sealed class UserServiceTests : IUserServiceTests
     {
         // Arrange
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
         _mockUserRepository
             .Setup(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser user, CancellationToken _) => user);
 
         // Act
-        var result = await _userService.GetOrCreateUserAsync(123, "John", null, null).ConfigureAwait(false);
+        var result = await _userService.GetOrCreateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, null, null).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
-        result.FirstName.Should().Be("John");
+        result.FirstName.Should().Be(UserServiceTestsConstants.FirstNameJohn);
         result.LastName.Should().BeNull();
         result.Username.Should().BeNull();
     }
@@ -129,24 +129,24 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task GetOrCreateUserAsync_WithExistingUserWithDifferentDetails_UpdatesUser()
     {
         // Arrange
-        var existingUser = new BotUser { UserId = 123, FirstName = "OldName", LastName = "OldLast", Username = "olduser" };
-        var updatedUser = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Username = "johndoe" };
+        var existingUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameOld, LastName = UserServiceTestsConstants.LastNameOld, Username = UserServiceTestsConstants.UsernameOldUser };
+        var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
         // Act
-        var result = await _userService.GetOrCreateUserAsync(123, "John", "Doe", "johndoe").ConfigureAwait(false);
+        var result = await _userService.GetOrCreateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, UserServiceTestsConstants.LastNameDoe, UserServiceTestsConstants.UsernameJohnDoe).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(existingUser);
-        result.FirstName.Should().Be("John");
-        result.LastName.Should().Be("Doe");
-        result.Username.Should().Be("johndoe");
+        result.FirstName.Should().Be(UserServiceTestsConstants.FirstNameJohn);
+        result.LastName.Should().Be(UserServiceTestsConstants.LastNameDoe);
+        result.Username.Should().Be(UserServiceTestsConstants.UsernameJohnDoe);
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -158,14 +158,14 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe" };
+        var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        var result = await _userService.GetUserByIdAsync(123).ConfigureAwait(false);
+        var result = await _userService.GetUserByIdAsync(UserServiceTestsConstants.ExistingUserId).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(user);
@@ -180,11 +180,11 @@ public sealed class UserServiceTests : IUserServiceTests
     {
         // Arrange
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.NonExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
 
         // Act
-        var result = await _userService.GetUserByIdAsync(999).ConfigureAwait(false);
+        var result = await _userService.GetUserByIdAsync(UserServiceTestsConstants.NonExistingUserId).ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -197,18 +197,18 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task RecordUserActivityAsync_UpdatesLastActivityAndIncrementsMessagesCount()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", MessagesCount = 5 };
-        var updatedUser = new BotUser { UserId = 123, FirstName = "John", MessagesCount = 6 };
+        var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, MessagesCount = 5 };
+        var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, MessagesCount = 6 };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        await _userService.RecordUserActivityAsync(123).ConfigureAwait(false);
+        await _userService.RecordUserActivityAsync(UserServiceTestsConstants.ExistingUserId).ConfigureAwait(false);
 
         // Assert
         _mockUserRepository.Verify(r => r.UpdateAsync(It.Is<BotUser>(u =>
@@ -226,7 +226,7 @@ public sealed class UserServiceTests : IUserServiceTests
     {
         // Arrange
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.NonExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
 
         // Act & Assert
@@ -242,22 +242,22 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task UpdateUserAsync_UpdatesUserProperties()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Username = "johndoe" };
-        var updatedUser = new BotUser { UserId = 123, FirstName = "John", LastName = "Smith", Username = "johnsmith" };
+        var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
+        var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameSmithUpdated, Username = "johnsmith" };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(updatedUser);
 
         // Act
-        var result = await _userService.UpdateUserAsync(123, "John", "Smith", "johnsmith").ConfigureAwait(false);
+        var result = await _userService.UpdateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, UserServiceTestsConstants.LastNameSmithUpdated, "johnsmith").ConfigureAwait(false);
 
         // Assert
         result.Should().Be(updatedUser);
-        result.LastName.Should().Be("Smith");
+        result.LastName.Should().Be(UserServiceTestsConstants.LastNameSmithUpdated);
         result.Username.Should().Be("johnsmith");
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -270,22 +270,22 @@ public sealed class UserServiceTests : IUserServiceTests
     public async Task UpdateUserAsync_WithPartialUpdates_PreservesUnchangedValues()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Username = "johndoe" };
+        var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
 
         _mockUserRepository
-            .Setup(r => r.GetByIdAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _mockUserRepository
             .Setup(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        var result = await _userService.UpdateUserAsync(123, "John", null, null).ConfigureAwait(false);
+        var result = await _userService.UpdateUserAsync(UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn, null, null).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(user);
-        result.LastName.Should().Be("Doe");
-        result.Username.Should().Be("johndoe");
+        result.LastName.Should().Be(UserServiceTestsConstants.LastNameDoe);
+        result.Username.Should().Be(UserServiceTestsConstants.UsernameJohnDoe);
     }
 
     /// <summary>
@@ -297,15 +297,15 @@ public sealed class UserServiceTests : IUserServiceTests
     {
         // Arrange
         _mockUserRepository
-            .Setup(r => r.DeleteAsync(123, It.IsAny<CancellationToken>()))
+            .Setup(r => r.DeleteAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _userService.DeleteUserAsync(123).ConfigureAwait(false);
+        var result = await _userService.DeleteUserAsync(UserServiceTestsConstants.ExistingUserId).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        _mockUserRepository.Verify(r => r.DeleteAsync(123, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUserRepository.Verify(r => r.DeleteAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -337,21 +337,21 @@ public sealed class UserServiceTests : IUserServiceTests
         // Arrange
         var users = new List<BotUser>
         {
-            new BotUser { UserId = 1, FirstName = "John", LastName = "Doe" },
-            new BotUser { UserId = 2, FirstName = "Jane", LastName = "Smith" },
-            new BotUser { UserId = 3, FirstName = "Johnny", LastName = "Appleseed" }
+            new BotUser { UserId = 1, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe },
+            new BotUser { UserId = UserServiceTestsConstants.UserIdTwo, FirstName = UserServiceTestsConstants.FirstNameJane, LastName = UserServiceTestsConstants.LastNameSmithUpdated },
+            new BotUser { UserId = UserServiceTestsConstants.UserIdThree, FirstName = UserServiceTestsConstants.FirstNameJohnny, LastName = UserServiceTestsConstants.LastNameAppleseed }
         };
 
         _mockUserRepository
-            .Setup(r => r.SearchAsync("John", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(users.Where(u => u.FirstName.Contains("John", StringComparison.OrdinalIgnoreCase)).ToList());
+            .Setup(r => r.SearchAsync(UserServiceTestsConstants.FirstNameJohn, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(users.Where(u => u.FirstName.Contains(UserServiceTestsConstants.FirstNameJohn, StringComparison.OrdinalIgnoreCase)).ToList());
 
         // Act
-        var result = await _userService.SearchUsersAsync("John").ConfigureAwait(false);
+        var result = await _userService.SearchUsersAsync(UserServiceTestsConstants.FirstNameJohn).ConfigureAwait(false);
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().AllSatisfy(u => u.FirstName.Should().ContainEquivalentOf("John"));
+        result.Should().AllSatisfy(u => u.FirstName.Should().ContainEquivalentOf(UserServiceTestsConstants.FirstNameJohn));
     }
 
     /// <summary>
@@ -364,8 +364,8 @@ public sealed class UserServiceTests : IUserServiceTests
         // Arrange
         var users = new List<BotUser>
         {
-            new BotUser { UserId = 1, FirstName = "John" },
-            new BotUser { UserId = 2, FirstName = "Jane" }
+            new BotUser { UserId = UserServiceTestsConstants.UserIdOne, FirstName = UserServiceTestsConstants.FirstNameJohn },
+            new BotUser { UserId = UserServiceTestsConstants.UserIdTwo, FirstName = UserServiceTestsConstants.FirstNameJane }
         };
 
         _mockUserRepository
