@@ -29,6 +29,7 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public async Task<T?> GetAsync<T>(string url, int maxRetries = 3)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
         if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
         {
             _logger.LogWarning("Invalid URL for external API call: {Url}", url);
@@ -82,6 +83,7 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public async Task<bool> PostAsync<TRequest>(string url, TRequest payload, string? apiKey = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
         if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
         {
             _logger.LogWarning("Invalid URL for external API call: {Url}", url);
@@ -121,11 +123,15 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+        ArgumentNullException.ThrowIfNull(headers);
         return GetWithHeadersAsync(url, headers, CancellationToken.None);
     }
 
     public async Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+        ArgumentNullException.ThrowIfNull(headers);
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
