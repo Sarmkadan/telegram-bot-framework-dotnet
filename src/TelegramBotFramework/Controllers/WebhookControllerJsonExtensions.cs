@@ -51,7 +51,7 @@ public static class WebhookControllerJsonExtensions
 		}
 		catch (JsonException ex)
 		{
-			throw new JsonException("Failed to deserialize JSON to WebhookController", ex);
+			throw new JsonException(WebhookControllerJsonExtensionsConstants.FailedToDeserializeWebhookControllerMessage, ex);
 		}
 	}
 
