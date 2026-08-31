@@ -40,6 +40,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public T? GetParameter<T>(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         if (Parameters?.TryGetValue(key, out var value) == true)
         {
             return value is T tValue ? tValue : default;
@@ -52,6 +53,8 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public void SetParameter(string key, object value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
         Parameters ??= new Dictionary<string, object>();
         Parameters[key] = value;
     }
@@ -61,6 +64,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public T? GetState<T>(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         if (States.TryGetValue(key, out var value))
         {
             return value is T tValue ? tValue : default;
@@ -73,11 +77,8 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public void SetState(string? key, object value)
     {
-        if (string.IsNullOrEmpty(key))
-        {
-            return;
-        }
-
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
         States[key] = value;
     }
 
@@ -103,6 +104,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <param name="responseMessage">The message text to deliver to the user.</param>
     public void RespondAndStop(string responseMessage)
     {
+        ArgumentException.ThrowIfNullOrEmpty(responseMessage);
         PendingResponse = responseMessage;
         IsStopped = true;
         IsValid = false;
@@ -121,9 +123,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public void AddError(string? errorMessage)
     {
-        if (string.IsNullOrEmpty(errorMessage))
-            return;
-
+        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
         Errors ??= new List<string>();
         Errors.Add(errorMessage);
         IsValid = false;
@@ -166,8 +166,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
     public bool Equals(ExecutionContext? other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
+        ArgumentNullException.ThrowIfNull(other);
         return ContextId == other.ContextId
                && UserId == other.UserId
                && ChatId == other.ChatId
@@ -185,7 +184,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
+        ArgumentNullException.ThrowIfNull(obj);
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != GetType()) return false;
         return Equals((ExecutionContext)obj);
@@ -208,9 +207,8 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
     public static bool operator ==(ExecutionContext? left, ExecutionContext? right)
     {
-        if (ReferenceEquals(left, right)) return true;
-        if (ReferenceEquals(null, left)) return false;
-        if (ReferenceEquals(null, right)) return false;
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
         return left.Equals(right);
     }
 
@@ -222,6 +220,8 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
     public static bool operator !=(ExecutionContext? left, ExecutionContext? right)
     {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
         return !(left == right);
     }
 }
