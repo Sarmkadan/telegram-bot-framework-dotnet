@@ -53,10 +53,15 @@ public class WebhookHandlerExtensionsTests : IWebhookHandlerExtensionsTests
     {
         // Arrange
         var handler = new WebhookHandler();
-        var update = new TelegramUpdate { CallbackData = "test" };
+        var update = new TelegramUpdate
+        {
+            CallbackData = WebhookHandlerExtensionsTestsConstants.MatchingCallbackData,
+        };
 
         // Act
-        var result = handler.HasCallbackData(update, "test");
+        var result = handler.HasCallbackData(
+            update,
+            WebhookHandlerExtensionsTestsConstants.MatchingCallbackData);
 
         // Assert
         result.Should().BeTrue();
@@ -71,10 +76,15 @@ public class WebhookHandlerExtensionsTests : IWebhookHandlerExtensionsTests
     {
         // Arrange
         var handler = new WebhookHandler();
-        var update = new TelegramUpdate { CallbackData = "test" };
+        var update = new TelegramUpdate
+        {
+            CallbackData = WebhookHandlerExtensionsTestsConstants.MatchingCallbackData,
+        };
 
         // Act
-        var result = handler.HasCallbackData(update, "different");
+        var result = handler.HasCallbackData(
+            update,
+            WebhookHandlerExtensionsTestsConstants.NonMatchingCallbackData);
 
         // Assert
         result.Should().BeFalse();
@@ -95,7 +105,7 @@ public class WebhookHandlerExtensionsTests : IWebhookHandlerExtensionsTests
         var result = handler.GetChatId(update);
 
         // Assert
-        result.Should().Be(0);
+        result.Should().Be(WebhookHandlerExtensionsTestsConstants.MissingIdentifier);
     }
 
     /// <summary>
@@ -113,6 +123,6 @@ public class WebhookHandlerExtensionsTests : IWebhookHandlerExtensionsTests
         var result = handler.GetUserId(update);
 
         // Assert
-        result.Should().Be(0);
+        result.Should().Be(WebhookHandlerExtensionsTestsConstants.MissingIdentifier);
     }
 }
