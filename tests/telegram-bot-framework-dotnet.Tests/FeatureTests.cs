@@ -35,14 +35,14 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	public void Build_WithSingleCallbackButton_CreatesOneRowOneButton()
 	{
 		var markup = InlineKeyboardBuilder.Create()
-			.AddButton("Click me", "click")
+			.AddButton(InlineKeyboardBuilderTestsConstants.ClickButtonText, InlineKeyboardBuilderTestsConstants.ClickCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(1);
-	markup.TotalButtonCount.Should().Be(1);
-	markup.InlineKeyboard[0][0].Text.Should().Be("Click me");
-	markup.InlineKeyboard[0][0].CallbackData.Should().Be("click");
-	markup.InlineKeyboard[0][0].Type.Should().Be(InlineButtonType.Callback);
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+	markup.TotalButtonCount.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.ClickButtonText);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].CallbackData.Should().Be(InlineKeyboardBuilderTestsConstants.ClickCallbackData);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Type.Should().Be(InlineButtonType.Callback);
 	}
 
 	/// <summary>
@@ -54,14 +54,14 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		await Task.CompletedTask;
 
 		var markup = InlineKeyboardBuilder.Create()
-			.AddButton("Click me", "click")
+			.AddButton(InlineKeyboardBuilderTestsConstants.ClickButtonText, InlineKeyboardBuilderTestsConstants.ClickCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(1);
-		markup.TotalButtonCount.Should().Be(1);
-		markup.InlineKeyboard[0][0].Text.Should().Be("Click me");
-		markup.InlineKeyboard[0][0].CallbackData.Should().Be("click");
-		markup.InlineKeyboard[0][0].Type.Should().Be(InlineButtonType.Callback);
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+		markup.TotalButtonCount.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.ClickButtonText);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].CallbackData.Should().Be(InlineKeyboardBuilderTestsConstants.ClickCallbackData);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Type.Should().Be(InlineButtonType.Callback);
 	}
 
 	/// <summary>
@@ -72,12 +72,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	public void Build_WithUrlButton_SetsTypeAndUrl()
 	{
 		var markup = InlineKeyboardBuilder.Create()
-			.AddUrlButton("Visit", "https://example.com")
+			.AddUrlButton(InlineKeyboardBuilderTestsConstants.VisitButtonText, InlineKeyboardBuilderTestsConstants.ExampleUrl)
 			.Build();
 
-		var btn = markup.InlineKeyboard[0][0];
+		var btn = markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex];
 	btn.Type.Should().Be(InlineButtonType.Url);
-	btn.Url.Should().Be("https://example.com");
+	btn.Url.Should().Be(InlineKeyboardBuilderTestsConstants.ExampleUrl);
 	btn.CallbackData.Should().BeNull();
 	}
 
@@ -90,12 +90,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		await Task.CompletedTask;
 
 		var markup = InlineKeyboardBuilder.Create()
-			.AddUrlButton("Visit", "https://example.com")
+			.AddUrlButton(InlineKeyboardBuilderTestsConstants.VisitButtonText, InlineKeyboardBuilderTestsConstants.ExampleUrl)
 			.Build();
 
-		var btn = markup.InlineKeyboard[0][0];
+		var btn = markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex];
 		btn.Type.Should().Be(InlineButtonType.Url);
-		btn.Url.Should().Be("https://example.com");
+		btn.Url.Should().Be(InlineKeyboardBuilderTestsConstants.ExampleUrl);
 		btn.CallbackData.Should().BeNull();
 	}
 
@@ -107,12 +107,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	public void Build_WithSwitchInlineButton_SetsTypeAndQuery()
 	{
 		var markup = InlineKeyboardBuilder.Create()
-			.AddSwitchInlineButton("Search", "my query")
+			.AddSwitchInlineButton(InlineKeyboardBuilderTestsConstants.SearchButtonText, InlineKeyboardBuilderTestsConstants.SearchQuery)
 			.Build();
 
-		var btn = markup.InlineKeyboard[0][0];
+		var btn = markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex];
 	btn.Type.Should().Be(InlineButtonType.SwitchInline);
-	btn.SwitchInlineQuery.Should().Be("my query");
+	btn.SwitchInlineQuery.Should().Be(InlineKeyboardBuilderTestsConstants.SearchQuery);
 	}
 
 	/// <summary>
@@ -124,12 +124,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		await Task.CompletedTask;
 
 		var markup = InlineKeyboardBuilder.Create()
-			.AddSwitchInlineButton("Search", "my query")
+			.AddSwitchInlineButton(InlineKeyboardBuilderTestsConstants.SearchButtonText, InlineKeyboardBuilderTestsConstants.SearchQuery)
 			.Build();
 
-		var btn = markup.InlineKeyboard[0][0];
+		var btn = markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex];
 		btn.Type.Should().Be(InlineButtonType.SwitchInline);
-		btn.SwitchInlineQuery.Should().Be("my query");
+		btn.SwitchInlineQuery.Should().Be(InlineKeyboardBuilderTestsConstants.SearchQuery);
 	}
 
 	/// <summary>
@@ -139,15 +139,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	[Fact]
 	public void Build_AutoWrapsButtonsAtMaxPerRow()
 	{
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-			.AddButton("A", "a")
-			.AddButton("B", "b")
-			.AddButton("C", "c")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.TwoButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.FirstButtonText, InlineKeyboardBuilderTestsConstants.FirstCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.SecondButtonText, InlineKeyboardBuilderTestsConstants.SecondCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.ThirdButtonText, InlineKeyboardBuilderTestsConstants.ThirdCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(2);
-	markup.InlineKeyboard[0].Count.Should().Be(2);
-	markup.InlineKeyboard[1].Count.Should().Be(1);
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex].Count.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.SecondIndex].Count.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
 	}
 
 	/// <summary>
@@ -158,15 +158,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		cancellationToken.ThrowIfCancellationRequested();
 		await Task.CompletedTask;
 
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-			.AddButton("A", "a")
-			.AddButton("B", "b")
-			.AddButton("C", "c")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.TwoButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.FirstButtonText, InlineKeyboardBuilderTestsConstants.FirstCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.SecondButtonText, InlineKeyboardBuilderTestsConstants.SecondCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.ThirdButtonText, InlineKeyboardBuilderTestsConstants.ThirdCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(2);
-		markup.InlineKeyboard[0].Count.Should().Be(2);
-		markup.InlineKeyboard[1].Count.Should().Be(1);
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex].Count.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.SecondIndex].Count.Should().Be(InlineKeyboardBuilderTestsConstants.SingleItemCount);
 	}
 
 	/// <summary>
@@ -176,15 +176,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	[Fact]
 	public void NewRow_ForcesRowBreakBeforeMaxReached()
 	{
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 3)
-			.AddButton("A", "a")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.ThreeButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.FirstButtonText, InlineKeyboardBuilderTestsConstants.FirstCallbackData)
 			.NewRow()
-			.AddButton("B", "b")
+			.AddButton(InlineKeyboardBuilderTestsConstants.SecondButtonText, InlineKeyboardBuilderTestsConstants.SecondCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(2);
-	markup.InlineKeyboard[0][0].Text.Should().Be("A");
-	markup.InlineKeyboard[1][0].Text.Should().Be("B");
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.FirstButtonText);
+	markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.SecondIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.SecondButtonText);
 	}
 
 	/// <summary>
@@ -195,15 +195,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		cancellationToken.ThrowIfCancellationRequested();
 		await Task.CompletedTask;
 
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 3)
-			.AddButton("A", "a")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.ThreeButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.FirstButtonText, InlineKeyboardBuilderTestsConstants.FirstCallbackData)
 			.NewRow()
-			.AddButton("B", "b")
+			.AddButton(InlineKeyboardBuilderTestsConstants.SecondButtonText, InlineKeyboardBuilderTestsConstants.SecondCallbackData)
 			.Build();
 
-		markup.RowCount.Should().Be(2);
-		markup.InlineKeyboard[0][0].Text.Should().Be("A");
-		markup.InlineKeyboard[1][0].Text.Should().Be("B");
+		markup.RowCount.Should().Be(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.FirstIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.FirstButtonText);
+		markup.InlineKeyboard[InlineKeyboardBuilderTestsConstants.SecondIndex][InlineKeyboardBuilderTestsConstants.FirstIndex].Text.Should().Be(InlineKeyboardBuilderTestsConstants.SecondButtonText);
 	}
 
 	/// <summary>
@@ -213,15 +213,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	[Fact]
 	public void ToButtonLabels_ReturnsTwoDimensionalLabelArray()
 	{
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-			.AddButton("Yes", "yes")
-			.AddButton("No", "no")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.TwoButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.YesButtonText, InlineKeyboardBuilderTestsConstants.YesCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.NoButtonText, InlineKeyboardBuilderTestsConstants.NoCallbackData)
 			.Build();
 
 		var labels = markup.ToButtonLabels();
 
-		labels.Should().HaveCount(1);
-	labels[0].Should().BeEquivalentTo(new[] { "Yes", "No" });
+		labels.Should().HaveCount(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+	labels[InlineKeyboardBuilderTestsConstants.FirstIndex].Should().BeEquivalentTo(new[] { InlineKeyboardBuilderTestsConstants.YesButtonText, InlineKeyboardBuilderTestsConstants.NoButtonText });
 	}
 
 	/// <summary>
@@ -232,15 +232,15 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		cancellationToken.ThrowIfCancellationRequested();
 		await Task.CompletedTask;
 
-		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: 2)
-			.AddButton("Yes", "yes")
-			.AddButton("No", "no")
+		var markup = InlineKeyboardBuilder.Create(maxButtonsPerRow: InlineKeyboardBuilderTestsConstants.TwoButtonsPerRow)
+			.AddButton(InlineKeyboardBuilderTestsConstants.YesButtonText, InlineKeyboardBuilderTestsConstants.YesCallbackData)
+			.AddButton(InlineKeyboardBuilderTestsConstants.NoButtonText, InlineKeyboardBuilderTestsConstants.NoCallbackData)
 			.Build();
 
 		var labels = markup.ToButtonLabels();
 
-		labels.Should().HaveCount(1);
-		labels[0].Should().BeEquivalentTo(new[] { "Yes", "No" });
+		labels.Should().HaveCount(InlineKeyboardBuilderTestsConstants.SingleItemCount);
+		labels[InlineKeyboardBuilderTestsConstants.FirstIndex].Should().BeEquivalentTo(new[] { InlineKeyboardBuilderTestsConstants.YesButtonText, InlineKeyboardBuilderTestsConstants.NoButtonText });
 	}
 
 	/// <summary>
@@ -251,16 +251,16 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	public void ToMenu_ConvertsMarkupToMenuModel()
 	{
 		var menu = InlineKeyboardBuilder.Create()
-			.AddButton("Help", "help")
-			.AddUrlButton("Docs", "https://docs.example.com")
-			.ToMenu("main_menu", "Main Menu");
+			.AddButton(InlineKeyboardBuilderTestsConstants.HelpButtonText, InlineKeyboardBuilderTestsConstants.HelpCallbackData)
+			.AddUrlButton(InlineKeyboardBuilderTestsConstants.DocumentationButtonText, InlineKeyboardBuilderTestsConstants.DocumentationUrl)
+			.ToMenu(InlineKeyboardBuilderTestsConstants.MainMenuId, InlineKeyboardBuilderTestsConstants.MainMenuTitle);
 
-		menu.Id.Should().Be("main_menu");
-	menu.Title.Should().Be("Main Menu");
-	menu.Buttons.Should().HaveCount(2);
-	menu.Buttons[0].CallbackData.Should().Be("help");
-	menu.Buttons[1].Url.Should().Be("https://docs.example.com");
-	menu.Buttons[1].Action.Should().Be(Models.ButtonAction.OpenUrl);
+		menu.Id.Should().Be(InlineKeyboardBuilderTestsConstants.MainMenuId);
+	menu.Title.Should().Be(InlineKeyboardBuilderTestsConstants.MainMenuTitle);
+	menu.Buttons.Should().HaveCount(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+	menu.Buttons[InlineKeyboardBuilderTestsConstants.FirstIndex].CallbackData.Should().Be(InlineKeyboardBuilderTestsConstants.HelpCallbackData);
+	menu.Buttons[InlineKeyboardBuilderTestsConstants.SecondIndex].Url.Should().Be(InlineKeyboardBuilderTestsConstants.DocumentationUrl);
+	menu.Buttons[InlineKeyboardBuilderTestsConstants.SecondIndex].Action.Should().Be(Models.ButtonAction.OpenUrl);
 	}
 
 	/// <summary>
@@ -272,16 +272,16 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		await Task.CompletedTask;
 
 		var menu = InlineKeyboardBuilder.Create()
-			.AddButton("Help", "help")
-			.AddUrlButton("Docs", "https://docs.example.com")
-			.ToMenu("main_menu", "Main Menu");
+			.AddButton(InlineKeyboardBuilderTestsConstants.HelpButtonText, InlineKeyboardBuilderTestsConstants.HelpCallbackData)
+			.AddUrlButton(InlineKeyboardBuilderTestsConstants.DocumentationButtonText, InlineKeyboardBuilderTestsConstants.DocumentationUrl)
+			.ToMenu(InlineKeyboardBuilderTestsConstants.MainMenuId, InlineKeyboardBuilderTestsConstants.MainMenuTitle);
 
-		menu.Id.Should().Be("main_menu");
-		menu.Title.Should().Be("Main Menu");
-		menu.Buttons.Should().HaveCount(2);
-		menu.Buttons[0].CallbackData.Should().Be("help");
-		menu.Buttons[1].Url.Should().Be("https://docs.example.com");
-		menu.Buttons[1].Action.Should().Be(Models.ButtonAction.OpenUrl);
+		menu.Id.Should().Be(InlineKeyboardBuilderTestsConstants.MainMenuId);
+		menu.Title.Should().Be(InlineKeyboardBuilderTestsConstants.MainMenuTitle);
+		menu.Buttons.Should().HaveCount(InlineKeyboardBuilderTestsConstants.TwoItemCount);
+		menu.Buttons[InlineKeyboardBuilderTestsConstants.FirstIndex].CallbackData.Should().Be(InlineKeyboardBuilderTestsConstants.HelpCallbackData);
+		menu.Buttons[InlineKeyboardBuilderTestsConstants.SecondIndex].Url.Should().Be(InlineKeyboardBuilderTestsConstants.DocumentationUrl);
+		menu.Buttons[InlineKeyboardBuilderTestsConstants.SecondIndex].Action.Should().Be(Models.ButtonAction.OpenUrl);
 	}
 
 	/// <summary>
@@ -294,7 +294,7 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		var act = () => InlineKeyboardBuilder.Create().Build();
 
 		act.Should().Throw<InvalidOperationException>()
-			.WithMessage("*empty keyboard*");
+			.WithMessage(InlineKeyboardBuilderTestsConstants.EmptyKeyboardMessagePattern);
 	}
 
 	/// <summary>
@@ -308,7 +308,7 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		var act = () => InlineKeyboardBuilder.Create().Build();
 
 		act.Should().Throw<InvalidOperationException>()
-			.WithMessage("*empty keyboard*");
+			.WithMessage(InlineKeyboardBuilderTestsConstants.EmptyKeyboardMessagePattern);
 	}
 
 	/// <summary>
@@ -318,12 +318,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	[Fact]
 	public void AddButton_WithCallbackDataExceeding64Bytes_ThrowsArgumentException()
 	{
-		var longData = new string('x', 65);
+		var longData = new string(InlineKeyboardBuilderTestsConstants.CallbackDataCharacter, InlineKeyboardBuilderTestsConstants.CallbackDataLengthOverLimit);
 
-		var act = () => InlineKeyboardBuilder.Create().AddButton("Test", longData);
+		var act = () => InlineKeyboardBuilder.Create().AddButton(InlineKeyboardBuilderTestsConstants.TestButtonText, longData);
 
 		act.Should().Throw<ArgumentException>()
-			.WithMessage("*64*byte*");
+			.WithMessage(InlineKeyboardBuilderTestsConstants.CallbackDataByteLimitMessagePattern);
 	}
 
 	/// <summary>
@@ -334,12 +334,12 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		cancellationToken.ThrowIfCancellationRequested();
 		await Task.CompletedTask;
 
-		var longData = new string('x', 65);
+		var longData = new string(InlineKeyboardBuilderTestsConstants.CallbackDataCharacter, InlineKeyboardBuilderTestsConstants.CallbackDataLengthOverLimit);
 
-		var act = () => InlineKeyboardBuilder.Create().AddButton("Test", longData);
+		var act = () => InlineKeyboardBuilder.Create().AddButton(InlineKeyboardBuilderTestsConstants.TestButtonText, longData);
 
 		act.Should().Throw<ArgumentException>()
-			.WithMessage("*64*byte*");
+			.WithMessage(InlineKeyboardBuilderTestsConstants.CallbackDataByteLimitMessagePattern);
 	}
 
 	/// <summary>
@@ -349,7 +349,7 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 	[Fact]
 	public void AddButton_WithEmptyText_ThrowsArgumentException()
 	{
-		var act = () => InlineKeyboardBuilder.Create().AddButton("", "data");
+		var act = () => InlineKeyboardBuilder.Create().AddButton(string.Empty, InlineKeyboardBuilderTestsConstants.DefaultCallbackData);
 
 		act.Should().Throw<ArgumentException>();
 	}
@@ -362,7 +362,7 @@ public sealed class InlineKeyboardBuilderTests : IInlineKeyboardBuilderTests
 		cancellationToken.ThrowIfCancellationRequested();
 		await Task.CompletedTask;
 
-		var act = () => InlineKeyboardBuilder.Create().AddButton("", "data");
+		var act = () => InlineKeyboardBuilder.Create().AddButton(string.Empty, InlineKeyboardBuilderTestsConstants.DefaultCallbackData);
 
 		act.Should().Throw<ArgumentException>();
 	}
