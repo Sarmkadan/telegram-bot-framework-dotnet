@@ -24,7 +24,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var formData = example.GetFormData<RegistrationForm>(session, "registration_form");
+			var formData = example.GetFormData<RegistrationForm>(session, StateManagementExampleExtensionsConstants.RegistrationFormKey);
 
 			return !string.IsNullOrWhiteSpace(formData.FirstName) &&
 				!string.IsNullOrWhiteSpace(formData.Email) &&
@@ -43,7 +43,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var formData = example.GetFormData<RegistrationForm>(session, "registration_form");
+			var formData = example.GetFormData<RegistrationForm>(session, StateManagementExampleExtensionsConstants.RegistrationFormKey);
 
 			return $"Registration: Name='{formData.FirstName}', Email='{formData.Email}', Phone='{formData.PhoneNumber}'";
 		}
@@ -60,7 +60,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var surveyData = example.GetFormData<FeedbackSurvey>(session, "survey_data");
+			var surveyData = example.GetFormData<FeedbackSurvey>(session, StateManagementExampleExtensionsConstants.SurveyDataKey);
 
 			return surveyData.SatisfactionLevel >= 1 &&
 				surveyData.SatisfactionLevel <= 10 &&
@@ -79,7 +79,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var surveyData = example.GetFormData<FeedbackSurvey>(session, "survey_data");
+			var surveyData = example.GetFormData<FeedbackSurvey>(session, StateManagementExampleExtensionsConstants.SurveyDataKey);
 
 			return $"Survey Results: Satisfaction={surveyData.SatisfactionLevel}/10, " +
 				$"WouldRecommend={(surveyData.WouldRecommend ? "Yes" : "No")}, " +
@@ -99,7 +99,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var surveyData = example.GetFormData<FeedbackSurvey>(session, "survey_data");
+			var surveyData = example.GetFormData<FeedbackSurvey>(session, StateManagementExampleExtensionsConstants.SurveyDataKey);
 			surveyData.SatisfactionLevel = Math.Clamp(level, 1, 10);
 
 			session.SetContextData("survey_data", JsonSerializer.Serialize(surveyData));
@@ -119,7 +119,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var surveyData = example.GetFormData<FeedbackSurvey>(session, "survey_data");
+			var surveyData = example.GetFormData<FeedbackSurvey>(session, StateManagementExampleExtensionsConstants.SurveyDataKey);
 			surveyData.ImprovementSuggestions = suggestions ?? string.Empty;
 
 			session.SetContextData("survey_data", JsonSerializer.Serialize(surveyData));
@@ -139,7 +139,7 @@ namespace TelegramBotFramework.Examples
 			ArgumentNullException.ThrowIfNull(example);
 			ArgumentNullException.ThrowIfNull(session);
 
-			var surveyData = example.GetFormData<FeedbackSurvey>(session, "survey_data");
+			var surveyData = example.GetFormData<FeedbackSurvey>(session, StateManagementExampleExtensionsConstants.SurveyDataKey);
 			surveyData.WouldRecommend = wouldRecommend;
 
 			session.SetContextData("survey_data", JsonSerializer.Serialize(surveyData));
