@@ -21,7 +21,7 @@ public sealed class WebhookController : ControllerBase, IWebhookController
     private readonly WebhookService _webhookService;
     private readonly ILogger<WebhookController> _logger;
 
-    private const string SecretTokenHeader = "X-Telegram-Bot-Api-Secret-Token";
+    // Using WebhookControllerConstants.SecretTokenHeader instead
 
     /// <summary>
     /// Initialises a new instance of <see cref="WebhookController"/>.
@@ -55,7 +55,7 @@ public sealed class WebhookController : ControllerBase, IWebhookController
         {
             _logger.LogWarning("Rejected webhook request: request body size {ContentLength} bytes exceeds maximum allowed {MaxSize} bytes",
                 Request.ContentLength.Value, _webhookService.Options.MaxRequestBodySize);
-            return StatusCode(413, "Request body too large.");
+            return StatusCode(413, WebhookControllerConstants.RequestBodyTooLargeMessage);
         }
 
         string body;
@@ -67,12 +67,12 @@ public sealed class WebhookController : ControllerBase, IWebhookController
         if (string.IsNullOrWhiteSpace(body))
         {
             _logger.LogWarning("Received empty webhook request body");
-            return BadRequest("Request body is required.");
+            return BadRequest(WebhookControllerConstants.EmptyRequestBodyMessage);
         }
 
         _logger.LogDebug("Webhook request body received - Length: {BodyLength} bytes", body.Length);
 
-        Request.Headers.TryGetValue(SecretTokenHeader, out var secretTokenValue);
+        Request.Headers.TryGetValue(WebhookControllerConstants.SecretTokenHeader, out var secretTokenValue);
         var secretToken = secretTokenValue.ToString();
 
         _logger.LogDebug("Validating webhook request with secret token");
