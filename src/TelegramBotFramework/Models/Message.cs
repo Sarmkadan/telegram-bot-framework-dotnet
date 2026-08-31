@@ -53,6 +53,7 @@ public sealed class Message : IMessage, IEquatable<Message>
     /// </summary>
     public void MarkAsFailed(string errorMessage)
     {
+        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
         Status = MessageStatus.Failed;
         SetMetadata("error", errorMessage);
     }
@@ -70,6 +71,8 @@ public sealed class Message : IMessage, IEquatable<Message>
     /// </summary>
     public void SetMetadata(string key, object value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
         Metadata ??= new Dictionary<string, object>();
         Metadata[key] = value;
     }
@@ -85,6 +88,7 @@ public sealed class Message : IMessage, IEquatable<Message>
     /// </summary>
     public void AddAttachment(string url)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
         AttachmentUrls ??= new List<string>();
         AttachmentUrls.Add(url);
     }
