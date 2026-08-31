@@ -69,11 +69,11 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task SetAsync_ThenGetAsync_ReturnsStoredValue()
     {
-        await _cache.SetAsync("greeting", "hello").ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.GreetingKey, LocalCacheProviderTestsConstants.GreetingValue).ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("greeting").ConfigureAwait(false);
+        var result = await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.GreetingKey).ConfigureAwait(false);
 
-        result.Should().Be("hello");
+        result.Should().Be(LocalCacheProviderTestsConstants.GreetingValue);
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task GetAsync_WhenKeyDoesNotExist_ReturnsDefault()
     {
-        var result = await _cache.GetAsync<string>("missing-key").ConfigureAwait(false);
+        var result = await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.MissingKey).ConfigureAwait(false);
 
         result.Should().BeNull();
     }
@@ -95,10 +95,10 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task GetAsync_WhenEntryHasExpired_ReturnsDefault()
     {
-        await _cache.SetAsync("expiring", "value", TimeSpan.FromMilliseconds(1)).ConfigureAwait(false);
-        await Task.Delay(50).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.ExpiringKey, LocalCacheProviderTestsConstants.ExpiringValue, TimeSpan.FromMilliseconds(LocalCacheProviderTestsConstants.ShortExpirationMs)).ConfigureAwait(false);
+        await Task.Delay(LocalCacheProviderTestsConstants.ShortDelayMs).ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("expiring").ConfigureAwait(false);
+        var result = await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.ExpiringKey).ConfigureAwait(false);
 
         result.Should().BeNull();
     }
@@ -110,11 +110,11 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task GetAsync_WhenEntryNotExpired_ReturnsValue()
     {
-        await _cache.SetAsync("persistent", "alive", TimeSpan.FromHours(1)).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.PersistentKey, LocalCacheProviderTestsConstants.PersistentValue, TimeSpan.FromHours(LocalCacheProviderTestsConstants.OneHour)).ConfigureAwait(false);
 
-        var result = await _cache.GetAsync<string>("persistent").ConfigureAwait(false);
+        var result = await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.PersistentKey).ConfigureAwait(false);
 
-        result.Should().Be("alive");
+        result.Should().Be(LocalCacheProviderTestsConstants.PersistentValue);
     }
 
     /// <summary>
@@ -124,11 +124,11 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task RemoveAsync_ExistingKey_MakesValueUnavailable()
     {
-        await _cache.SetAsync("toRemove", 42).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.ToRemoveKey, LocalCacheProviderTestsConstants.TestIntegerValue).ConfigureAwait(false);
 
-        await _cache.RemoveAsync("toRemove").ConfigureAwait(false);
+        await _cache.RemoveAsync(LocalCacheProviderTestsConstants.ToRemoveKey).ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("toRemove").ConfigureAwait(false);
+        var exists = await _cache.ExistsAsync(LocalCacheProviderTestsConstants.ToRemoveKey).ConfigureAwait(false);
         exists.Should().BeFalse();
     }
 
@@ -139,9 +139,9 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task ExistsAsync_WhenKeyPresent_ReturnsTrue()
     {
-        await _cache.SetAsync("present", true).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.PresentKey, true).ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("present").ConfigureAwait(false);
+        var exists = await _cache.ExistsAsync(LocalCacheProviderTestsConstants.PresentKey).ConfigureAwait(false);
 
         exists.Should().BeTrue();
     }
@@ -153,7 +153,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task ExistsAsync_WhenKeyNotPresent_ReturnsFalse()
     {
-        var exists = await _cache.ExistsAsync("not-there").ConfigureAwait(false);
+        var exists = await _cache.ExistsAsync(LocalCacheProviderTestsConstants.NotThereKey).ConfigureAwait(false);
 
         exists.Should().BeFalse();
     }
@@ -165,10 +165,10 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task ExistsAsync_WhenEntryExpired_ReturnsFalse()
     {
-        await _cache.SetAsync("gone-soon", "x", TimeSpan.FromMilliseconds(1)).ConfigureAwait(false);
-        await Task.Delay(50).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.GoneSoonKey, LocalCacheProviderTestsConstants.XValue, TimeSpan.FromMilliseconds(LocalCacheProviderTestsConstants.ShortExpirationMs)).ConfigureAwait(false);
+        await Task.Delay(LocalCacheProviderTestsConstants.ShortDelayMs).ConfigureAwait(false);
 
-        var exists = await _cache.ExistsAsync("gone-soon").ConfigureAwait(false);
+        var exists = await _cache.ExistsAsync(LocalCacheProviderTestsConstants.GoneSoonKey).ConfigureAwait(false);
 
         exists.Should().BeFalse();
     }
@@ -182,16 +182,16 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     {
         int callCount = 0;
 
-        var value = await _cache.GetOrCreateAsync("new-key", async () =>
+        var value = await _cache.GetOrCreateAsync(LocalCacheProviderTestsConstants.NewKey, async () =>
         {
             callCount++;
             await Task.CompletedTask;
-            return "created";
+            return LocalCacheProviderTestsConstants.CreatedValue;
         });
 
-        value.Should().Be("created");
+        value.Should().Be(LocalCacheProviderTestsConstants.CreatedValue);
         callCount.Should().Be(1);
-        (await _cache.GetAsync<string>("new-key")).Should().Be("created");
+        (await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.NewKey)).Should().Be(LocalCacheProviderTestsConstants.CreatedValue);
     }
 
     /// <summary>
@@ -201,18 +201,18 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task GetOrCreateAsync_WhenKeyExists_SkipsFactoryAndReturnsCached()
     {
-        await _cache.SetAsync("existing", "cached-value").ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.ExistingKey, LocalCacheProviderTestsConstants.CachedValue).ConfigureAwait(false);
         int callCount = 0;
 
-        var value = await _cache.GetOrCreateAsync("existing", async () =>
+        var value = await _cache.GetOrCreateAsync(LocalCacheProviderTestsConstants.ExistingKey, async () =>
         {
             callCount++;
             await Task.CompletedTask;
-            return "should-not-be-used";
+            return LocalCacheProviderTestsConstants.ShouldNotBeUsedValue;
         });
 
         callCount.Should().Be(0);
-        value.Should().Be("cached-value");
+        value.Should().Be(LocalCacheProviderTestsConstants.CachedValue);
     }
 
     /// <summary>
@@ -222,9 +222,9 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task FlushAsync_ClearsAllCachedEntries()
     {
-        await _cache.SetAsync("a", 1).ConfigureAwait(false);
-        await _cache.SetAsync("b", 2).ConfigureAwait(false);
-        await _cache.SetAsync("c", 3).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.KeyA, LocalCacheProviderTestsConstants.FirstTestIntegerValue).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.KeyB, LocalCacheProviderTestsConstants.SecondTestIntegerValue).ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.KeyC, LocalCacheProviderTestsConstants.ThirdTestIntegerValue).ConfigureAwait(false);
 
         await _cache.FlushAsync().ConfigureAwait(false);
 
@@ -239,9 +239,9 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     [Fact]
     public async Task GetStatisticsAsync_TracksCacheHitsAndMisses()
     {
-        await _cache.SetAsync("tracked", "x").ConfigureAwait(false);
-        await _cache.GetAsync<string>("tracked").ConfigureAwait(false);
-        await _cache.GetAsync<string>("non-existent").ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.TrackedKey, LocalCacheProviderTestsConstants.XValue).ConfigureAwait(false);
+        await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.TrackedKey).ConfigureAwait(false);
+        await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.NonExistentKey).ConfigureAwait(false);
 
         var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
 
@@ -274,7 +274,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task GetAsync_WithWhitespaceKey_ReturnsDefaultValue()
     {
         // Act
-        var result = await _cache.GetAsync<string>("   ").ConfigureAwait(false);
+        var result = await _cache.GetAsync<string>(LocalCacheProviderTestsConstants.WhitespaceKey).ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -295,7 +295,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task SetAsync_WithEmptyKey_DoesNotThrow()
     {
         // Act & Assert
-        await _cache.SetAsync(string.Empty, "value").ConfigureAwait(false);
+        await _cache.SetAsync(string.Empty, LocalCacheProviderTestsConstants.ExpiringValue).ConfigureAwait(false);
 
         // Should not throw
         var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
@@ -306,7 +306,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task SetAsync_WithWhitespaceKey_DoesNotThrow()
     {
         // Act & Assert
-        await _cache.SetAsync("   ", "value").ConfigureAwait(false);
+        await _cache.SetAsync(LocalCacheProviderTestsConstants.WhitespaceKey, LocalCacheProviderTestsConstants.ExpiringValue).ConfigureAwait(false);
 
         // Should not throw
         var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
@@ -317,8 +317,8 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task SetAsync_WithValidKey_StoresValue()
     {
         // Arrange
-        const string key = "valid_key";
-        const string value = "test_value";
+        const string key = LocalCacheProviderTestsConstants.ValidKey;
+        const string value = LocalCacheProviderTestsConstants.TestValue;
 
         // Act
         await _cache.SetAsync(key, value).ConfigureAwait(false);
@@ -336,9 +336,9 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task SetAsync_WithExpiration_StoresValueWithExpiration()
     {
         // Arrange
-        const string key = "expiring_key";
-        const string value = "expiring_value";
-        var expiration = TimeSpan.FromMilliseconds(100);
+        const string key = LocalCacheProviderTestsConstants.ExpiringKeyName;
+        const string value = LocalCacheProviderTestsConstants.ExpiringValueName;
+        var expiration = TimeSpan.FromMilliseconds(LocalCacheProviderTestsConstants.LongExpirationMs);
 
         // Act
         await _cache.SetAsync(key, value, expiration).ConfigureAwait(false);
@@ -352,14 +352,14 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task ExpiryAfterTTL_ValueExpiresAfterTimeSpan()
     {
         // Arrange
-        const string key = "expiry_test_key";
-        const string value = "expiry_test_value";
-        var expiration = TimeSpan.FromMilliseconds(50);
+        const string key = LocalCacheProviderTestsConstants.ExpiryTestKey;
+        const string value = LocalCacheProviderTestsConstants.ExpiryTestValue;
+        var expiration = TimeSpan.FromMilliseconds(LocalCacheProviderTestsConstants.MediumExpirationMs);
 
         await _cache.SetAsync(key, value, expiration).ConfigureAwait(false);
 
         // Act - wait for expiration
-        await Task.Delay(100).ConfigureAwait(false);
+        await Task.Delay(LocalCacheProviderTestsConstants.LongDelayMs).ConfigureAwait(false);
 
         // Assert - value should no longer be retrievable
         var result = await _cache.GetAsync<string>(key).ConfigureAwait(false);
@@ -373,9 +373,9 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task OverwriteExistingKey_UpdatesValue()
     {
         // Arrange
-        const string key = "overwrite_key";
-        const string initialValue = "initial_value";
-        const string updatedValue = "updated_value";
+        const string key = LocalCacheProviderTestsConstants.OverwriteKey;
+        const string initialValue = LocalCacheProviderTestsConstants.InitialValue;
+        const string updatedValue = LocalCacheProviderTestsConstants.UpdatedValue;
 
         await _cache.SetAsync(key, initialValue).ConfigureAwait(false);
         var initialResult = await _cache.GetAsync<string>(key).ConfigureAwait(false);
@@ -396,7 +396,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task RemoveAsync_WithNonExistentKey_DoesNotThrow()
     {
         // Act & Assert
-        await _cache.RemoveAsync("nonexistent_key").ConfigureAwait(false);
+        await _cache.RemoveAsync(LocalCacheProviderTestsConstants.NonExistentKeyName).ConfigureAwait(false);
 
         // Should not throw
         var stats = await _cache.GetStatisticsAsync().ConfigureAwait(false);
@@ -407,7 +407,7 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task NullValues_HandledCorrectly()
     {
         // Arrange
-        const string key = "null_value_key";
+        const string key = LocalCacheProviderTestsConstants.NullValueKey;
 
         // Act - set null value
         await _cache.SetAsync<string>(key, null).ConfigureAwait(false);
@@ -425,16 +425,21 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task ComplexObjectValues_AreStoredAndRetrieved()
     {
         // Arrange
-        const string key = "complex_object_key";
+        const string key = LocalCacheProviderTestsConstants.ComplexObjectKey;
         var complexObject = new TestCacheObject
         {
-            Id = 123,
-            Name = "Test Object",
-            Values = new List<int> { 1, 2, 3 },
+            Id = LocalCacheProviderTestsConstants.ComplexObjectId,
+            Name = LocalCacheProviderTestsConstants.ComplexObjectName,
+            Values = new List<int>
+            {
+                LocalCacheProviderTestsConstants.FirstTestIntegerValue,
+                LocalCacheProviderTestsConstants.SecondTestIntegerValue,
+                LocalCacheProviderTestsConstants.ThirdTestIntegerValue
+            },
             Metadata = new Dictionary<string, string>
             {
-                { "key1", "value1" },
-                { "key2", "value2" }
+                { LocalCacheProviderTestsConstants.Key1, LocalCacheProviderTestsConstants.Value1 },
+                { LocalCacheProviderTestsConstants.Key2, LocalCacheProviderTestsConstants.Value2 }
             }
         };
 
@@ -454,8 +459,8 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task RemoveAsync_WithExistingKey_RemovesValue()
     {
         // Arrange
-        const string key = "remove_key";
-        const string value = "remove_value";
+        const string key = LocalCacheProviderTestsConstants.RemoveKey;
+        const string value = LocalCacheProviderTestsConstants.RemoveValue;
         await _cache.SetAsync(key, value).ConfigureAwait(false);
 
         // Verify value exists
@@ -478,32 +483,32 @@ public sealed class LocalCacheProviderTests : ILocalCacheProviderTests, IEquatab
     public async Task GetOrCreateAsync_WithExpiration_StoresValueWithExpiration()
     {
         // Arrange
-        const string key = "get_or_create_expiring_key";
+        const string key = LocalCacheProviderTestsConstants.GetOrCreateExpiringKey;
 
         // Act - first call creates with expiration
-        var result1 = await _cache.GetOrCreateAsync(key, () => Task.FromResult("value1"), TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+        var result1 = await _cache.GetOrCreateAsync(key, () => Task.FromResult(LocalCacheProviderTestsConstants.Value1), TimeSpan.FromMilliseconds(LocalCacheProviderTestsConstants.MediumExpirationMs)).ConfigureAwait(false);
 
         // Assert - result should be correct
-        result1.Should().Be("value1");
+        result1.Should().Be(LocalCacheProviderTestsConstants.Value1);
 
         // Verify it was cached
         var cached1 = await _cache.GetAsync<string>(key).ConfigureAwait(false);
-        cached1.Should().Be("value1");
+        cached1.Should().Be(LocalCacheProviderTestsConstants.Value1);
 
         // Wait for expiration
-        await Task.Delay(100).ConfigureAwait(false);
+        await Task.Delay(LocalCacheProviderTestsConstants.LongDelayMs).ConfigureAwait(false);
 
         // Value should no longer be retrievable
         var expiredValue = await _cache.GetAsync<string>(key).ConfigureAwait(false);
         expiredValue.Should().BeNull();
 
         // Factory should be called again since value expired
-        var result2 = await _cache.GetOrCreateAsync(key, () => Task.FromResult("value2")).ConfigureAwait(false);
-        result2.Should().Be("value2");
+        var result2 = await _cache.GetOrCreateAsync(key, () => Task.FromResult(LocalCacheProviderTestsConstants.Value2)).ConfigureAwait(false);
+        result2.Should().Be(LocalCacheProviderTestsConstants.Value2);
 
         // Verify the new value was cached
         var cached2 = await _cache.GetAsync<string>(key).ConfigureAwait(false);
-        cached2.Should().Be("value2");
+        cached2.Should().Be(LocalCacheProviderTestsConstants.Value2);
     }
 
     private class TestCacheObject
