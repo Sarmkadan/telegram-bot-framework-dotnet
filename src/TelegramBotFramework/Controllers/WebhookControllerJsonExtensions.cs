@@ -15,10 +15,10 @@ namespace TelegramBotFramework.Controllers;
 /// </summary>
 public static class WebhookControllerJsonExtensions
 {
-	private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
+	private static readonly JsonSerializerOptions _jsonSerializerOptions = new(WebhookControllerJsonExtensionsConstants.JsonSerializerDefaults)
 	{
-		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-		WriteIndented = false,
+		PropertyNamingPolicy = WebhookControllerJsonExtensionsConstants.PropertyNamingPolicy,
+		WriteIndented = WebhookControllerJsonExtensionsConstants.DefaultWriteIndented,
 		TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
 	};
 
