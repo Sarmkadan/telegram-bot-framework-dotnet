@@ -164,6 +164,7 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public static T? ParseResponse<T>(string jsonContent)
     {
+        ArgumentException.ThrowIfNullOrEmpty(jsonContent);
         return JsonUtility.Deserialize<T>(jsonContent);
     }
 }
