@@ -63,7 +63,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.NextOffset.Should().Be("2");
 
         _cacheMock.Verify(c => c.GetOrCreateAsync(
-            It.Is<string>(key => key.StartsWith("inline_query_")),
+            It.Is<string>(key => key.StartsWith(InlineQueryServiceTestsConstants.InlineQueryCacheKeyPrefix)),
             It.IsAny<Func<Task<IList<InlineQueryResult>>>>(),
             It.IsAny<TimeSpan?>()),
         Times.Once);
@@ -97,7 +97,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         var result = await _service.HandleAsync(
             query,
             (q, ct) => Task.FromResult<IList<InlineQueryResult>>(results),
-            pageSize: 10
+            pageSize: InlineQueryServiceTestsConstants.DefaultPageSize
         );
 
         // Assert
@@ -133,7 +133,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         var result = await _service.HandleAsync(
             query,
             (q, ct) => Task.FromResult<IList<InlineQueryResult>>(results),
-            pageSize: 10
+            pageSize: InlineQueryServiceTestsConstants.DefaultPageSize
         );
 
         // Assert
@@ -167,7 +167,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         var result = await _service.HandleAsync(
             query,
             (q, ct) => Task.FromResult<IList<InlineQueryResult>>(allResults),
-            pageSize: 10
+            pageSize: InlineQueryServiceTestsConstants.DefaultPageSize
         );
 
         // Assert
@@ -248,7 +248,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
 
         // Assert
         _cacheMock.Verify(c => c.RemoveAsync(
-            It.Is<string>(key => key == $"inline_query_{queryText.ToLowerInvariant().Trim()}")),
+            It.Is<string>(key => key == $"{InlineQueryServiceTestsConstants.InlineQueryCacheKeyPrefix}{queryText.ToLowerInvariant().Trim()}")),
         Times.Once);
     }
 
@@ -294,7 +294,7 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         var result = await _service.HandleAsync(
             query,
             (q, ct) => Task.FromResult<IList<InlineQueryResult>>(results),
-            pageSize: 10
+            pageSize: InlineQueryServiceTestsConstants.DefaultPageSize
         );
 
         // Assert
