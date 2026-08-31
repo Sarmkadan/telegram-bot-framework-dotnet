@@ -35,33 +35,33 @@ namespace TelegramBotFramework.Examples
 				// A complex command with parameters, rate limiting and admin requirements
 				var command = new Command
 				{
-					Name = "/admin",
-					Description = "Perform administrative tasks",
-					HandlerType = "AdminCommandHandler",
+					Name = AdvancedUsageConstants.AdminCommandName,
+					Description = AdvancedUsageConstants.AdminCommandDescription,
+					HandlerType = AdvancedUsageConstants.AdminCommandHandlerType,
 					Type = CommandType.Standard,
 					IsEnabled = true,
 					RequiresAdmin = true,
-					RateLimitPerMinute = 5,
+					RateLimitPerMinute = AdvancedUsageConstants.AdminCommandRateLimitPerMinute,
 					Parameters = new List<CommandParameter>
 					{
 						new CommandParameter
 						{
-							Name = "action",
-							Type = "string",
+							Name = AdvancedUsageConstants.ActionParameterName,
+							Type = AdvancedUsageConstants.StringParameterType,
 							IsRequired = true,
-							Description = "The action to perform (e.g., 'ban', 'mute')"
+							Description = AdvancedUsageConstants.ActionParameterDescription
 						}
 					}
 				};
 
 				await _commandService.RegisterCommandAsync(command);
-				_logger.LogInformation("Admin command registered successfully.");
+				_logger.LogInformation(AdvancedUsageConstants.AdminCommandRegisteredLogMessage);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Failed to register admin command.");
+				_logger.LogError(ex, AdvancedUsageConstants.AdminCommandRegistrationFailedLogMessage);
 				// Proper error handling
-				throw new InvalidOperationException("Registration failed", ex);
+				throw new InvalidOperationException(AdvancedUsageConstants.RegistrationFailedExceptionMessage, ex);
 			}
 		}
 	}
