@@ -57,14 +57,14 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var originalState = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 12345,
             ChatId = 67890,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.Active,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow,
-            Variables = new Dictionary<string, string> { { "test_var", "test_value" } },
+            Variables = new Dictionary<string, string> { { FileConversationStateStoreTestsConstants.TestVariableName, FileConversationStateStoreTestsConstants.TestVariableValue } },
             History = new List<FlowStepHistory> { new() { StepId = "step_1", EnteredAt = DateTime.UtcNow } }
         };
 
@@ -80,12 +80,12 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         loadedState.ChatId.Should().Be(originalState.ChatId);
         loadedState.CurrentStepId.Should().Be(originalState.CurrentStepId);
         loadedState.Status.Should().Be(originalState.Status);
-        loadedState.StartedAt.Should().BeCloseTo(originalState.StartedAt, TimeSpan.FromSeconds(1));
-        loadedState.LastActivityAt.Should().BeCloseTo(originalState.LastActivityAt, TimeSpan.FromSeconds(1));
+        loadedState.StartedAt.Should().BeCloseTo(originalState.StartedAt, FileConversationStateStoreTestsConstants.AssertionTimeout);
+        loadedState.LastActivityAt.Should().BeCloseTo(originalState.LastActivityAt, FileConversationStateStoreTestsConstants.AssertionTimeout);
         loadedState.CompletedAt.Should().Be(originalState.CompletedAt);
         loadedState.Variables.Should().BeEquivalentTo(originalState.Variables);
         loadedState.History.Should().HaveCount(1);
-        loadedState.History[0].StepId.Should().Be("step_1");
+        loadedState.History[0].StepId.Should().Be(FileConversationStateStoreTestsConstants.TestStepId);
     }
 
     /// <summary>
@@ -114,17 +114,17 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var state = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 54321,
             ChatId = 54321,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.Active,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow
         };
 
         await _store.SaveStateAsync(state);
-        var filePath = Path.Combine(_tempDirectory, $"{state.UserId}.json");
+        var filePath = Path.Combine(_tempDirectory, $"{state.UserId}{FileConversationStateStoreTestsConstants.JsonFileExtension}");
         File.Exists(filePath).Should().BeTrue("State file should exist before deletion");
 
         // Act
@@ -213,10 +213,10 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var activeState1 = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 10001,
             ChatId = 10001,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.Active,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow
@@ -225,10 +225,10 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var activeState2 = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 10002,
             ChatId = 10002,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.WaitingForInput,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow
@@ -237,10 +237,10 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var completedState = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 10003,
             ChatId = 10003,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.Completed,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow,
@@ -250,10 +250,10 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
         var suspendedState = new UserFlowState
         {
             StateId = Guid.NewGuid().ToString(),
-            FlowId = "test_flow",
+            FlowId = FileConversationStateStoreTestsConstants.TestFlowId,
             UserId = 10004,
             ChatId = 10004,
-            CurrentStepId = "step_1",
+            CurrentStepId = FileConversationStateStoreTestsConstants.TestStepId,
             Status = FlowStateStatus.Suspended,
             StartedAt = DateTime.UtcNow,
             LastActivityAt = DateTime.UtcNow
@@ -325,7 +325,7 @@ public sealed class FileConversationStateStoreTests : IDisposable, IFileConversa
     {
         // Arrange
         var userId = 123456789L;
-        var expectedPath = Path.Combine(_tempDirectory, $"{userId}.json");
+        var expectedPath = Path.Combine(_tempDirectory, $"{userId}{FileConversationStateStoreTestsConstants.JsonFileExtension}");
 
         // Act
         var actualPath = _store.GetFilePath(userId);
