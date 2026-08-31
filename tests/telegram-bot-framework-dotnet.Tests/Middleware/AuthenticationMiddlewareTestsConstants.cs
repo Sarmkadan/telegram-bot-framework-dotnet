@@ -14,7 +14,9 @@ internal static class AuthenticationMiddlewareTestsConstants
     // Test API keys
     public const string ValidApiKey = "test-secret-key-123";
     public const string AlternativeValidApiKey = "test-secret-key";
+    public const string CorrectApiKey = "correct-secret-key";
     public const string InvalidApiKey = "wrong-secret-key";
+    public const string TestKey = "test-key";
     public const string WhitespaceApiKey = "   ";
     public const string CaseSensitiveKey = "TestKey123";
     public const string CaseMismatchKey = "testkey123";
