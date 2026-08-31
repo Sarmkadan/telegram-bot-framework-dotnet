@@ -40,11 +40,11 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
     public string Format<T>(IEnumerable<T> data)
     {
         var items = data.ToList();
-        var root = new XElement("items");
+        var root = new XElement(XmlFormatterConstants.ItemsRoot);
 
         foreach (var item in items)
         {
-            root.Add(SerializeObject(item, "item"));
+            root.Add(SerializeObject(item, XmlFormatterConstants.ItemElement));
         }
 
         var document = new XDocument(root);
@@ -53,11 +53,11 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatError(string errorCode, string message, string? details = null)
     {
-        var root = new XElement("error",
-            new XElement("code", errorCode),
-            new XElement("message", message),
-            new XElement("details", details ?? string.Empty),
-            new XElement("timestamp", DateTime.UtcNow.ToString("O"))
+        var root = new XElement(XmlFormatterConstants.ErrorRoot,
+            new XElement(XmlFormatterConstants.ErrorCode, errorCode),
+            new XElement(XmlFormatterConstants.Message, message),
+            new XElement(XmlFormatterConstants.Details, details ?? string.Empty),
+            new XElement(XmlFormatterConstants.Timestamp, DateTime.UtcNow.ToString(XmlFormatterConstants.DateFormatRoundtrip))
         );
 
         return root.ToString(GetSaveOptions());
@@ -65,13 +65,13 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatMessage(Message message)
     {
-        var element = new XElement("message",
-            new XElement("id", message.MessageId),
-            new XElement("content", message.Content),
-            new XElement("userId", message.UserId),
-            new XElement("chatId", message.ChatId),
-            new XElement("createdAt", message.CreatedAt.ToString("O")),
-            new XElement("type", message.Type.ToString())
+        var element = new XElement(XmlFormatterConstants.Message,
+            new XElement(XmlFormatterConstants.Id, message.MessageId),
+            new XElement(XmlFormatterConstants.Content, message.Content),
+            new XElement(XmlFormatterConstants.UserId, message.UserId),
+            new XElement(XmlFormatterConstants.ChatId, message.ChatId),
+            new XElement(XmlFormatterConstants.CreatedAt, message.CreatedAt.ToString(XmlFormatterConstants.DateFormatRoundtrip)),
+            new XElement(XmlFormatterConstants.Type, message.Type.ToString())
         );
 
         return element.ToString(GetSaveOptions());
@@ -79,21 +79,21 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatMessages(IEnumerable<Message> messages)
     {
-        var root = new XElement("messages");
+        var root = new XElement(XmlFormatterConstants.MessagesRoot);
 
         foreach (var msg in messages)
         {
-            root.Add(new XElement("message",
-                new XElement("id", msg.MessageId),
-                new XElement("content", msg.Content),
-                new XElement("userId", msg.UserId),
-                new XElement("chatId", msg.ChatId),
-                new XElement("createdAt", msg.CreatedAt.ToString("O")),
-                new XElement("type", msg.Type.ToString())
+            root.Add(new XElement(XmlFormatterConstants.Message,
+                new XElement(XmlFormatterConstants.Id, msg.MessageId),
+                new XElement(XmlFormatterConstants.Content, msg.Content),
+                new XElement(XmlFormatterConstants.UserId, msg.UserId),
+                new XElement(XmlFormatterConstants.ChatId, msg.ChatId),
+                new XElement(XmlFormatterConstants.CreatedAt, msg.CreatedAt.ToString(XmlFormatterConstants.DateFormatRoundtrip)),
+                new XElement(XmlFormatterConstants.Type, msg.Type.ToString())
             ));
         }
 
-        root.SetAttributeValue("count", root.Elements("message").Count());
+        root.SetAttributeValue(XmlFormatterConstants.CountAttribute, root.Elements(XmlFormatterConstants.Message).Count());
         return root.ToString(GetSaveOptions());
     }
 
