@@ -44,14 +44,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.ValidApiKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.ValidApiKey;
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -80,7 +80,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -112,7 +112,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -123,21 +123,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenBearerTokenInvalid_Returns401()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.CorrectApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.InvalidApiKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.InvalidApiKey;
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -161,7 +161,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -179,14 +179,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -204,14 +204,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -229,14 +229,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -254,7 +254,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
         context.Request.Path = null;
 
         // Act
@@ -262,7 +262,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
 
         // Assert
         await act.Should().NotThrowAsync();
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -287,7 +287,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
 
         // Assert
         await act.Should().NotThrowAsync();
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
     }
 
     /// <summary>
@@ -314,7 +314,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.PublicEndpointItemKey);
     }
 
@@ -338,7 +338,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -362,7 +362,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -386,7 +386,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
         context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
@@ -410,7 +410,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(200);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeOk);
     }
 
     /// <summary>
@@ -427,14 +427,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.CaseMismatchKey; // lowercase
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.CaseMismatchKey; // lowercase
         context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
     }
 
     /// <summary>
@@ -458,7 +458,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
     }
 
     /// <summary>
@@ -485,6 +485,6 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         await middleware.InvokeAsync(context, config);
 
         // Assert
-        context.Response.StatusCode.Should().Be(401);
+        context.Response.StatusCode.Should().Be(AuthenticationMiddlewareTestsConstants.StatusCodeUnauthorized);
     }
 }
