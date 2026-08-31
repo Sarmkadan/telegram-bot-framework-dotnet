@@ -10,45 +10,45 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsValidJsonString_WhenCalledWithValidException()
     {
         // Arrange
-        var exception = new BotFrameworkException("Test error message", "TEST_ERROR");
+        var exception = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
 
         // Act
         var json = exception.ToJson();
 
         // Assert
         json.Should().NotBeNullOrEmpty();
-        json.Should().Contain("Test error message");
-        json.Should().Contain("TEST_ERROR");
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
     }
 
     public void ReturnsIndentedJson_WhenIndentedParameterIsTrue()
     {
         // Arrange
-        var exception = new BotFrameworkException("Test error message", "TEST_ERROR");
+        var exception = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
 
         // Act
         var json = exception.ToJson(indented: true);
 
         // Assert
         json.Should().NotBeNullOrEmpty();
-        json.Should().Contain("Test error message");
-        json.Should().Contain("TEST_ERROR");
-        json.Should().Contain("\n"); // Should have newlines for indentation
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.Newline); // Should have newlines for indentation
     }
 
     public void ReturnsCompactJson_WhenIndentedParameterIsFalse()
     {
         // Arrange
-        var exception = new BotFrameworkException("Test error message", "TEST_ERROR");
+        var exception = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
 
         // Act
         var json = exception.ToJson(indented: false);
 
         // Assert
         json.Should().NotBeNullOrEmpty();
-        json.Should().Contain("Test error message");
-        json.Should().Contain("TEST_ERROR");
-        json.Should().NotContain("\n"); // Should not have newlines
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorMessage);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
+        json.Should().NotContain(BotFrameworkExceptionJsonExtensionsTestsConstants.Newline); // Should not have newlines
     }
 
     public void ThrowsArgumentNullException_WhenValueIsNull()
@@ -63,28 +63,28 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void SerializesErrorCodeProperty()
     {
         // Arrange
-        var exception = new BotFrameworkException("Session failed", "SESSION_ERROR");
+        var exception = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.SessionFailedMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.SessionErrorCode);
 
         // Act
         var json = exception.ToJson();
 
         // Assert
-        json.Should().Contain("sessionError");
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.SessionErrorJsonProperty);
     }
 
     public void SerializesCommandExecutionException()
     {
         // Arrange
-        var exception = new CommandExecutionException("Command failed", "test-command");
+        var exception = new CommandExecutionException(BotFrameworkExceptionJsonExtensionsTestsConstants.CommandFailedMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.TestCommand);
 
         // Act
         var json = exception.ToJson();
 
         // Assert
         json.Should().NotBeNullOrEmpty();
-        json.Should().Contain("Command failed");
-        json.Should().Contain("commandExecutionError");
-        json.Should().Contain("test-command");
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.CommandFailedMessage);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.CommandExecutionErrorJsonProperty);
+        json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestCommand);
     }
 
     public void ReturnsNull_WhenJsonIsNull()
@@ -99,7 +99,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsNull_WhenJsonIsEmpty()
     {
         // Arrange & Act
-        var result = BotFrameworkExceptionJsonExtensions.FromJson("");
+        var result = BotFrameworkExceptionJsonExtensions.FromJson(BotFrameworkExceptionJsonExtensionsTestsConstants.EmptyJson);
 
         // Assert
         result.Should().BeNull();
@@ -108,7 +108,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsNull_WhenJsonIsWhitespace()
     {
         // Arrange & Act
-        var result = BotFrameworkExceptionJsonExtensions.FromJson("   ");
+        var result = BotFrameworkExceptionJsonExtensions.FromJson(BotFrameworkExceptionJsonExtensionsTestsConstants.WhitespaceJson);
 
         // Assert
         result.Should().BeNull();
@@ -117,7 +117,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsDeserializedException_WhenJsonIsValid()
     {
         // Arrange
-        var originalException = new BotFrameworkException("Test error", "TEST_ERROR_001");
+        var originalException = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.DeserializedTestErrorMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode001);
         var json = originalException.ToJson();
 
         // Act
@@ -125,28 +125,28 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
 
         // Assert
         result.Should().NotBeNull();
-        result!.Message.Should().Be("Test error");
-        result.ErrorCode.Should().Be("TEST_ERROR_001");
+        result!.Message.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.DeserializedTestErrorMessage);
+        result.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode001);
     }
 
     public void ReturnsDeserializedException_WhenJsonHasCamelCaseProperties()
     {
         // Arrange
-        var json = "{\"message\":\"Camel case test\",\"errorCode\":\"CAMEL_TEST\"}";
+        var json = BotFrameworkExceptionJsonExtensionsTestsConstants.CamelCaseJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.FromJson(json);
 
         // Assert
         result.Should().NotBeNull();
-        result!.Message.Should().Be("Camel case test");
-        result.ErrorCode.Should().Be("CAMEL_TEST");
+        result!.Message.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.CamelCaseTestMessage);
+        result.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.CamelCaseTestErrorCode);
     }
 
     public void ReturnsNull_WhenJsonIsMalformed()
     {
         // Arrange
-        var malformedJson = "{ invalid json";
+        var malformedJson = BotFrameworkExceptionJsonExtensionsTestsConstants.MalformedJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.FromJson(malformedJson);
@@ -158,7 +158,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsNull_WhenJsonHasInvalidStructure()
     {
         // Arrange
-        var invalidJson = "{\"invalid\":\"structure\"}";
+        var invalidJson = BotFrameworkExceptionJsonExtensionsTestsConstants.InvalidStructureJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.FromJson(invalidJson);
@@ -192,7 +192,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsFalse_WhenJsonIsEmpty()
     {
         // Arrange
-        var json = "";
+        var json = BotFrameworkExceptionJsonExtensionsTestsConstants.EmptyJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.TryFromJson(json, out var exception);
@@ -205,7 +205,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsFalse_WhenJsonIsWhitespace()
     {
         // Arrange
-        var json = "   ";
+        var json = BotFrameworkExceptionJsonExtensionsTestsConstants.WhitespaceJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.TryFromJson(json, out var exception);
@@ -218,7 +218,7 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
     public void ReturnsTrueAndDeserializedException_WhenJsonIsValid()
     {
         // Arrange
-        var originalException = new BotFrameworkException("Valid exception", "VALID_001");
+        var originalException = new BotFrameworkException(BotFrameworkExceptionJsonExtensionsTestsConstants.ValidExceptionMessage, BotFrameworkExceptionJsonExtensionsTestsConstants.ValidErrorCode);
         var json = originalException.ToJson();
 
         // Act
@@ -227,14 +227,14 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         // Assert
         result.Should().BeTrue();
         exception.Should().NotBeNull();
-        exception!.Message.Should().Be("Valid exception");
-        exception.ErrorCode.Should().Be("VALID_001");
+        exception!.Message.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.ValidExceptionMessage);
+        exception.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.ValidErrorCode);
     }
 
     public void ReturnsFalseAndNull_WhenJsonIsMalformed()
     {
         // Arrange
-        var malformedJson = "{ invalid json";
+        var malformedJson = BotFrameworkExceptionJsonExtensionsTestsConstants.MalformedJson;
 
         // Act
         var result = BotFrameworkExceptionJsonExtensions.TryFromJson(malformedJson, out var exception);
