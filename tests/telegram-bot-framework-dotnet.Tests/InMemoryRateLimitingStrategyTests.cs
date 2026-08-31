@@ -26,10 +26,10 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var identifier = "test-user";
+        var identifier = InMemoryRateLimitingStrategyTestsConstants.TestUserIdentifier;
 
         // Fill the rate limit
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier).Should().BeTrue();
         }
@@ -38,7 +38,7 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         strategy.IsRequestAllowed(identifier).Should().BeFalse();
 
         // Wait for requests to expire (exactly 1 minute)
-        Thread.Sleep(TimeSpan.FromMinutes(1));
+        Thread.Sleep(InMemoryRateLimitingStrategyTestsConstants.DefaultInterval);
 
         // After waiting exactly 1 minute, all previous requests should be expired
         // and new requests should be allowed again
@@ -53,10 +53,10 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var identifier = "test-user";
+        var identifier = InMemoryRateLimitingStrategyTestsConstants.TestUserIdentifier;
 
         // Make 30 requests to fill the limit
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier).Should().BeTrue();
         }
@@ -65,7 +65,7 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         strategy.IsRequestAllowed(identifier).Should().BeFalse();
 
         // Wait for 59 seconds (just inside the 1 minute window)
-        Thread.Sleep(TimeSpan.FromSeconds(59));
+        Thread.Sleep(InMemoryRateLimitingStrategyTestsConstants.JustInsideWindow);
 
         // Request should still be blocked (not expired yet)
         strategy.IsRequestAllowed(identifier).Should().BeFalse();
@@ -79,10 +79,10 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var identifier = "test-user";
+        var identifier = InMemoryRateLimitingStrategyTestsConstants.TestUserIdentifier;
 
         // Make 30 requests to fill the limit
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier).Should().BeTrue();
         }
@@ -91,7 +91,7 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         strategy.IsRequestAllowed(identifier).Should().BeFalse();
 
         // Wait for 61 seconds (just outside the 1 minute window)
-        Thread.Sleep(TimeSpan.FromSeconds(61));
+        Thread.Sleep(InMemoryRateLimitingStrategyTestsConstants.JustOutsideWindow);
 
         // Request should be expired and new request should be allowed
         strategy.IsRequestAllowed(identifier).Should().BeTrue();
@@ -105,10 +105,10 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var identifier = "test-user";
+        var identifier = InMemoryRateLimitingStrategyTestsConstants.TestUserIdentifier;
 
         // Fill the rate limit
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier);
         }
@@ -117,11 +117,11 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         strategy.GetRemainingRequests(identifier).Should().Be(0);
 
         // Wait for requests to expire (exactly 1 minute)
-        Thread.Sleep(TimeSpan.FromMinutes(1));
+        Thread.Sleep(InMemoryRateLimitingStrategyTestsConstants.DefaultInterval);
 
         // After waiting exactly 1 minute, all previous requests should be expired
         // and we should have 30 remaining again
-        strategy.GetRemainingRequests(identifier).Should().Be(30);
+        strategy.GetRemainingRequests(identifier).Should().Be(InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit);
     }
 
     /// <summary>
@@ -132,9 +132,9 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var key = "test-key";
-        var limit = 10;
-        var interval = TimeSpan.FromSeconds(30);
+        var key = InMemoryRateLimitingStrategyTestsConstants.AsyncTestKey;
+        var limit = InMemoryRateLimitingStrategyTestsConstants.AsyncTestRequestLimit;
+        var interval = InMemoryRateLimitingStrategyTestsConstants.AsyncTestInterval;
 
         // Fill the rate limit
         for (int i = 0; i < limit; i++)
@@ -146,7 +146,7 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         (await strategy.IsActionAllowedAsync(key, limit, interval)).Should().BeFalse();
 
         // Wait for requests to expire (exactly 30 seconds)
-        await Task.Delay(TimeSpan.FromSeconds(30));
+        await Task.Delay(InMemoryRateLimitingStrategyTestsConstants.AsyncTestInterval);
 
         // After waiting exactly the interval, all previous requests should be expired
         // and new requests should be allowed again
@@ -161,11 +161,11 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
     {
         // Arrange
         var strategy = new InMemoryRateLimitingStrategy();
-        var identifier1 = "user1";
-        var identifier2 = "user2";
+        var identifier1 = InMemoryRateLimitingStrategyTestsConstants.FirstUserIdentifier;
+        var identifier2 = InMemoryRateLimitingStrategyTestsConstants.SecondUserIdentifier;
 
         // Fill identifier1's limit
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier1).Should().BeTrue();
         }
@@ -174,7 +174,7 @@ public sealed class InMemoryRateLimitingStrategyTests : IInMemoryRateLimitingStr
         strategy.IsRequestAllowed(identifier1).Should().BeFalse();
 
         // identifier2 should still be able to make requests
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < InMemoryRateLimitingStrategyTestsConstants.DefaultRequestLimit; i++)
         {
             strategy.IsRequestAllowed(identifier2).Should().BeTrue();
         }
