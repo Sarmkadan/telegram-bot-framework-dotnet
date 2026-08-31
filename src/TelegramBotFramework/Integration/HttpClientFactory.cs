@@ -20,6 +20,7 @@ public sealed class HttpClientFactory : IHttpClientFactory
     /// </summary>
     public HttpClient GetClient(string baseUrl, TimeSpan? timeout = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         return GetClientCore(baseUrl, baseUrl, timeout, configure: null);
     }
 
@@ -67,6 +68,7 @@ public sealed class HttpClientFactory : IHttpClientFactory
     /// </summary>
     public HttpClient GetClientWithHeaders(string baseUrl, Dictionary<string, string> headers)
     {
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         ArgumentNullException.ThrowIfNull(headers);
 
         // Header sets get their own cache entry: mutating the DefaultRequestHeaders
@@ -91,8 +93,8 @@ public sealed class HttpClientFactory : IHttpClientFactory
     /// </summary>
     public HttpClient GetClientWithAuth(string baseUrl, string authToken, string scheme = "Bearer")
     {
-        if (string.IsNullOrWhiteSpace(authToken))
-            throw new ArgumentException("Auth token cannot be empty", nameof(authToken));
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+        ArgumentException.ThrowIfNullOrEmpty(authToken);
 
         // Authenticated clients are cached separately per credential so the token
         // never bleeds into the unauthenticated shared client for the same host.
