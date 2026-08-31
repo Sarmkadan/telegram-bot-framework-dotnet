@@ -46,12 +46,12 @@ public class QuizFlowExample : IQuizFlowExample
 
         // Create a quiz with multiple choice questions
         await flowBuilder.AddQuizFlow(
-            quizId: "sample_quiz",
-            name: "General Knowledge Quiz",
+            quizId: QuizFlowExampleConstants.SampleQuizId,
+            name: QuizFlowExampleConstants.SampleQuizName,
             configureQuestions: quiz =>
             {
-                quiz.Description = "Test your general knowledge with 5 multiple choice questions.";
-                quiz.CompletionMenuId = "main_menu";
+                quiz.Description = QuizFlowExampleConstants.SampleQuizDescription;
+                quiz.CompletionMenuId = QuizFlowExampleConstants.CompletionMenuId;
 
                 // Add questions to the quiz
                 quiz.AddQuestion(new QuizQuestion
@@ -105,7 +105,7 @@ public class QuizFlowExample : IQuizFlowExample
                 });
             });
 
-        Console.WriteLine("✅ Sample quiz 'General Knowledge Quiz' registered successfully!");
+        Console.WriteLine(QuizFlowExampleConstants.QuizRegisteredSuccessMessage);
     }
 
     /// <summary>
@@ -119,28 +119,28 @@ public class QuizFlowExample : IQuizFlowExample
         // Get the quiz helper from DI
         var quizHelper = _serviceProvider.GetRequiredService<QuizFlowHelper>();
 
-        Console.WriteLine($"Starting quiz for User {userId} in Chat {chatId}");
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.StartingQuizMessage, userId, chatId));
 
         // Start the quiz
         var state = await quizHelper.StartQuizAsync(userId, chatId);
-        Console.WriteLine($"Quiz started! State ID: {state.StateId}");
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuizStartedMessage, state.StateId));
 
         // Simulate user answering questions (in a real bot, this would be actual user input)
         // Question 1: What is the capital of France?
-        var result1 = await quizHelper.ProcessQuizInputAsync(userId, "answer:2"); // Select Paris (index 1, user enters 2)
-        Console.WriteLine($"Question 1 result - Valid: {result1.IsValid}, Completed: {result1.IsCompleted}");
+        var result1 = await quizHelper.ProcessQuizInputAsync(userId, string.Format(QuizFlowExampleConstants.QuizAnswerFormat, 2)); // Select Paris (index 1, user enters 2)
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuestionResultFormat, 1, result1.IsValid, result1.IsCompleted));
 
         // Question 2: Which planet is known as the Red Planet?
-        var result2 = await quizHelper.ProcessQuizInputAsync(userId, "answer:2"); // Select Mars (index 1, user enters 2)
-        Console.WriteLine($"Question 2 result - Valid: {result2.IsValid}, Completed: {result2.IsCompleted}");
+        var result2 = await quizHelper.ProcessQuizInputAsync(userId, string.Format(QuizFlowExampleConstants.QuizAnswerFormat, 2)); // Select Mars (index 1, user enters 2)
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuestionResultFormat, 2, result2.IsValid, result2.IsCompleted));
 
         // Question 3: What is the largest mammal in the world?
-        var result3 = await quizHelper.ProcessQuizInputAsync(userId, "answer:2"); // Select Blue Whale (index 1, user enters 2)
-        Console.WriteLine($"Question 3 result - Valid: {result3.IsValid}, Completed: {result3.IsCompleted}");
+        var result3 = await quizHelper.ProcessQuizInputAsync(userId, string.Format(QuizFlowExampleConstants.QuizAnswerFormat, 2)); // Select Blue Whale (index 1, user enters 2)
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuestionResultFormat, 3, result3.IsValid, result3.IsCompleted));
 
         // Question 4: Which language has the most native speakers?
-        var result4 = await quizHelper.ProcessQuizInputAsync(userId, "answer:3"); // Select Mandarin Chinese (index 2, user enters 3)
-        Console.WriteLine($"Question 4 result - Valid: {result4.IsValid}, Completed: {result4.IsCompleted}");
+        var result4 = await quizHelper.ProcessQuizInputAsync(userId, string.Format(QuizFlowExampleConstants.QuizAnswerFormat, 3)); // Select Mandarin Chinese (index 2, user enters 3)
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuestionResultFormat, 4, result4.IsValid, result4.IsCompleted));
 
         // Question 5: Who painted the Mona Lisa?
         var result5 = await quizHelper.ProcessQuizInputAsync(userId, "answer:3"); // Select Leonardo da Vinci (index 2, user enters 3)
@@ -150,9 +150,9 @@ public class QuizFlowExample : IQuizFlowExample
         if (result5.IsCompleted && result5.QuizResult != null)
         {
             var finalResult = result5.QuizResult;
-            Console.WriteLine("\n📊 **QUIZ COMPLETED!**");
-            Console.WriteLine($"Score: {finalResult.TotalScore}/{finalResult.MaxScore} ({finalResult.Percentage:F1}%)");
-            Console.WriteLine($"Grade: {finalResult.Grade}");
+            Console.WriteLine(QuizFlowExampleConstants.QuizCompletedHeader);
+            Console.WriteLine(string.Format(QuizFlowExampleConstants.QuizScoreFormat, finalResult.TotalScore, finalResult.MaxScore, finalResult.Percentage));
+            Console.WriteLine(string.Format(QuizFlowExampleConstants.QuizGradeFormat, finalResult.Grade));
             Console.WriteLine("\n" + finalResult.FormatSummary());
         }
     }
@@ -169,16 +169,16 @@ public class QuizFlowExample : IQuizFlowExample
 
         if (state == null)
         {
-            Console.WriteLine("No active quiz for this user.");
+            Console.WriteLine(QuizFlowExampleConstants.NoActiveQuizMessage);
             return;
         }
 
-        Console.WriteLine($"User {userId} has an active quiz:");
-        Console.WriteLine($"- Flow ID: {state.FlowId}");
-        Console.WriteLine($"- Current Step: {state.CurrentStepId}");
-        Console.WriteLine($"- Status: {state.Status}");
-        Console.WriteLine($"- Started: {state.StartedAt}");
-        Console.WriteLine($"- Score: {state.Variables.GetValueOrDefault("_quiz_score") ?? "0"}");
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.ActiveQuizHeader, userId));
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.FlowIdFormat, state.FlowId));
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.CurrentStepFormat, state.CurrentStepId));
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.StatusFormat, state.Status));
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.StartedAtFormat, state.StartedAt));
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.ScoreFormat, state.Variables.GetValueOrDefault(QuizFlowExampleConstants.QuizScoreVariableKey) ?? "0"));
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ public class QuizFlowExample : IQuizFlowExample
     public async Task AbortQuizExampleAsync(long userId)
     {
         var quizHelper = _serviceProvider.GetRequiredService<QuizFlowHelper>();
-        await quizHelper.AbortQuizAsync(userId, "Example cleanup");
-        Console.WriteLine($"Quiz for user {userId} aborted.");
+        await quizHelper.AbortQuizAsync(userId, QuizFlowExampleConstants.ExampleCleanupReason);
+        Console.WriteLine(string.Format(QuizFlowExampleConstants.QuizAbortedMessage, userId));
     }
 }
