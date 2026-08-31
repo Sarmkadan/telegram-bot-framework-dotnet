@@ -45,7 +45,7 @@ public class EventPublisherTests : IEventPublisherTests
     public void WithCorrelationId_SetsCorrelationIdAndReturnsPublisher()
     {
         // Arrange
-        const string expectedCorrelationId = "test-correlation-123";
+        const string expectedCorrelationId = EventPublisherTestsConstants.TestCorrelationId;
 
         // Act
         var result = _publisher.WithCorrelationId(expectedCorrelationId);
@@ -55,7 +55,7 @@ public class EventPublisherTests : IEventPublisherTests
 
         // Verify by calling a method that uses correlation ID
         _eventBusMock.Reset();
-        _publisher.PublishMessageReceivedAsync(123, 456, "test");
+        _publisher.PublishMessageReceivedAsync(EventPublisherTestsConstants.TestChatId2, EventPublisherTestsConstants.TestUserId3, EventPublisherTestsConstants.TestMessageShort);
 
         _eventBusMock.Verify(x => x.PublishAsync(It.Is<MessageReceivedEvent>(e =>
             e.CorrelationId == expectedCorrelationId)),
@@ -66,8 +66,8 @@ public class EventPublisherTests : IEventPublisherTests
     public void WithCorrelationId_MultipleCalls_OverwritesPreviousValue()
     {
         // Arrange
-        const string firstCorrelationId = "first-id";
-        const string secondCorrelationId = "second-id";
+        const string firstCorrelationId = EventPublisherTestsConstants.FirstCorrelationId;
+        const string secondCorrelationId = EventPublisherTestsConstants.SecondCorrelationId;
 
         // Act
         _publisher.WithCorrelationId(firstCorrelationId);
@@ -86,9 +86,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishMessageReceivedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
-        const long chatId = 12345;
-        const long userId = 67890;
-        const string messageText = "Hello, world!";
+        const long chatId = EventPublisherTestsConstants.TestChatId;
+        const long userId = EventPublisherTestsConstants.TestUserId;
+        const string messageText = EventPublisherTestsConstants.TestMessage;
 
         // Act
         await _publisher.PublishMessageReceivedAsync(chatId, userId, messageText);
@@ -98,7 +98,7 @@ public class EventPublisherTests : IEventPublisherTests
             e.ChatId == chatId &&
             e.UserId == userId &&
             e.MessageText == messageText &&
-            e.EventType == "MessageReceivedEvent")),
+            e.EventType == EventPublisherTestsConstants.MessageReceivedEventType)),
             Times.Once);
     }
 
@@ -106,8 +106,8 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishMessageReceivedAsync_WithNullMessageText_SetsMessageTextToNull()
     {
         // Arrange
-        const long chatId = 12345;
-        const long userId = 67890;
+        const long chatId = EventPublisherTestsConstants.TestChatId;
+        const long userId = EventPublisherTestsConstants.TestUserId;
 
         // Act
         await _publisher.PublishMessageReceivedAsync(chatId, userId, null);
@@ -122,9 +122,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishMessageReceivedAsync_WithEmptyMessageText_SetsMessageTextToEmpty()
     {
         // Arrange
-        const long chatId = 12345;
-        const long userId = 67890;
-        const string emptyMessage = "";
+        const long chatId = EventPublisherTestsConstants.TestChatId;
+        const long userId = EventPublisherTestsConstants.TestUserId;
+        const string emptyMessage = EventPublisherTestsConstants.EmptyMessage;
 
         // Act
         await _publisher.PublishMessageReceivedAsync(chatId, userId, emptyMessage);
@@ -139,10 +139,10 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishMessageReceivedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
-        const string correlationId = "test-correlation";
-        const long chatId = 12345;
-        const long userId = 67890;
-        const string messageText = "test message";
+        const string correlationId = EventPublisherTestsConstants.TestCorrelation;
+        const long chatId = EventPublisherTestsConstants.TestChatId;
+        const long userId = EventPublisherTestsConstants.TestUserId;
+        const string messageText = EventPublisherTestsConstants.TestMessageText;
 
         _publisher.WithCorrelationId(correlationId);
 
@@ -159,9 +159,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishCommandExecutedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
-        const string commandName = "start";
-        const long userId = 12345;
-        const string arguments = "arg1 arg2";
+        const string commandName = EventPublisherTestsConstants.TestCommandName;
+        const long userId = EventPublisherTestsConstants.TestUserId2;
+        const string arguments = EventPublisherTestsConstants.TestArguments;
         const bool success = true;
         const string errorMessage = null;
 
@@ -175,7 +175,7 @@ public class EventPublisherTests : IEventPublisherTests
             e.Arguments == arguments &&
             e.Success == success &&
             e.ErrorMessage == errorMessage &&
-            e.EventType == "CommandExecutedEvent")),
+            e.EventType == EventPublisherTestsConstants.CommandExecutedEventType)),
             Times.Once);
     }
 
@@ -183,11 +183,11 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishCommandExecutedAsync_WithErrorMessage_SetsErrorMessage()
     {
         // Arrange
-        const string commandName = "start";
-        const long userId = 12345;
-        const string arguments = "arg1 arg2";
+        const string commandName = EventPublisherTestsConstants.TestCommandName;
+        const long userId = EventPublisherTestsConstants.TestUserId2;
+        const string arguments = EventPublisherTestsConstants.TestArguments;
         const bool success = false;
-        const string errorMessage = "Command failed";
+        const string errorMessage = EventPublisherTestsConstants.TestErrorMessage;
 
         // Act
         await _publisher.PublishCommandExecutedAsync(commandName, userId, arguments, success, errorMessage);
@@ -203,8 +203,8 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishCommandExecutedAsync_WithNullArguments_SetsArgumentsToNull()
     {
         // Arrange
-        const string commandName = "start";
-        const long userId = 12345;
+        const string commandName = EventPublisherTestsConstants.TestCommandName;
+        const long userId = EventPublisherTestsConstants.TestUserId2;
         const string? arguments = null;
         const bool success = true;
 
@@ -221,9 +221,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishCommandExecutedAsync_WithEmptyArguments_SetsArgumentsToEmpty()
     {
         // Arrange
-        const string commandName = "start";
-        const long userId = 12345;
-        const string emptyArguments = "";
+        const string commandName = EventPublisherTestsConstants.TestCommandName;
+        const long userId = EventPublisherTestsConstants.TestUserId2;
+        const string emptyArguments = EventPublisherTestsConstants.EmptyMessage;
         const bool success = true;
 
         // Act
@@ -239,9 +239,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishCommandExecutedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
-        const string correlationId = "test-correlation";
-        const string commandName = "start";
-        const long userId = 12345;
+        const string correlationId = EventPublisherTestsConstants.TestCorrelation;
+        const string commandName = EventPublisherTestsConstants.TestCommandName;
+        const long userId = EventPublisherTestsConstants.TestUserId2;
         const bool success = true;
 
         _publisher.WithCorrelationId(correlationId);
@@ -259,9 +259,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishBotStateChangedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
-        const string previousState = "Idle";
-        const string newState = "Active";
-        const string? reason = "User triggered action";
+        const string previousState = EventPublisherTestsConstants.TestPreviousState;
+        const string newState = EventPublisherTestsConstants.TestNewState;
+        const string? reason = EventPublisherTestsConstants.TestReason;
 
         // Act
         await _publisher.PublishBotStateChangedAsync(previousState, newState, reason);
@@ -271,7 +271,7 @@ public class EventPublisherTests : IEventPublisherTests
             e.PreviousState == previousState &&
             e.NewState == newState &&
             e.Reason == reason &&
-            e.EventType == "BotStateChangedEvent")),
+            e.EventType == EventPublisherTestsConstants.BotStateChangedEventType)),
             Times.Once);
     }
 
@@ -279,8 +279,8 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishBotStateChangedAsync_WithNullReason_SetsReasonToNull()
     {
         // Arrange
-        const string previousState = "Idle";
-        const string newState = "Active";
+        const string previousState = EventPublisherTestsConstants.TestPreviousState;
+        const string newState = EventPublisherTestsConstants.TestNewState;
 
         // Act
         await _publisher.PublishBotStateChangedAsync(previousState, newState);
@@ -295,9 +295,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishBotStateChangedAsync_WithEmptyReason_SetsReasonToEmpty()
     {
         // Arrange
-        const string previousState = "Idle";
-        const string newState = "Active";
-        const string emptyReason = "";
+        const string previousState = EventPublisherTestsConstants.TestPreviousState;
+        const string newState = EventPublisherTestsConstants.TestNewState;
+        const string emptyReason = EventPublisherTestsConstants.EmptyReason;
 
         // Act
         await _publisher.PublishBotStateChangedAsync(previousState, newState, emptyReason);
@@ -312,9 +312,9 @@ public class EventPublisherTests : IEventPublisherTests
     public async Task PublishBotStateChangedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
-        const string correlationId = "test-correlation";
-        const string previousState = "Idle";
-        const string newState = "Active";
+        const string correlationId = EventPublisherTestsConstants.TestCorrelation;
+        const string previousState = EventPublisherTestsConstants.TestPreviousState;
+        const string newState = EventPublisherTestsConstants.TestNewState;
 
         _publisher.WithCorrelationId(correlationId);
 
