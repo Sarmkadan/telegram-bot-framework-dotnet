@@ -74,6 +74,8 @@ public sealed class UserSession : IUserSession, IEquatable<UserSession>
     /// </summary>
     public void SetContextData(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentException.ThrowIfNullOrEmpty(value);
         ContextData ??= new Dictionary<string, string>();
         ContextData[key] = value;
     }
@@ -81,14 +83,20 @@ public sealed class UserSession : IUserSession, IEquatable<UserSession>
     /// <summary>
     /// Gets context data.
     /// </summary>
-    public string? GetContextData(string key) =>
-        ContextData?.TryGetValue(key, out var value) == true ? value : null;
+    public string? GetContextData(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return ContextData?.TryGetValue(key, out var value) == true ? value : null;
+    }
 
     /// <summary>
     /// Removes context data.
     /// </summary>
-    public bool RemoveContextData(string key) =>
-        ContextData?.Remove(key) ?? false;
+    public bool RemoveContextData(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return ContextData?.Remove(key) ?? false;
+    }
 
     /// <summary>
     /// Clears all context data.
@@ -103,6 +111,7 @@ public sealed class UserSession : IUserSession, IEquatable<UserSession>
     /// </summary>
     public void AddCommandToHistory(string command)
     {
+        ArgumentException.ThrowIfNullOrEmpty(command);
         CommandHistory ??= new List<string>();
         CommandHistory.Add($"{DateTime.UtcNow:O}:{command}");
 
