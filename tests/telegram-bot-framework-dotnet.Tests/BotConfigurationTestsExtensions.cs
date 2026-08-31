@@ -18,10 +18,10 @@ public static class BotConfigurationTestsExtensions
 	/// <returns>A new <see cref="BotConfiguration"/> instance with valid default values.</returns>
 	public static BotConfiguration CreateValidConfiguration(this BotConfiguration _) => new BotConfiguration
 	{
-		BotToken = "test-token-123",
-		BotUsername = "TestBot",
-		SessionTimeoutMinutes = 30,
-		MaxConcurrentRequests = 10
+		BotToken = BotConfigurationTestsExtensionsConstants.DefaultBotToken,
+		BotUsername = BotConfigurationTestsExtensionsConstants.DefaultBotUsername,
+		SessionTimeoutMinutes = BotConfigurationTestsExtensionsConstants.DefaultSessionTimeoutMinutes,
+		MaxConcurrentRequests = BotConfigurationTestsExtensionsConstants.DefaultMaxConcurrentRequests
 	};
 
 	/// <summary>
@@ -106,8 +106,8 @@ public static class BotConfigurationTestsExtensions
 	{
 		ArgumentNullException.ThrowIfNull(config);
 		config.EnableWebhook = true;
-		config.WebhookUrl = webhookUrl ?? "https://example.com/webhook";
-		config.WebhookSecret = webhookSecret ?? "secret123";
+		config.WebhookUrl = webhookUrl ?? BotConfigurationTestsExtensionsConstants.DefaultWebhookUrl;
+		config.WebhookSecret = webhookSecret ?? BotConfigurationTestsExtensionsConstants.DefaultWebhookSecret;
 		return config;
 	}
 
