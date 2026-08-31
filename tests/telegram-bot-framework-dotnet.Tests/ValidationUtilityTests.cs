@@ -22,14 +22,14 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidTelegramUserId with various positive and negative inputs.
     /// </summary>
     [Theory]
-    [InlineData(1L, true)]
-    [InlineData(100L, true)]
-    [InlineData(999999999L, true)]
-    [InlineData(1000000000L, true)]
-    [InlineData(0L, false)]
-    [InlineData(-1L, false)]
-    [InlineData(-100L, false)]
-    [InlineData(-999999999L, false)]
+    [InlineData(ValidationUtilityTestsConstants.MinimumPositiveId, true)]
+    [InlineData(ValidationUtilityTestsConstants.PositiveUserId, true)]
+    [InlineData(ValidationUtilityTestsConstants.LargeUserId, true)]
+    [InlineData(ValidationUtilityTestsConstants.BillionUserId, true)]
+    [InlineData(ValidationUtilityTestsConstants.ZeroId, false)]
+    [InlineData(ValidationUtilityTestsConstants.NegativeId, false)]
+    [InlineData(ValidationUtilityTestsConstants.NegativeUserId, false)]
+    [InlineData(ValidationUtilityTestsConstants.LargeNegativeId, false)]
     public void IsValidTelegramUserId_VariousInputs_ReturnsExpectedResult(long userId, bool expected)
     {
         ValidationUtility.IsValidTelegramUserId(userId).Should().Be(expected);
@@ -43,12 +43,12 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidTelegramChatId with positive, negative, and zero values.
     /// </summary>
     [Theory]
-    [InlineData(12345L, true)]
-    [InlineData(1L, true)]
-    [InlineData(-1L, true)]
-    [InlineData(-100500L, true)]
-    [InlineData(-999999999L, true)]
-    [InlineData(0L, false)]
+    [InlineData(ValidationUtilityTestsConstants.PositiveChatId, true)]
+    [InlineData(ValidationUtilityTestsConstants.MinimumPositiveId, true)]
+    [InlineData(ValidationUtilityTestsConstants.NegativeId, true)]
+    [InlineData(ValidationUtilityTestsConstants.NegativeChatId, true)]
+    [InlineData(ValidationUtilityTestsConstants.LargeNegativeId, true)]
+    [InlineData(ValidationUtilityTestsConstants.ZeroId, false)]
     public void IsValidTelegramChatId_VariousInputs_ReturnsExpectedResult(long chatId, bool expected)
     {
         ValidationUtility.IsValidTelegramChatId(chatId).Should().Be(expected);
@@ -76,8 +76,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("1234567890:abc", false)]
     [InlineData("1234567890:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR", false)]
     [InlineData("1234567890abc:token", false)]
@@ -98,12 +98,12 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidUrl with valid URLs.
     /// </summary>
     [Theory]
-    [InlineData("https://example.com", true)]
-    [InlineData("http://example.com", true)]
-    [InlineData("https://sub.example.com/path?query=value#fragment", true)]
-    [InlineData("http://localhost:5000", true)]
-    [InlineData("https://192.168.1.1:8080", true)]
-    [InlineData("ftp://files.example.com", true)]
+    [InlineData(ValidationUtilityTestsConstants.SecureExampleUrl, true)]
+    [InlineData(ValidationUtilityTestsConstants.ExampleUrl, true)]
+    [InlineData(ValidationUtilityTestsConstants.UrlWithPathQueryAndFragment, true)]
+    [InlineData(ValidationUtilityTestsConstants.LocalhostUrlWithPort, true)]
+    [InlineData(ValidationUtilityTestsConstants.IpUrlWithPort, true)]
+    [InlineData(ValidationUtilityTestsConstants.FtpUrl, true)]
     public void IsValidUrl_ValidUrls_ReturnsTrue(string url, bool expected)
     {
         ValidationUtility.IsValidUrl(url).Should().Be(expected);
@@ -114,12 +114,12 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
-    [InlineData("not-a-url", false)]
-    [InlineData("example.com", false)]
-    [InlineData("http://", false)]
-    [InlineData("https://", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.InvalidUrl, false)]
+    [InlineData(ValidationUtilityTestsConstants.UrlWithoutScheme, false)]
+    [InlineData(ValidationUtilityTestsConstants.IncompleteHttpUrl, false)]
+    [InlineData(ValidationUtilityTestsConstants.IncompleteHttpsUrl, false)]
     public void IsValidUrl_InvalidInputs_ReturnsFalse(string? url, bool expected)
     {
         ValidationUtility.IsValidUrl(url).Should().Be(expected);
@@ -149,8 +149,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("256.1.1.1", false)]
     [InlineData("192.168.1", false)]
     [InlineData("192.168.1.1.1", false)]
@@ -172,7 +172,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData("+1 (555) 123-4567", true)]
-    [InlineData("1234567890", true)]
+    [InlineData(ValidationUtilityTestsConstants.TenDigitPhoneNumber, true)]
     [InlineData("+44 20 7946 0958", true)]
     [InlineData("555-123-4567", true)]
     [InlineData("5551234567", true)]
@@ -187,10 +187,10 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("123", false)]
-    [InlineData("123456789", false)]
+    [InlineData(ValidationUtilityTestsConstants.NineDigitPhoneNumber, false)]
     [InlineData("abc", false)]
     [InlineData("123-456-789", false)]
     public void IsValidPhoneNumber_InvalidInputs_ReturnsFalse(string? phoneNumber, bool expected)
@@ -202,10 +202,10 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidPhoneNumber with boundary length values.
     /// </summary>
     [Theory]
-    [InlineData("1234567890", true)]  // Exactly 10 digits
+    [InlineData(ValidationUtilityTestsConstants.TenDigitPhoneNumber, true)]  // Exactly 10 digits
     [InlineData("12345678901", true)] // 11 digits
     [InlineData("123456789012345", true)] // 15 digits (max)
-    [InlineData("123456789", false)] // 9 digits (below min)
+    [InlineData(ValidationUtilityTestsConstants.NineDigitPhoneNumber, false)] // 9 digits (below min)
     [InlineData("1234567890123456", false)] // 16 digits (above max)
     public void IsValidPhoneNumber_BoundaryLengths_ReturnsExpectedResult(string phoneNumber, bool expected)
     {
@@ -238,8 +238,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("start", false)]
     [InlineData("start/", false)]
     [InlineData("/hello-world", false)]
@@ -265,7 +265,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("file-with-dashes.txt", true)]
     [InlineData("file_with_underscores.txt", true)]
     [InlineData("file123.txt", true)]
-    [InlineData("a", true)]
+    [InlineData(ValidationUtilityTestsConstants.SingleCharacter, true)]
     public void IsValidFilename_ValidNames_ReturnsTrue(string filename, bool expected)
     {
         ValidationUtility.IsValidFilename(filename).Should().Be(expected);
@@ -276,8 +276,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("file/name.txt", false)]
     [InlineData("file:name.txt", false)]
     [InlineData("file*name.txt", false)]
@@ -314,13 +314,13 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
-    [InlineData("NoSpecial1", false)] // Missing special character
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.DuplicateInvalidPassword, false)] // Missing special character
     [InlineData("abcdefg1!", false)] // Missing uppercase
     [InlineData("ABCDEFG1!", false)] // Missing lowercase
     [InlineData("Abcdefgh!", false)] // Missing digit
-    [InlineData("NoSpecial1", false)] // Missing special character
+    [InlineData(ValidationUtilityTestsConstants.DuplicateInvalidPassword, false)] // Missing special character
     [InlineData("short1!", false)] // Too short (7 chars)
     [InlineData("Ab1!", false)] // Too short (4 chars)
     public void IsStrongPassword_InvalidInputs_ReturnsFalse(string? password, bool expected)
@@ -348,11 +348,11 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidLength with valid string lengths.
     /// </summary>
     [Theory]
-    [InlineData("hello", 3, 10, true)]
-    [InlineData("hi", 1, 5, true)]
-    [InlineData("a", 1, 1, true)]
-    [InlineData("test", 0, 10, true)]
-    [InlineData("", 0, 0, true)]
+    [InlineData(ValidationUtilityTestsConstants.Hello, ValidationUtilityTestsConstants.ShortMinimumLength, ValidationUtilityTestsConstants.StandardMaximumLength, true)]
+    [InlineData(ValidationUtilityTestsConstants.Hi, ValidationUtilityTestsConstants.MinimumLength, ValidationUtilityTestsConstants.ShortMaximumLength, true)]
+    [InlineData(ValidationUtilityTestsConstants.SingleCharacter, ValidationUtilityTestsConstants.MinimumLength, ValidationUtilityTestsConstants.MinimumLength, true)]
+    [InlineData("test", ValidationUtilityTestsConstants.ZeroLength, ValidationUtilityTestsConstants.StandardMaximumLength, true)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, ValidationUtilityTestsConstants.ZeroLength, ValidationUtilityTestsConstants.ZeroLength, true)]
     public void IsValidLength_ValidLengths_ReturnsTrue(string value, int minLength, int maxLength, bool expected)
     {
         ValidationUtility.IsValidLength(value, minLength, maxLength).Should().Be(expected);
@@ -362,11 +362,11 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// Tests IsValidLength with invalid string lengths.
     /// </summary>
     [Theory]
-    [InlineData(null, 0, 10, true)] // null with minLength=0 should return true
-    [InlineData(null, 1, 10, false)] // null with minLength>0 should return false
-    [InlineData("hello", 10, 5, false)] // min > max (invalid range)
-    [InlineData("hello world", 1, 5, false)] // Exceeds maximum
-    [InlineData("hi", 5, 10, false)] // Below minimum
+    [InlineData(null, ValidationUtilityTestsConstants.ZeroLength, ValidationUtilityTestsConstants.StandardMaximumLength, true)] // null with minLength=0 should return true
+    [InlineData(null, ValidationUtilityTestsConstants.MinimumLength, ValidationUtilityTestsConstants.StandardMaximumLength, false)] // null with minLength>0 should return false
+    [InlineData(ValidationUtilityTestsConstants.Hello, ValidationUtilityTestsConstants.StandardMaximumLength, ValidationUtilityTestsConstants.ShortMaximumLength, false)] // min > max (invalid range)
+    [InlineData("hello world", ValidationUtilityTestsConstants.MinimumLength, ValidationUtilityTestsConstants.ShortMaximumLength, false)] // Exceeds maximum
+    [InlineData(ValidationUtilityTestsConstants.Hi, ValidationUtilityTestsConstants.ShortMaximumLength, ValidationUtilityTestsConstants.StandardMaximumLength, false)] // Below minimum
     public void IsValidLength_InvalidInputs_ReturnsExpectedResult(string? value, int minLength, int maxLength, bool expected)
     {
         ValidationUtility.IsValidLength(value, minLength, maxLength).Should().Be(expected);
@@ -397,8 +397,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("12abc", false)]
     [InlineData("abc123", false)]
     [InlineData("12 34", false)]
@@ -429,8 +429,8 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     /// </summary>
     [Theory]
     [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("   ", false)]
+    [InlineData(ValidationUtilityTestsConstants.EmptyValue, false)]
+    [InlineData(ValidationUtilityTestsConstants.WhitespaceValue, false)]
     [InlineData("not-a-guid", false)]
     [InlineData("550e8400-e29b-41d4-a716-44665544000", false)] // Too short
     [InlineData("550e8400-e29b-41d4-a716-4466554400000", false)] // Too long
