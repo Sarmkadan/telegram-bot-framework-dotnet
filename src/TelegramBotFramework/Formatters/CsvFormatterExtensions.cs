@@ -13,10 +13,6 @@ using System.Globalization;
 /// </summary>
 public static class CsvFormatterExtensions
 {
-    private const string FieldSeparator = ",";
-    private const string LineEnding = "\r\n";
-    private const char QuoteChar = '"';
-
     /// <summary>
     /// Formats a collection of objects with custom property selection.
     /// </summary>
@@ -34,7 +30,7 @@ public static class CsvFormatterExtensions
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var type = typeof(T);
         var properties = propertyNames
@@ -43,13 +39,13 @@ public static class CsvFormatterExtensions
             .ToList();
 
         if (properties.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var sb = new System.Text.StringBuilder();
 
         // Write headers
         var headers = properties.Select(p => EscapeField(p!.Name));
-        sb.AppendLine(string.Join(FieldSeparator, headers));
+        sb.AppendLine(string.Join(CsvFormatterExtensionsConstants.FieldSeparator, headers));
 
         // Write data rows
         foreach (var item in list)
@@ -57,11 +53,11 @@ public static class CsvFormatterExtensions
             var values = properties.Select(p =>
             {
                 var value = p!.GetValue(item);
-                var stringValue = value?.ToString() ?? string.Empty;
+                var stringValue = value?.ToString() ?? CsvFormatterExtensionsConstants.EmptyString;
                 return EscapeField(stringValue);
             });
 
-            sb.AppendLine(string.Join(FieldSeparator, values));
+            sb.AppendLine(string.Join(CsvFormatterExtensionsConstants.FieldSeparator, values));
         }
 
         return sb.ToString();
@@ -106,10 +102,10 @@ public static class CsvFormatterExtensions
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         if (headers.Length == 0)
-            throw new ArgumentException("At least one header must be provided", nameof(headers));
+            throw new ArgumentException(CsvFormatterExtensionsConstants.AtLeastOneHeaderMessage, nameof(headers));
 
         var type = typeof(T);
         var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
@@ -117,13 +113,13 @@ public static class CsvFormatterExtensions
             .ToList();
 
         if (properties.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var sb = new System.Text.StringBuilder();
 
         // Write custom headers
         var escapedHeaders = headers.Select(h => EscapeField(h));
-        sb.AppendLine(string.Join(FieldSeparator, escapedHeaders));
+        sb.AppendLine(string.Join(CsvFormatterExtensionsConstants.FieldSeparator, escapedHeaders));
 
         // Write data rows using all properties in order
         foreach (var item in list)
@@ -131,11 +127,11 @@ public static class CsvFormatterExtensions
             var values = properties.Select(p =>
             {
                 var value = p.GetValue(item);
-                var stringValue = value?.ToString() ?? string.Empty;
+                var stringValue = value?.ToString() ?? CsvFormatterExtensionsConstants.EmptyString;
                 return EscapeField(stringValue);
             });
 
-            sb.AppendLine(string.Join(FieldSeparator, values));
+            sb.AppendLine(string.Join(CsvFormatterExtensionsConstants.FieldSeparator, values));
         }
 
         return sb.ToString();
@@ -150,13 +146,13 @@ public static class CsvFormatterExtensions
     /// <param name="delimiter">The delimiter character to use instead of comma.</param>
     /// <returns>CSV formatted string with custom delimiter.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
-    public static string FormatWithDelimiter<T>(this CsvFormatter formatter, IEnumerable<T> data, char delimiter = ';')
+    public static string FormatWithDelimiter<T>(this CsvFormatter formatter, IEnumerable<T> data, char delimiter = CsvFormatterExtensionsConstants.DefaultDelimiter)
     {
         ArgumentNullException.ThrowIfNull(formatter);
 
         var list = data?.ToList() ?? new List<T>();
         if (list.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var type = typeof(T);
         var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
@@ -164,7 +160,7 @@ public static class CsvFormatterExtensions
             .ToList();
 
         if (properties.Count == 0)
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var sb = new System.Text.StringBuilder();
 
@@ -178,7 +174,7 @@ public static class CsvFormatterExtensions
             var values = properties.Select(p =>
             {
                 var value = p.GetValue(item);
-                var stringValue = value?.ToString() ?? string.Empty;
+                var stringValue = value?.ToString() ?? CsvFormatterExtensionsConstants.EmptyString;
                 return EscapeField(stringValue, delimiter);
             });
 
@@ -194,12 +190,12 @@ public static class CsvFormatterExtensions
     private static string EscapeField(string? field)
     {
         if (string.IsNullOrEmpty(field))
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         // If field contains special characters, wrap in quotes and escape inner quotes
-        if (field.Contains(FieldSeparator) || field.Contains(LineEnding) || field.Contains(QuoteChar.ToString()))
+        if (field.Contains(CsvFormatterExtensionsConstants.FieldSeparator) || field.Contains(CsvFormatterExtensionsConstants.LineEnding) || field.Contains(CsvFormatterExtensionsConstants.QuoteChar.ToString()))
         {
-            return QuoteChar + field.Replace(QuoteChar.ToString(), QuoteChar.ToString() + QuoteChar) + QuoteChar;
+            return CsvFormatterExtensionsConstants.QuoteChar + field.Replace(CsvFormatterExtensionsConstants.QuoteChar.ToString(), CsvFormatterExtensionsConstants.QuoteChar.ToString() + CsvFormatterExtensionsConstants.QuoteChar) + CsvFormatterExtensionsConstants.QuoteChar;
         }
 
         return field;
@@ -211,7 +207,7 @@ public static class CsvFormatterExtensions
     private static string EscapeField(string? field, char delimiter)
     {
         if (string.IsNullOrEmpty(field))
-            return string.Empty;
+            return CsvFormatterExtensionsConstants.EmptyString;
 
         var escaped = EscapeField(field);
 
@@ -219,7 +215,7 @@ public static class CsvFormatterExtensions
         if (escaped.Contains(delimiter.ToString()))
         {
             // Re-escape with quotes
-            return QuoteChar + escaped.Replace(QuoteChar.ToString(), QuoteChar.ToString() + QuoteChar) + QuoteChar;
+            return CsvFormatterExtensionsConstants.QuoteChar + escaped.Replace(CsvFormatterExtensionsConstants.QuoteChar.ToString(), CsvFormatterExtensionsConstants.QuoteChar.ToString() + CsvFormatterExtensionsConstants.QuoteChar) + CsvFormatterExtensionsConstants.QuoteChar;
         }
 
         return escaped;
