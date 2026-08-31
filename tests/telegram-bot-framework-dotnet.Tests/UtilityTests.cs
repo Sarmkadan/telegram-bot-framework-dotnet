@@ -22,9 +22,9 @@ namespace TelegramBotFramework.Tests;
     /// <param name="maxLength">The maximum length to truncate to.</param>
     /// <param name="expected">The expected truncated result.</param>
     [Theory]
-    [InlineData("Hello World", 5, "Hell…")]
-    [InlineData("Hi", 10, "Hi")]
-    [InlineData("Short", 5, "Short")]
+    [InlineData(StringExtensionTestsConstants.HelloWorld, StringExtensionTestsConstants.ShortMaxLength, StringExtensionTestsConstants.TruncatedHelloWorld)]
+    [InlineData(StringExtensionTestsConstants.Hi, StringExtensionTestsConstants.NormalMaxLength, StringExtensionTestsConstants.Hi)]
+    [InlineData(StringExtensionTestsConstants.Short, StringExtensionTestsConstants.ShortMaxLength, StringExtensionTestsConstants.Short)]
     public void Truncate_VariousInputs_TruncatesCorrectly(string input, int maxLength, string expected)
     {
         input.Truncate(maxLength).Should().Be(expected);
@@ -37,7 +37,7 @@ namespace TelegramBotFramework.Tests;
     public void Truncate_NullInput_ReturnsNull()
     {
         string? value = null;
-        value!.Truncate(10).Should().BeNull();
+        value!.Truncate(StringExtensionTestsConstants.NormalMaxLength).Should().BeNull();
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsValidEmail_WithValidFormat_ReturnsTrue()
     {
-        "user@example.com".IsValidEmail().Should().BeTrue();
+        StringExtensionTestsConstants.ValidEmail.IsValidEmail().Should().BeTrue();
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsValidEmail_WithMissingAtSign_ReturnsFalse()
     {
-        "userexample.com".IsValidEmail().Should().BeFalse();
+        StringExtensionTestsConstants.MissingAtSign.IsValidEmail().Should().BeFalse();
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsValidEmail_WithEmptyString_ReturnsFalse()
     {
-        "".IsValidEmail().Should().BeFalse();
+        StringExtensionTestsConstants.Empty.IsValidEmail().Should().BeFalse();
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsValidEmail_WithMissingDomain_ReturnsFalse()
     {
-        "user@".IsValidEmail().Should().BeFalse();
+        StringExtensionTestsConstants.MissingDomain.IsValidEmail().Should().BeFalse();
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Repeat_PositiveCount_ProducesRepeatedString()
     {
-        "ab".Repeat(3).Should().Be("ababab");
+        StringExtensionTestsConstants.Ab.Repeat(StringExtensionTestsConstants.RepeatCount).Should().Be(StringExtensionTestsConstants.RepeatedAb);
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Repeat_ZeroCount_ReturnsEmpty()
     {
-        "abc".Repeat(0).Should().BeEmpty();
+        StringExtensionTestsConstants.Abc.Repeat(StringExtensionTestsConstants.ZeroCount).Should().BeEmpty();
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Repeat_NegativeCount_ReturnsEmpty()
     {
-        "abc".Repeat(-1).Should().BeEmpty();
+        StringExtensionTestsConstants.Abc.Repeat(StringExtensionTestsConstants.NegativeCount).Should().BeEmpty();
     }
 
     /// <summary>
@@ -109,7 +109,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void ExtractNumbers_FromMixedString_ReturnsOnlyDigits()
     {
-        "abc123def456".ExtractNumbers().Should().Be("123456");
+        StringExtensionTestsConstants.MixedString.ExtractNumbers().Should().Be(StringExtensionTestsConstants.ExtractedNumbers);
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void ExtractNumbers_FromStringWithNoDigits_ReturnsEmpty()
     {
-        "abcdef".ExtractNumbers().Should().BeEmpty();
+        StringExtensionTestsConstants.LettersOnly.ExtractNumbers().Should().BeEmpty();
     }
 
     /// <summary>
@@ -127,7 +127,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void EnsureStartsWith_WhenPrefixMissing_PrependPrefix()
     {
-        "example.com".EnsureStartsWith("https://").Should().Be("https://example.com");
+        StringExtensionTestsConstants.ExampleCom.EnsureStartsWith(StringExtensionTestsConstants.HttpsPrefix).Should().Be(StringExtensionTestsConstants.HttpsExampleCom);
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void EnsureStartsWith_WhenAlreadyHasPrefix_ReturnsUnchanged()
     {
-        "https://example.com".EnsureStartsWith("https://").Should().Be("https://example.com");
+        StringExtensionTestsConstants.HttpsExampleCom.EnsureStartsWith(StringExtensionTestsConstants.HttpsPrefix).Should().Be(StringExtensionTestsConstants.HttpsExampleCom);
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void EnsureEndsWith_WhenSuffixMissing_AppendsSuffix()
     {
-        "hello".EnsureEndsWith("!").Should().Be("hello!");
+        StringExtensionTestsConstants.Hello.EnsureEndsWith(StringExtensionTestsConstants.Exclamation).Should().Be(StringExtensionTestsConstants.HelloWithExclamation);
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void EnsureEndsWith_WhenAlreadyHasSuffix_ReturnsUnchanged()
     {
-        "hello!".EnsureEndsWith("!").Should().Be("hello!");
+        StringExtensionTestsConstants.HelloWithExclamation.EnsureEndsWith(StringExtensionTestsConstants.Exclamation).Should().Be(StringExtensionTestsConstants.HelloWithExclamation);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Capitalize_WithLowercaseFirstChar_CapitalizesFirstChar()
     {
-        "hello world".Capitalize().Should().Be("Hello world");
+        StringExtensionTestsConstants.HelloWorldLowercase.Capitalize().Should().Be(StringExtensionTestsConstants.HelloWorldCapitalized);
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Capitalize_WithAlreadyCapitalized_ReturnsUnchanged()
     {
-        "Hello".Capitalize().Should().Be("Hello");
+        StringExtensionTestsConstants.HelloCapitalized.Capitalize().Should().Be(StringExtensionTestsConstants.HelloCapitalized);
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsAlphanumeric_WithPureAlphanumericString_ReturnsTrue()
     {
-        "abc123".IsAlphanumeric().Should().BeTrue();
+        StringExtensionTestsConstants.Alphanumeric.IsAlphanumeric().Should().BeTrue();
     }
 
     /// <summary>
@@ -190,7 +190,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsAlphanumeric_WithSpecialCharacters_ReturnsFalse()
     {
-        "abc!123".IsAlphanumeric().Should().BeFalse();
+        StringExtensionTestsConstants.WithSpecialChars.IsAlphanumeric().Should().BeFalse();
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void IsAlphanumeric_WithSpaces_ReturnsFalse()
     {
-        "abc 123".IsAlphanumeric().Should().BeFalse();
+        StringExtensionTestsConstants.WithSpaces.IsAlphanumeric().Should().BeFalse();
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ namespace TelegramBotFramework.Tests;
     [Fact]
     public void Reverse_OfPalindrome_ReturnsSameString()
     {
-        "racecar".Reverse().Should().Be("racecar");
+        StringExtensionTestsConstants.Palindrome.Reverse().Should().Be(StringExtensionTestsConstants.Palindrome);
     }
 
     /// <summary>
