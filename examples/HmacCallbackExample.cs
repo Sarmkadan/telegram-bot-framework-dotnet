@@ -30,11 +30,11 @@ public static class HmacCallbackExample
     // Example 1: Simple signed button
     public static void Example1_SimpleSignedButton()
     {
-        var secret = "my-secret-key-12345";
+        var secret = HmacCallbackExampleConstants.SimpleSecret;
 
         var keyboard = InlineKeyboardBuilder.Create()
-            .AddSignedButton("Delete Account", "delete_account:123", secret)
-            .AddSignedButton("Cancel", "cancel_action", secret)
+            .AddSignedButton(HmacCallbackExampleConstants.DeleteAccountLabel, HmacCallbackExampleConstants.DeleteAccountCallbackData, secret)
+            .AddSignedButton(HmacCallbackExampleConstants.CancelLabel, HmacCallbackExampleConstants.CancelActionCallbackData, secret)
             .Build();
 
         // The callback data sent to Telegram will be:
@@ -45,39 +45,39 @@ public static class HmacCallbackExample
     // Example 2: Signed confirmation dialog
     public static void Example2_SignedConfirmation()
     {
-        var secret = "secure-secret-key";
-        var userId = 42;
+        var secret = HmacCallbackExampleConstants.ConfirmationSecret;
+        var userId = HmacCallbackExampleConstants.ExampleUserId;
 
         var keyboard = InlineKeyboardBuilder.Create()
-            .AddButton("✅ Confirm Purchase", CallbackDataSigner.Sign($"purchase:{userId}", secret))
-            .AddButton("❌ Cancel", CallbackDataSigner.Sign("cancel", secret))
+            .AddButton(HmacCallbackExampleConstants.ConfirmPurchaseLabel, CallbackDataSigner.Sign(string.Format(HmacCallbackExampleConstants.PurchaseCallbackDataFormat, userId), secret))
+            .AddButton(HmacCallbackExampleConstants.CancelPurchaseLabel, CallbackDataSigner.Sign(HmacCallbackExampleConstants.CancelPurchaseCallbackData, secret))
             .Build();
     }
 
     // Example 3: Signed pagination
     public static void Example3_SignedPagination()
     {
-        var secret = "pagination-secret";
-        var currentPage = 3;
-        var totalPages = 10;
+        var secret = HmacCallbackExampleConstants.PaginationSecret;
+        var currentPage = HmacCallbackExampleConstants.CurrentPage;
+        var totalPages = HmacCallbackExampleConstants.TotalPages;
 
         var keyboard = InlineKeyboardBuilder.Create()
-            .AddButton("⬅️ Previous", CallbackDataSigner.Sign($"page_{currentPage - 1}", secret))
-            .AddButton($"📄 Page {currentPage} of {totalPages}", CallbackDataSigner.Sign($"page_{currentPage}_current", secret))
-            .AddButton("Next ➡️", CallbackDataSigner.Sign($"page_{currentPage + 1}", secret))
+            .AddButton(HmacCallbackExampleConstants.PreviousPageLabel, CallbackDataSigner.Sign(string.Format(HmacCallbackExampleConstants.PageCallbackDataFormat, currentPage - HmacCallbackExampleConstants.PageStep), secret))
+            .AddButton(string.Format(HmacCallbackExampleConstants.CurrentPageLabelFormat, currentPage, totalPages), CallbackDataSigner.Sign(string.Format(HmacCallbackExampleConstants.CurrentPageCallbackDataFormat, currentPage), secret))
+            .AddButton(HmacCallbackExampleConstants.NextPageLabel, CallbackDataSigner.Sign(string.Format(HmacCallbackExampleConstants.PageCallbackDataFormat, currentPage + HmacCallbackExampleConstants.PageStep), secret))
             .Build();
     }
 
     // Example 4: Using extension methods for convenience
     public static void Example4_UsingExtensions()
     {
-        var secret = "my-secret";
+        var secret = HmacCallbackExampleConstants.ExtensionSecret;
 
         var keyboard = InlineKeyboardBuilder.Create()
             .AddSignedConfirmationRow(secret) // Adds ✅ Confirm and ❌ Cancel with signatures
             .NewRow()
-            .AddSignedButton("Approve", "approve_request", secret)
-            .AddSignedButton("Reject", "reject_request", secret)
+            .AddSignedButton(HmacCallbackExampleConstants.ApproveLabel, HmacCallbackExampleConstants.ApproveRequestCallbackData, secret)
+            .AddSignedButton(HmacCallbackExampleConstants.RejectLabel, HmacCallbackExampleConstants.RejectRequestCallbackData, secret)
             .Build();
     }
 
@@ -90,13 +90,13 @@ public static class HmacCallbackExample
         if (CallbackDataSigner.TryValidate(signedCallbackData, secret, out var originalData))
         {
             // Validation successful - the data is authentic
-            Console.WriteLine($"Received authentic callback: {originalData}");
+            Console.WriteLine(HmacCallbackExampleConstants.AuthenticCallbackMessageFormat, originalData);
 
             // Parse and handle the original data
-            var parts = originalData.Split(':');
-            if (parts[0] == "delete_account")
+            var parts = originalData.Split(HmacCallbackExampleConstants.CallbackDataSeparator);
+            if (parts[HmacCallbackExampleConstants.CommandPartIndex] == HmacCallbackExampleConstants.DeleteAccountCommand)
             {
-                var userId = parts[1];
+                var userId = parts[HmacCallbackExampleConstants.ArgumentPartIndex];
                 // Handle delete account logic
                 return true;
             }
@@ -106,7 +106,7 @@ public static class HmacCallbackExample
         else
         {
             // Validation failed - the callback may be forged!
-            Console.WriteLine("⚠️ Invalid callback signature detected! Possible forgery attempt.");
+            Console.WriteLine(HmacCallbackExampleConstants.InvalidSignatureMessage);
             return false;
         }
     }
@@ -114,16 +114,16 @@ public static class HmacCallbackExample
     // Example 6: Using with Menu system
     public static void Example6_MenuWithSignedCallbacks()
     {
-        var secret = "menu-secret-key";
-        var menuId = "settings_menu";
+        var secret = HmacCallbackExampleConstants.MenuSecret;
+        var menuId = HmacCallbackExampleConstants.SettingsMenuId;
 
         // Create keyboard with signed buttons
         var keyboard = InlineKeyboardBuilder.Create()
-            .AddSignedButton("🔒 Change Password", $"change_password:{menuId}", secret)
-            .AddSignedButton("📧 Update Email", $"update_email:{menuId}", secret)
+            .AddSignedButton(HmacCallbackExampleConstants.ChangePasswordLabel, string.Format(HmacCallbackExampleConstants.ChangePasswordCallbackDataFormat, menuId), secret)
+            .AddSignedButton(HmacCallbackExampleConstants.UpdateEmailLabel, string.Format(HmacCallbackExampleConstants.UpdateEmailCallbackDataFormat, menuId), secret)
             .NewRow()
-            .AddSignedButton("📱 Notification Settings", $"notifications:{menuId}", secret)
-            .AddSignedButton("🔄 Language", $"language:{menuId}", secret)
+            .AddSignedButton(HmacCallbackExampleConstants.NotificationSettingsLabel, string.Format(HmacCallbackExampleConstants.NotificationSettingsCallbackDataFormat, menuId), secret)
+            .AddSignedButton(HmacCallbackExampleConstants.LanguageLabel, string.Format(HmacCallbackExampleConstants.LanguageCallbackDataFormat, menuId), secret)
             .Build();
 
         // Store menu with signed callbacks
@@ -133,12 +133,12 @@ public static class HmacCallbackExample
     // Example 7: Batch signing multiple buttons
     public static void Example7_BatchSignedButtons()
     {
-        var secret = "batch-secret";
+        var secret = HmacCallbackExampleConstants.BatchSecret;
         var actions = new[]
         {
-            ("Action 1", "action1:param"),
-            ("Action 2", "action2:param"),
-            ("Action 3", "action3:param")
+            (HmacCallbackExampleConstants.ActionOneLabel, HmacCallbackExampleConstants.ActionOneCallbackData),
+            (HmacCallbackExampleConstants.ActionTwoLabel, HmacCallbackExampleConstants.ActionTwoCallbackData),
+            (HmacCallbackExampleConstants.ActionThreeLabel, HmacCallbackExampleConstants.ActionThreeCallbackData)
         };
 
         var keyboard = InlineKeyboardBuilder.Create()
@@ -153,7 +153,7 @@ public static class HmacCallbackExample
         // var weakSecret = "12345"; // BAD!
 
         // ✅ DO: Use long, random secrets
-        var strongSecret = Guid.NewGuid().ToString("N"); // 32-char hex string
+        var strongSecret = Guid.NewGuid().ToString(HmacCallbackExampleConstants.GuidCompactFormat); // 32-char hex string
 
         // ❌ DON'T: Store secret in code
         // var secret = "hardcoded_secret"; // BAD!
@@ -169,7 +169,7 @@ public static class HmacCallbackExample
 // Example usage in a bot handler:
 public class CallbackHandlerExample
 {
-    private readonly string _hmacSecret = "your-secret-from-config";
+    private readonly string _hmacSecret = HmacCallbackExampleConstants.ConfigurationSecretPlaceholder;
 
     public async Task HandleCallbackQueryAsync(string callbackData)
     {
@@ -181,24 +181,24 @@ public class CallbackHandlerExample
         else
         {
             // Log security event and reject forged callback
-            Console.WriteLine($"Security: Invalid callback signature detected!");
+            Console.WriteLine(HmacCallbackExampleConstants.HandlerInvalidSignatureMessage);
             // Optionally ban user or report to admin
         }
     }
 
     private async Task ProcessValidCallback(string callbackData)
     {
-        var parts = callbackData.Split(':');
-        var command = parts[0];
+        var parts = callbackData.Split(HmacCallbackExampleConstants.CallbackDataSeparator);
+        var command = parts[HmacCallbackExampleConstants.CommandPartIndex];
 
         switch (command)
         {
-            case "delete_account":
-                var userId = parts[1];
+            case HmacCallbackExampleConstants.DeleteAccountCommand:
+                var userId = parts[HmacCallbackExampleConstants.ArgumentPartIndex];
                 await DeleteUserAccountAsync(userId);
                 break;
-            case "purchase":
-                var purchaseId = parts[1];
+            case HmacCallbackExampleConstants.PurchaseCommand:
+                var purchaseId = parts[HmacCallbackExampleConstants.ArgumentPartIndex];
                 await ConfirmPurchaseAsync(purchaseId);
                 break;
             // Handle other commands
