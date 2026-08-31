@@ -23,16 +23,16 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void RecordCommandInvocation_RecordsInvocation()
     {
         // Act
-        _tracker.RecordCommandInvocation("/test");
-        _tracker.RecordCommandInvocation("/test");
-        _tracker.RecordCommandInvocation("/other");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.OtherCommand);
 
         // Assert
-        var topCommands = _tracker.GetTopCommands(10);
+        var topCommands = _tracker.GetTopCommands(CommandUsageTrackerTestsConstants.TopCommandsCount);
         topCommands.Should().HaveCount(2);
-        topCommands[0].CommandName.Should().Be("/test");
+        topCommands[0].CommandName.Should().Be(CommandUsageTrackerTestsConstants.TestCommand);
         topCommands[0].InvocationCount.Should().Be(2);
-        topCommands[1].CommandName.Should().Be("/other");
+        topCommands[1].CommandName.Should().Be(CommandUsageTrackerTestsConstants.OtherCommand);
         topCommands[1].InvocationCount.Should().Be(1);
     }
 
@@ -43,14 +43,14 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void RecordCommandInvocation_NormalizesCommandName()
     {
         // Act
-        _tracker.RecordCommandInvocation("test"); // No leading slash
-        _tracker.RecordCommandInvocation("/test2"); // With leading slash
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestInputWithoutSlash); // No leading slash
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.Test2Command); // With leading slash
 
         // Assert
-        var topCommands = _tracker.GetTopCommands(10);
+        var topCommands = _tracker.GetTopCommands(CommandUsageTrackerTestsConstants.TopCommandsCount);
         topCommands.Should().HaveCount(2);
-        topCommands[0].CommandName.Should().Be("/test");
-        topCommands[1].CommandName.Should().Be("/test2");
+        topCommands[0].CommandName.Should().Be(CommandUsageTrackerTestsConstants.TestCommand);
+        topCommands[1].CommandName.Should().Be(CommandUsageTrackerTestsConstants.Test2Command);
     }
 
     /// <summary>
@@ -60,21 +60,21 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void GetTopCommands_ReturnsCommandsSortedByCountDescending()
     {
         // Arrange
-        _tracker.RecordCommandInvocation("/least");
-        _tracker.RecordCommandInvocation("/most");
-        _tracker.RecordCommandInvocation("/most");
-        _tracker.RecordCommandInvocation("/most");
-        _tracker.RecordCommandInvocation("/middle");
-        _tracker.RecordCommandInvocation("/middle");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.LeastCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.MostCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.MostCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.MostCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.MiddleCommand);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.MiddleCommand);
 
         // Act
         var topCommands = _tracker.GetTopCommands(2);
 
         // Assert
         topCommands.Should().HaveCount(2);
-        topCommands[0].CommandName.Should().Be("/most");
+        topCommands[0].CommandName.Should().Be(CommandUsageTrackerTestsConstants.MostCommand);
         topCommands[0].InvocationCount.Should().Be(3);
-        topCommands[1].CommandName.Should().Be("/middle");
+        topCommands[1].CommandName.Should().Be(CommandUsageTrackerTestsConstants.MiddleCommand);
         topCommands[1].InvocationCount.Should().Be(2);
     }
 
@@ -85,11 +85,11 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void GetTopCommands_WithZeroOrNegativeCount_ReturnsEmptyList()
     {
         // Arrange
-        _tracker.RecordCommandInvocation("/test");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
 
         // Act
-        var empty1 = _tracker.GetTopCommands(0);
-        var empty2 = _tracker.GetTopCommands(-1);
+        var empty1 = _tracker.GetTopCommands(CommandUsageTrackerTestsConstants.ZeroCount);
+        var empty2 = _tracker.GetTopCommands(CommandUsageTrackerTestsConstants.NegativeOneCount);
 
         // Assert
         empty1.Should().BeEmpty();
@@ -103,12 +103,12 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void GetLastUsedTimestamp_ReturnsCorrectTimestamp()
     {
         // Arrange
-        var before = DateTime.UtcNow.AddMilliseconds(-10);
-        _tracker.RecordCommandInvocation("/test");
+        var before = DateTime.UtcNow.AddMilliseconds(-CommandUsageTrackerTestsConstants.TimestampDeltaMilliseconds);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
         var after = DateTime.UtcNow.AddMilliseconds(10);
 
         // Act
-        var lastUsed = _tracker.GetLastUsedTimestamp("/test");
+        var lastUsed = _tracker.GetLastUsedTimestamp(CommandUsageTrackerTestsConstants.TestCommand);
 
         // Assert
         lastUsed.Should().NotBeNull();
@@ -123,7 +123,7 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void GetLastUsedTimestamp_ForNeverUsedCommand_ReturnsNull()
     {
         // Act
-        var lastUsed = _tracker.GetLastUsedTimestamp("/nonexistent");
+        var lastUsed = _tracker.GetLastUsedTimestamp(CommandUsageTrackerTestsConstants.NonexistentCommand);
 
         // Assert
         lastUsed.Should().BeNull();
@@ -136,19 +136,19 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     public void GetAllCommandStats_ReturnsAllStatistics()
     {
         // Arrange
-        _tracker.RecordCommandInvocation("/test1");
-        _tracker.RecordCommandInvocation("/test2");
-        _tracker.RecordCommandInvocation("/test1");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.Test1Command);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.Test2Command);
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.Test1Command);
 
         // Act
         var allStats = _tracker.GetAllCommandStats();
 
         // Assert
         allStats.Should().HaveCount(2);
-        allStats.Should().ContainKey("/test1");
-        allStats.Should().ContainKey("/test2");
-        allStats["/test1"].TotalInvocations.Should().Be(2);
-        allStats["/test2"].TotalInvocations.Should().Be(1);
+        allStats.Should().ContainKey(CommandUsageTrackerTestsConstants.Test1Command);
+        allStats.Should().ContainKey(CommandUsageTrackerTestsConstants.Test2Command);
+        allStats[CommandUsageTrackerTestsConstants.Test1Command].TotalInvocations.Should().Be(2);
+        allStats[CommandUsageTrackerTestsConstants.Test2Command].TotalInvocations.Should().Be(1);
     }
 
     /// <summary>
@@ -188,17 +188,17 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
     {
         // Arrange
         var firstCallTime = DateTime.UtcNow;
-        _tracker.RecordCommandInvocation("/test");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
         var afterFirstCall = DateTime.UtcNow;
 
-        System.Threading.Thread.Sleep(10); // Ensure time passes
+        System.Threading.Thread.Sleep(CommandUsageTrackerTestsConstants.ShortSleepMilliseconds); // Ensure time passes
 
         var secondCallTime = DateTime.UtcNow;
-        _tracker.RecordCommandInvocation("/test");
+        _tracker.RecordCommandInvocation(CommandUsageTrackerTestsConstants.TestCommand);
         var afterSecondCall = DateTime.UtcNow;
 
         // Act
-        var stats = _tracker.GetAllCommandStats()["/test"];
+        var stats = _tracker.GetAllCommandStats()[CommandUsageTrackerTestsConstants.TestCommand];
 
         // Assert
         stats.FirstUsedAt.Should().BeOnOrAfter(firstCallTime).And.BeOnOrBefore(afterFirstCall);
