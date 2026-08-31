@@ -15,13 +15,11 @@ namespace TelegramBotFramework.Controllers;
 /// <see cref="WebhookOptions.ListenPath"/> ) with each incoming update.
 /// </summary>
 [ApiController]
-[Route("api/webhook")]
+[Route(WebhookControllerConstants.Route)]
 public sealed class WebhookController : ControllerBase, IWebhookController
 {
     private readonly WebhookService _webhookService;
     private readonly ILogger<WebhookController> _logger;
-
-    // Using WebhookControllerConstants.SecretTokenHeader instead
 
     /// <summary>
     /// Initialises a new instance of <see cref="WebhookController"/>.
@@ -44,18 +42,19 @@ public sealed class WebhookController : ControllerBase, IWebhookController
     /// validates the <c>X-Telegram-Bot-Api-Secret-Token</c> header and returns
     /// <c>401 Unauthorized</c> on mismatch.
     /// </remarks>
-    [HttpPost("telegram")]
-    [Consumes("application/json")]
+    [HttpPost(WebhookControllerConstants.TelegramRoute)]
+    [Consumes(WebhookControllerConstants.JsonMediaType)]
     public async Task<IActionResult> ReceiveUpdate(CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Webhook endpoint called - Path: {Path}, Method: {Method}", Request.Path, Request.Method);
+        _logger.LogInformation(WebhookControllerConstants.EndpointCalledLogMessage, Request.Path, Request.Method);
 
         // Validate request body size to prevent DoS attacks
         if (Request.ContentLength.HasValue && Request.ContentLength.Value > _webhookService.Options.MaxRequestBodySize)
         {
-            _logger.LogWarning("Rejected webhook request: request body size {ContentLength} bytes exceeds maximum allowed {MaxSize} bytes",
+            _logger.LogWarning(WebhookControllerConstants.RequestBodyTooLargeLogMessage,
                 Request.ContentLength.Value, _webhookService.Options.MaxRequestBodySize);
-            return StatusCode(413, WebhookControllerConstants.RequestBodyTooLargeMessage);
+            return StatusCode(WebhookControllerConstants.PayloadTooLargeStatusCode,
+                WebhookControllerConstants.RequestBodyTooLargeMessage);
         }
 
         string body;
@@ -66,16 +65,16 @@ public sealed class WebhookController : ControllerBase, IWebhookController
 
         if (string.IsNullOrWhiteSpace(body))
         {
-            _logger.LogWarning("Received empty webhook request body");
+            _logger.LogWarning(WebhookControllerConstants.EmptyRequestBodyLogMessage);
             return BadRequest(WebhookControllerConstants.EmptyRequestBodyMessage);
         }
 
-        _logger.LogDebug("Webhook request body received - Length: {BodyLength} bytes", body.Length);
+        _logger.LogDebug(WebhookControllerConstants.RequestBodyReceivedLogMessage, body.Length);
 
         Request.Headers.TryGetValue(WebhookControllerConstants.SecretTokenHeader, out var secretTokenValue);
         var secretToken = secretTokenValue.ToString();
 
-        _logger.LogDebug("Validating webhook request with secret token");
+        _logger.LogDebug(WebhookControllerConstants.ValidatingSecretTokenLogMessage);
 
         var update = await _webhookService.ParseAndValidateAsync(body, secretToken, cancellationToken)
             .ConfigureAwait(false);
@@ -83,18 +82,18 @@ public sealed class WebhookController : ControllerBase, IWebhookController
         if (update is null)
         {
             // ParseAndValidateAsync already logged the reason (invalid signature or parse failure)
-            _logger.LogWarning("Webhook request validation failed - Invalid signature or parse error");
+            _logger.LogWarning(WebhookControllerConstants.ValidationFailedLogMessage);
             return Unauthorized();
         }
 
         _logger.LogInformation(
-            "Webhook request validated successfully - UpdateId: {UpdateId}, Type: {UpdateType}",
+            WebhookControllerConstants.ValidationSucceededLogMessage,
             update.UpdateId,
             update.MessageType);
 
         await _webhookService.DispatchUpdateAsync(update, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogDebug("Webhook update dispatched successfully - UpdateId: {UpdateId}", update.UpdateId);
+        _logger.LogDebug(WebhookControllerConstants.UpdateDispatchedLogMessage, update.UpdateId);
 
         // Always return 200 OK so Telegram does not re-deliver
         return Ok();
@@ -104,7 +103,7 @@ public sealed class WebhookController : ControllerBase, IWebhookController
     /// Returns current webhook status (registered URL, dispatched update count, etc.).
     /// Useful for health checks and diagnostics.
     /// </summary>
-    [HttpGet("info")]
+    [HttpGet(WebhookControllerConstants.InfoRoute)]
     public IActionResult GetInfo()
     {
         var info = _webhookService.GetInfo();
