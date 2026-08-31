@@ -14,11 +14,7 @@ namespace TelegramBotFramework.Tests;
 /// </summary>
 public static class SessionServiceTestsJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
-    };
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = SessionServiceTestsJsonExtensionsConstants.BaseJsonSerializerOptions;
 
     /// <summary>
     /// Serializes the <see cref="SessionServiceTests"/> instance to a JSON string.
