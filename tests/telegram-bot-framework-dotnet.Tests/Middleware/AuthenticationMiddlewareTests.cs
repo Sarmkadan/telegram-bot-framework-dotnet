@@ -33,26 +33,26 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenBearerTokenValid_PassesAuthentication()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key-123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.ValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) =>
             {
-                context.Items["Authenticated"] = true;
+                context.Items[AuthenticationMiddlewareTestsConstants.AuthenticatedItemKey] = true;
                 await Task.CompletedTask;
             },
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer test-secret-key-123";
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.ValidApiKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().ContainKey("AuthenticatedAt");
+        context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -62,26 +62,26 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenXApiKeyValid_PassesAuthentication()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key-123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.ValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) =>
             {
-                context.Items["Authenticated"] = true;
+                context.Items[AuthenticationMiddlewareTestsConstants.AuthenticatedItemKey] = true;
                 await Task.CompletedTask;
             },
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers["X-API-Key"] = "test-secret-key-123";
-        context.Request.Path = "/api/test";
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.XApiKeyHeader] = AuthenticationMiddlewareTestsConstants.ValidApiKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().ContainKey("AuthenticatedAt");
+        context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -91,11 +91,11 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenQueryApiKeyValid_PassesAuthentication()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key-123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.ValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) =>
             {
-                context.Items["Authenticated"] = true;
+                context.Items[AuthenticationMiddlewareTestsConstants.AuthenticatedItemKey] = true;
                 await Task.CompletedTask;
             },
             logger: _loggerMock.Object
@@ -104,16 +104,16 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         var context = new DefaultHttpContext();
         context.Request.Query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
         {
-            ["api_key"] = "test-secret-key-123"
+            [AuthenticationMiddlewareTestsConstants.ApiKeyQueryParam] = AuthenticationMiddlewareTestsConstants.ValidApiKey
         });
-        context.Request.Path = "/api/test";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().ContainKey("AuthenticatedAt");
+        context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -123,22 +123,22 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenBearerTokenInvalid_Returns401()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "correct-secret-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer wrong-secret-key";
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.InvalidApiKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(401);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -148,21 +148,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenAuthorizationHeaderMissing_Returns401()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/test";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(401);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -179,15 +179,15 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer test-key";
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(401);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -204,15 +204,15 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer test-key";
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(401);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -222,22 +222,22 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenApiKeyWhitespace_Returns401()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "   " };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.WhitespaceApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer test-key";
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(401);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -247,14 +247,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenPathIsNull_DoesNotThrow()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer test-secret-key";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
         context.Request.Path = null;
 
         // Act
@@ -263,7 +263,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         // Assert
         await act.Should().NotThrowAsync();
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().ContainKey("AuthenticatedAt");
+        context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -273,14 +273,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenAuthorizationHeaderMissing_DoesNotThrow()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "test-secret-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/test";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         var act = () => middleware.InvokeAsync(context, config);
@@ -301,21 +301,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         var middleware = new AuthenticationMiddleware(
             next: async (context) =>
             {
-                context.Items["PublicEndpoint"] = true;
+                context.Items[AuthenticationMiddlewareTestsConstants.PublicEndpointItemKey] = true;
                 await Task.CompletedTask;
             },
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/health";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.HealthPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().ContainKey("PublicEndpoint");
+        context.Items.Should().ContainKey(AuthenticationMiddlewareTestsConstants.PublicEndpointItemKey);
     }
 
     /// <summary>
@@ -325,21 +325,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenWebhookEndpoint_PublicEndpoint()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "some-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.SomeKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/webhook";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.WebhookPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -349,21 +349,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenSwaggerEndpoint_PublicEndpoint()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "some-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.SomeKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/swagger/index.html";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.SwaggerPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -373,21 +373,21 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenBotUpdateEndpoint_PublicEndpoint()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "some-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.SomeKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/v1/bot/update";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.BotUpdatePath;
 
         // Act
         await middleware.InvokeAsync(context, config);
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().NotContainKey("AuthenticatedAt");
+        context.Items.Should().NotContainKey(AuthenticationMiddlewareTestsConstants.AuthenticatedAtItemKey);
     }
 
     /// <summary>
@@ -397,14 +397,14 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenPublicEndpointCaseInsensitive_PassesWithoutAuth()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "some-key" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.SomeKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/HEALTH";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.HealthPathUppercase;
 
         // Act
         await middleware.InvokeAsync(context, config);
@@ -420,15 +420,15 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenBearerTokenCaseSensitive_FailsOnCaseMismatch()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "TestKey123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.CaseSensitiveKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer testkey123"; // lowercase
-        context.Request.Path = "/api/test";
+        context.Request.Headers.Authorization = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.CaseMismatchKey; // lowercase
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
@@ -444,15 +444,15 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenXApiKeyCaseSensitive_FailsOnCaseMismatch()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "TestKey123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.CaseSensitiveKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers["X-API-Key"] = "testkey123"; // lowercase
-        context.Request.Path = "/api/test";
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.XApiKeyHeader] = AuthenticationMiddlewareTestsConstants.CaseMismatchKey; // lowercase
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
@@ -468,7 +468,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
     public async Task InvokeAsync_WhenQueryApiKeyCaseSensitive_FailsOnCaseMismatch()
     {
         // Arrange
-        var config = new BotConfiguration { ApiKey = "TestKey123" };
+        var config = new BotConfiguration { ApiKey = AuthenticationMiddlewareTestsConstants.CaseSensitiveKey };
         var middleware = new AuthenticationMiddleware(
             next: async (context) => await Task.CompletedTask,
             logger: _loggerMock.Object
@@ -477,9 +477,9 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         var context = new DefaultHttpContext();
         context.Request.Query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
         {
-            ["api_key"] = "testkey123"
+            [AuthenticationMiddlewareTestsConstants.ApiKeyQueryParam] = AuthenticationMiddlewareTestsConstants.CaseMismatchKey
         });
-        context.Request.Path = "/api/test";
+        context.Request.Path = AuthenticationMiddlewareTestsConstants.ApiTestPath;
 
         // Act
         await middleware.InvokeAsync(context, config);
