@@ -15,7 +15,30 @@ using System.Threading;
 /// <summary>
 /// Represents a media item for sending in a media group.
 /// </summary>
-public record MediaGroupItem(MediaType Type, string FileIdOrUrl, string? Caption = null);
+public record MediaGroupItem
+{
+    public MediaGroupItem(MediaType Type, string FileIdOrUrl, string? Caption = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(FileIdOrUrl);
+
+        this.Type = Type;
+        this.FileIdOrUrl = FileIdOrUrl;
+        this.Caption = Caption;
+    }
+
+    public MediaType Type { get; init; }
+
+    public string FileIdOrUrl { get; init; }
+
+    public string? Caption { get; init; }
+
+    public void Deconstruct(out MediaType Type, out string FileIdOrUrl, out string? Caption)
+    {
+        Type = this.Type;
+        FileIdOrUrl = this.FileIdOrUrl;
+        Caption = this.Caption;
+    }
+}
 
 /// <summary>
 /// Media type for media group items.
