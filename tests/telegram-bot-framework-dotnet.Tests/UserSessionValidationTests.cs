@@ -13,14 +13,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         return new UserSession
         {
-            SessionId = "valid-session-id",
-            UserId = 12345,
-            ChatId = 67890,
-            CurrentContext = "menu",
-            CreatedAt = DateTime.UtcNow.AddMinutes(-10),
-            LastActivityAt = DateTime.UtcNow.AddMinutes(-5),
-            ExpiresAt = DateTime.UtcNow.AddHours(1),
-            InteractionCount = 5
+            SessionId = UserSessionValidationTestsConstants.ValidSessionId,
+            UserId = UserSessionValidationTestsConstants.ValidUserId,
+            ChatId = UserSessionValidationTestsConstants.ValidChatId,
+            CurrentContext = UserSessionValidationTestsConstants.ValidCurrentContext,
+            CreatedAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.CreatedAtMinutesAgo),
+            LastActivityAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.LastActivityAtMinutesAgo),
+            ExpiresAt = DateTime.UtcNow.AddHours(UserSessionValidationTestsConstants.ExpiresAtHoursFromNow),
+            InteractionCount = UserSessionValidationTestsConstants.ValidInteractionCount
         };
     }
 
@@ -62,7 +62,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("SessionId cannot be null or whitespace.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdCannotBeNullOrWhitespace);
     }
 
     [Fact]
@@ -70,14 +70,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.SessionId = "   ";
+        session.SessionId = UserSessionValidationTestsConstants.WhitespaceValue;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("SessionId cannot be null or whitespace.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdCannotBeNullOrWhitespace);
     }
 
     [Fact]
@@ -85,14 +85,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.SessionId = new string('a', 101);
+        session.SessionId = new string(
+            UserSessionValidationTestsConstants.RepeatedCharacter,
+            UserSessionValidationTestsConstants.SessionIdMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("SessionId cannot exceed 100 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdExceedsMaxLength);
     }
 
     [Fact]
@@ -100,14 +102,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.UserId = 0;
+        session.UserId = UserSessionValidationTestsConstants.InvalidZeroId;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("UserId must be a positive integer greater than zero.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.UserIdMustBePositive);
     }
 
     [Fact]
@@ -115,14 +117,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.UserId = -1;
+        session.UserId = UserSessionValidationTestsConstants.InvalidNegativeValue;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("UserId must be a positive integer greater than zero.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.UserIdMustBePositive);
     }
 
     [Fact]
@@ -130,14 +132,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ChatId = 0;
+        session.ChatId = UserSessionValidationTestsConstants.InvalidZeroId;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ChatId must be a positive integer greater than zero.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ChatIdMustBePositive);
     }
 
     [Fact]
@@ -145,14 +147,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ChatId = -1;
+        session.ChatId = UserSessionValidationTestsConstants.InvalidNegativeValue;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ChatId must be a positive integer greater than zero.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ChatIdMustBePositive);
     }
 
     [Fact]
@@ -167,7 +169,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CurrentContext cannot be null or whitespace.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextCannotBeNullOrWhitespace);
     }
 
     [Fact]
@@ -175,14 +177,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CurrentContext = "   ";
+        session.CurrentContext = UserSessionValidationTestsConstants.WhitespaceValue;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CurrentContext cannot be null or whitespace.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextCannotBeNullOrWhitespace);
     }
 
     [Fact]
@@ -190,14 +192,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CurrentContext = new string('a', 51);
+        session.CurrentContext = new string(
+            UserSessionValidationTestsConstants.RepeatedCharacter,
+            UserSessionValidationTestsConstants.CurrentContextMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CurrentContext cannot exceed 50 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextExceedsMaxLength);
     }
 
     [Fact]
@@ -205,14 +209,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CurrentMenuId = new string('a', 51);
+        session.CurrentMenuId = new string(
+            UserSessionValidationTestsConstants.RepeatedCharacter,
+            UserSessionValidationTestsConstants.CurrentMenuIdMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CurrentMenuId cannot exceed 50 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CurrentMenuIdExceedsMaxLength);
     }
 
     [Fact]
@@ -227,7 +233,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CreatedAt must be set to a valid DateTime.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CreatedAtMustBeSet);
     }
 
     [Fact]
@@ -237,13 +243,13 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         var now = DateTime.UtcNow;
         var session = new UserSession
         {
-            SessionId = "valid-session-id",
-            UserId = 12345,
-            ChatId = 67890,
-            CurrentContext = "menu",
-            CreatedAt = now.AddMinutes(10),
+            SessionId = UserSessionValidationTestsConstants.ValidSessionId,
+            UserId = UserSessionValidationTestsConstants.ValidUserId,
+            ChatId = UserSessionValidationTestsConstants.ValidChatId,
+            CurrentContext = UserSessionValidationTestsConstants.ValidCurrentContext,
+            CreatedAt = now.AddMinutes(UserSessionValidationTestsConstants.FutureMinutes),
             LastActivityAt = null, // Don't set LastActivityAt to avoid it triggering other errors
-            InteractionCount = 5
+            InteractionCount = UserSessionValidationTestsConstants.ValidInteractionCount
         };
 
         // Act
@@ -251,7 +257,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CreatedAt cannot be in the future.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CreatedAtCannotBeInFuture);
     }
 
     [Fact]
@@ -260,13 +266,13 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "valid-session-id",
-            UserId = 12345,
-            ChatId = 67890,
-            CurrentContext = "menu",
-            CreatedAt = DateTime.UtcNow.AddMinutes(-10),
-            LastActivityAt = DateTime.MinValue, // default(DateTime)
-            InteractionCount = 5
+            SessionId = UserSessionValidationTestsConstants.ValidSessionId,
+            UserId = UserSessionValidationTestsConstants.ValidUserId,
+            ChatId = UserSessionValidationTestsConstants.ValidChatId,
+            CurrentContext = UserSessionValidationTestsConstants.ValidCurrentContext,
+            CreatedAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.CreatedAtMinutesAgo),
+            LastActivityAt = UserSessionValidationTestsConstants.DateTimeMinValue, // default(DateTime)
+            InteractionCount = UserSessionValidationTestsConstants.ValidInteractionCount
         };
 
         // Act
@@ -274,7 +280,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("LastActivityAt must be a valid DateTime if set.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtMustBeValidIfSet);
     }
 
     [Fact]
@@ -282,14 +288,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.LastActivityAt = DateTime.UtcNow.AddMinutes(10);
+        session.LastActivityAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.FutureMinutes);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("LastActivityAt cannot be in the future.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtCannotBeInFuture);
     }
 
     [Fact]
@@ -298,14 +304,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         // Arrange
         var session = CreateValidSession();
         session.CreatedAt = DateTime.UtcNow;
-        session.LastActivityAt = DateTime.UtcNow.AddMinutes(-10);
+        session.LastActivityAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.CreatedAtMinutesAgo);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("LastActivityAt cannot be before CreatedAt.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtCannotBeBeforeCreatedAt);
     }
 
     [Fact]
@@ -314,14 +320,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         // Arrange
         var session = new UserSession
         {
-            SessionId = "valid-session-id",
-            UserId = 12345,
-            ChatId = 67890,
-            CurrentContext = "menu",
-            CreatedAt = DateTime.UtcNow.AddMinutes(-10),
-            LastActivityAt = DateTime.UtcNow.AddMinutes(-5),
-            ExpiresAt = DateTime.MinValue, // default(DateTime)
-            InteractionCount = 5
+            SessionId = UserSessionValidationTestsConstants.ValidSessionId,
+            UserId = UserSessionValidationTestsConstants.ValidUserId,
+            ChatId = UserSessionValidationTestsConstants.ValidChatId,
+            CurrentContext = UserSessionValidationTestsConstants.ValidCurrentContext,
+            CreatedAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.CreatedAtMinutesAgo),
+            LastActivityAt = DateTime.UtcNow.AddMinutes(UserSessionValidationTestsConstants.LastActivityAtMinutesAgo),
+            ExpiresAt = UserSessionValidationTestsConstants.DateTimeMinValue, // default(DateTime)
+            InteractionCount = UserSessionValidationTestsConstants.ValidInteractionCount
         };
 
         // Act
@@ -329,7 +335,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ExpiresAt must be a valid DateTime if set.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtMustBeValidIfSet);
     }
 
     [Fact]
@@ -339,14 +345,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         var now = DateTime.UtcNow;
         var session = new UserSession
         {
-            SessionId = "valid-session-id",
-            UserId = 12345,
-            ChatId = 67890,
-            CurrentContext = "menu",
-            CreatedAt = now.AddMinutes(-30), // Set to past to avoid "CreatedAt cannot be in future" error
-            LastActivityAt = now.AddMinutes(-20), // Set to valid time after CreatedAt
-            ExpiresAt = now.AddMinutes(-35), // Set to time before CreatedAt
-            InteractionCount = 5
+            SessionId = UserSessionValidationTestsConstants.ValidSessionId,
+            UserId = UserSessionValidationTestsConstants.ValidUserId,
+            ChatId = UserSessionValidationTestsConstants.ValidChatId,
+            CurrentContext = UserSessionValidationTestsConstants.ValidCurrentContext,
+            CreatedAt = now.AddMinutes(UserSessionValidationTestsConstants.ExpiresAtCreatedOffsetMinutes), // Set to past to avoid "CreatedAt cannot be in future" error
+            LastActivityAt = now.AddMinutes(UserSessionValidationTestsConstants.ExpiresAtActivityOffsetMinutes), // Set to valid time after CreatedAt
+            ExpiresAt = now.AddMinutes(UserSessionValidationTestsConstants.ExpiresAtInvalidOffsetMinutes), // Set to time before CreatedAt
+            InteractionCount = UserSessionValidationTestsConstants.ValidInteractionCount
         };
 
         // Act
@@ -354,7 +360,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ExpiresAt cannot be before CreatedAt.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtCannotBeBeforeCreatedAt);
     }
 
     [Fact]
@@ -362,14 +368,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ExpiresAt = DateTime.UtcNow.AddYears(2);
+        session.ExpiresAt = DateTime.UtcNow.AddYears(
+            UserSessionValidationTestsConstants.ExpiresAtMaxYearsInFuture
+            + UserSessionValidationTestsConstants.YearsBeyondExpirationLimit);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ExpiresAt cannot be more than 1 year in the future.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtCannotBeMoreThanOneYearInFuture);
     }
 
     [Fact]
@@ -377,15 +385,19 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = Enumerable.Range(0, 1001)
-            .ToDictionary(i => $"key{i}", i => $"value{i}");
+        session.ContextData = Enumerable.Range(
+                UserSessionValidationTestsConstants.InvalidZeroId,
+                UserSessionValidationTestsConstants.ContextDataMaxEntries + UserSessionValidationTestsConstants.LengthBeyondLimit)
+            .ToDictionary(
+                i => string.Format(UserSessionValidationTestsConstants.ContextDataKeyFormat, i),
+                i => string.Format(UserSessionValidationTestsConstants.ContextDataValueFormat, i));
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ContextData dictionary cannot contain more than 1000 entries.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataCannotContainMoreThanMaxEntries);
     }
 
     [Fact]
@@ -407,14 +419,17 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = new Dictionary<string, string> { ["   "] = "value" };
+        session.ContextData = new Dictionary<string, string>
+        {
+            [UserSessionValidationTestsConstants.WhitespaceValue] = UserSessionValidationTestsConstants.ContextDataValue
+        };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ContextData contains an entry with null or whitespace key.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataContainsEntryWithNullOrWhitespaceKey);
     }
 
     [Fact]
@@ -422,14 +437,20 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = new Dictionary<string, string> { [new string('a', 101)] = "value" };
+        session.ContextData = new Dictionary<string, string>
+        {
+            [new string(
+                UserSessionValidationTestsConstants.RepeatedCharacter,
+                UserSessionValidationTestsConstants.ContextDataKeyMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit)]
+                = UserSessionValidationTestsConstants.ContextDataValue
+        };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("ContextData key cannot exceed 100 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataKeyCannotExceedMaxLength);
     }
 
     [Fact]
@@ -437,14 +458,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = new Dictionary<string, string> { ["key"] = null! };
+        session.ContextData = new Dictionary<string, string> { [UserSessionValidationTestsConstants.ContextDataKey] = null! };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Match<string>(s => s.StartsWith("ContextData key 'key' has null or whitespace value."));
+            .Which.Should().Match<string>(s => s.StartsWith(string.Format(
+                UserSessionValidationTestsConstants.ContextDataKeyHasNullOrWhitespaceValueFormat,
+                UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
     [Fact]
@@ -452,14 +475,19 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = new Dictionary<string, string> { ["key"] = "   " };
+        session.ContextData = new Dictionary<string, string>
+        {
+            [UserSessionValidationTestsConstants.ContextDataKey] = UserSessionValidationTestsConstants.WhitespaceValue
+        };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Match<string>(s => s.StartsWith("ContextData key 'key' has null or whitespace value."));
+            .Which.Should().Match<string>(s => s.StartsWith(string.Format(
+                UserSessionValidationTestsConstants.ContextDataKeyHasNullOrWhitespaceValueFormat,
+                UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
     [Fact]
@@ -467,14 +495,21 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.ContextData = new Dictionary<string, string> { ["key"] = new string('a', 1001) };
+        session.ContextData = new Dictionary<string, string>
+        {
+            [UserSessionValidationTestsConstants.ContextDataKey] = new string(
+                UserSessionValidationTestsConstants.RepeatedCharacter,
+                UserSessionValidationTestsConstants.ContextDataValueMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit)
+        };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Match<string>(s => s.StartsWith("ContextData value for key 'key' cannot exceed 1000 characters."));
+            .Which.Should().Match<string>(s => s.StartsWith(string.Format(
+                UserSessionValidationTestsConstants.ContextDataValueForKeyCannotExceedMaxLengthFormat,
+                UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
     [Fact]
@@ -482,14 +517,18 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CommandHistory = Enumerable.Range(0, 51).Select(i => $"command{i}").ToList();
+        session.CommandHistory = Enumerable.Range(
+                UserSessionValidationTestsConstants.InvalidZeroId,
+                UserSessionValidationTestsConstants.CommandHistoryMaxEntries + UserSessionValidationTestsConstants.LengthBeyondLimit)
+            .Select(i => string.Format(UserSessionValidationTestsConstants.CommandHistoryEntryFormat, i))
+            .ToList();
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CommandHistory cannot contain more than 50 entries.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryCannotContainMoreThanMaxEntries);
     }
 
     [Fact]
@@ -504,7 +543,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CommandHistory contains null or whitespace entry.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryContainsNullOrWhitespaceEntry);
     }
 
     [Fact]
@@ -512,14 +551,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CommandHistory = new List<string> { "   " };
+        session.CommandHistory = new List<string> { UserSessionValidationTestsConstants.WhitespaceValue };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CommandHistory contains null or whitespace entry.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryContainsNullOrWhitespaceEntry);
     }
 
     [Fact]
@@ -527,14 +566,19 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.CommandHistory = new List<string> { new string('a', 201) };
+        session.CommandHistory = new List<string>
+        {
+            new(
+                UserSessionValidationTestsConstants.RepeatedCharacter,
+                UserSessionValidationTestsConstants.CommandHistoryEntryMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit)
+        };
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("CommandHistory entry cannot exceed 200 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryEntryCannotExceedMaxLength);
     }
 
     [Fact]
@@ -542,14 +586,14 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.InteractionCount = -1;
+        session.InteractionCount = UserSessionValidationTestsConstants.InvalidNegativeValue;
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("InteractionCount cannot be negative.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.InteractionCountCannotBeNegative);
     }
 
     [Fact]
@@ -557,14 +601,16 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.UserInput = new string('a', 1001);
+        session.UserInput = new string(
+            UserSessionValidationTestsConstants.RepeatedCharacter,
+            UserSessionValidationTestsConstants.UserInputMaxLength + UserSessionValidationTestsConstants.LengthBeyondLimit);
 
         // Act
         var errors = session.ValidateSession();
 
         // Assert
         errors.Should().ContainSingle()
-            .Which.Should().Be("UserInput cannot exceed 1000 characters.");
+            .Which.Should().Be(UserSessionValidationTestsConstants.UserInputCannotExceedMaxLength);
     }
 
     [Fact]
@@ -585,7 +631,7 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.UserId = 0; // Invalid
+        session.UserId = UserSessionValidationTestsConstants.InvalidZeroId; // Invalid
 
         // Act
         var isValid = session.IsValid();
@@ -625,13 +671,13 @@ public class UserSessionValidationTests : IUserSessionValidationTests
     {
         // Arrange
         var session = CreateValidSession();
-        session.UserId = 0; // Invalid
+        session.UserId = UserSessionValidationTestsConstants.InvalidZeroId; // Invalid
 
         // Act
         Action act = () => session.EnsureValid();
 
         // Assert
         act.Should().Throw<ArgumentException>()
-            .WithMessage("*UserSession validation failed*");
+            .WithMessage(UserSessionValidationTestsConstants.EnsureValidFailureMessagePattern);
     }
 }
