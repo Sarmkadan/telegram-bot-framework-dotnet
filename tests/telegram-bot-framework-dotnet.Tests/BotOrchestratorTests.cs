@@ -35,8 +35,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     private readonly Mock<Middleware.IBotMiddleware> _mockMiddleware2 = new();
     private readonly BotConfiguration _configuration = new()
     {
-        BotToken = "test-token",
-        BotUsername = "TestBot"
+        BotToken = BotOrchestratorTestsConstants.TestBotToken,
+        BotUsername = BotOrchestratorTestsConstants.TestBotUsername
     };
     private readonly BotOrchestrator _orchestrator;
 
@@ -232,24 +232,24 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task ProcessUserMessageAsync_WithValidMessage_ReturnsValidContext()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
-        var message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "Hello", Type = MessageType.Text };
-        var processedMessage = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "Hello", Type = MessageType.Text };
+        var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
+        var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
+        var message = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.TestGreeting, Type = MessageType.Text };
+        var processedMessage = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.TestGreeting, Type = MessageType.Text };
 
-        _mockUserService.Setup(s => s.GetOrCreateUserAsync(123, "John", "Doe", It.IsAny<CancellationToken>()))
+        _mockUserService.Setup(s => s.GetOrCreateUserAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestFirstName, BotOrchestratorTestsConstants.TestLastName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockSessionService.Setup(s => s.CreateSessionAsync(123, 456, It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.CreateSessionAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockUserService.Setup(s => s.RecordUserActivityAsync(123, It.IsAny<CancellationToken>()))
+        _mockUserService.Setup(s => s.RecordUserActivityAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _mockSessionService.Setup(s => s.RecordSessionActivityAsync("session-123", It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.RecordSessionActivityAsync(BotOrchestratorTestsConstants.TestSessionId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
-        _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
+        _mockMessageService.Setup(s => s.MarkAsProcessedAsync(BotOrchestratorTestsConstants.TestMessageId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
@@ -258,7 +258,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
-        var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "Hello", "John", "Doe");
+        var result = await _orchestrator.ProcessUserMessageAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.TestGreeting, BotOrchestratorTestsConstants.TestFirstName, BotOrchestratorTestsConstants.TestLastName);
 
         // Assert
         result.Should().NotBeNull();
@@ -280,27 +280,27 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task ProcessUserMessageAsync_WithCommandMessage_ExtractsCommand()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
-        var command = new Command { Name = "/start", IsEnabled = true };
-        var message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "/start", Type = MessageType.Text };
-        var processedMessage = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "/start", Type = MessageType.Text };
+        var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
+        var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
+        var command = new Command { Name = BotOrchestratorTestsConstants.TestStartCommand, IsEnabled = true };
+        var message = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.TestStartCommand, Type = MessageType.Text };
+        var processedMessage = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.TestStartCommand, Type = MessageType.Text };
 
-        _mockUserService.Setup(s => s.GetOrCreateUserAsync(123, "John", "Doe", It.IsAny<CancellationToken>()))
+        _mockUserService.Setup(s => s.GetOrCreateUserAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestFirstName, BotOrchestratorTestsConstants.TestLastName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockSessionService.Setup(s => s.CreateSessionAsync(123, 456, It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.CreateSessionAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockUserService.Setup(s => s.RecordUserActivityAsync(123, It.IsAny<CancellationToken>()))
+        _mockUserService.Setup(s => s.RecordUserActivityAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _mockSessionService.Setup(s => s.RecordSessionActivityAsync("session-123", It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.RecordSessionActivityAsync(BotOrchestratorTestsConstants.TestSessionId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _mockMessageService.Setup(s => s.ProcessIncomingMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(processedMessage);
-        _mockCommandService.Setup(s => s.GetCommandAsync("start", It.IsAny<CancellationToken>()))
+        _mockCommandService.Setup(s => s.GetCommandAsync(BotOrchestratorTestsConstants.TestCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
-        _mockMessageService.Setup(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()))
+        _mockMessageService.Setup(s => s.MarkAsProcessedAsync(BotOrchestratorTestsConstants.TestMessageId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
@@ -309,7 +309,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             .Returns((ExecutionContext ctx, Func<ExecutionContext, Task<ExecutionContext>> next, CancellationToken ct) => next(ctx));
 
         // Act
-        var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "/start", "John", "Doe");
+        var result = await _orchestrator.ProcessUserMessageAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.TestStartCommand, BotOrchestratorTestsConstants.TestFirstName, BotOrchestratorTestsConstants.TestLastName);
 
         // Assert
         result.Command.Should().NotBeNull();
@@ -324,10 +324,10 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task ProcessUserMessageAsync_WithInvalidMessage_MarksAsFailed()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = false };
-        var message = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "", Type = MessageType.Text };
-        var processedMessage = new Message { MessageId = 1, UserId = 123, ChatId = 456, Content = "", Type = MessageType.Text };
+        var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
+        var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = false };
+        var message = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.EmptyString, Type = MessageType.Text };
+        var processedMessage = new Message { MessageId = BotOrchestratorTestsConstants.TestMessageId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, Content = BotOrchestratorTestsConstants.EmptyString, Type = MessageType.Text };
 
         _mockUserService.Setup(s => s.GetOrCreateUserAsync(123, "John", "Doe", It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -344,28 +344,28 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         var contextWithErrors = new ExecutionContext
         {
-            UserId = 123,
-            ChatId = 456,
+            UserId = BotOrchestratorTestsConstants.TestUserId,
+            ChatId = BotOrchestratorTestsConstants.TestChatId,
             User = user,
             Session = session,
             Message = processedMessage,
-            Errors = new List<string> { "Validation failed" },
+            Errors = new List<string> { BotOrchestratorTestsConstants.ValidationFailedMessage },
             IsValid = false
         };
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(contextWithErrors);
 
-        _mockMessageService.Setup(s => s.MarkAsFailedAsync(1, "Validation failed", It.IsAny<CancellationToken>()))
+        _mockMessageService.Setup(s => s.MarkAsFailedAsync(BotOrchestratorTestsConstants.TestMessageId, BotOrchestratorTestsConstants.ValidationFailedMessage, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _orchestrator.ProcessUserMessageAsync(123, 456, "", "John", "Doe");
+        var result = await _orchestrator.ProcessUserMessageAsync(BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.EmptyString, BotOrchestratorTestsConstants.TestFirstName, BotOrchestratorTestsConstants.TestLastName);
 
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain("Validation failed");
-        _mockMessageService.Verify(s => s.MarkAsFailedAsync(1, "Validation failed", It.IsAny<CancellationToken>()), Times.Once);
+        _mockMessageService.Verify(s => s.MarkAsFailedAsync(BotOrchestratorTestsConstants.TestMessageId, BotOrchestratorTestsConstants.ValidationFailedMessage, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -376,17 +376,17 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task ExecuteUserCommandAsync_WithValidCommand_ReturnsValidContext()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
-        var command = new Command { Name = "/test", IsEnabled = true };
+        var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
+        var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
+        var command = new Command { Name = BotOrchestratorTestsConstants.TestTestCommand, IsEnabled = true };
 
-        _mockUserService.Setup(s => s.GetUserByIdAsync(123, It.IsAny<CancellationToken>()))
+        _mockUserService.Setup(s => s.GetUserByIdAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
+        _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockCommandService.Setup(s => s.GetCommandAsync("test", It.IsAny<CancellationToken>()))
+        _mockCommandService.Setup(s => s.GetCommandAsync(BotOrchestratorTestsConstants.TestCommandName.Substring(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
-        _mockCommandService.Setup(s => s.RecordCommandExecutionAsync("test", It.IsAny<CancellationToken>()))
+        _mockCommandService.Setup(s => s.RecordCommandExecutionAsync(BotOrchestratorTestsConstants.TestCommandName.Substring(1), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
@@ -413,8 +413,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task ExecuteUserCommandAsync_WithNonExistentCommand_ReturnsContextWithError()
     {
         // Arrange
-        var user = new BotUser { UserId = 123, FirstName = "John", LastName = "Doe", Role = UserRole.User };
-        var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
+        var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
+        var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
 
         _mockUserService.Setup(s => s.GetUserByIdAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -465,7 +465,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public async Task DisplayMenuAsync_WithNonExistentMenu_ThrowsInvalidOperationException()
     {
         // Arrange
-        _mockMenuService.Setup(s => s.GetMenuAsync("nonexistent", It.IsAny<CancellationToken>()))
+        _mockMenuService.Setup(s => s.GetMenuAsync(BotOrchestratorTestsConstants.TestNonexistentMenu, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Menu?)null);
 
         // Act & Assert
@@ -649,7 +649,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public void ExtractCommandName_WithCommand_ReturnsCommandName()
     {
         // Arrange
-        var messageContent = "/start param1 param2";
+        var messageContent = BotOrchestratorTestsConstants.TestCommandWithParams;
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
@@ -665,7 +665,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public void ExtractCommandName_WithCommandOnly_ReturnsCommandName()
     {
         // Arrange
-        var messageContent = "/start";
+        var messageContent = BotOrchestratorTestsConstants.TestCommandOnly;
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
@@ -681,7 +681,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     public void ExtractCommandName_WithEmptyString_ReturnsEmptyString()
     {
         // Arrange
-        var messageContent = "";
+        var messageContent = BotOrchestratorTestsConstants.EmptyString;
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
