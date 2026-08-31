@@ -36,8 +36,8 @@ public sealed class MenuNavigationExample
 
             try
             {
-                var userId = 123456789L;
-                var chatId = 123456789L;
+                var userId = MenuNavigationExampleConstants.ExampleUserId;
+                var chatId = MenuNavigationExampleConstants.ExampleChatId;
 
                 // Create user
                 var user = await _userService.GetOrCreateUserAsync(userId, "John", "Doe").ConfigureAwait(false);
@@ -71,47 +71,47 @@ public sealed class MenuNavigationExample
         {
             var menu = new Menu
             {
-                Id = "main_menu",
-                Title = "👋 Welcome to Bot",
-                Description = "Choose an option to get started",
+                Id = MenuNavigationExampleConstants.MainMenuId,
+                Title = MenuNavigationExampleConstants.MainMenuTitle,
+                Description = MenuNavigationExampleConstants.MainMenuDescription,
                 Type = MenuType.Inline,
                 IsActive = true,
-                MaxButtonsPerRow = 2
+                MaxButtonsPerRow = MenuNavigationExampleConstants.MainMenuMaxButtonsPerRow
             };
 
             // Create buttons
             menu.AddButton(new MenuButton
             {
                 Label = "📋 Settings",
-                CallbackData = "menu:settings",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuSettings,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "❓ Help",
-                CallbackData = "menu:help",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuHelp,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
-                Label = "👤 Profile",
-                CallbackData = "menu:profile",
+                Label = MenuNavigationExampleConstants.ProfileMenuTitle,
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuProfile,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "⚙️ Admin",
-                CallbackData = "menu:admin",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuAdmin,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "🚪 Exit",
-                CallbackData = "menu:exit",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuExit,
                 Action = ButtonAction.CloseMenu
             });
 
@@ -123,39 +123,39 @@ public sealed class MenuNavigationExample
         {
             var menu = new Menu
             {
-                Id = "settings_menu",
-                Title = "⚙️ Settings",
-                Description = "Manage your preferences",
+                Id = MenuNavigationExampleConstants.SettingsMenuId,
+                Title = MenuNavigationExampleConstants.SettingsMenuTitle,
+                Description = MenuNavigationExampleConstants.SettingsMenuDescription,
                 Type = MenuType.Inline,
                 IsActive = true,
-                MaxButtonsPerRow = 1
+                MaxButtonsPerRow = MenuNavigationExampleConstants.SubMenuMaxButtonsPerRow
             };
 
             menu.AddButton(new MenuButton
             {
                 Label = "🔔 Notifications",
-                CallbackData = "settings:notifications",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataSettingsNotifications,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "🌍 Language",
-                CallbackData = "settings:language",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataSettingsLanguage,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "🔒 Privacy",
-                CallbackData = "settings:privacy",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataSettingsPrivacy,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
-                Label = "⬅️ Back",
-                CallbackData = "menu:main",
+                Label = MenuNavigationExampleConstants.BackButtonLabel,
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuMain,
                 Action = ButtonAction.NavigateMenu
             });
 
@@ -167,39 +167,39 @@ public sealed class MenuNavigationExample
         {
             var menu = new Menu
             {
-                Id = "profile_menu",
-                Title = "👤 Profile",
-                Description = "View and edit your profile",
+                Id = MenuNavigationExampleConstants.ProfileMenuId,
+                Title = MenuNavigationExampleConstants.ProfileMenuTitle,
+                Description = MenuNavigationExampleConstants.ProfileMenuDescription,
                 Type = MenuType.Inline,
                 IsActive = true,
-                MaxButtonsPerRow = 1
+                MaxButtonsPerRow = MenuNavigationExampleConstants.SubMenuMaxButtonsPerRow
             };
 
             menu.AddButton(new MenuButton
             {
                 Label = "📝 Edit Name",
-                CallbackData = "profile:edit_name",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataProfileEditName,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "📧 Edit Email",
-                CallbackData = "profile:edit_email",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataProfileEditEmail,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
                 Label = "📊 Statistics",
-                CallbackData = "profile:stats",
+                CallbackData = MenuNavigationExampleConstants.CallbackDataProfileStats,
                 Action = ButtonAction.NavigateMenu
             });
 
             menu.AddButton(new MenuButton
             {
-                Label = "⬅️ Back",
-                CallbackData = "menu:main",
+                Label = MenuNavigationExampleConstants.BackButtonLabel,
+                CallbackData = MenuNavigationExampleConstants.CallbackDataMenuMain,
                 Action = ButtonAction.NavigateMenu
             });
 
@@ -214,20 +214,26 @@ public sealed class MenuNavigationExample
             // Update session to settings menu
             var settingsMenu = await CreateSettingsMenuAsync().ConfigureAwait(false);
             session.CurrentMenuId = settingsMenu.Id;
-            session.SetContextData("menu_history", "main_menu,settings_menu");
+            session.SetContextData(
+                MenuNavigationExampleConstants.ContextKeyMenuHistory,
+                MenuNavigationExampleConstants.ContextValueMenuHistoryMainSettings);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated to settings menu");
 
             // Back to main menu
             session.CurrentMenuId = mainMenu.Id;
-            session.SetContextData("menu_history", "main_menu");
+            session.SetContextData(
+                MenuNavigationExampleConstants.ContextKeyMenuHistory,
+                MenuNavigationExampleConstants.ContextValueMenuHistoryMain);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated back to main menu");
 
             // Navigate to profile menu
             var profileMenu = await CreateProfileMenuAsync().ConfigureAwait(false);
             session.CurrentMenuId = profileMenu.Id;
-            session.SetContextData("menu_history", "main_menu,profile_menu");
+            session.SetContextData(
+                MenuNavigationExampleConstants.ContextKeyMenuHistory,
+                MenuNavigationExampleConstants.ContextValueMenuHistoryMainProfile);
             await _sessionService.UpdateSessionAsync(session).ConfigureAwait(false);
             _logger.LogInformation("Navigated to profile menu");
         }
