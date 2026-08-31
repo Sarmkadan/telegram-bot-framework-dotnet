@@ -109,14 +109,19 @@ public sealed class BotConfiguration : IEquatable<BotConfiguration>, IBotConfigu
     /// <summary>
     /// Gets a custom setting value.
     /// </summary>
-    public string? GetCustomSetting(string key) =>
-        CustomSettings?.TryGetValue(key, out var value) == true ? value : null;
+    public string? GetCustomSetting(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return CustomSettings?.TryGetValue(key, out var value) == true ? value : null;
+    }
 
     /// <summary>
     /// Sets a custom setting value.
     /// </summary>
     public void SetCustomSetting(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentException.ThrowIfNullOrEmpty(value);
         CustomSettings ??= new Dictionary<string, string>();
         CustomSettings[key] = value;
     }
