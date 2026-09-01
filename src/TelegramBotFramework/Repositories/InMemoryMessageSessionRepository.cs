@@ -175,6 +175,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession> CreateAsync(Models.UserSession entity, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
@@ -186,6 +187,7 @@ public sealed class InMemorySessionRepository : ISessionRepository
 
     public async Task<Models.UserSession> UpdateAsync(Models.UserSession entity, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
