@@ -231,6 +231,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task ProcessUserMessageAsync_WithValidMessage_ReturnsValidContext()
     {
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithValidMessage_ReturnsValidContext called with {UserId}, {ChatId}, {Message}",
+            BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.TestGreeting);
+
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
@@ -270,6 +273,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         result.IsValid.Should().BeTrue();
 
         _mockMessageService.Verify(s => s.MarkAsProcessedAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithValidMessage_ReturnsValidContext completed with {UserId}",
+            BotOrchestratorTestsConstants.TestUserId);
     }
 
     /// <summary>
@@ -279,6 +285,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task ProcessUserMessageAsync_WithCommandMessage_ExtractsCommand()
     {
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithCommandMessage_ExtractsCommand called with {UserId}, {ChatId}, {Command}",
+            BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.TestStartCommand);
+
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
@@ -314,6 +323,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Assert
         result.Command.Should().NotBeNull();
         result.Command!.Name.Should().Be("/start");
+
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithCommandMessage_ExtractsCommand completed with {UserId}",
+            BotOrchestratorTestsConstants.TestUserId);
     }
 
     /// <summary>
@@ -323,6 +335,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task ProcessUserMessageAsync_WithInvalidMessage_MarksAsFailed()
     {
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithInvalidMessage_MarksAsFailed called with {UserId}, {ChatId}, {Message}",
+            BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, BotOrchestratorTestsConstants.EmptyString);
+
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = false };
@@ -366,6 +381,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain("Validation failed");
         _mockMessageService.Verify(s => s.MarkAsFailedAsync(BotOrchestratorTestsConstants.TestMessageId, BotOrchestratorTestsConstants.ValidationFailedMessage, It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("ProcessUserMessageAsync_WithInvalidMessage_MarksAsFailed completed with {UserId}, IsValid: {IsValid}",
+            BotOrchestratorTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -375,6 +393,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task ExecuteUserCommandAsync_WithValidCommand_ReturnsValidContext()
     {
+        _mockLogger.Object.LogInformation("ExecuteUserCommandAsync_WithValidCommand_ReturnsValidContext called with {UserId}, {ChatId}, {Command}",
+            BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, "test");
+
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
@@ -403,6 +424,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         result.Command!.Name.Should().Be("/test");
         result.IsValid.Should().BeTrue();
         _mockCommandService.Verify(s => s.RecordCommandExecutionAsync("test", It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("ExecuteUserCommandAsync_WithValidCommand_ReturnsValidContext completed with {UserId}, IsValid: {IsValid}",
+            BotOrchestratorTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -412,6 +436,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task ExecuteUserCommandAsync_WithNonExistentCommand_ReturnsContextWithError()
     {
+        _mockLogger.Object.LogInformation("ExecuteUserCommandAsync_WithNonExistentCommand_ReturnsContextWithError called with {UserId}, {ChatId}, {Command}",
+            BotOrchestratorTestsConstants.TestUserId, BotOrchestratorTestsConstants.TestChatId, "nonexistent");
+
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorTestsConstants.TestUserId, FirstName = BotOrchestratorTestsConstants.TestFirstName, LastName = BotOrchestratorTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorTestsConstants.TestSessionId, UserId = BotOrchestratorTestsConstants.TestUserId, ChatId = BotOrchestratorTestsConstants.TestChatId, IsActive = true };
@@ -429,6 +456,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain("Command 'nonexistent' not found");
+
+        _mockLogger.Object.LogInformation("ExecuteUserCommandAsync_WithNonExistentCommand_ReturnsContextWithError completed with {UserId}, IsValid: {IsValid}",
+            BotOrchestratorTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -438,6 +468,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task DisplayMenuAsync_WithValidMenuId_ReturnsMenu()
     {
+        _mockLogger.Object.LogInformation("DisplayMenuAsync_WithValidMenuId_ReturnsMenu called with {UserId}, {MenuId}",
+            123, "main");
+
         // Arrange
         var menu = new Menu { MenuId = "main", Title = "Main Menu", Buttons = new List<MenuButton>() };
 
@@ -455,6 +488,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         result.Should().NotBeNull();
         result.MenuId.Should().Be("main");
         _mockSessionService.Verify(s => s.NavigateToMenuAsync("session-123", "main", It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("DisplayMenuAsync_WithValidMenuId_ReturnsMenu completed with {UserId}, MenuId: {MenuId}",
+            123, result?.MenuId);
     }
 
     /// <summary>
@@ -464,6 +500,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task DisplayMenuAsync_WithNonExistentMenu_ThrowsInvalidOperationException()
     {
+        _mockLogger.Object.LogInformation("DisplayMenuAsync_WithNonExistentMenu_ThrowsInvalidOperationException called with {UserId}, {MenuId}",
+            123, "nonexistent");
+
         // Arrange
         _mockMenuService.Setup(s => s.GetMenuAsync(BotOrchestratorTestsConstants.TestNonexistentMenu, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Menu?)null);
@@ -471,6 +510,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Act & Assert
         await _orchestrator.Invoking(o => o.DisplayMenuAsync(123, "nonexistent"))
             .Should().ThrowAsync<InvalidOperationException>();
+
+        _mockLogger.Object.LogInformation("DisplayMenuAsync_WithNonExistentMenu_ThrowsInvalidOperationException completed with {UserId}, {MenuId}",
+            123, "nonexistent");
     }
 
     /// <summary>
@@ -480,6 +522,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task HandleMenuButtonAsync_WithExecuteCommandButton_ExecutesCommand()
     {
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithExecuteCommandButton_ExecutesCommand called with {UserId}, {MenuId}, {CallbackData}",
+            123, "main", "/start");
+
         // Arrange
         var button = new MenuButton
         {
@@ -508,6 +553,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Assert
         result.Should().BeTrue();
         _mockCommandService.Verify(s => s.RecordCommandExecutionAsync("start", It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithExecuteCommandButton_ExecutesCommand completed with {UserId}, Result: {Result}",
+            123, result);
     }
 
     /// <summary>
@@ -517,6 +565,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task HandleMenuButtonAsync_WithNavigateMenuButton_NavigatesToMenu()
     {
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithNavigateMenuButton_NavigatesToMenu called with {UserId}, {MenuId}, {CallbackData}",
+            123, "main", "submenu");
+
         // Arrange
         var button = new MenuButton
         {
@@ -539,6 +590,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Assert
         result.Should().BeTrue();
         _mockSessionService.Verify(s => s.NavigateToMenuAsync("session-123", "submenu", It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithNavigateMenuButton_NavigatesToMenu completed with {UserId}, Result: {Result}",
+            123, result);
     }
 
     /// <summary>
@@ -548,6 +602,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task HandleMenuButtonAsync_WithUnknownButtonAction_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithUnknownButtonAction_ReturnsFalse called with {UserId}, {MenuId}, {CallbackData}",
+            123, "main", "unknown");
+
         // Arrange
         var button = new MenuButton
         {
@@ -563,6 +620,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().BeFalse();
+
+        _mockLogger.Object.LogInformation("HandleMenuButtonAsync_WithUnknownButtonAction_ReturnsFalse completed with {UserId}, Result: {Result}",
+            123, result);
     }
 
     /// <summary>
@@ -572,6 +632,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task GetUserSessionAsync_WithActiveSession_ReturnsSession()
     {
+        _mockLogger.Object.LogInformation("GetUserSessionAsync_WithActiveSession_ReturnsSession called with {UserId}", 123);
+
         // Arrange
         var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
 
@@ -583,6 +645,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().Be(session);
+
+        _mockLogger.Object.LogInformation("GetUserSessionAsync_WithActiveSession_ReturnsSession completed with {UserId}, SessionId: {SessionId}",
+            123, result?.SessionId);
     }
 
     /// <summary>
@@ -592,6 +657,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException()
     {
+        _mockLogger.Object.LogInformation("GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException called with {UserId}", 123);
+
         // Arrange
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
@@ -599,6 +666,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Act & Assert
         await _orchestrator.Invoking(o => o.GetUserSessionAsync(123))
             .Should().ThrowAsync<Exceptions.SessionException>();
+
+        _mockLogger.Object.LogInformation("GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException completed with {UserId}", 123);
     }
 
     /// <summary>
@@ -608,6 +677,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task EndUserSessionAsync_WithActiveSession_ClosesSession()
     {
+        _mockLogger.Object.LogInformation("EndUserSessionAsync_WithActiveSession_ClosesSession called with {UserId}", 123);
+
         // Arrange
         var session = new UserSession { SessionId = "session-123", UserId = 123, ChatId = 456, IsActive = true };
 
@@ -622,6 +693,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Assert
         result.Should().BeTrue();
         _mockSessionService.Verify(s => s.CloseSessionAsync("session-123", It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("EndUserSessionAsync_WithActiveSession_ClosesSession completed with {UserId}, Result: {Result}",
+            123, result);
     }
 
     /// <summary>
@@ -631,6 +705,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public async Task EndUserSessionAsync_WithNoActiveSession_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("EndUserSessionAsync_WithNoActiveSession_ReturnsFalse called with {UserId}", 123);
+
         // Arrange
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
@@ -640,6 +716,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().BeFalse();
+
+        _mockLogger.Object.LogInformation("EndUserSessionAsync_WithNoActiveSession_ReturnsFalse completed with {UserId}, Result: {Result}",
+            123, result);
     }
 
     /// <summary>
@@ -648,6 +727,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void ExtractCommandName_WithCommand_ReturnsCommandName()
     {
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithCommand_ReturnsCommandName called with {MessageContent}",
+            BotOrchestratorTestsConstants.TestCommandWithParams);
+
         // Arrange
         var messageContent = BotOrchestratorTestsConstants.TestCommandWithParams;
 
@@ -656,6 +738,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().Be("start");
+
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithCommand_ReturnsCommandName completed with Result: {Result}", result);
     }
 
     /// <summary>
@@ -664,6 +748,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void ExtractCommandName_WithCommandOnly_ReturnsCommandName()
     {
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithCommandOnly_ReturnsCommandName called with {MessageContent}",
+            BotOrchestratorTestsConstants.TestCommandOnly);
+
         // Arrange
         var messageContent = BotOrchestratorTestsConstants.TestCommandOnly;
 
@@ -672,6 +759,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().Be("start");
+
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithCommandOnly_ReturnsCommandName completed with Result: {Result}", result);
     }
 
     /// <summary>
@@ -680,6 +769,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void ExtractCommandName_WithEmptyString_ReturnsEmptyString()
     {
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithEmptyString_ReturnsEmptyString called with {MessageContent}",
+            BotOrchestratorTestsConstants.EmptyString);
+
         // Arrange
         var messageContent = BotOrchestratorTestsConstants.EmptyString;
 
@@ -688,6 +780,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().BeEmpty();
+
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithEmptyString_ReturnsEmptyString completed with Result: {Result}", result);
     }
 
     /// <summary>
@@ -696,6 +790,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void ExtractCommandName_WithNoSlash_ReturnsEmptyString()
     {
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithNoSlash_ReturnsEmptyString called with {MessageContent}",
+            "start");
+
         // Arrange
         var messageContent = "start";
 
@@ -704,5 +801,7 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Assert
         result.Should().BeEmpty();
+
+        _mockLogger.Object.LogInformation("ExtractCommandName_WithNoSlash_ReturnsEmptyString completed with Result: {Result}", result);
     }
 }
