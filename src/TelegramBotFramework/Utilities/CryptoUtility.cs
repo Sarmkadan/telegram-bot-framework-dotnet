@@ -69,8 +69,8 @@ public static class CryptoUtility
     /// </summary>
     public static bool VerifyPassword(string password, string hash)
     {
-        if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
-            return false;
+        ArgumentException.ThrowIfNullOrEmpty(password);
+        ArgumentException.ThrowIfNullOrEmpty(hash);
 
         try
         {
@@ -128,8 +128,8 @@ public static class CryptoUtility
     /// </summary>
     public static string ComputeHmacSHA256(string message, string key)
     {
-        if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(key))
-            return string.Empty;
+        ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
