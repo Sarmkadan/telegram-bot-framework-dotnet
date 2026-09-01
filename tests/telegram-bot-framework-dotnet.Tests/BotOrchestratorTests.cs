@@ -45,6 +45,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     /// </summary>
     public BotOrchestratorTests()
     {
+        _mockLogger.Object.LogInformation("BotOrchestratorTests constructor called with {MiddlewareCount} middlewares", 2);
+
         var middlewares = new List<Middleware.IBotMiddleware> { _mockMiddleware1.Object, _mockMiddleware2.Object };
 
         _orchestrator = new BotOrchestrator(
@@ -56,6 +58,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             middlewares,
             _configuration,
             _mockLogger.Object);
+
+        _mockLogger.Object.LogInformation("BotOrchestratorTests constructor completed with {MiddlewareCount} middlewares", middlewares.Count);
     }
 
     /// <summary>
@@ -64,6 +68,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullUserService_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullUserService_ThrowsArgumentNullException called with {UserService}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -77,6 +83,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("userService");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullUserService_ThrowsArgumentNullException completed with {ParameterName}", "userService");
     }
 
     /// <summary>
@@ -85,6 +93,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullCommandService_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullCommandService_ThrowsArgumentNullException called with {CommandService}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -98,6 +108,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("commandService");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullCommandService_ThrowsArgumentNullException completed with {ParameterName}", "commandService");
     }
 
     /// <summary>
@@ -106,6 +118,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullSessionService_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullSessionService_ThrowsArgumentNullException called with {SessionService}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -119,6 +133,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("sessionService");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullSessionService_ThrowsArgumentNullException completed with {ParameterName}", "sessionService");
     }
 
     /// <summary>
@@ -127,6 +143,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullMessageService_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullMessageService_ThrowsArgumentNullException called with {MessageService}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -140,6 +158,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("messageService");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullMessageService_ThrowsArgumentNullException completed with {ParameterName}", "messageService");
     }
 
     /// <summary>
@@ -148,6 +168,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullMenuService_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullMenuService_ThrowsArgumentNullException called with {MenuService}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -161,6 +183,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("menuService");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullMenuService_ThrowsArgumentNullException completed with {ParameterName}", "menuService");
     }
 
     /// <summary>
@@ -169,6 +193,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullMiddlewares_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullMiddlewares_ThrowsArgumentNullException called with {Middlewares}", (object?)null);
+
         Action act = () => new BotOrchestrator(
             _mockUserService.Object,
             _mockCommandService.Object,
@@ -180,6 +206,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("middleware");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullMiddlewares_ThrowsArgumentNullException completed with {ParameterName}", "middleware");
     }
 
     /// <summary>
@@ -188,6 +216,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullConfiguration_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullConfiguration_ThrowsArgumentNullException called with {Configuration}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -201,6 +231,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             _mockLogger.Object);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("configuration");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullConfiguration_ThrowsArgumentNullException completed with {ParameterName}", "configuration");
     }
 
     /// <summary>
@@ -209,6 +241,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
+        _mockLogger.Object.LogInformation("Constructor_WithNullLogger_ThrowsArgumentNullException called with {Logger}", (object?)null);
+
         var middlewares = new List<Middleware.IBotMiddleware>();
 
         Action act = () => new BotOrchestrator(
@@ -222,6 +256,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             null!);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
+
+        _mockLogger.Object.LogInformation("Constructor_WithNullLogger_ThrowsArgumentNullException completed with {ParameterName}", "logger");
     }
 
     /// <summary>
@@ -368,6 +404,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             IsValid = false
         };
 
+        _mockLogger.Object.LogWarning("Processing message {MessageId} through degraded validation path with {ErrorCount} errors",
+            BotOrchestratorTestsConstants.TestMessageId, contextWithErrors.Errors.Count);
+
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(contextWithErrors);
 
@@ -450,6 +489,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         _mockCommandService.Setup(s => s.GetCommandAsync("nonexistent", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Command?)null);
 
+        _mockLogger.Object.LogWarning("Command {Command} was not found for user {UserId}",
+            "nonexistent", BotOrchestratorTestsConstants.TestUserId);
+
         // Act
         var result = await _orchestrator.ExecuteUserCommandAsync(123, 456, "nonexistent");
 
@@ -506,6 +548,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Arrange
         _mockMenuService.Setup(s => s.GetMenuAsync(BotOrchestratorTestsConstants.TestNonexistentMenu, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Menu?)null);
+
+        _mockLogger.Object.LogWarning("Menu {MenuId} was not found for user {UserId}",
+            BotOrchestratorTestsConstants.TestNonexistentMenu, BotOrchestratorTestsConstants.TestUserId);
 
         // Act & Assert
         await _orchestrator.Invoking(o => o.DisplayMenuAsync(123, "nonexistent"))
@@ -612,6 +657,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             Action = (ButtonAction)999 // Unknown action
         };
 
+        _mockLogger.Object.LogWarning("Using unknown button action {ButtonAction} for menu {MenuId}",
+            button.Action, "main");
+
         _mockMenuService.Setup(s => s.GetButtonAsync("main", "unknown", It.IsAny<CancellationToken>()))
             .ReturnsAsync(button);
 
@@ -663,6 +711,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
+        _mockLogger.Object.LogWarning("No active session found for user {UserId}", 123);
+
         // Act & Assert
         await _orchestrator.Invoking(o => o.GetUserSessionAsync(123))
             .Should().ThrowAsync<Exceptions.SessionException>();
@@ -710,6 +760,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Arrange
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
+
+        _mockLogger.Object.LogWarning("Cannot end session because no active session exists for user {UserId}", 123);
 
         // Act
         var result = await _orchestrator.EndUserSessionAsync(123);
@@ -775,6 +827,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
         // Arrange
         var messageContent = BotOrchestratorTestsConstants.EmptyString;
 
+        _mockLogger.Object.LogWarning("Falling back to an empty command name for message content {MessageContent}", messageContent);
+
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
 
@@ -795,6 +849,8 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
 
         // Arrange
         var messageContent = "start";
+
+        _mockLogger.Object.LogWarning("Falling back to an empty command name for non-command message {MessageContent}", messageContent);
 
         // Act
         var result = BotOrchestrator.ExtractCommandName(messageContent);
