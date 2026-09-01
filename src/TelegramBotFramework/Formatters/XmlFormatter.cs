@@ -33,12 +33,14 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string Format<T>(T data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var element = SerializeObject(data, typeof(T).Name);
         return element.ToString(GetSaveOptions());
     }
 
     public string Format<T>(IEnumerable<T> data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var items = data.ToList();
         var root = new XElement(XmlFormatterConstants.ItemsRoot);
 
@@ -53,6 +55,8 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatError(string errorCode, string message, string? details = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(errorCode);
+        ArgumentException.ThrowIfNullOrEmpty(message);
         var root = new XElement(XmlFormatterConstants.ErrorRoot,
             new XElement(XmlFormatterConstants.ErrorCode, errorCode),
             new XElement(XmlFormatterConstants.Message, message),
@@ -65,6 +69,7 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatMessage(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var element = new XElement(XmlFormatterConstants.Message,
             new XElement(XmlFormatterConstants.Id, message.MessageId),
             new XElement(XmlFormatterConstants.Content, message.Content),
@@ -79,6 +84,7 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
 
     public string FormatMessages(IEnumerable<Message> messages)
     {
+        ArgumentNullException.ThrowIfNull(messages);
         var root = new XElement(XmlFormatterConstants.MessagesRoot);
 
         foreach (var msg in messages)
