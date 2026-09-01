@@ -45,8 +45,11 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenRateLimitingDisabled_PassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting disabled rate limiting test with rate limiting enabled: {EnableRateLimiting}", _configuration.EnableRateLimiting);
+
         // Arrange
         _configuration.EnableRateLimiting = false;
+        _loggerMock.Object.LogWarning("Rate limiting is disabled; verifying fallback processing for user {UserId}", 123L);
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
             _configuration,
@@ -77,6 +80,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().NotContain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("RateLimitingMiddleware")));
+        _loggerMock.Object.LogInformation("Completed disabled rate limiting test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -85,6 +89,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenContextInvalid_PassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting invalid context test for user {UserId} and chat {ChatId}", 0L, 456L);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -109,11 +115,13 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("Processing invalid context through fallback path for user {UserId}", context.UserId);
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
+        _loggerMock.Object.LogInformation("Completed invalid context test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -122,6 +130,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting missing user test for user {UserId} and chat {ChatId}", 123L, 456L);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -146,6 +156,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("User is missing from context for user {UserId}; verifying fallback processing", context.UserId);
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
         // Assert
@@ -153,6 +164,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("User not found")));
+        _loggerMock.Object.LogInformation("Completed missing user test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -161,6 +173,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserIsAdmin_BypassesRateLimit()
     {
+        _loggerMock.Object.LogInformation("Starting admin bypass test for user {UserId}", 999L);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -185,6 +199,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("Admin user {UserId} is using the rate limit bypass path", context.UserId);
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
         // Assert
@@ -192,6 +207,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("is admin, bypassing rate limit")));
+        _loggerMock.Object.LogInformation("Completed admin bypass test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -200,6 +216,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUnderRateLimit_PassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting under rate limit test with limit {RateLimitPerMinute}", _configuration.RateLimitPerMinute);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -231,6 +249,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
         context.IsValid.Should().BeTrue();
+        _loggerMock.Object.LogInformation("Completed under rate limit test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
@@ -239,6 +258,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenOverRateLimit_BlocksAndAddsError()
     {
+        _loggerMock.Object.LogInformation("Starting exceeded rate limit test with limit {RateLimitPerMinute}", _configuration.RateLimitPerMinute);
+
         // Arrange - exhaust rate limit
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -292,6 +313,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("Submitting additional request for user {UserId} after {RequestCount} allowed requests", context.UserId, 3);
         var result = await middleware.ProcessAsync(context, Next4, CancellationToken.None);
 
         // Assert
@@ -301,6 +323,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         context.IsValid.Should().BeFalse();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("exceeded rate limit")));
+        _loggerMock.Object.LogInformation("Completed exceeded rate limit test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
@@ -309,6 +332,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_DifferentUsersLimitedIndependently()
     {
+        _loggerMock.Object.LogInformation("Starting independent user limits test for users {FirstUserId} and {SecondUserId}", 111L, 222L);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -358,6 +383,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         next2Called.Should().BeTrue();
         user2Context.Errors.Should().BeEmpty();
         user2Context.IsValid.Should().BeTrue();
+        _loggerMock.Object.LogInformation("Completed independent user limits test for user {UserId}; context valid: {IsValid}", user2Context.UserId, user2Context.IsValid);
     }
 
     /// <summary>
@@ -366,6 +392,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WithTokenBucketStrategy_WorksCorrectly()
     {
+        _loggerMock.Object.LogInformation("Starting token bucket strategy test with capacity {Capacity} and refill rate {RefillRate}", 5, 1);
+
         // Arrange
         var tokenBucketStrategy = new TokenBucketStrategy(5, 1); // 5 tokens, 1 token per second
         var middleware = new RateLimitingMiddleware(
@@ -405,12 +433,14 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("Submitting request {RequestNumber} after token bucket capacity is exhausted for user {UserId}", 6, context.UserId);
         var result6 = await middleware.ProcessAsync(context, Next6, CancellationToken.None);
 
         // Assert
         result6.Should().BeSameAs(context);
         nextCalled6.Should().BeFalse();
         context.Errors.Should().ContainSingle(e => e.Contains("Rate limit exceeded"));
+        _loggerMock.Object.LogInformation("Completed token bucket strategy test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled6);
     }
 
     /// <summary>
@@ -419,6 +449,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WithSlidingWindowStrategy_WorksCorrectly()
     {
+        _loggerMock.Object.LogInformation("Starting sliding window strategy test with request limit {RequestLimit} and window minutes {WindowMinutes}", 3, 1);
+
         // Arrange
         var slidingWindowStrategy = new SlidingWindowStrategy(3, TimeSpan.FromMinutes(1));
         var middleware = new RateLimitingMiddleware(
@@ -458,12 +490,14 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         }
 
         // Act
+        _loggerMock.Object.LogWarning("Submitting request {RequestNumber} after sliding window limit is exhausted for user {UserId}", 4, context.UserId);
         var result4 = await middleware.ProcessAsync(context, Next4, CancellationToken.None);
 
         // Assert
         result4.Should().BeSameAs(context);
         nextCalled4.Should().BeFalse();
         context.Errors.Should().ContainSingle(e => e.Contains("Rate limit exceeded"));
+        _loggerMock.Object.LogInformation("Completed sliding window strategy test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled4);
     }
 
     /// <summary>
@@ -472,6 +506,8 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
     [Fact]
     public void Priority_ReturnsCorrectValue()
     {
+        _loggerMock.Object.LogInformation("Starting middleware priority test with expected priority {ExpectedPriority}", 20);
+
         // Arrange
         var middleware = new RateLimitingMiddleware(
             _commandServiceMock.Object,
@@ -482,5 +518,6 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
 
         // Act & Assert
         middleware.Priority.Should().Be(20);
+        _loggerMock.Object.LogInformation("Completed middleware priority test with actual priority {ActualPriority}", middleware.Priority);
     }
 }
