@@ -31,6 +31,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
     private readonly TelegramApiRetryHandler _retryHandler;
     private readonly TelegramApiRetryOptions _retryOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TelegramApiClient"/> class.
+    /// </summary>
+    /// <param name="botToken">The bot token obtained from BotFather.</param>
+    /// <param name="httpClientFactory">Optional factory used to create the underlying HTTP client.</param>
+    /// <param name="logger">Optional logger used to record client activity.</param>
+    /// <param name="retryOptions">Optional retry configuration; defaults are used when not provided.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="botToken"/> is empty or has an invalid format.</exception>
     public TelegramApiClient(
         string botToken,
         HttpClientFactory? httpClientFactory = null,
@@ -55,6 +63,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Sends a simple text message to a chat.
     /// </summary>
+    /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+    /// <param name="text">Text of the message to be sent</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
+    /// <returns>True if the message was sent successfully, false otherwise</returns>
     public async Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -75,6 +87,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Sends a message with inline keyboard buttons.
     /// </summary>
+    /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+    /// <param name="text">Text of the message to be sent</param>
+    /// <param name="buttonLabels">Two-dimensional array representing the keyboard layout where each inner array is a row of buttons</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
+    /// <returns>True if the message was sent successfully, false otherwise</returns>
     public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -102,6 +119,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Edits a previously sent message.
     /// </summary>
+    /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+    /// <param name="messageId">Identifier of the sent message</param>
+    /// <param name="newText">New text of the message</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
+    /// <returns>True if the message was edited successfully, false otherwise</returns>
     public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -119,6 +141,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Deletes a message from a chat.
     /// </summary>
+    /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+    /// <param name="messageId">Identifier of the message to delete</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
+    /// <returns>True if the message was deleted successfully, false otherwise</returns>
     public async Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
