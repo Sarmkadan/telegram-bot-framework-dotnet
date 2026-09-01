@@ -35,17 +35,21 @@ public sealed class JsonFormatter : IOutputFormatter
 
     public string Format<T>(T data)
     {
+        System.ArgumentNullException.ThrowIfNull(data);
         return JsonSerializer.Serialize(data, _options);
     }
 
     public string Format<T>(IEnumerable<T> data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var wrapper = new { items = data.ToList(), count = data.Count() };
         return JsonSerializer.Serialize(wrapper, _options);
     }
 
     public string FormatError(string errorCode, string message, string? details = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(errorCode);
+        ArgumentException.ThrowIfNullOrEmpty(message);
         var errorResponse = new
         {
             error = errorCode,
@@ -59,6 +63,7 @@ public sealed class JsonFormatter : IOutputFormatter
 
     public string FormatMessage(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var formatted = new
         {
             id = message.MessageId,
@@ -75,6 +80,7 @@ public sealed class JsonFormatter : IOutputFormatter
 
     public string FormatMessages(IEnumerable<Message> messages)
     {
+        ArgumentNullException.ThrowIfNull(messages);
         var formattedMessages = messages.Select(m => new
         {
             id = m.MessageId,
