@@ -33,6 +33,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     /// </summary>
     public CommandServiceAdditionalTests()
     {
+        _mockLogger.Object.LogInformation("Initializing {ClassName}", nameof(CommandServiceAdditionalTests));
         _service = new CommandService(_mockRepository.Object, _mockUserService.Object, _mockCommandUsageTracker.Object, _mockLogger.Object);
     }
 
@@ -43,6 +44,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task GetAvailableCommandsAsync_WithAdminRole_ReturnsAdminCommands()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(GetAvailableCommandsAsync_WithAdminRole_ReturnsAdminCommands));
         // Arrange
         var adminCommand = new Command { Name = CommandServiceAdditionalTestsConstants.AdminCommandName, IsEnabled = true, RequiresAdmin = true };
         var regularCommand = new Command { Name = CommandServiceAdditionalTestsConstants.HelpCommandName, IsEnabled = true, RequiresAdmin = false };
@@ -59,6 +61,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.Should().HaveCount(CommandServiceAdditionalTestsConstants.AdminAvailableCommandCount);
         result.Should().Contain(c => c.Name == CommandServiceAdditionalTestsConstants.AdminCommandName);
         result.Should().Contain(c => c.Name == CommandServiceAdditionalTestsConstants.HelpCommandName);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(GetAvailableCommandsAsync_WithAdminRole_ReturnsAdminCommands));
     }
 
     /// <summary>
@@ -68,6 +71,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task GetAvailableCommandsAsync_WithUserRole_ReturnsOnlyNonAdminCommands()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(GetAvailableCommandsAsync_WithUserRole_ReturnsOnlyNonAdminCommands));
         // Arrange
         var adminCommand = new Command { Name = CommandServiceAdditionalTestsConstants.AdminCommandName, IsEnabled = true, RequiresAdmin = true };
         var regularCommand = new Command { Name = CommandServiceAdditionalTestsConstants.HelpCommandName, IsEnabled = true, RequiresAdmin = false };
@@ -83,6 +87,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.Should().HaveCount(CommandServiceAdditionalTestsConstants.UserAvailableCommandCount);
         result.Should().Contain(c => c.Name == CommandServiceAdditionalTestsConstants.HelpCommandName);
         result.Should().NotContain(c => c.Name == CommandServiceAdditionalTestsConstants.AdminCommandName);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(GetAvailableCommandsAsync_WithUserRole_ReturnsOnlyNonAdminCommands));
     }
 
     /// <summary>
@@ -92,6 +97,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task GetAvailableCommandsAsync_WithModeratorRole_ReturnsCommandsForModeratorAndAbove()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(GetAvailableCommandsAsync_WithModeratorRole_ReturnsCommandsForModeratorAndAbove));
         // Arrange
         var adminCommand = new Command { Name = CommandServiceAdditionalTestsConstants.AdminCommandName, IsEnabled = true, RequiresAdmin = true };
         var moderatorCommand = new Command { Name = CommandServiceAdditionalTestsConstants.ModeratorCommandName, IsEnabled = true, RequiresAdmin = false };
@@ -109,6 +115,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.Should().Contain(c => c.Name == CommandServiceAdditionalTestsConstants.ModeratorCommandName);
         result.Should().Contain(c => c.Name == CommandServiceAdditionalTestsConstants.HelpCommandName);
         result.Should().NotContain(c => c.Name == CommandServiceAdditionalTestsConstants.AdminCommandName);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(GetAvailableCommandsAsync_WithModeratorRole_ReturnsCommandsForModeratorAndAbove));
     }
 
     /// <summary>
@@ -118,6 +125,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task ExecuteCommandAsync_WithValidContext_ExecutesSuccessfully()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(ExecuteCommandAsync_WithValidContext_ExecutesSuccessfully));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, IsEnabled = true, HandlerType = CommandServiceAdditionalTestsConstants.TestHandlerType };
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Role = UserRole.User };
@@ -144,6 +152,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.Command.Should().NotBeNull();
         result.Command!.ExecutionCount.Should().Be(CommandServiceAdditionalTestsConstants.FirstExecutionCount);
         _mockRepository.Verify(r => r.UpdateAsync(command, It.IsAny<CancellationToken>()), Times.Once);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(ExecuteCommandAsync_WithValidContext_ExecutesSuccessfully));
     }
 
     /// <summary>
@@ -153,6 +162,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task ExecuteCommandAsync_WithDisabledCommand_AddsErrorToContext()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(ExecuteCommandAsync_WithDisabledCommand_AddsErrorToContext));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.DisabledCommandName, IsEnabled = false, HandlerType = CommandServiceAdditionalTestsConstants.TestHandlerType };
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Role = UserRole.Administrator };
@@ -166,6 +176,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         };
 
         // Act
+        _mockLogger.Object.LogWarning("Executing disabled command {CommandName} for user {UserId}", command.Name, user.UserId);
         var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
 
         // Assert
@@ -173,6 +184,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Contains(CommandServiceAdditionalTestsConstants.DisabledErrorText));
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(ExecuteCommandAsync_WithDisabledCommand_AddsErrorToContext));
     }
 
     /// <summary>
@@ -182,6 +194,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.AdminCommandName, IsEnabled = true, RequiresAdmin = true, HandlerType = CommandServiceAdditionalTestsConstants.TestHandlerType };
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Role = UserRole.User };
@@ -195,6 +208,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         };
 
         // Act
+        _mockLogger.Object.LogWarning("Executing admin command {CommandName} with insufficient user role {UserRole}", command.Name, user.Role);
         var result = await _service.ExecuteCommandAsync(context).ConfigureAwait(false);
 
         // Assert
@@ -202,6 +216,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Contains(CommandServiceAdditionalTestsConstants.InsufficientPermissionsErrorText));
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(ExecuteCommandAsync_WithInsufficientPermissions_AddsErrorToContext));
     }
 
     /// <summary>
@@ -211,6 +226,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithInactiveUser_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithInactiveUser_ReturnsFalse));
         // Arrange
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Status = UserStatus.Banned };
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, IsEnabled = true };
@@ -223,10 +239,12 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
             .ReturnsAsync(command);
 
         // Act
+        _mockLogger.Object.LogWarning("Checking command {CommandName} for inactive user {UserId} with status {UserStatus}", command.Name, user.UserId, user.Status);
         var result = await _service.CanUserExecuteCommandAsync(CommandServiceAdditionalTestsConstants.TestUserId, CommandServiceAdditionalTestsConstants.TestCommandInput).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithInactiveUser_ReturnsFalse));
     }
 
     /// <summary>
@@ -236,6 +254,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithNonExistentCommand_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithNonExistentCommand_ReturnsFalse));
         // Arrange
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Status = UserStatus.Active };
 
@@ -247,10 +266,12 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
             .ReturnsAsync((Command?)null);
 
         // Act
+        _mockLogger.Object.LogWarning("Checking unavailable command {CommandName} for user {UserId}", CommandServiceAdditionalTestsConstants.NonExistentCommandName, user.UserId);
         var result = await _service.CanUserExecuteCommandAsync(CommandServiceAdditionalTestsConstants.TestUserId, CommandServiceAdditionalTestsConstants.NonExistentCommandInput).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithNonExistentCommand_ReturnsFalse));
     }
 
     /// <summary>
@@ -260,6 +281,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task CanUserExecuteCommandAsync_WithDisabledCommand_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithDisabledCommand_ReturnsFalse));
         // Arrange
         var user = new BotUser { UserId = CommandServiceAdditionalTestsConstants.TestUserId, FirstName = CommandServiceAdditionalTestsConstants.TestUserFirstName, Status = UserStatus.Active };
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.DisabledCommandName, IsEnabled = false };
@@ -272,10 +294,12 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
             .ReturnsAsync(command);
 
         // Act
+        _mockLogger.Object.LogWarning("Checking disabled command {CommandName} for user {UserId}", command.Name, user.UserId);
         var result = await _service.CanUserExecuteCommandAsync(CommandServiceAdditionalTestsConstants.TestUserId, CommandServiceAdditionalTestsConstants.DisabledCommandInput).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(CanUserExecuteCommandAsync_WithDisabledCommand_ReturnsFalse));
     }
 
     /// <summary>
@@ -285,6 +309,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task RecordCommandExecutionAsync_WithValidCommand_IncrementsExecutionCount()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(RecordCommandExecutionAsync_WithValidCommand_IncrementsExecutionCount));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, HandlerType = CommandServiceAdditionalTestsConstants.TestHandlerType, ExecutionCount = CommandServiceAdditionalTestsConstants.InitialExecutionCount };
 
@@ -301,6 +326,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         // Assert
         command.ExecutionCount.Should().Be(CommandServiceAdditionalTestsConstants.ExpectedExecutionCountAfterIncrement);
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(RecordCommandExecutionAsync_WithValidCommand_IncrementsExecutionCount));
     }
 
     /// <summary>
@@ -310,14 +336,17 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task RecordCommandExecutionAsync_WithNonExistentCommand_DoesNotThrow()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(RecordCommandExecutionAsync_WithNonExistentCommand_DoesNotThrow));
         // Arrange
         _mockRepository
             .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.NonExistentCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Command?)null);
 
         // Act & Assert
+        _mockLogger.Object.LogWarning("Recording execution for unavailable command {CommandName}", CommandServiceAdditionalTestsConstants.NonExistentCommandName);
         await _service.Invoking(s => s.RecordCommandExecutionAsync(CommandServiceAdditionalTestsConstants.NonExistentCommandInput))
             .Should().NotThrowAsync();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(RecordCommandExecutionAsync_WithNonExistentCommand_DoesNotThrow));
     }
 
     /// <summary>
@@ -327,6 +356,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task GetCommandExecutionCountAsync_WithExistingCommand_ReturnsCount()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(GetCommandExecutionCountAsync_WithExistingCommand_ReturnsCount));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, ExecutionCount = CommandServiceAdditionalTestsConstants.ExecutionCountForGetTest };
 
@@ -339,6 +369,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
 
         // Assert
         result.Should().Be(CommandServiceAdditionalTestsConstants.ExecutionCountForGetTest);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(GetCommandExecutionCountAsync_WithExistingCommand_ReturnsCount));
     }
 
     /// <summary>
@@ -348,16 +379,19 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task GetCommandExecutionCountAsync_WithNonExistentCommand_ReturnsZero()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(GetCommandExecutionCountAsync_WithNonExistentCommand_ReturnsZero));
         // Arrange
         _mockRepository
             .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.NonExistentCommandName, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Command?)null);
 
         // Act
+        _mockLogger.Object.LogWarning("Retrieving execution count for unavailable command {CommandName}", CommandServiceAdditionalTestsConstants.NonExistentCommandName);
         var result = await _service.GetCommandExecutionCountAsync(CommandServiceAdditionalTestsConstants.NonExistentCommandInput).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(CommandServiceAdditionalTestsConstants.MissingCommandExecutionCount);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(GetCommandExecutionCountAsync_WithNonExistentCommand_ReturnsZero));
     }
 
     /// <summary>
@@ -367,6 +401,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task IsCommandRateLimitedAsync_WithNoRateLimitConfigured_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(IsCommandRateLimitedAsync_WithNoRateLimitConfigured_ReturnsFalse));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, RateLimitPerMinute = null };
 
@@ -375,10 +410,12 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
             .ReturnsAsync(command);
 
         // Act
+        _mockLogger.Object.LogWarning("Checking rate limit for command {CommandName} without a configured limit for user {UserId}", command.Name, CommandServiceAdditionalTestsConstants.TestUserId);
         var result = await _service.IsCommandRateLimitedAsync(CommandServiceAdditionalTestsConstants.TestUserId, CommandServiceAdditionalTestsConstants.TestCommandInput).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(IsCommandRateLimitedAsync_WithNoRateLimitConfigured_ReturnsFalse));
     }
 
     /// <summary>
@@ -389,6 +426,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
     [Fact]
     public async Task IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod}", nameof(IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser));
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, RateLimitPerMinute = CommandServiceAdditionalTestsConstants.RateLimitPerMinute };
 
@@ -407,5 +445,6 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         // First user again - should be rate limited now
         var result3 = await _service.IsCommandRateLimitedAsync(CommandServiceAdditionalTestsConstants.FirstRateLimitUserId, CommandServiceAdditionalTestsConstants.TestCommandInput).ConfigureAwait(false);
         result3.Should().BeTrue();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod}", nameof(IsCommandRateLimitedAsync_WithMultipleUsers_ResetsRateLimitPerUser));
     }
 }
