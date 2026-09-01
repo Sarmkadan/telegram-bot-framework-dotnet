@@ -55,6 +55,7 @@ public sealed class PollingStrategy : IHostedService
     public PollingStrategy(ITelegramApiClient apiClient, ILogger<PollingStrategy>? logger = null)
         : this(apiClient, new InMemoryUpdateOffsetStore(), logger)
     {
+        _logger.LogInformation("PollingStrategy initialized with in-memory offset store");
     }
 
     /// <summary>
@@ -78,9 +79,17 @@ public sealed class PollingStrategy : IHostedService
         int? maxInFlightUpdates = null,
         PollingOptions? options = null)
     {
+        if (logger != null)
+        {
+            _logger = logger;
+        }
+        else
+        {
+            _logger = new ConsoleLogger<PollingStrategy>();
+        }
+        _logger.LogInformation("Initializing PollingStrategy");
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _offsetStore = offsetStore ?? throw new ArgumentNullException(nameof(offsetStore));
-        _logger = logger ?? new ConsoleLogger<PollingStrategy>();
         _webhookHandler = new WebhookHandler();
         _eventPublisher = eventPublisher ?? new EventPublisher(new InMemoryEventBus());
 
@@ -114,6 +123,7 @@ public sealed class PollingStrategy : IHostedService
 
         // Initialize with offset from store
         _lastUpdateId = _offsetStore.GetLastOffset();
+        _logger.LogInformation("PollingStrategy initialized successfully. LastUpdateId: {LastUpdateId}", _lastUpdateId);
     }
 
     /// <summary>
@@ -128,9 +138,11 @@ public sealed class PollingStrategy : IHostedService
     /// <exception cref="InvalidOperationException">Thrown when polling is already running.</exception>
     public void Start(TimeSpan? pollInterval = null)
     {
+        _logger.LogInformation("Starting polling strategy with pollInterval={PollIntervalMs}ms", pollInterval?.TotalMilliseconds ?? _options.PollInterval.TotalMilliseconds);
+
         if (_pollingTask is not null && !_pollingTask.IsCompleted)
         {
-            _logger.LogWarning("Polling is already running");
+            _logger.LogWarning("Polling is already running, not starting another polling task");
             return;
         }
 
@@ -139,7 +151,7 @@ public sealed class PollingStrategy : IHostedService
 
         _pollingTask = Task.Run(() => PollAsync(interval, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
 
-        _logger.LogInformation("Polling started with interval {IntervalMs}ms", interval.TotalMilliseconds);
+        _logger.LogInformation("Polling started successfully with interval {IntervalMs}ms", interval.TotalMilliseconds);
     }
 
     /// <summary>
@@ -289,6 +301,7 @@ public sealed class PollingStrategy : IHostedService
 
     private async Task PollAsync(TimeSpan interval, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Polling loop started");
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -301,6 +314,8 @@ public sealed class PollingStrategy : IHostedService
 
                 var offset = _lastUpdateId > 0 ? _lastUpdateId + 1 : 0;
                 var updates = await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false);
+
+                _logger.LogInformation("Received {UpdateCount} updates from Telegram API", updates.Count);
 
                 // Apply update flood protection - limit updates per batch
                 var updatesToProcess = ApplyUpdateFloodProtection(updates);
@@ -330,19 +345,21 @@ public sealed class PollingStrategy : IHostedService
                 if (updates.Count == 0)
                 {
                     // Small delay to avoid hammering the API when there is nothing to fetch
+                    _logger.LogDebug("No updates received, waiting {IntervalMs}ms before next poll", interval.TotalMilliseconds);
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
                 }
 
                 // Reset failure count on successful poll
                 if (_consecutiveFailureCount > 0)
                 {
-                    _logger.LogDebug("Resetting failure count after successful poll");
+                    _logger.LogInformation("Polling successful after {FailureCount} consecutive failures, resetting failure count", _consecutiveFailureCount);
                     _consecutiveFailureCount = 0;
                     _currentBackoffMs = 0;
                 }
             }
             catch (OperationCanceledException)
             {
+                _logger.LogInformation("Polling loop cancelled");
                 break;
             }
             catch (Exception ex)
@@ -361,6 +378,7 @@ public sealed class PollingStrategy : IHostedService
                 await Task.Delay(backoffDelayMs, cancellationToken).ConfigureAwait(false);
             }
         }
+        _logger.LogInformation("Polling loop stopped");
     }
 
     /// <summary>
@@ -370,8 +388,11 @@ public sealed class PollingStrategy : IHostedService
     /// <returns>A filtered collection of updates to process.</returns>
     private IReadOnlyList<JsonElement> ApplyUpdateFloodProtection(IReadOnlyList<JsonElement> updates)
     {
+        _logger.LogDebug("Applying update flood protection. Received {UpdateCount} updates, max allowed per batch: {MaxUpdatesPerBatch}", updates.Count, _maxUpdatesPerBatch);
+
         if (updates.Count <= _maxUpdatesPerBatch)
         {
+            _logger.LogDebug("Update count within limits, no flood protection needed");
             return updates;
         }
 
@@ -383,7 +404,9 @@ public sealed class PollingStrategy : IHostedService
             _maxUpdatesPerBatch);
 
         // Return only the first N updates to prevent memory exhaustion
-        return updates.Take(_maxUpdatesPerBatch).ToList();
+        var limitedUpdates = updates.Take(_maxUpdatesPerBatch).ToList();
+        _logger.LogInformation("Limited updates from {OriginalCount} to {LimitedCount} due to flood protection", updates.Count, limitedUpdates.Count);
+        return limitedUpdates;
     }
 
     /// <summary>
@@ -392,6 +415,8 @@ public sealed class PollingStrategy : IHostedService
     /// <returns>The backoff delay in milliseconds.</returns>
     private int CalculateBackoffDelay()
     {
+        _logger.LogDebug("Calculating backoff delay. ConsecutiveFailureCount: {FailureCount}", _consecutiveFailureCount);
+
         // Calculate exponential backoff with jitter
         double exponentialBackoff = Math.Pow(BackoffMultiplier, _consecutiveFailureCount - 1);
         double backoffMs = BasePollIntervalMs * exponentialBackoff;
@@ -407,6 +432,8 @@ public sealed class PollingStrategy : IHostedService
         // Ensure we don't go below base interval
         _currentBackoffMs = Math.Max(result, BasePollIntervalMs);
 
+        _logger.LogInformation("Calculated backoff delay: {BackoffDelayMs}ms (failure count: {FailureCount})", _currentBackoffMs, _consecutiveFailureCount);
+
         return _currentBackoffMs;
     }
 
@@ -419,6 +446,7 @@ public sealed class PollingStrategy : IHostedService
     /// <exception cref="ArgumentNullException">Thrown when update is null.</exception>
     public async Task ProcessUpdateAsync(TelegramUpdate update)
     {
+        _logger.LogInformation("Processing update {UpdateId}", update.UpdateId);
         ArgumentNullException.ThrowIfNull(update);
 
         // Track in-flight handler
@@ -464,6 +492,7 @@ public sealed class PollingStrategy : IHostedService
 
             await _offsetStore.SetLastOffset(_lastUpdateId).ConfigureAwait(false);
             await _offsetStore.PersistAsync().ConfigureAwait(false);
+            _logger.LogInformation("Successfully processed update {UpdateId}", update.UpdateId);
         }
         catch (Exception ex)
         {
@@ -489,7 +518,7 @@ public sealed class PollingStrategy : IHostedService
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task DrainInFlightHandlersAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Waiting for {Count} in-flight update handlers to complete", _inFlightHandlers.Count);
+        _logger.LogInformation("Starting to drain {Count} in-flight update handlers", _inFlightHandlers.Count);
 
         var drainTimeout = _shutdownTimeout;
         var startTime = DateTime.UtcNow;
@@ -530,9 +559,9 @@ public sealed class PollingStrategy : IHostedService
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task PersistFinalOffsetAsync()
     {
+        _logger.LogInformation("Persisting final offset: {LastUpdateId}", _lastUpdateId);
         try
         {
-            _logger.LogDebug("Persisting final offset: {LastUpdateId}", _lastUpdateId);
             await _offsetStore.SetLastOffset(_lastUpdateId).ConfigureAwait(false);
             await _offsetStore.PersistAsync().ConfigureAwait(false);
             _logger.LogInformation("Final offset persisted successfully");
@@ -550,9 +579,9 @@ public sealed class PollingStrategy : IHostedService
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     private async Task PublishBotStoppedEventAsync()
     {
+        _logger.LogInformation("Publishing BotStateChangedEvent(Stopped)");
         try
         {
-            _logger.LogDebug("Publishing BotStateChangedEvent(Stopped)");
             await _eventPublisher.PublishBotStateChangedAsync(
                 "Running",
                 "Stopped",
