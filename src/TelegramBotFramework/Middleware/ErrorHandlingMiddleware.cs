@@ -31,9 +31,12 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        _logger.LogInformation("Starting to process request {Path} with TraceId {TraceId}", context.Request.Path, context.TraceIdentifier);
+
         try
         {
             await _next(context);
+            _logger.LogInformation("Finished processing request {Path} with TraceId {TraceId}", context.Request.Path, context.TraceIdentifier);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -43,6 +46,7 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        _logger.LogInformation("Handling exception for request {Path} with TraceId {TraceId}", context.Request.Path, context.TraceIdentifier);
         _logger.LogError(exception, HttpErrorHandlingMiddlewareConstants.UnhandledExceptionLogMessage);
 
         context.Response.ContentType = ApiConstants.ContentTypeJson;
@@ -59,6 +63,7 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
             TraceId = context.TraceIdentifier
         };
 
+        _logger.LogInformation("Returning error response {StatusCode} with ErrorCode {ErrorCode} for request {Path}", statusCode, errorCode, context.Request.Path);
         return context.Response.WriteAsJsonAsync(response);
     }
 
