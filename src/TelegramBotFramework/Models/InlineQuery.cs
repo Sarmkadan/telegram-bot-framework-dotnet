@@ -38,13 +38,18 @@ public sealed class InlineQuery : IInlineQuery, IEquatable<InlineQuery>
     /// <summary>Sets a metadata entry by key.</summary>
     public void SetMetadata(string key, object value)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
         Metadata ??= new Dictionary<string, object>();
         Metadata[key] = value;
     }
 
     /// <summary>Gets a metadata entry by key, or null if not present.</summary>
-    public object? GetMetadata(string key) =>
-        Metadata?.TryGetValue(key, out var value) == true ? value : null;
+    public object? GetMetadata(string key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return Metadata?.TryGetValue(key, out var value) == true ? value : null;
+    }
 
     /// <summary>
     /// Validates required fields.
