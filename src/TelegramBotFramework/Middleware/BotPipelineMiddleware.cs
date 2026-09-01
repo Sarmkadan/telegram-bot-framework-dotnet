@@ -12,17 +12,29 @@ using TelegramBotFramework.Models;
 /// <summary>
 /// Middleware for structured logging of bot execution contexts.
 /// </summary>
+/// <summary>
+/// 
+/// </summary>
 public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
 {
     private readonly ILogger<BotLoggingMiddleware> _logger;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BotLoggingMiddleware(ILogger<BotLoggingMiddleware> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public int Priority => 100;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public async Task<Models.ExecutionContext> ProcessAsync(
         Models.ExecutionContext context,
         Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
@@ -52,17 +64,29 @@ public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
 /// <summary>
 /// Middleware for translating bot framework exceptions into execution context errors.
 /// </summary>
+/// <summary>
+/// 
+/// </summary>
 public sealed class BotErrorHandlingMiddleware : IBotMiddleware
 {
     private readonly ILogger<BotErrorHandlingMiddleware> _logger;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BotErrorHandlingMiddleware(ILogger<BotErrorHandlingMiddleware> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public int Priority => 10;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public async Task<Models.ExecutionContext> ProcessAsync(
         Models.ExecutionContext context,
         Func<Models.ExecutionContext, Task<Models.ExecutionContext>> next,
