@@ -13,6 +13,9 @@ namespace TelegramBotFramework.Middleware;
 /// <summary>
 /// Base middleware interface for request processing pipeline.
 /// </summary>
+/// <summary>
+/// 
+/// </summary>
 public interface IBotMiddleware
 {
     int Priority { get; }
