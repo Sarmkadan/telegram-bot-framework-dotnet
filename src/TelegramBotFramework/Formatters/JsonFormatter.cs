@@ -9,6 +9,7 @@ namespace TelegramBotFramework.Formatters;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TelegramBotFramework.Models;
+using System;
 
 /// <summary>
 /// Formats data as JSON output for API responses and exports.
