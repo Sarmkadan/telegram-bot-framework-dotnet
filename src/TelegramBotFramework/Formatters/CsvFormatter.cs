@@ -22,12 +22,14 @@ public sealed class CsvFormatter : IOutputFormatter, ICsvFormatter
 
     public string Format<T>(T data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var items = new[] { data };
         return Format((IEnumerable<T>)items);
     }
 
     public string Format<T>(IEnumerable<T> data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var list = data.ToList();
         if (list.Count == 0)
             return string.Empty;
@@ -64,6 +66,8 @@ public sealed class CsvFormatter : IOutputFormatter, ICsvFormatter
 
     public string FormatError(string errorCode, string message, string? details = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(errorCode);
+        ArgumentException.ThrowIfNullOrEmpty(message);
         var sb = new StringBuilder();
         sb.AppendLine("ErrorCode,Message,Details,Timestamp");
 
@@ -79,11 +83,13 @@ public sealed class CsvFormatter : IOutputFormatter, ICsvFormatter
 
     public string FormatMessage(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         return Format(new[] { message });
     }
 
     public string FormatMessages(IEnumerable<Message> messages)
     {
+        ArgumentNullException.ThrowIfNull(messages);
         var sb = new StringBuilder();
         sb.AppendLine("MessageId,Content,UserId,ChatId,CreatedAt,Type");
 
