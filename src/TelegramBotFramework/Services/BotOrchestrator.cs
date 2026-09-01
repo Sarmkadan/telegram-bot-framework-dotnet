@@ -15,6 +15,17 @@ namespace TelegramBotFramework.Services;
 /// </remarks>
 public interface IBotOrchestrator
 {
+    /// <summary>
+    /// Processes an incoming user message through the bot pipeline.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user who sent the message.</param>
+    /// <param name="chatId">The unique identifier of the chat containing the message.</param>
+    /// <param name="content">The message text to process.</param>
+    /// <param name="firstName">The user's first name.</param>
+    /// <param name="lastName">The user's last name, or <see langword="null"/> when it is unavailable.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result contains the execution context produced by the bot pipeline.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<Models.ExecutionContext> ProcessUserMessageAsync(
         long userId,
         long chatId,
@@ -23,6 +34,16 @@ public interface IBotOrchestrator
         string? lastName = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Executes a command for a user through the bot pipeline.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user executing the command.</param>
+    /// <param name="chatId">The unique identifier of the chat in which the command is executed.</param>
+    /// <param name="commandName">The name of the command to execute.</param>
+    /// <param name="parameters">The command parameters, or <see langword="null"/> when the command has no parameters.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result contains the execution context produced by command execution.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<Models.ExecutionContext> ExecuteUserCommandAsync(
         long userId,
         long chatId,
@@ -30,19 +51,61 @@ public interface IBotOrchestrator
         Dictionary<string, object>? parameters = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Retrieves a menu and records navigation to it for the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user viewing the menu.</param>
+    /// <param name="menuId">The unique identifier of the menu to display.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result is the requested menu.</returns>
+    /// <exception cref="InvalidOperationException">No menu exists with the specified <paramref name="menuId"/>.</exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<Models.Menu> DisplayMenuAsync(
         long userId,
         string menuId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Handles a menu button action for a user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user who selected the button.</param>
+    /// <param name="menuId">The unique identifier of the menu containing the button.</param>
+    /// <param name="buttonCallbackData">The callback data associated with the selected button.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when the button action is recognized and handled;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// The button navigates to a menu that does not exist.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<bool> HandleMenuButtonAsync(
         long userId,
         string menuId,
         string buttonCallbackData,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose session is requested.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result is the user's active session.</returns>
+    /// <exception cref="Exceptions.SessionException">The user has no active session.</exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<Models.UserSession> GetUserSessionAsync(long userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Ends the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose session should end.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when an active session is closed successfully;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     Task<bool> EndUserSessionAsync(long userId, CancellationToken cancellationToken = default);
 }
 
@@ -64,6 +127,18 @@ public sealed class BotOrchestrator : IBotOrchestrator
     private readonly IEnumerable<Middleware.IBotMiddleware> _middleware;
     private readonly Models.BotConfiguration _configuration;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BotOrchestrator"/> class.
+    /// </summary>
+    /// <param name="userService">The service used to manage users.</param>
+    /// <param name="commandService">The service used to retrieve and execute commands.</param>
+    /// <param name="sessionService">The service used to manage user sessions.</param>
+    /// <param name="messageService">The service used to process and track messages.</param>
+    /// <param name="menuService">The service used to retrieve menus and buttons.</param>
+    /// <param name="middleware">The middleware components that make up the processing pipeline.</param>
+    /// <param name="configuration">The bot configuration.</param>
+    /// <param name="logger">The logger used to record orchestration activity.</param>
+    /// <exception cref="ArgumentNullException">Any constructor argument is <see langword="null"/>.</exception>
     public BotOrchestrator(
         IUserService userService,
         ICommandService commandService,
@@ -94,6 +169,7 @@ public sealed class BotOrchestrator : IBotOrchestrator
     /// <param name="lastName">The user's last name (optional).</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>Execution context containing the result of message processing.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<Models.ExecutionContext> ProcessUserMessageAsync(
         long userId,
         long chatId,
@@ -171,6 +247,16 @@ public sealed class BotOrchestrator : IBotOrchestrator
         return finalContext;
     }
 
+    /// <summary>
+    /// Executes a command for a user through the middleware pipeline.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user executing the command.</param>
+    /// <param name="chatId">The unique identifier of the chat in which the command is executed.</param>
+    /// <param name="commandName">The name of the command to execute.</param>
+    /// <param name="parameters">The command parameters, or <see langword="null"/> when the command has no parameters.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result contains the execution context produced by command execution.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<Models.ExecutionContext> ExecuteUserCommandAsync(
         long userId,
         long chatId,
@@ -215,6 +301,15 @@ public sealed class BotOrchestrator : IBotOrchestrator
         return context;
     }
 
+    /// <summary>
+    /// Retrieves a menu and records navigation to it for the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user viewing the menu.</param>
+    /// <param name="menuId">The unique identifier of the menu to display.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result is the requested menu.</returns>
+    /// <exception cref="InvalidOperationException">No menu exists with the specified <paramref name="menuId"/>.</exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<Models.Menu> DisplayMenuAsync(
         long userId,
         string menuId,
@@ -236,6 +331,21 @@ public sealed class BotOrchestrator : IBotOrchestrator
         return menu;
     }
 
+    /// <summary>
+    /// Handles a menu button action for a user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user who selected the button.</param>
+    /// <param name="menuId">The unique identifier of the menu containing the button.</param>
+    /// <param name="buttonCallbackData">The callback data associated with the selected button.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when the button action is recognized and handled;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// The button navigates to a menu that does not exist.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<bool> HandleMenuButtonAsync(
         long userId,
         string menuId,
@@ -284,6 +394,14 @@ public sealed class BotOrchestrator : IBotOrchestrator
         return true;
     }
 
+    /// <summary>
+    /// Gets the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose session is requested.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task whose result is the user's active session.</returns>
+    /// <exception cref="Exceptions.SessionException">The user has no active session.</exception>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<Models.UserSession> GetUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -296,6 +414,16 @@ public sealed class BotOrchestrator : IBotOrchestrator
         return session;
     }
 
+    /// <summary>
+    /// Ends the user's active session.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose session should end.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when an active session is closed successfully;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<bool> EndUserSessionAsync(long userId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
