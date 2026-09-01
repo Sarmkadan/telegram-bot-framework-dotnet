@@ -32,45 +32,56 @@ public sealed class MessageServiceTests : IMessageServiceTests
     [Fact]
     public async Task ProcessIncomingMessageAsync_WithValidMessage_ReturnsCreatedMessage()
     {
-        // Arrange
-        var message = new Message
+        try
         {
-            UserId = MessageServiceTestsConstants.TestUserId,
-            ChatId = MessageServiceTestsConstants.TestChatId,
-            Content = MessageServiceTestsConstants.HelloWorldContent,
-            Type = MessageType.Text
-        };
+            // Arrange
+            _mockLogger.Object.LogInformation("Starting ProcessIncomingMessageAsync_WithValidMessage_ReturnsCreatedMessage test");
+            var message = new Message
+            {
+                UserId = MessageServiceTestsConstants.TestUserId,
+                ChatId = MessageServiceTestsConstants.TestChatId,
+                Content = MessageServiceTestsConstants.HelloWorldContent,
+                Type = MessageType.Text
+            };
 
-        var createdMessage = new Message
+            var createdMessage = new Message
+            {
+                MessageId = MessageServiceTestsConstants.TestMessageId,
+                UserId = MessageServiceTestsConstants.TestUserId,
+                ChatId = MessageServiceTestsConstants.TestChatId,
+                Content = MessageServiceTestsConstants.HelloWorldContent,
+                Type = MessageType.Text,
+                Status = MessageStatus.Processing
+            };
+
+            _mockMessageRepository
+                .Setup(x => x.CreateAsync(message, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(createdMessage);
+
+            // Act
+            var result = await _messageService.ProcessIncomingMessageAsync(message);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.MessageId.Should().Be(MessageServiceTestsConstants.TestMessageId);
+            result.Status.Should().Be(MessageStatus.Processing);
+            _mockMessageRepository.Verify(x => x.CreateAsync(message, It.IsAny<CancellationToken>()), Times.Once);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains(MessageServiceTestsConstants.LogMessageReceived) && t != null),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+            _mockLogger.Object.LogInformation("Completed ProcessIncomingMessageAsync_WithValidMessage_ReturnsCreatedMessage test successfully");
+        }
+        catch (Exception ex)
         {
-            MessageId = MessageServiceTestsConstants.TestMessageId,
-            UserId = MessageServiceTestsConstants.TestUserId,
-            ChatId = MessageServiceTestsConstants.TestChatId,
-            Content = MessageServiceTestsConstants.HelloWorldContent,
-            Type = MessageType.Text,
-            Status = MessageStatus.Processing
-        };
-
-        _mockMessageRepository
-            .Setup(x => x.CreateAsync(message, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(createdMessage);
-
-        // Act
-        var result = await _messageService.ProcessIncomingMessageAsync(message);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.MessageId.Should().Be(MessageServiceTestsConstants.TestMessageId);
-        result.Status.Should().Be(MessageStatus.Processing);
-        _mockMessageRepository.Verify(x => x.CreateAsync(message, It.IsAny<CancellationToken>()), Times.Once);
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains(MessageServiceTestsConstants.LogMessageReceived) && t != null),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+            _mockLogger.Object.LogError(ex, "Error in ProcessIncomingMessageAsync_WithValidMessage_ReturnsCreatedMessage test");
+            throw;
+        }
     }
 
     [Fact]
@@ -80,6 +91,7 @@ public sealed class MessageServiceTests : IMessageServiceTests
         {
             // Arrange
             _mockLogger.Object.LogInformation("Starting ProcessIncomingMessageAsync_WithInvalidMessage_ThrowsInvalidOperationException test with UserId={UserId}", MessageServiceTestsConstants.InvalidId);
+            _mockLogger.Object.LogWarning("Testing with invalid UserId={UserId} to verify exception handling", MessageServiceTestsConstants.InvalidId);
             var message = new Message
             {
                 UserId = MessageServiceTestsConstants.InvalidId, // Invalid UserId
