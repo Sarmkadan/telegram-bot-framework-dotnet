@@ -59,6 +59,8 @@ public sealed class BroadcastResult : IBroadcastResult
         IReadOnlyList<FailedChat> failures,
         string? summary = null)
     {
+        ArgumentNullException.ThrowIfNull(successfulChatIds);
+        ArgumentNullException.ThrowIfNull(failures);
         TotalChats = totalChats;
         SuccessCount = successCount;
         FailedCount = failedCount;
@@ -73,14 +75,17 @@ public sealed class BroadcastResult : IBroadcastResult
     public static BroadcastResult Success(
         int totalChats,
         IReadOnlyList<long> successfulChatIds,
-        string? summary = null) =>
-        new BroadcastResult(
+        string? summary = null)
+    {
+        ArgumentNullException.ThrowIfNull(successfulChatIds);
+        return new BroadcastResult(
             totalChats,
             successfulChatIds.Count,
             0,
             successfulChatIds,
             Array.Empty<FailedChat>(),
             summary);
+    }
 
     /// <summary>
     /// Creates a failure result.
@@ -88,14 +93,17 @@ public sealed class BroadcastResult : IBroadcastResult
     public static BroadcastResult Failure(
         int totalChats,
         IReadOnlyList<FailedChat> failures,
-        string? summary = null) =>
-        new BroadcastResult(
+        string? summary = null)
+    {
+        ArgumentNullException.ThrowIfNull(failures);
+        return new BroadcastResult(
             totalChats,
             0,
             failures.Count,
             Array.Empty<long>(),
             failures,
             summary);
+    }
 
     /// <summary>
     /// Creates a mixed result with both successes and failures.
@@ -104,12 +112,16 @@ public sealed class BroadcastResult : IBroadcastResult
         int totalChats,
         IReadOnlyList<long> successfulChatIds,
         IReadOnlyList<FailedChat> failures,
-        string? summary = null) =>
-        new BroadcastResult(
+        string? summary = null)
+    {
+        ArgumentNullException.ThrowIfNull(successfulChatIds);
+        ArgumentNullException.ThrowIfNull(failures);
+        return new BroadcastResult(
             totalChats,
             successfulChatIds.Count,
             failures.Count,
             successfulChatIds,
             failures,
             summary);
+    }
 }
