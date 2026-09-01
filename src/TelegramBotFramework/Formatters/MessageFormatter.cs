@@ -20,6 +20,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string FormatAsPlainText(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var sb = new StringBuilder();
         sb.AppendLine($"[{message.CreatedAt:yyyy-MM-dd HH:mm:ss}] {message.UserId}:");
         sb.AppendLine(message.Content);
@@ -35,6 +36,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string FormatAsMarkdown(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var sb = new StringBuilder();
         sb.Append($"**[{message.CreatedAt:HH:mm}]** ");
         sb.Append($"_{EscapeMarkdown(message.UserId.ToString())}_: ");
@@ -51,6 +53,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string FormatAsHtml(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var sb = new StringBuilder();
         sb.Append("<div class='message'>");
         sb.Append($"<span class='timestamp'>[{message.CreatedAt:HH:mm}]</span> ");
@@ -69,6 +72,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string FormatAsConversation(IEnumerable<Message> messages, bool markdown = true)
     {
+        ArgumentNullException.ThrowIfNull(messages);
         var sb = new StringBuilder();
 
         foreach (var message in messages)
@@ -86,6 +90,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string TruncateForPreview(Message message, int maxLength = 100)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var text = message.Content.Replace("\r\n", " ").Replace("\n", " ");
 
         if (text.Length > maxLength)
@@ -99,6 +104,7 @@ public sealed class MessageFormatter : IMessageFormatter
     /// </summary>
     public static string FormatForDebug(Message message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         var sb = new StringBuilder();
         sb.AppendLine("=== Message Debug Info ===");
         sb.AppendLine($"ID: {message.MessageId}");
