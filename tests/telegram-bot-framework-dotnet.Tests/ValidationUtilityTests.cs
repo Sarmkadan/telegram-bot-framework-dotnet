@@ -5,6 +5,7 @@
 // =====================================================================
 
 using FluentAssertions;
+using System;
 using TelegramBotFramework.Utilities;
 using Xunit;
 
@@ -68,6 +69,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("123:ABCDEFGHIJKLMNOPQRSTUVWXYZ-", true)]
     public void IsValidTelegramToken_ValidFormats_ReturnsTrue(string token, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(token);
         ValidationUtility.IsValidTelegramToken(token).Should().Be(expected);
     }
 
@@ -87,6 +89,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("1234567890:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", false)]
     public void IsValidTelegramToken_InvalidFormats_ReturnsFalse(string? token, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(token);
         ValidationUtility.IsValidTelegramToken(token).Should().Be(expected);
     }
 
@@ -106,6 +109,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.FtpUrl, true)]
     public void IsValidUrl_ValidUrls_ReturnsTrue(string url, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
         ValidationUtility.IsValidUrl(url).Should().Be(expected);
     }
 
@@ -122,6 +126,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.IncompleteHttpsUrl, false)]
     public void IsValidUrl_InvalidInputs_ReturnsFalse(string? url, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
         ValidationUtility.IsValidUrl(url).Should().Be(expected);
     }
 
@@ -141,6 +146,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("192.168.1.255", true)]
     public void IsValidIPv4_ValidAddresses_ReturnsTrue(string ipAddress, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(ipAddress);
         ValidationUtility.IsValidIPv4(ipAddress).Should().Be(expected);
     }
 
@@ -160,6 +166,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("192.168.1.1:8080", false)]
     public void IsValidIPv4_InvalidInputs_ReturnsFalse(string? ipAddress, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(ipAddress);
         ValidationUtility.IsValidIPv4(ipAddress).Should().Be(expected);
     }
 
@@ -179,6 +186,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("+380 99 123 45 67", true)]
     public void IsValidPhoneNumber_ValidFormats_ReturnsTrue(string phoneNumber, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(phoneNumber);
         ValidationUtility.IsValidPhoneNumber(phoneNumber).Should().Be(expected);
     }
 
@@ -209,6 +217,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("1234567890123456", false)] // 16 digits (above max)
     public void IsValidPhoneNumber_BoundaryLengths_ReturnsExpectedResult(string phoneNumber, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(phoneNumber);
         ValidationUtility.IsValidPhoneNumber(phoneNumber).Should().Be(expected);
     }
 
@@ -230,6 +239,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("/with123numbers", true)]
     public void IsValidCommandName_ValidFormats_ReturnsTrue(string commandName, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(commandName);
         ValidationUtility.IsValidCommandName(commandName).Should().Be(expected);
     }
 
@@ -248,6 +258,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("/hello.world", false)]
     public void IsValidCommandName_InvalidInputs_ReturnsFalse(string? commandName, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(commandName);
         ValidationUtility.IsValidCommandName(commandName).Should().Be(expected);
     }
 
@@ -268,6 +279,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.SingleCharacter, true)]
     public void IsValidFilename_ValidNames_ReturnsTrue(string filename, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filename);
         ValidationUtility.IsValidFilename(filename).Should().Be(expected);
     }
 
@@ -288,6 +300,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("file|name.txt", false)]
     public void IsValidFilename_InvalidInputs_ReturnsFalse(string? filename, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filename);
         ValidationUtility.IsValidFilename(filename).Should().Be(expected);
     }
 
@@ -306,6 +319,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("Abcdefg1!", true)]
     public void IsStrongPassword_ValidStrongPasswords_ReturnsTrue(string password, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(password);
         ValidationUtility.IsStrongPassword(password).Should().Be(expected);
     }
 
@@ -355,6 +369,7 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.EmptyValue, ValidationUtilityTestsConstants.ZeroLength, ValidationUtilityTestsConstants.ZeroLength, true)]
     public void IsValidLength_ValidLengths_ReturnsTrue(string value, int minLength, int maxLength, bool expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(value);
         ValidationUtility.IsValidLength(value, minLength, maxLength).Should().Be(expected);
     }
 
