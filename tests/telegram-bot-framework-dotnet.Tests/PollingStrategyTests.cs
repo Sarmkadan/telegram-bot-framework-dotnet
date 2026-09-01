@@ -19,6 +19,7 @@ public class PollingStrategyTests : IPollingStrategyTests
 {
     private readonly Mock<ITelegramApiClient> _mockApiClient = new();
     private readonly Mock<ILogger<PollingStrategy>> _mockLogger = new();
+    private ILogger<PollingStrategy> _logger => _mockLogger.Object;
     private readonly PollingStrategy _pollingStrategy;
 
     public PollingStrategyTests()
@@ -29,23 +30,29 @@ public class PollingStrategyTests : IPollingStrategyTests
     [Fact]
     public void Constructor_WithNullApiClient_ThrowsArgumentNullException()
     {
+        _logger.LogInformation("Starting {TestName}", nameof(Constructor_WithNullApiClient_ThrowsArgumentNullException));
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new PollingStrategy(null!));
+        _logger.LogInformation("Completed {TestName}", nameof(Constructor_WithNullApiClient_ThrowsArgumentNullException));
     }
 
     [Fact]
     public void Constructor_WithNullLogger_UsesConsoleLogger()
     {
+        _logger.LogInformation("Starting {TestName}", nameof(Constructor_WithNullLogger_UsesConsoleLogger));
+        _logger.LogWarning("No logger supplied; verifying fallback to the console logger for {TestName}", nameof(Constructor_WithNullLogger_UsesConsoleLogger));
         // Act
         var strategy = new PollingStrategy(_mockApiClient.Object, logger: null);
 
         // Assert - just verify it doesn't throw
         strategy.Should().NotBeNull();
+        _logger.LogInformation("Completed {TestName}", nameof(Constructor_WithNullLogger_UsesConsoleLogger));
     }
 
     [Fact]
     public void Start_WhenAlreadyRunning_DoesNotStartAnotherPollingTask()
     {
+        _logger.LogInformation("Testing Start method when already running");
         // Arrange
         _pollingStrategy.Start();
         var initialTask = _pollingStrategy.GetStatus().IsRunning;
@@ -62,11 +69,13 @@ public class PollingStrategyTests : IPollingStrategyTests
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+        _logger.LogInformation("Start_WhenAlreadyRunning test completed - IsRunning: {IsRunning}", _pollingStrategy.GetStatus().IsRunning);
     }
 
     [Fact]
     public async Task StopAsync_WhenNotRunning_DoesNotThrow()
     {
+        _logger.LogInformation("Testing StopAsync when not running");
         // Act
         var act = async () => await _pollingStrategy.StopAsync();
 
@@ -79,18 +88,22 @@ public class PollingStrategyTests : IPollingStrategyTests
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
+        _logger.LogInformation("StopAsync_WhenNotRunning test completed - IsRunning: {IsRunning}", _pollingStrategy.GetStatus().IsRunning);
     }
 
     [Fact]
     public async Task ProcessUpdateAsync_WithNullUpdate_ThrowsArgumentNullException()
     {
+        _logger.LogInformation("Testing ProcessUpdateAsync with null update");
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() => _pollingStrategy.ProcessUpdateAsync(null!));
+        _logger.LogInformation("ProcessUpdateAsync_WithNullUpdate test completed - ArgumentNullException expected and thrown for {ParamName}", nameof(TelegramUpdate));
     }
 
     [Fact]
     public async Task ProcessUpdateAsync_AdvancesLastUpdateId()
     {
+        _logger.LogInformation("Testing ProcessUpdateAsync advances last update ID for {UpdateId}", ProcessedUpdateId);
         // Arrange
         var update = new TelegramUpdate
         {
@@ -106,11 +119,13 @@ public class PollingStrategyTests : IPollingStrategyTests
         var status = _pollingStrategy.GetStatus();
         status.LastUpdateId.Should().Be(ProcessedUpdateId);
         status.IsRunning.Should().BeFalse(); // Not running since we didn't call Start
+        _logger.LogInformation("ProcessUpdateAsync_AdvancesLastUpdateId test completed - LastUpdateId is {LastUpdateId}", status.LastUpdateId);
     }
 
     [Fact]
     public async Task ProcessUpdateAsync_InvokesOnUpdateReceivedEvent()
     {
+        _logger.LogInformation("Testing ProcessUpdateAsync invokes OnUpdateReceived event for {UpdateId}", EventUpdateId);
         // Arrange
         var update = new TelegramUpdate
         {
@@ -136,11 +151,13 @@ public class PollingStrategyTests : IPollingStrategyTests
         eventInvoked.Should().BeTrue();
         receivedUpdate.Should().NotBeNull();
         receivedUpdate!.UpdateId.Should().Be(EventUpdateId);
+        _logger.LogInformation("ProcessUpdateAsync_InvokesOnUpdateReceivedEvent test completed - eventInvoked: {EventInvoked}, receivedUpdateId: {ReceivedUpdateId}", eventInvoked, receivedUpdate?.UpdateId);
     }
 
     [Fact]
     public async Task ProcessUpdateAsync_WithException_LogsErrorAndContinues()
     {
+        _logger.LogInformation("Testing ProcessUpdateAsync with exception for update {UpdateId}", FailingUpdateId);
         // Arrange
         var update = new TelegramUpdate
         {
@@ -171,11 +188,13 @@ public class PollingStrategyTests : IPollingStrategyTests
             It.Is<Exception>(e => e.Message == TestExceptionMessage),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+        _logger.LogInformation("ProcessUpdateAsync_WithException_LogsErrorAndContinues test completed");
     }
 
     [Fact]
     public void GetStatus_ReturnsCorrectPollingStatus()
     {
+        _logger.LogInformation("Testing GetStatus_ReturnsCorrectPollingStatus for update {UpdateId}", StatusUpdateId);
         // Arrange
         var update = new TelegramUpdate
         {
@@ -193,11 +212,13 @@ public class PollingStrategyTests : IPollingStrategyTests
         status.LastUpdateId.Should().Be(StatusUpdateId);
         // LastPollTime is only set during active polling loop, not by ProcessUpdateAsync
         status.LastPollTime.Should().BeNull();
+        _logger.LogInformation("GetStatus_ReturnsCorrectPollingStatus test completed - IsRunning: {IsRunning}, LastUpdateId: {LastUpdateId}", status.IsRunning, status.LastUpdateId);
     }
 
     [Fact]
     public async Task Start_WithCustomPollInterval_SetsCorrectInterval()
     {
+        _logger.LogInformation("Testing Start_WithCustomPollInterval_SetsCorrectInterval with customInterval={CustomIntervalMs}ms", LongPollIntervalMs);
         // Arrange
         var customInterval = TimeSpan.FromMilliseconds(LongPollIntervalMs);
 
@@ -215,11 +236,13 @@ public class PollingStrategyTests : IPollingStrategyTests
             Times.Once);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Start_WithCustomPollInterval_SetsCorrectInterval test completed");
     }
 
     [Fact]
     public async Task Start_WithDefaultInterval_UsesOneSecondInterval()
     {
+        _logger.LogInformation("Testing Start_WithDefaultInterval_UsesOneSecondInterval");
         // Act
         _pollingStrategy.Start();
 
@@ -233,11 +256,14 @@ public class PollingStrategyTests : IPollingStrategyTests
             Times.Once);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Start_WithDefaultInterval_UsesOneSecondInterval test completed");
     }
 
     [Fact]
     public async Task Polling_WithEmptyUpdates_AppliesDelay()
     {
+        _logger.LogInformation("Testing Polling_WithEmptyUpdates_AppliesDelay with StandardPollIntervalMs={StandardPollIntervalMs}", StandardPollIntervalMs);
+        _logger.LogWarning("No updates are available; verifying polling delay of {PollIntervalMs} ms", StandardPollIntervalMs);
         // Arrange
         var emptyUpdates = new List<JsonElement>();
         _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
@@ -251,13 +277,16 @@ public class PollingStrategyTests : IPollingStrategyTests
 
         // Assert - polling should be running
         _pollingStrategy.GetStatus().IsRunning.Should().BeTrue();
+        _logger.LogInformation("Polling_WithEmptyUpdates_AppliesDelay assert passed - IsRunning={IsRunning}", _pollingStrategy.GetStatus().IsRunning);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Polling_WithEmptyUpdates_AppliesDelay test completed");
     }
 
     [Fact]
     public async Task Polling_WithUpdates_ProcessesThemAndAdvancesOffset()
     {
+        _logger.LogInformation("Testing Polling_WithUpdates_ProcessesThemAndAdvancesOffset");
         // Arrange
         var jsonUpdate = JsonUpdate;
         var jsonElement = JsonDocument.Parse(jsonUpdate).RootElement;
@@ -290,11 +319,14 @@ public class PollingStrategyTests : IPollingStrategyTests
         receivedUpdate!.UpdateId.Should().Be(ProcessedUpdateId);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Polling_WithUpdates_ProcessesThemAndAdvancesOffset test completed");
     }
 
     [Fact]
     public async Task Polling_WithException_AppliesBackoffDelay()
     {
+        _logger.LogInformation("Testing Polling_WithException_AppliesBackoffDelay");
+        _logger.LogWarning("Telegram API failure will trigger the polling backoff path for {PollIntervalMs} ms", ShortPollIntervalMs);
         // Arrange
         _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException(ApiFailureMessage));
@@ -307,13 +339,16 @@ public class PollingStrategyTests : IPollingStrategyTests
 
         // Assert - polling should still be running despite exception
         _pollingStrategy.GetStatus().IsRunning.Should().BeTrue();
+        _logger.LogInformation("Polling_WithException_AppliesBackoffDelay assert passed - IsRunning={IsRunning}", _pollingStrategy.GetStatus().IsRunning);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Polling_WithException_AppliesBackoffDelay test completed");
     }
 
     [Fact]
     public async Task StopAsync_CancelsPollingLoop()
     {
+        _logger.LogInformation("Testing StopAsync_CancelsPollingLoop");
         // Arrange
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(ShortPollIntervalMs));
 
@@ -326,11 +361,13 @@ public class PollingStrategyTests : IPollingStrategyTests
         // Assert
         var status = _pollingStrategy.GetStatus();
         status.IsRunning.Should().BeFalse();
+        _logger.LogInformation("StopAsync_CancelsPollingLoop test completed - IsRunning={IsRunning}", status.IsRunning);
     }
 
     [Fact]
     public async Task Polling_AdvancesUpdateIdThroughMultiplePolls()
     {
+        _logger.LogInformation("Testing Polling_AdvancesUpdateIdThroughMultiplePolls");
         // Arrange - simulate 3 consecutive polls with updates
         var update1 = CreateUpdateJson(FirstUpdateId);
         var update2 = CreateUpdateJson(SecondUpdateId);
@@ -357,13 +394,20 @@ public class PollingStrategyTests : IPollingStrategyTests
         // Assert - LastUpdateId should be at least 100 (the last processed update)
         _pollingStrategy.GetStatus().LastUpdateId.Should().BeGreaterOrEqualTo(FirstUpdateId);
         lastUpdateId.Should().BeGreaterOrEqualTo(FirstUpdateId);
+        _logger.LogInformation("Polling_AdvancesUpdateIdThroughMultiplePolls assertions passed - LastUpdateId: {LastUpdateId}, tracked lastUpdateId: {TrackedLastUpdateId}", _pollingStrategy.GetStatus().LastUpdateId, lastUpdateId);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation("Polling_AdvancesUpdateIdThroughMultiplePolls test completed");
     }
 
     [Fact]
     public async Task Polling_WithOffsetAdvancement_RequestsUpdatesWithCorrectOffset()
     {
+        _logger.LogInformation(
+            "Starting {TestName} with initial offset {InitialOffset} and expected offset {ExpectedOffset}",
+            nameof(Polling_WithOffsetAdvancement_RequestsUpdatesWithCorrectOffset),
+            InitialUpdateOffset,
+            SecondUpdateId);
         // Arrange
         var update1 = CreateUpdateJson(FirstUpdateId);
         var update2 = CreateUpdateJson(SecondUpdateId);
@@ -387,11 +431,19 @@ public class PollingStrategyTests : IPollingStrategyTests
         _mockApiClient.Verify(x => x.GetUpdatesAsync(SecondUpdateId, It.IsAny<int>()), Times.AtLeastOnce());
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation(
+            "Completed {TestName} with expected offset {ExpectedOffset}",
+            nameof(Polling_WithOffsetAdvancement_RequestsUpdatesWithCorrectOffset),
+            SecondUpdateId);
     }
 
     [Fact]
     public async Task LastPollTime_IsUpdatedOnEachPoll()
     {
+        _logger.LogInformation(
+            "Starting {TestName} with poll interval {PollIntervalMs} ms",
+            nameof(LastPollTime_IsUpdatedOnEachPoll),
+            StandardPollIntervalMs);
         // Arrange
         var emptyUpdates = new List<JsonElement>();
         _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
@@ -413,11 +465,19 @@ public class PollingStrategyTests : IPollingStrategyTests
         status.LastPollTime.Should().NotBe(firstPollTime);
 
         await _pollingStrategy.StopAsync();
+        _logger.LogInformation(
+            "Completed {TestName}; last poll time is {LastPollTime}",
+            nameof(LastPollTime_IsUpdatedOnEachPoll),
+            status.LastPollTime);
     }
 
     [Fact]
     public async Task Polling_WithCancellation_StopsGracefully()
     {
+        _logger.LogInformation(
+            "Starting {TestName} with poll interval {PollIntervalMs} ms",
+            nameof(Polling_WithCancellation_StopsGracefully),
+            ShortPollIntervalMs);
         // Arrange
         var cts = new CancellationTokenSource();
         _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
@@ -431,6 +491,10 @@ public class PollingStrategyTests : IPollingStrategyTests
 
         // Assert
         _pollingStrategy.GetStatus().IsRunning.Should().BeFalse();
+        _logger.LogInformation(
+            "Completed {TestName}; polling running state is {IsRunning}",
+            nameof(Polling_WithCancellation_StopsGracefully),
+            _pollingStrategy.GetStatus().IsRunning);
     }
 
     private static JsonElement CreateUpdateJson(long updateId)
