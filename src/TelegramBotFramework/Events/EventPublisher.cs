@@ -22,6 +22,7 @@ public sealed class EventPublisher : IEventPublisher
     {
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
         _logger = logger ?? new ConsoleLogger<EventPublisher>();
+        _logger.LogInformation("EventPublisher initialized");
     }
 
     /// <summary>
@@ -31,6 +32,7 @@ public sealed class EventPublisher : IEventPublisher
     {
         _logger.LogInformation("Setting correlation id to {CorrelationId}", correlationId);
         _correlationId = correlationId;
+        _logger.LogInformation("WithCorrelationId completed with correlation id {CorrelationId}", correlationId);
         _logger.LogInformation("Correlation id set");
         return this;
     }
@@ -45,6 +47,7 @@ public sealed class EventPublisher : IEventPublisher
         {
             var @event = new MessageReceivedEvent(chatId, userId, messageText, _correlationId);
             await _eventBus.PublishAsync(@event).ConfigureAwait(false);
+            _logger.LogInformation("PublishMessageReceivedAsync completed for chat {ChatId}, user {UserId}", chatId, userId);
             _logger.LogInformation("Message received event published");
         }
         catch (Exception ex)
@@ -64,6 +67,7 @@ public sealed class EventPublisher : IEventPublisher
         {
             var @event = new CommandExecutedEvent(commandName, userId, arguments, success, errorMessage, _correlationId);
             await _eventBus.PublishAsync(@event).ConfigureAwait(false);
+            _logger.LogInformation("PublishCommandExecutedAsync completed for command {CommandName} by user {UserId} with success {Success}", commandName, userId, success);
             _logger.LogInformation("Command executed event published");
         }
         catch (Exception ex)
@@ -83,6 +87,7 @@ public sealed class EventPublisher : IEventPublisher
         {
             var @event = new BotStateChangedEvent(previousState, newState, reason, _correlationId);
             await _eventBus.PublishAsync(@event).ConfigureAwait(false);
+            _logger.LogInformation("PublishBotStateChangedAsync completed from {PreviousState} to {NewState}", previousState, newState);
             _logger.LogInformation("Bot state changed event published");
         }
         catch (Exception ex)
@@ -101,6 +106,7 @@ public sealed class EventPublisher : IEventPublisher
         try
         {
             await _eventBus.PublishAsync(@event).ConfigureAwait(false);
+            _logger.LogInformation("PublishAsync completed for event type {EventType}", typeof(TEvent).Name);
             _logger.LogInformation("Custom event of type {EventType} published", typeof(TEvent).Name);
         }
         catch (Exception ex)
