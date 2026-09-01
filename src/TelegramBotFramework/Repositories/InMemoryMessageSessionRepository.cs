@@ -35,6 +35,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository, IInMemoryMes
 
     public async Task<Models.Message> CreateAsync(Models.Message entity, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
@@ -47,6 +48,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository, IInMemoryMes
 
     public async Task<Models.Message> UpdateAsync(Models.Message entity, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         entity.Validate();
         lock (_lockObj)
@@ -112,6 +114,7 @@ public sealed class InMemoryMessageRepository : IMessageRepository, IInMemoryMes
 
     public async Task<IList<Models.Message>> GetByCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(commandName);
         await Task.Delay(0, cancellationToken).ConfigureAwait(false);
         lock (_lockObj)
         {
