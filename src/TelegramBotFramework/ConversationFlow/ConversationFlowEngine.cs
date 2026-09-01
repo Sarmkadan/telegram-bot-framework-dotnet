@@ -37,6 +37,14 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     /// <summary>
     /// Initialises a new instance of <see cref="ConversationFlowEngine"/> without state persistence.
     /// </summary>
+    /// <param name="options">The options that control conversation flow execution.</param>
+    /// <param name="sessionService">The service used to access and update user sessions.</param>
+    /// <param name="eventBus">The event bus used to publish conversation flow lifecycle events.</param>
+    /// <param name="logger">The logger used to record conversation flow activity.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="options"/>, <paramref name="sessionService"/>,
+    /// <paramref name="eventBus"/>, or <paramref name="logger"/> is <see langword="null"/>.
+    /// </exception>
     public ConversationFlowEngine(
         ConversationFlowOptions options,
         ISessionService sessionService,
@@ -49,9 +57,17 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     /// <summary>
     /// Initialises a new instance of <see cref="ConversationFlowEngine"/> with optional state persistence.
     /// </summary>
+    /// <param name="options">The options that control conversation flow execution.</param>
+    /// <param name="sessionService">The service used to access and update user sessions.</param>
+    /// <param name="eventBus">The event bus used to publish conversation flow lifecycle events.</param>
+    /// <param name="logger">The logger used to record conversation flow activity.</param>
     /// <param name="stateStore">
-    /// When non-null, active states are saved on every mutation and restored from the store on startup.
+    /// The optional store used to persist active states on mutation and remove terminal states.
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="options"/>, <paramref name="sessionService"/>,
+    /// <paramref name="eventBus"/>, or <paramref name="logger"/> is <see langword="null"/>.
+    /// </exception>
     public ConversationFlowEngine(
         ConversationFlowOptions options,
         ISessionService sessionService,
@@ -70,7 +86,15 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Registration
     // -------------------------------------------------------------------------
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Registers a flow definition, replacing any existing definition with the same identifier.
+    /// </summary>
+    /// <param name="flow">The flow definition to register.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task that represents the registration operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="flow"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when the flow identifier is empty or consists only of white-space characters.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the initial step is not present in the flow's steps.</exception>
     public Task RegisterFlowAsync(FlowDefinition flow, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(flow);
@@ -90,7 +114,12 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         return Task.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Removes the flow definition with the specified identifier from the engine.
+    /// </summary>
+    /// <param name="flowId">The identifier of the flow to remove.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task that represents the removal operation.</returns>
     public Task UnregisterFlowAsync(string flowId, CancellationToken cancellationToken = default)
     {
         _flows.TryRemove(flowId, out _);
@@ -98,11 +127,22 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         return Task.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the registered flow definition with the specified identifier.
+    /// </summary>
+    /// <param name="flowId">The identifier of the flow to retrieve.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>
+    /// A task whose result is the matching flow definition, or <see langword="null"/> when no matching flow is registered.
+    /// </returns>
     public Task<FlowDefinition?> GetFlowAsync(string flowId, CancellationToken cancellationToken = default)
         => Task.FromResult(_flows.TryGetValue(flowId, out var flow) ? flow : (FlowDefinition?)null);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets a snapshot of all registered flow definitions.
+    /// </summary>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task whose result contains the registered flow definitions.</returns>
     public Task<IReadOnlyList<FlowDefinition>> GetAllFlowsAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<FlowDefinition>>(_flows.Values.ToList());
 
@@ -110,7 +150,16 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Execution — Start
     // -------------------------------------------------------------------------
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Starts a flow for a user, aborting any flow already active for that user.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="chatId">The Telegram chat identifier.</param>
+    /// <param name="flowId">The identifier of the registered flow to start.</param>
+    /// <param name="initialVariables">Optional variables with which to initialize the new flow state.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task whose result is the newly created flow state positioned at its initial step.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when <paramref name="flowId"/> is not registered.</exception>
     public async Task<UserFlowState> StartFlowAsync(
         long userId,
         long chatId,
@@ -177,7 +226,18 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Execution — Input Processing
     // -------------------------------------------------------------------------
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Validates and processes user input against the current step of the user's active flow.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier whose active flow receives the input.</param>
+    /// <param name="input">The raw input to process.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>
+    /// A task whose result describes validation, the next prompt, and whether the flow has completed.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the user has no active flow, its definition is no longer registered, or its current step does not exist.
+    /// </exception>
     public async Task<FlowStepResult> ProcessInputAsync(
         long userId,
         string input,
@@ -337,11 +397,24 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Execution — State Management
     // -------------------------------------------------------------------------
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the active flow state for a user.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>
+    /// A task whose result is the active flow state, or <see langword="null"/> when the user has no active flow.
+    /// </returns>
     public Task<UserFlowState?> GetActiveFlowStateAsync(long userId, CancellationToken cancellationToken = default)
         => Task.FromResult(_activeStates.TryGetValue(userId, out var s) ? s : (UserFlowState?)null);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Aborts the active flow for a user and records the supplied reason.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="reason">A human-readable reason for aborting the flow.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task that represents the abort operation.</returns>
     public async Task AbortFlowAsync(long userId, string reason, CancellationToken cancellationToken = default)
     {
         if (!_activeStates.TryGetValue(userId, out var state))
@@ -357,7 +430,14 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
             userId, state.FlowId, reason);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Attempts to resume a suspended in-memory flow for a user.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>
+    /// A task whose result is the resumed state, or <see langword="null"/> when no resumable state exists.
+    /// </returns>
     public async Task<UserFlowState?> ResumeFlowAsync(long userId, CancellationToken cancellationToken = default)
     {
         if (_activeStates.TryGetValue(userId, out var state) &&
@@ -398,7 +478,13 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // Querying
     // -------------------------------------------------------------------------
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the most recent flow states for a user in descending start-time order.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="limit">The maximum number of states to return; values less than one are treated as one.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task whose result contains a snapshot of the user's flow history.</returns>
     public Task<IReadOnlyList<UserFlowState>> GetFlowHistoryAsync(
         long userId, int limit = 10, CancellationToken cancellationToken = default)
     {
@@ -417,7 +503,14 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         return Task.FromResult<IReadOnlyList<UserFlowState>>(result);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Determines whether a user has an active flow or one waiting for input.
+    /// </summary>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when the user is in a flow; otherwise, <see langword="false"/>.
+    /// </returns>
     public Task<bool> IsUserInFlowAsync(long userId, CancellationToken cancellationToken = default)
     {
         var active = _activeStates.TryGetValue(userId, out var state) &&
@@ -425,7 +518,11 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         return Task.FromResult(active);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Applies the configured eviction policy to all active flow states whose inactivity timeout has elapsed.
+    /// </summary>
+    /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+    /// <returns>A task whose result is the number of expired states processed.</returns>
     public async Task<int> CleanupExpiredFlowStatesAsync(CancellationToken cancellationToken = default)
     {
         var cleaned = 0;
