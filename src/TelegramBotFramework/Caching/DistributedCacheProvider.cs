@@ -25,6 +25,8 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 
     public virtual async Task<T?> GetAsync<T>(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         if (string.IsNullOrWhiteSpace(key))
             return default;
 
@@ -45,6 +47,8 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 
     public virtual async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         if (string.IsNullOrWhiteSpace(key))
             return;
 
@@ -61,6 +65,8 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 
     public virtual async Task RemoveAsync(string key)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         if (string.IsNullOrWhiteSpace(key))
             return;
 
@@ -80,6 +86,8 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 
     public virtual async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(key))
@@ -98,6 +106,9 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 
     public virtual async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(factory);
+
         var existing = await GetAsync<T>(key).ConfigureAwait(false);
         if (existing  is not null)
             return existing;
