@@ -39,6 +39,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenContextInvalid_PassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting invalid context authorization test for user {UserId} and chat {ChatId}", InvalidUserId, TestChatId);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -64,10 +66,14 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         // Act
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
+        _loggerMock.Object.LogWarning("Authorization used invalid-context fallback for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
+
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed invalid context authorization test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
@@ -76,6 +82,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext()
     {
+        _loggerMock.Object.LogInformation("Starting missing-user authorization test for user {UserId} and chat {ChatId}", RegularUserId, TestChatId);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -101,12 +109,16 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         // Act
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
+        _loggerMock.Object.LogWarning("Authorization used missing-user fallback for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
+
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().ContainSingle(e => e.Contains("User not found in context for authorization"));
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("User not found")));
+
+        _loggerMock.Object.LogInformation("Completed missing-user authorization test for user {UserId}; error count: {ErrorCount}", context.UserId, context.Errors.Count);
     }
 
     /// <summary>
@@ -115,6 +127,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserIsRegularAndNoCommand_PassesThrough()
     {
+        _loggerMock.Object.LogInformation("Starting regular-user authorization test for user {UserId} with command {CommandName}", RegularUserId, null);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -144,6 +158,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed regular-user authorization test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -152,6 +168,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserIsAdminAndNoCommand_PassesThrough()
     {
+        _loggerMock.Object.LogInformation("Starting admin authorization test for user {UserId} with command {CommandName}", AdminUserId, null);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -181,6 +199,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed admin authorization test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -189,6 +209,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenRegularUserTriesAdminCommand_BlocksAndAddsError()
     {
+        _loggerMock.Object.LogInformation("Starting admin-command authorization test for user {UserId} and command {CommandName}", RegularUserId, AdminCommandName);
+
         // Arrange
         var command = new Command
         {
@@ -227,6 +249,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         // Act
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
+        _loggerMock.Object.LogWarning("Authorization denied for user {UserId} with role {UserRole} on command {CommandName}", context.UserId, context.User?.Role, context.Command?.Name);
+
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeFalse(); // next should not be called
@@ -234,6 +258,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         context.IsValid.Should().BeFalse();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
             a.ToString() != null && a.ToString().Contains("denied access to command")));
+
+        _loggerMock.Object.LogInformation("Completed denied admin-command authorization test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
@@ -242,6 +268,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenAdminUserExecutesAdminCommand_PassesThrough()
     {
+        _loggerMock.Object.LogInformation("Starting admin-command authorization test for admin user {UserId} and command {CommandName}", AdminUserId, AdminCommandName);
+
         // Arrange
         var command = new Command
         {
@@ -284,6 +312,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed admin-command authorization test for admin user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -292,6 +322,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenModeratorTriesAdminCommand_BlocksAndAddsError()
     {
+        _loggerMock.Object.LogInformation("Starting admin-command authorization test for moderator {UserId} and command {CommandName}", ModeratorUserId, AdminCommandName);
+
         // Arrange
         var command = new Command
         {
@@ -330,11 +362,15 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         // Act
         var result = await middleware.ProcessAsync(context, Next, CancellationToken.None);
 
+        _loggerMock.Object.LogWarning("Authorization denied for moderator {UserId} with role {UserRole} on command {CommandName}", context.UserId, context.User?.Role, context.Command?.Name);
+
         // Assert
         result.Should().BeSameAs(context);
         nextCalled.Should().BeFalse(); // next should not be called
         context.Errors.Should().ContainSingle(e => e.Contains(UnauthorizedCommandErrorFragment));
         context.IsValid.Should().BeFalse();
+
+        _loggerMock.Object.LogInformation("Completed denied moderator authorization test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
@@ -343,6 +379,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserHasAdminRoleExecutesAdminCommand_PassesThrough()
     {
+        _loggerMock.Object.LogInformation("Starting administrator-role authorization test for user {UserId} and command {CommandName}", AdminUserId, AdminCommandName);
+
         // Arrange
         var command = new Command
         {
@@ -385,6 +423,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed administrator-role authorization test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -393,6 +433,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public async Task ProcessAsync_WhenUserWithoutCommand_ExecutesRegularCommands()
     {
+        _loggerMock.Object.LogInformation("Starting no-command authorization test for user {UserId} and chat {ChatId}", RegularUserId, TestChatId);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -422,6 +464,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         context.Errors.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed no-command authorization test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
     /// <summary>
@@ -430,6 +474,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public void Priority_ReturnsCorrectValue()
     {
+        _loggerMock.Object.LogInformation("Starting middleware priority test with expected priority {ExpectedPriority}", ExpectedMiddlewarePriority);
+
         // Arrange
         var middleware = new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -439,6 +485,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Act & Assert
         middleware.Priority.Should().Be(ExpectedMiddlewarePriority);
+
+        _loggerMock.Object.LogInformation("Completed middleware priority test with actual priority {ActualPriority}", middleware.Priority);
     }
 
     /// <summary>
@@ -447,6 +495,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public void Constructor_WhenCommandServiceNull_Throws()
     {
+        _loggerMock.Object.LogInformation("Starting null command service constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
+
         // Act
         var act = () => new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -456,6 +506,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
+
+        _loggerMock.Object.LogInformation("Completed null command service constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
     }
 
     /// <summary>
@@ -464,6 +516,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public void Constructor_WhenUserServiceNull_Throws()
     {
+        _loggerMock.Object.LogInformation("Starting null user service constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
+
         // Act
         var act = () => new AuthorizationMiddleware(
             null!,
@@ -473,6 +527,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
+
+        _loggerMock.Object.LogInformation("Completed null user service constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
     }
 
     /// <summary>
@@ -481,6 +537,8 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     [Fact]
     public void Constructor_WhenLoggerNull_Throws()
     {
+        _loggerMock.Object.LogInformation("Starting null logger constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
+
         // Act
         var act = () => new AuthorizationMiddleware(
             _userServiceMock.Object,
@@ -490,5 +548,7 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
+
+        _loggerMock.Object.LogInformation("Completed null logger constructor test for {MiddlewareType}", nameof(AuthorizationMiddleware));
     }
 }
