@@ -175,6 +175,7 @@ public class CallbackHandlerExample
 
     public async Task HandleCallbackQueryAsync(string callbackData)
     {
+        ArgumentException.ThrowIfNullOrEmpty(callbackData);
         if (CallbackDataSigner.TryValidate(callbackData, _hmacSecret, out var originalData))
         {
             // Process the authentic callback
