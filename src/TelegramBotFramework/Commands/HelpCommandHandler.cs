@@ -24,6 +24,7 @@ public sealed class HelpCommandHandler : ICommandHandler, IHelpCommandHandler
     {
         _handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger.LogInformation("HelpCommandHandler instantiated");
     }
 
     /// <inheritdoc/>
@@ -31,6 +32,7 @@ public sealed class HelpCommandHandler : ICommandHandler, IHelpCommandHandler
         Models.ExecutionContext context,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Handling help command for user {UserId}", context.UserId);
         var helpText = BuildHelpText();
         context.SetState("help_text", helpText);
 
@@ -44,6 +46,7 @@ public sealed class HelpCommandHandler : ICommandHandler, IHelpCommandHandler
     /// </summary>
     public string BuildHelpText()
     {
+        _logger.LogInformation("Building help text");
         var lines = new System.Text.StringBuilder();
         lines.AppendLine("Available commands:");
         lines.AppendLine();
@@ -65,7 +68,9 @@ public sealed class HelpCommandHandler : ICommandHandler, IHelpCommandHandler
                 lines.AppendLine(name);
         }
 
-        return lines.ToString().TrimEnd();
+        var result = lines.ToString().TrimEnd();
+        _logger.LogInformation("Built help text with {Length} characters", result.Length);
+        return result;
     }
 
     private static string GetCommandName(ICommandHandler handler)
