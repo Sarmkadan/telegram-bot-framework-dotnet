@@ -76,8 +76,10 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// Data sent in the callback query. Must not exceed 64 bytes (UTF-8).
     /// </param>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="callbackData"/> exceeds the 64-byte Telegram limit.
+    /// Thrown when <paramref name="text"/> is empty or consists only of white-space,
+    /// or when <paramref name="callbackData"/> exceeds the 64-byte Telegram limit.
     /// </exception>
+    /// <returns>The same builder instance for method chaining.</returns>
     public InlineKeyboardBuilder AddButton(string text, string callbackData)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -96,6 +98,13 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// <summary>
     /// Adds a URL button. When pressed, the user's Telegram client opens the given URL.
     /// </summary>
+    /// <param name="text">Button label shown to the user.</param>
+    /// <param name="url">HTTP/HTTPS URL to open when the button is pressed.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="text"/> is empty or consists only of white-space,
+    /// or when <paramref name="url"/> is empty or consists only of white-space.
+    /// </exception>
+    /// <returns>The same builder instance for method chaining.</returns>
     public InlineKeyboardBuilder AddUrlButton(string text, string url)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -116,6 +125,15 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// Adds a switch-inline button. When pressed, Telegram opens the inline query mode
     /// in the current chat, pre-filled with the optional <paramref name="query"/>.
     /// </summary>
+    /// <param name="text">Button label shown to the user.</param>
+    /// <param name="query">
+    /// Optional query to pre-fill in the inline query field. If empty, the inline query
+    /// field will be empty.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="text"/> is empty or consists only of white-space.
+    /// </exception>
+    /// <returns>The same builder instance for method chaining.</returns>
     public InlineKeyboardBuilder AddSwitchInlineButton(string text, string query = "")
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -132,6 +150,17 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// <summary>
     /// Forces the next button(s) onto a new row, even if the current row is not full.
     /// </summary>
+    /// <returns>The same builder instance for method chaining.</returns>
+    /// <example>
+    /// <code>
+    /// var keyboard = InlineKeyboardBuilder.Create()
+    ///     .AddButton("Button 1", "data1")
+    ///     .AddButton("Button 2", "data2")
+    ///     .NewRow() // Forces next button to a new row
+    ///     .AddButton("Button 3", "data3")
+    ///     .Build();
+    /// </code>
+    /// </example>
     public InlineKeyboardBuilder NewRow()
     {
         FlushCurrentRow();
@@ -146,6 +175,7 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// Builds and returns an immutable <see cref="InlineKeyboardMarkup"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when no buttons have been added.</exception>
+    /// <returns>An immutable inline keyboard markup.</returns>
     public InlineKeyboardMarkup Build()
     {
         FlushCurrentRow();
@@ -166,6 +196,11 @@ public sealed class InlineKeyboardBuilder : IInlineKeyboardBuilder
     /// </summary>
     /// <param name="menuId">Unique identifier for the menu.</param>
     /// <param name="title">Human-readable menu title.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="menuId"/> is empty or consists only of white-space,
+    /// or when <paramref name="title"/> is empty or consists only of white-space.
+    /// </exception>
+    /// <returns>A <see cref="Models.Menu"/> representing the current keyboard state.</returns>
     public Models.Menu ToMenu(string menuId, string title)
     {
         if (string.IsNullOrWhiteSpace(menuId))
@@ -266,6 +301,7 @@ public sealed class InlineKeyboardMarkup
     /// Returns a two-dimensional array of button labels compatible with
     /// <c>TelegramApiClient.SendMessageWithButtonsAsync</c>.
     /// </summary>
+    /// <returns>A jagged array where each inner array represents a row of button labels.</returns>
     public string[][] ToButtonLabels()
         => InlineKeyboard
             .Select(row => row.Select(b => b.Text).ToArray())
