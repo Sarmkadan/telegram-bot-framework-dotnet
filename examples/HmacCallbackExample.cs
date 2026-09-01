@@ -84,6 +84,8 @@ public static class HmacCallbackExample
     // Example 5: Validating incoming callback queries
     public static bool Example5_ValidateCallback(string signedCallbackData, string secret)
     {
+        ArgumentException.ThrowIfNullOrEmpty(signedCallbackData);
+        ArgumentException.ThrowIfNullOrEmpty(secret);
         // When your bot receives a callback query from Telegram:
         // callbackData = update.CallbackData
 
