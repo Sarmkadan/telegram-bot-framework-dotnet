@@ -19,6 +19,9 @@ public sealed class AuthenticationMiddleware
 
     public AuthenticationMiddleware(RequestDelegate next, ILogger<AuthenticationMiddleware> logger)
     {
+        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _next = next;
         _logger = logger;
         _publicEndpoints = new HashSet<string>
@@ -32,6 +35,9 @@ public sealed class AuthenticationMiddleware
 
     public async Task InvokeAsync(HttpContext context, Models.BotConfiguration config)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(config);
+
         var path = context.Request.Path.Value ?? string.Empty;
 
         // Skip authentication for public endpoints
