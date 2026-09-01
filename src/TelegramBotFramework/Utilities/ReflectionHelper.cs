@@ -42,6 +42,8 @@ public static class ReflectionHelper
     /// </summary>
     public static T? CreateInstance<T>(Type type) where T : class
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         if (type  is null)
             return null;
 
@@ -60,6 +62,9 @@ public static class ReflectionHelper
     /// </summary>
     public static T? CreateInstance<T>(Type type, params object[] args) where T : class
     {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(args);
+
         if (type  is null)
             return null;
 
@@ -78,6 +83,8 @@ public static class ReflectionHelper
     /// </summary>
     public static IEnumerable<PropertyInfo> GetProperties<TAttribute>(Type type) where TAttribute : Attribute
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         return type.GetProperties()
             .Where(p => p.GetCustomAttribute<TAttribute>()  is not null);
     }
@@ -87,6 +94,8 @@ public static class ReflectionHelper
     /// </summary>
     public static IEnumerable<MethodInfo> GetPublicMethods(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         return type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => !m.IsSpecialName);
     }
@@ -96,6 +105,9 @@ public static class ReflectionHelper
     /// </summary>
     public static object? GetPropertyValue(object obj, string propertyName)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentException.ThrowIfNullOrEmpty(propertyName);
+
         if (obj  is null)
             return null;
 
@@ -108,6 +120,10 @@ public static class ReflectionHelper
     /// </summary>
     public static bool SetPropertyValue(object obj, string propertyName, object? value)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentException.ThrowIfNullOrEmpty(propertyName);
+        ArgumentNullException.ThrowIfNull(value);
+
         if (obj  is null)
             return false;
 
@@ -131,6 +147,9 @@ public static class ReflectionHelper
     /// </summary>
     public static bool IsSubclassOfGeneric(Type toCheck, Type generic)
     {
+        ArgumentNullException.ThrowIfNull(toCheck);
+        ArgumentNullException.ThrowIfNull(generic);
+
         while (toCheck != typeof(object))
         {
             var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
@@ -148,6 +167,8 @@ public static class ReflectionHelper
     /// </summary>
     public static string GetDisplayName(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         if (type.IsGenericType)
         {
             var genericArgs = string.Join(", ", type.GetGenericArguments().Select(GetDisplayName));
@@ -166,6 +187,8 @@ public static class ReflectionHelper
     /// </summary>
     public static IEnumerable<FieldInfo> GetConstants(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         return type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f.IsLiteral);
     }
