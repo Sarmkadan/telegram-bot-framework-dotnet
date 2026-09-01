@@ -51,6 +51,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser()
     {
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         var existingUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
 
@@ -64,6 +67,8 @@ public sealed class UserServiceTests : IUserServiceTests
         // Assert
         result.Should().Be(existingUser);
         _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithExistingUser_ReturnsExistingUser completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -73,7 +78,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetOrCreateUserAsync_WithNonExistingUser_CreatesAndReturnsNewUser()
     {
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithNonExistingUser_CreatesAndReturnsNewUser called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
+        _mockLogger.Object.LogWarning("User {UserId} was not found; exercising user creation fallback", UserServiceTestsConstants.ExistingUserId);
+
         _mockUserRepository
             .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
@@ -94,6 +104,8 @@ public sealed class UserServiceTests : IUserServiceTests
         result.MessagesCount.Should().Be(0);
         result.LastActivityAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithNonExistingUser_CreatesAndReturnsNewUser completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -103,7 +115,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetOrCreateUserAsync_WithNullLastName_CreatesUserWithoutLastName()
     {
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithNullLastName_CreatesUserWithoutLastName called with {UserId} and {FirstName}", UserServiceTestsConstants.ExistingUserId, UserServiceTestsConstants.FirstNameJohn);
+
         // Arrange
+        _mockLogger.Object.LogWarning("Creating user {UserId} with missing optional profile details", UserServiceTestsConstants.ExistingUserId);
+
         _mockUserRepository
             .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
@@ -119,6 +136,8 @@ public sealed class UserServiceTests : IUserServiceTests
         result.FirstName.Should().Be(UserServiceTestsConstants.FirstNameJohn);
         result.LastName.Should().BeNull();
         result.Username.Should().BeNull();
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithNullLastName_CreatesUserWithoutLastName completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -128,6 +147,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetOrCreateUserAsync_WithExistingUserWithDifferentDetails_UpdatesUser()
     {
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithExistingUserWithDifferentDetails_UpdatesUser called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         var existingUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameOld, LastName = UserServiceTestsConstants.LastNameOld, Username = UserServiceTestsConstants.UsernameOldUser };
         var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
@@ -148,6 +170,8 @@ public sealed class UserServiceTests : IUserServiceTests
         result.LastName.Should().Be(UserServiceTestsConstants.LastNameDoe);
         result.Username.Should().Be(UserServiceTestsConstants.UsernameJohnDoe);
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("GetOrCreateUserAsync_WithExistingUserWithDifferentDetails_UpdatesUser completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -157,6 +181,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
     {
+
+        _mockLogger.Object.LogInformation("GetUserByIdAsync_WithExistingUser_ReturnsUser called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe };
 
@@ -169,6 +196,8 @@ public sealed class UserServiceTests : IUserServiceTests
 
         // Assert
         result.Should().Be(user);
+
+        _mockLogger.Object.LogInformation("GetUserByIdAsync_WithExistingUser_ReturnsUser completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -178,7 +207,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetUserByIdAsync_WithNonExistingUser_ReturnsNull()
     {
+
+        _mockLogger.Object.LogInformation("GetUserByIdAsync_WithNonExistingUser_ReturnsNull called with {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         // Arrange
+        _mockLogger.Object.LogWarning("User lookup fallback returned no user for {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         _mockUserRepository
             .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.NonExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
@@ -188,6 +222,8 @@ public sealed class UserServiceTests : IUserServiceTests
 
         // Assert
         result.Should().BeNull();
+
+        _mockLogger.Object.LogInformation("GetUserByIdAsync_WithNonExistingUser_ReturnsNull completed with {UserId}", UserServiceTestsConstants.NonExistingUserId);
     }
 
     /// <summary>
@@ -196,6 +232,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task RecordUserActivityAsync_UpdatesLastActivityAndIncrementsMessagesCount()
     {
+
+        _mockLogger.Object.LogInformation("RecordUserActivityAsync_UpdatesLastActivityAndIncrementsMessagesCount called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, MessagesCount = 5 };
         var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, MessagesCount = 6 };
@@ -216,6 +255,8 @@ public sealed class UserServiceTests : IUserServiceTests
             u.LastActivityAt.HasValue &&
             u.LastActivityAt.Value.Date == DateTime.UtcNow.Date
         ), It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("RecordUserActivityAsync_UpdatesLastActivityAndIncrementsMessagesCount completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -224,7 +265,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task RecordUserActivityAsync_WithNonExistingUser_DoesNotThrow()
     {
+
+        _mockLogger.Object.LogInformation("RecordUserActivityAsync_WithNonExistingUser_DoesNotThrow called with {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         // Arrange
+        _mockLogger.Object.LogWarning("Skipping activity update fallback for missing user {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         _mockUserRepository
             .Setup(r => r.GetByIdAsync(UserServiceTestsConstants.NonExistingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BotUser?)null);
@@ -232,6 +278,8 @@ public sealed class UserServiceTests : IUserServiceTests
         // Act & Assert
         await _userService.Invoking(s => s.RecordUserActivityAsync(999))
             .Should().NotThrowAsync();
+
+        _mockLogger.Object.LogInformation("RecordUserActivityAsync_WithNonExistingUser_DoesNotThrow completed with {UserId}", UserServiceTestsConstants.NonExistingUserId);
     }
 
     /// <summary>
@@ -241,6 +289,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task UpdateUserAsync_UpdatesUserProperties()
     {
+
+        _mockLogger.Object.LogInformation("UpdateUserAsync_UpdatesUserProperties called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
         var updatedUser = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameSmithUpdated, Username = "johnsmith" };
@@ -260,6 +311,8 @@ public sealed class UserServiceTests : IUserServiceTests
         result.LastName.Should().Be(UserServiceTestsConstants.LastNameSmithUpdated);
         result.Username.Should().Be("johnsmith");
         _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<BotUser>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("UpdateUserAsync_UpdatesUserProperties completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -269,7 +322,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task UpdateUserAsync_WithPartialUpdates_PreservesUnchangedValues()
     {
+
+        _mockLogger.Object.LogInformation("UpdateUserAsync_WithPartialUpdates_PreservesUnchangedValues called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
+        _mockLogger.Object.LogWarning("Applying partial user update fallback for {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         var user = new BotUser { UserId = UserServiceTestsConstants.ExistingUserId, FirstName = UserServiceTestsConstants.FirstNameJohn, LastName = UserServiceTestsConstants.LastNameDoe, Username = UserServiceTestsConstants.UsernameJohnDoe };
 
         _mockUserRepository
@@ -286,6 +344,8 @@ public sealed class UserServiceTests : IUserServiceTests
         result.Should().Be(user);
         result.LastName.Should().Be(UserServiceTestsConstants.LastNameDoe);
         result.Username.Should().Be(UserServiceTestsConstants.UsernameJohnDoe);
+
+        _mockLogger.Object.LogInformation("UpdateUserAsync_WithPartialUpdates_PreservesUnchangedValues completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -295,6 +355,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task DeleteUserAsync_WithExistingUser_DeletesAndReturnsTrue()
     {
+
+        _mockLogger.Object.LogInformation("DeleteUserAsync_WithExistingUser_DeletesAndReturnsTrue called with {UserId}", UserServiceTestsConstants.ExistingUserId);
+
         // Arrange
         _mockUserRepository
             .Setup(r => r.DeleteAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()))
@@ -306,6 +369,8 @@ public sealed class UserServiceTests : IUserServiceTests
         // Assert
         result.Should().BeTrue();
         _mockUserRepository.Verify(r => r.DeleteAsync(UserServiceTestsConstants.ExistingUserId, It.IsAny<CancellationToken>()), Times.Once);
+
+        _mockLogger.Object.LogInformation("DeleteUserAsync_WithExistingUser_DeletesAndReturnsTrue completed with {UserId}", UserServiceTestsConstants.ExistingUserId);
     }
 
     /// <summary>
@@ -315,7 +380,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task DeleteUserAsync_WithNonExistingUser_ReturnsFalse()
     {
+
+        _mockLogger.Object.LogInformation("DeleteUserAsync_WithNonExistingUser_ReturnsFalse called with {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         // Arrange
+        _mockLogger.Object.LogWarning("Delete fallback returned false for missing user {UserId}", UserServiceTestsConstants.NonExistingUserId);
+
         _mockUserRepository
             .Setup(r => r.DeleteAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -325,6 +395,8 @@ public sealed class UserServiceTests : IUserServiceTests
 
         // Assert
         result.Should().BeFalse();
+
+        _mockLogger.Object.LogInformation("DeleteUserAsync_WithNonExistingUser_ReturnsFalse completed with {UserId}", UserServiceTestsConstants.NonExistingUserId);
     }
 
     /// <summary>
@@ -334,6 +406,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task SearchUsersAsync_FiltersByFirstName()
     {
+
+        _mockLogger.Object.LogInformation("SearchUsersAsync_FiltersByFirstName called with {Query}", UserServiceTestsConstants.FirstNameJohn);
+
         // Arrange
         var users = new List<BotUser>
         {
@@ -352,6 +427,8 @@ public sealed class UserServiceTests : IUserServiceTests
         // Assert
         result.Should().HaveCount(2);
         result.Should().AllSatisfy(u => u.FirstName.Should().ContainEquivalentOf(UserServiceTestsConstants.FirstNameJohn));
+
+        _mockLogger.Object.LogInformation("SearchUsersAsync_FiltersByFirstName completed with {ResultCount} results", result.Count);
     }
 
     /// <summary>
@@ -361,7 +438,12 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task SearchUsersAsync_WithEmptyQuery_ReturnsAllUsers()
     {
+
+        _mockLogger.Object.LogInformation("SearchUsersAsync_WithEmptyQuery_ReturnsAllUsers called with {Query}", string.Empty);
+
         // Arrange
+        _mockLogger.Object.LogWarning("Empty search query triggered all-users fallback");
+
         var users = new List<BotUser>
         {
             new BotUser { UserId = UserServiceTestsConstants.UserIdOne, FirstName = UserServiceTestsConstants.FirstNameJohn },
@@ -377,6 +459,8 @@ public sealed class UserServiceTests : IUserServiceTests
 
         // Assert
         result.Should().HaveCount(2);
+
+        _mockLogger.Object.LogInformation("SearchUsersAsync_WithEmptyQuery_ReturnsAllUsers completed with {ResultCount} results", result.Count);
     }
 
     /// <summary>
@@ -386,6 +470,9 @@ public sealed class UserServiceTests : IUserServiceTests
     [Fact]
     public async Task GetUsersByStatusAsync_ReturnsFilteredUsers()
     {
+
+        _mockLogger.Object.LogInformation("GetUsersByStatusAsync_ReturnsFilteredUsers called with {Status}", UserStatus.Active);
+
         // Arrange
         var activeUsers = new List<BotUser>
         {
@@ -404,5 +491,7 @@ public sealed class UserServiceTests : IUserServiceTests
         // Assert
         result.Should().HaveCount(2);
         result.Should().AllSatisfy(u => u.Status.Should().Be(UserStatus.Active));
+
+        _mockLogger.Object.LogInformation("GetUsersByStatusAsync_ReturnsFilteredUsers completed with {ResultCount} results for {Status}", result.Count, UserStatus.Active);
     }
 }
