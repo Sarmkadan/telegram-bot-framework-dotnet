@@ -23,6 +23,10 @@ using TelegramBotFramework.Utilities;
 /// Client for interacting with Telegram Bot API.
 /// Provides methods for sending messages, managing updates, and querying bot state.
 /// </summary>
+/// <remarks>
+/// The client validates request arguments before sending them and returns failure values when
+/// Telegram rejects a request or an unexpected error occurs.
+/// </remarks>
 public sealed class TelegramApiClient : ITelegramApiClient
 {
     private readonly HttpClientFactory _httpClientFactory;
@@ -38,7 +42,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="httpClientFactory">Optional factory used to create the underlying HTTP client.</param>
     /// <param name="logger">Optional logger used to record client activity.</param>
     /// <param name="retryOptions">Optional retry configuration; defaults are used when not provided.</param>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="botToken"/> is empty or has an invalid format.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="botToken"/> is empty or has an invalid format, or when <paramref name="retryOptions"/> contains invalid values.</exception>
     public TelegramApiClient(
         string botToken,
         HttpClientFactory? httpClientFactory = null,
@@ -67,6 +71,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="text">Text of the message to be sent</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was sent successfully, false otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="text"/> is empty or exceeds the maximum message length.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -92,6 +98,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="buttonLabels">Two-dimensional array representing the keyboard layout where each inner array is a row of buttons</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was sent successfully, false otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="text"/> exceeds the maximum message length.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="buttonLabels"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -124,6 +133,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="newText">New text of the message</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was edited successfully, false otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="messageId"/> is not positive.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -145,6 +156,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="messageId">Identifier of the message to delete</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was deleted successfully, false otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -165,6 +178,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="allowsMultipleAnswers">Whether users can select multiple answers</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Message ID of the sent poll if successful, null otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when the chat identifier, question, or answer options are invalid.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -239,6 +254,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="items">List of media items (2-10 items)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="items"/> has an invalid count or item.</exception>
     public async Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
@@ -335,6 +351,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Gets information about the bot itself.
     /// </summary>
+    /// <returns>The raw JSON response describing the bot, or <see langword="null"/> if the request fails.</returns>
     public async Task<string?> GetMeAsync()
     {
         return await GetApiRequestAsync(TelegramApiClientConstants.GetMeMethod).ConfigureAwait(false);
@@ -343,6 +360,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Answers a callback query from an inline button press.
     /// </summary>
+    /// <param name="callbackQueryId">The unique identifier of the callback query to answer.</param>
+    /// <param name="notificationText">Optional text to display to the user as a notification.</param>
+    /// <returns><see langword="true"/> if Telegram accepts the answer; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="callbackQueryId"/> is empty or consists only of white-space characters.</exception>
     public async Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null)
     {
         if (string.IsNullOrWhiteSpace(callbackQueryId))
@@ -357,6 +378,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Sets the webhook URL for receiving updates.
     /// </summary>
+    /// <param name="webhookUrl">The absolute URL to which Telegram sends updates.</param>
+    /// <returns><see langword="true"/> if Telegram accepts the webhook; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty or is not a valid URL.</exception>
     public async Task<bool> SetWebhookAsync(string webhookUrl)
     {
         if (string.IsNullOrWhiteSpace(webhookUrl) || !ValidationUtility.IsValidUrl(webhookUrl))
@@ -369,6 +393,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Removes the webhook (switches to polling mode).
     /// </summary>
+    /// <returns><see langword="true"/> if Telegram removes the webhook; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> RemoveWebhookAsync()
     {
         return await SendApiRequestAsync(
@@ -382,6 +407,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="commands">Collection of command name / description pairs.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>True if the request succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="commands"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default)
     {
         if (commands == null)
@@ -446,6 +473,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="fileId">File identifier to get info for</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>File information including file path and size, or null if not found</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="fileId"/> is empty or consists only of white-space characters.</exception>
     public async Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(fileId))
