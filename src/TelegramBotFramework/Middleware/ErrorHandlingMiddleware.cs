@@ -40,7 +40,10 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _logger.LogWarning("Request {Path} with TraceId {TraceId} is falling back to the error response path", context.Request.Path, context.TraceIdentifier);
+            _logger.LogError(ex, "Failed to process request {Path} with TraceId {TraceId}", context.Request.Path, context.TraceIdentifier);
             await HandleExceptionAsync(context, ex);
+            _logger.LogInformation("Finished processing failed request {Path} with TraceId {TraceId} and StatusCode {StatusCode}", context.Request.Path, context.TraceIdentifier, context.Response.StatusCode);
         }
     }
 
