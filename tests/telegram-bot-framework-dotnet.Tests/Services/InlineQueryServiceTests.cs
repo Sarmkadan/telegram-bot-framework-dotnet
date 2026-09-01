@@ -25,6 +25,8 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     [Fact]
     public async Task HandleAsync_WithValidQuery_ReturnsPagedResults()
     {
+        _loggerMock.Object.LogInformation("Starting valid inline query test for {QueryId} with page size {PageSize}", "test-query-123", 2);
+
         // Arrange
         var query = new InlineQuery
         {
@@ -67,11 +69,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
             It.IsAny<Func<Task<IList<InlineQueryResult>>>>(),
             It.IsAny<TimeSpan?>()),
         Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed valid inline query test for {QueryId} with {ResultCount} results", query.QueryId, result.Results.Count);
     }
 
     [Fact]
     public async Task HandleAsync_WithEmptyOffset_ReturnsFirstPage()
     {
+        _loggerMock.Object.LogInformation("Starting empty offset inline query test for {QueryId}", "test-query-456");
+
         // Arrange
         var query = new InlineQuery
         {
@@ -104,11 +110,16 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.Should().NotBeNull();
         result.PageNumber.Should().Be(1);
         result.NextOffset.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed empty offset inline query test for {QueryId} on page {PageNumber}", query.QueryId, result.PageNumber);
     }
 
     [Fact]
     public async Task HandleAsync_WithInvalidOffset_ReturnsFirstPage()
     {
+        _loggerMock.Object.LogInformation("Starting invalid offset inline query test for {QueryId} with offset {Offset}", "test-query-789", "invalid");
+        _loggerMock.Object.LogWarning("Testing fallback to the first page for invalid offset {Offset}", "invalid");
+
         // Arrange
         var query = new InlineQuery
         {
@@ -139,11 +150,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         // Assert
         result.Should().NotBeNull();
         result.PageNumber.Should().Be(1);
+
+        _loggerMock.Object.LogInformation("Completed invalid offset inline query test for {QueryId} on fallback page {PageNumber}", query.QueryId, result.PageNumber);
     }
 
     [Fact]
     public async Task HandleAsync_WithMultiplePages_ReturnsCorrectPage()
     {
+        _loggerMock.Object.LogInformation("Starting multi-page inline query test for {QueryId} with offset {Offset}", "test-query-multi", "3");
+
         // Arrange
         var query = new InlineQuery
         {
@@ -176,11 +191,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.PageNumber.Should().Be(3);
         result.TotalCount.Should().Be(25);
         result.NextOffset.Should().BeEmpty(); // Last page
+
+        _loggerMock.Object.LogInformation("Completed multi-page inline query test for {QueryId} on page {PageNumber} with {ResultCount} results", query.QueryId, result.PageNumber, result.Results.Count);
     }
 
     [Fact]
     public async Task GetCachedAsync_WithCachedResults_ReturnsPagedResults()
     {
+        _loggerMock.Object.LogInformation("Starting cached inline query test for {QueryText} on page {PageNumber}", "cached query", 1);
+
         // Arrange
         var cachedResults = new List<InlineQueryResult>
         {
@@ -200,11 +219,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.Results.Should().HaveCount(3);
         result.TotalCount.Should().Be(3);
         result.PageNumber.Should().Be(1);
+
+        _loggerMock.Object.LogInformation("Completed cached inline query test for {QueryText} with {ResultCount} results", "cached query", result.Results.Count);
     }
 
     [Fact]
     public async Task GetCachedAsync_WithPageNumber_ReturnsCorrectPage()
     {
+        _loggerMock.Object.LogInformation("Starting paginated cache test for {QueryText} on page {PageNumber}", "paginated query", 2);
+
         // Arrange
         var cachedResults = Enumerable.Range(1, 20)
             .Select(i => new InlineQueryResult { Title = $"Item {i}", Content = $"Item content {i}" })
@@ -221,11 +244,16 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.Results.Should().HaveCount(10); // DefaultPageSize is 10, so page 2 has 10 results
         result.PageNumber.Should().Be(2);
         result.NextOffset.Should().BeEmpty(); // Page 2 is the last page for 20 items with 10 per page
+
+        _loggerMock.Object.LogInformation("Completed paginated cache test for {QueryText} on page {PageNumber} with {ResultCount} results", "paginated query", result.PageNumber, result.Results.Count);
     }
 
     [Fact]
     public async Task GetCachedAsync_WithoutCachedResults_ReturnsNull()
     {
+        _loggerMock.Object.LogInformation("Starting cache miss test for {QueryText}", "nonexistent query");
+        _loggerMock.Object.LogWarning("Testing degraded cache-miss path for {QueryText}", "nonexistent query");
+
         // Arrange
         _cacheMock.Setup(c => c.GetAsync<IList<InlineQueryResult>>(It.IsAny<string>()))
             .ReturnsAsync((IList<InlineQueryResult>?)null);
@@ -235,11 +263,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
 
         // Assert
         result.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed cache miss test for {QueryText}", "nonexistent query");
     }
 
     [Fact]
     public async Task InvalidateCacheAsync_RemovesCachedEntry()
     {
+        _loggerMock.Object.LogInformation("Starting cache invalidation test for {QueryText}", "query to invalidate");
+
         // Arrange
         var queryText = "query to invalidate";
 
@@ -250,11 +282,15 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         _cacheMock.Verify(c => c.RemoveAsync(
             It.Is<string>(key => key == $"{InlineQueryServiceTestsConstants.InlineQueryCacheKeyPrefix}{queryText.ToLowerInvariant().Trim()}")),
         Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed cache invalidation test for {QueryText}", queryText);
     }
 
     [Fact]
     public async Task RecordQueryAsync_DoesNotThrow()
     {
+        _loggerMock.Object.LogInformation("Starting query recording test for {QueryId} with result count {ResultCount}", "log-test-123", 5);
+
         // Arrange
         var query = new InlineQuery
         {
@@ -268,11 +304,16 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
 
         // Assert
         await act.Should().NotThrowAsync();
+
+        _loggerMock.Object.LogInformation("Completed query recording test for {QueryId} with result count {ResultCount}", query.QueryId, 5);
     }
 
     [Fact]
     public async Task HandleAsync_WithEmptyQueryString_ProcessesSuccessfully()
     {
+        _loggerMock.Object.LogInformation("Starting empty query string test for {QueryId}", "empty-query-test");
+        _loggerMock.Object.LogWarning("Testing degraded processing path for empty query text on {QueryId}", "empty-query-test");
+
         // Arrange
         var query = new InlineQuery
         {
@@ -302,11 +343,16 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
         result.Results.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
         result.NextOffset.Should().BeEmpty();
+
+        _loggerMock.Object.LogInformation("Completed empty query string test for {QueryId} with {ResultCount} results", query.QueryId, result.Results.Count);
     }
 
     [Fact]
     public void AddInlineQueryHandling_WithNullServices_Throws()
     {
+        _loggerMock.Object.LogInformation("Starting service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandling));
+        _loggerMock.Object.LogWarning("Testing fallback validation for null services in {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandling));
+
         // Arrange
         IServiceCollection services = null!;
 
@@ -315,11 +361,16 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
+
+        _loggerMock.Object.LogInformation("Completed service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandling));
     }
 
     [Fact]
     public void AddInlineQueryHandlingWithLocalCache_WithNullServices_Throws()
     {
+        _loggerMock.Object.LogInformation("Starting service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandlingWithLocalCache));
+        _loggerMock.Object.LogWarning("Testing fallback validation for null services in {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandlingWithLocalCache));
+
         // Arrange
         IServiceCollection services = null!;
 
@@ -328,6 +379,8 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
+
+        _loggerMock.Object.LogInformation("Completed service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandlingWithLocalCache));
     }
 
 }
