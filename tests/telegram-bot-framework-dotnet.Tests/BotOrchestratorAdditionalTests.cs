@@ -51,6 +51,11 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
             middlewares,
             _configuration,
             _mockLogger.Object);
+
+        _mockLogger.Object.LogInformation("Initializing {ClassName} with BotToken={BotToken}, BotUsername={BotUsername}",
+            nameof(BotOrchestratorAdditionalTests),
+            _configuration.BotToken,
+            _configuration.BotUsername);
     }
 
     /// <summary>
@@ -61,6 +66,8 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task ProcessUserMessageAsync_WithEmptyMessageContent_AddsErrorToContext()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with empty message content", nameof(ProcessUserMessageAsync_WithEmptyMessageContent_AddsErrorToContext), BotOrchestratorAdditionalTestsConstants.TestUserId);
+        _mockLogger.Object.LogWarning("Testing degraded message processing for user {UserId} with empty content", BotOrchestratorAdditionalTestsConstants.TestUserId);
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, FirstName = BotOrchestratorAdditionalTestsConstants.TestFirstName, LastName = BotOrchestratorAdditionalTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = BotOrchestratorAdditionalTestsConstants.TestSessionId, UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, ChatId = BotOrchestratorAdditionalTestsConstants.TestChatId, IsActive = true };
@@ -101,6 +108,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Contains("empty"));
         _mockMessageService.Verify(s => s.MarkAsFailedAsync(1, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result IsValid={IsValid}", nameof(ProcessUserMessageAsync_WithEmptyMessageContent_AddsErrorToContext), BotOrchestratorAdditionalTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -111,6 +119,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task ProcessUserMessageAsync_WithNullLastName_ProcessesSuccessfully()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with first name {FirstName} and null last name", nameof(ProcessUserMessageAsync_WithNullLastName_ProcessesSuccessfully), BotOrchestratorAdditionalTestsConstants.TestUserId, BotOrchestratorAdditionalTestsConstants.TestFirstName);
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, FirstName = BotOrchestratorAdditionalTestsConstants.TestFirstName, Role = UserRole.User };
         var session = new UserSession { SessionId = $"session-{BotOrchestratorAdditionalTestsConstants.TestUserId}", UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, ChatId = BotOrchestratorAdditionalTestsConstants.TestChatId, IsActive = true };
@@ -146,6 +155,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         result.Session.Should().Be(session);
         result.Message.Should().Be(processedMessage);
         result.IsValid.Should().BeTrue();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result IsValid={IsValid}", nameof(ProcessUserMessageAsync_WithNullLastName_ProcessesSuccessfully), BotOrchestratorAdditionalTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -155,6 +165,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task ProcessUserMessageAsync_WithVeryLongMessageContent_ProcessesSuccessfully()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with message length {MessageLength}", nameof(ProcessUserMessageAsync_WithVeryLongMessageContent_ProcessesSuccessfully), BotOrchestratorAdditionalTestsConstants.TestUserId, BotOrchestratorAdditionalTestsConstants.MaxMessageLength);
         // Arrange
         var longMessage = new string('x', BotOrchestratorAdditionalTestsConstants.MaxMessageLength);
         var user = new BotUser { UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, FirstName = BotOrchestratorAdditionalTestsConstants.TestFirstName, LastName = BotOrchestratorAdditionalTestsConstants.TestLastName, Role = UserRole.User };
@@ -186,6 +197,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         // Assert
         result.Should().NotBeNull();
         result.IsValid.Should().BeTrue();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result IsValid={IsValid}", nameof(ProcessUserMessageAsync_WithVeryLongMessageContent_ProcessesSuccessfully), BotOrchestratorAdditionalTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -195,6 +207,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task ExecuteUserCommandAsync_WithParameters_StoresParametersInContext()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with parameters {ParameterCount}", nameof(ExecuteUserCommandAsync_WithParameters_StoresParametersInContext), BotOrchestratorAdditionalTestsConstants.TestUserId, 2);
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, FirstName = BotOrchestratorAdditionalTestsConstants.TestFirstName, LastName = BotOrchestratorAdditionalTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = $"session-{BotOrchestratorAdditionalTestsConstants.TestUserId}", UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, ChatId = BotOrchestratorAdditionalTestsConstants.TestChatId, IsActive = true };
@@ -222,6 +235,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         result.Parameters.Should().HaveCount(2);
         result.Parameters.Should().ContainKey(BotOrchestratorAdditionalTestsConstants.TestParamKey).WhoseValue.Should().Be(BotOrchestratorAdditionalTestsConstants.TestParamValue);
         result.Parameters.Should().ContainKey(BotOrchestratorAdditionalTestsConstants.TestParamKey2).WhoseValue.Should().Be(BotOrchestratorAdditionalTestsConstants.TestParamValue2);
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - parameters stored: {ParameterCount}", nameof(ExecuteUserCommandAsync_WithParameters_StoresParametersInContext), BotOrchestratorAdditionalTestsConstants.TestUserId, result.Parameters?.Count ?? 0);
     }
 
     /// <summary>
@@ -232,6 +246,8 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task ExecuteUserCommandAsync_WithNonExistentCommand_AddsErrorToContext()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} testing command {CommandName}", nameof(ExecuteUserCommandAsync_WithNonExistentCommand_AddsErrorToContext), BotOrchestratorAdditionalTestsConstants.TestUserId, BotOrchestratorAdditionalTestsConstants.NonExistentCommandName);
+        _mockLogger.Object.LogWarning("Testing command fallback for missing command {CommandName} and user {UserId}", BotOrchestratorAdditionalTestsConstants.NonExistentCommandName, BotOrchestratorAdditionalTestsConstants.TestUserId);
         // Arrange
         var user = new BotUser { UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, FirstName = BotOrchestratorAdditionalTestsConstants.TestFirstName, LastName = BotOrchestratorAdditionalTestsConstants.TestLastName, Role = UserRole.User };
         var session = new UserSession { SessionId = $"session-{BotOrchestratorAdditionalTestsConstants.TestUserId}", UserId = BotOrchestratorAdditionalTestsConstants.TestUserId, ChatId = BotOrchestratorAdditionalTestsConstants.TestChatId, IsActive = true };
@@ -250,6 +266,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Contains("not found"));
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result IsValid={IsValid}", nameof(ExecuteUserCommandAsync_WithNonExistentCommand_AddsErrorToContext), BotOrchestratorAdditionalTestsConstants.TestUserId, result.IsValid);
     }
 
     /// <summary>
@@ -260,6 +277,8 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task DisplayMenuAsync_WithNullSession_DoesNotThrow()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId}", nameof(DisplayMenuAsync_WithNullSession_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId);
+        _mockLogger.Object.LogWarning("Testing degraded menu display without an active session for user {UserId}", BotOrchestratorAdditionalTestsConstants.TestUserId);
         // Arrange
         var menu = new Menu { MenuId = "main", Title = "Main Menu", Buttons = new List<MenuButton>() };
 
@@ -274,6 +293,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         // Assert
         result.Should().NotBeNull();
         result.MenuId.Should().Be("main");
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result MenuId={MenuId}", nameof(DisplayMenuAsync_WithNullSession_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId, result?.MenuId);
     }
 
     /// <summary>
@@ -283,6 +303,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task HandleMenuButtonAsync_WithOpenUrlAction_DoesNotThrow()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with URL {Url}", nameof(HandleMenuButtonAsync_WithOpenUrlAction_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId, BotOrchestratorAdditionalTestsConstants.TestUrl);
         // Arrange
         var button = new MenuButton
         {
@@ -298,6 +319,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().BeTrue();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result={Result}", nameof(HandleMenuButtonAsync_WithOpenUrlAction_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId, result);
     }
 
     /// <summary>
@@ -307,6 +329,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task HandleMenuButtonAsync_WithSwitchInlineAction_DoesNotThrow()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId} with callback data {CallbackData}", nameof(HandleMenuButtonAsync_WithSwitchInlineAction_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId, "inline_query");
         // Arrange
         var button = new MenuButton
         {
@@ -322,6 +345,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().BeTrue();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result={Result}", nameof(HandleMenuButtonAsync_WithSwitchInlineAction_DoesNotThrow), BotOrchestratorAdditionalTestsConstants.TestUserId, result);
     }
 
     /// <summary>
@@ -331,6 +355,8 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId}", nameof(GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException), BotOrchestratorAdditionalTestsConstants.TestUserId);
+        _mockLogger.Object.LogWarning("Testing missing active session path for user {UserId}", BotOrchestratorAdditionalTestsConstants.TestUserId);
         // Arrange
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorAdditionalTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
@@ -338,6 +364,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
         // Act & Assert
         await _orchestrator.Invoking(o => o.GetUserSessionAsync(BotOrchestratorAdditionalTestsConstants.TestUserId))
             .Should().ThrowAsync<Exceptions.SessionException>();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - exception thrown", nameof(GetUserSessionAsync_WithNoActiveSession_ThrowsSessionException), BotOrchestratorAdditionalTestsConstants.TestUserId);
     }
 
     /// <summary>
@@ -347,6 +374,8 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public async Task EndUserSessionAsync_WithNoActiveSession_ReturnsFalse()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} for user {UserId}", nameof(EndUserSessionAsync_WithNoActiveSession_ReturnsFalse), BotOrchestratorAdditionalTestsConstants.TestUserId);
+        _mockLogger.Object.LogWarning("Testing session end fallback without an active session for user {UserId}", BotOrchestratorAdditionalTestsConstants.TestUserId);
         // Arrange
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorAdditionalTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
@@ -356,6 +385,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().BeFalse();
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} for user {UserId} - result={Result}", nameof(EndUserSessionAsync_WithNoActiveSession_ReturnsFalse), BotOrchestratorAdditionalTestsConstants.TestUserId, result);
     }
 
     /// <summary>
@@ -368,6 +398,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public void ExtractCommandName_WithMultipleSpaces_ReturnsCommandName()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} with message content {MessageContent}", nameof(ExtractCommandName_WithMultipleSpaces_ReturnsCommandName), "/start param1 param2");
         // Arrange
         var messageContent = "/start param1 param2";
 
@@ -376,6 +407,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().Be("start");
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} with command name {CommandName}", nameof(ExtractCommandName_WithMultipleSpaces_ReturnsCommandName), result);
     }
 
     /// <summary>
@@ -388,6 +420,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public void ExtractCommandName_WithLeadingAndTrailingSpaces_ReturnsCommandName()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} with message content {MessageContent}", nameof(ExtractCommandName_WithLeadingAndTrailingSpaces_ReturnsCommandName), " /start ");
         // Arrange
         var messageContent = " /start ";
 
@@ -396,6 +429,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().Be("start");
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} with command name {CommandName}", nameof(ExtractCommandName_WithLeadingAndTrailingSpaces_ReturnsCommandName), result);
     }
 
     /// <summary>
@@ -408,6 +442,7 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
     [Fact]
     public void ExtractCommandName_WithTabCharacters_ReturnsCommandName()
     {
+        _mockLogger.Object.LogInformation("Starting test {TestMethod} with message content {MessageContent}", nameof(ExtractCommandName_WithTabCharacters_ReturnsCommandName), "/start\tparam1");
         // Arrange
         var messageContent = "/start\tparam1";
 
@@ -416,5 +451,6 @@ public sealed class BotOrchestratorAdditionalTests : IBotOrchestratorAdditionalT
 
         // Assert
         result.Should().Be("start");
+        _mockLogger.Object.LogInformation("Finished test {TestMethod} with command name {CommandName}", nameof(ExtractCommandName_WithTabCharacters_ReturnsCommandName), result);
     }
 }
