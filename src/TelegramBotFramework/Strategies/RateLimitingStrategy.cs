@@ -38,6 +38,7 @@ public sealed class TokenBucketStrategy : IRateLimitingStrategy
 
     public bool IsRequestAllowed(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (!_buckets.TryGetValue(identifier, out var bucket))
@@ -60,6 +61,7 @@ public sealed class TokenBucketStrategy : IRateLimitingStrategy
 
     public int GetRemainingRequests(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (_buckets.TryGetValue(identifier, out var bucket))
@@ -116,6 +118,7 @@ public sealed class SlidingWindowStrategy : IRateLimitingStrategy
 
     public bool IsRequestAllowed(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (!_requestTimes.TryGetValue(identifier, out var times))
@@ -144,6 +147,7 @@ public sealed class SlidingWindowStrategy : IRateLimitingStrategy
 
     public int GetRemainingRequests(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (!_requestTimes.TryGetValue(identifier, out var times))
@@ -179,6 +183,7 @@ public sealed class FixedWindowStrategy : IRateLimitingStrategy
 
     public bool IsRequestAllowed(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (!_windows.TryGetValue(identifier, out var window))
@@ -207,6 +212,7 @@ public sealed class FixedWindowStrategy : IRateLimitingStrategy
 
     public int GetRemainingRequests(string identifier)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
         lock (_lockObj)
         {
             if (!_windows.TryGetValue(identifier, out var window))
