@@ -34,8 +34,15 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
 
     public Task<T?> GetAsync<T>(string key)
     {
+        _logger?.LogInformation("GetAsync called with key {Key}", key);
+
         if (string.IsNullOrWhiteSpace(key))
+        {
+            _logger?.LogWarning("GetAsync received an invalid cache key");
             return Task.FromResult<T?>(default);
+        }
+
+        _logger?.LogInformation("Getting cache entry for key {Key}", key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
@@ -44,29 +51,44 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
             {
                 _cache.TryRemove(key, out _);
                 Interlocked.Increment(ref _missCount);
+                _logger?.LogInformation("Cache entry expired and removed for key {Key}", key);
+                _logger?.LogInformation("GetAsync completed for key {Key} with cache miss", key);
                 return Task.FromResult<T?>(default);
             }
 
             Interlocked.Increment(ref _hitCount);
+            _logger?.LogInformation("Cache hit for key {Key}", key);
 
             try
             {
+                _logger?.LogInformation("GetAsync completed for key {Key} with cache hit", key);
                 return Task.FromResult((T?)entry.Value);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger?.LogError(ex, "Failed to cast cache value for key {Key}", key);
+                _logger?.LogWarning("GetAsync is returning the default value for key {Key} after a cache value type mismatch", key);
                 return Task.FromResult<T?>(default);
             }
         }
 
         Interlocked.Increment(ref _missCount);
+        _logger?.LogInformation("Cache miss for key {Key}", key);
+        _logger?.LogInformation("GetAsync completed for key {Key} with cache miss", key);
         return Task.FromResult<T?>(default);
     }
 
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
+        _logger?.LogInformation("SetAsync called with key {Key} and expiration {Expiration}", key, expiration);
+
         if (string.IsNullOrWhiteSpace(key))
+        {
+            _logger?.LogWarning("SetAsync received an invalid cache key");
             return Task.CompletedTask;
+        }
+
+        _logger?.LogInformation("Setting cache entry for key {Key}", key);
 
         var entry = new CacheEntry
         {
@@ -85,13 +107,19 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
                 key, expiration?.TotalMilliseconds);
         }
 
+        _logger?.LogInformation("SetAsync completed for key {Key}", key);
         return Task.CompletedTask;
     }
 
     public Task RemoveAsync(string key)
     {
+        _logger?.LogInformation("RemoveAsync called with key {Key}", key);
+
         if (string.IsNullOrWhiteSpace(key))
+        {
+            _logger?.LogWarning("RemoveAsync received an invalid cache key");
             return Task.CompletedTask;
+        }
 
         if (_cache.TryRemove(key, out _))
         {
@@ -101,16 +129,25 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
                 _logger.LogDebug("Cache entry removed - Key: {Key}", key);
             }
         }
+        else
+        {
+            _logger?.LogWarning("RemoveAsync could not find cache entry for key {Key}", key);
+        }
 
+        _logger?.LogInformation("RemoveAsync completed for key {Key}", key);
         return Task.CompletedTask;
     }
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
+        _logger?.LogInformation("ExistsAsync called with key {Key}", key);
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(key))
+        {
+            _logger?.LogWarning("ExistsAsync received an invalid cache key");
             return Task.FromResult(false);
+        }
 
         if (_cache.TryGetValue(key, out var entry))
         {
@@ -118,28 +155,39 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
             if (entry.ExpiredAt.HasValue && DateTime.UtcNow > entry.ExpiredAt)
             {
                 _cache.TryRemove(key, out _);
+                _logger?.LogWarning("ExistsAsync found and removed expired cache entry for key {Key}", key);
+                _logger?.LogInformation("ExistsAsync completed for key {Key} with result {Exists}", key, false);
                 return Task.FromResult(false);
             }
 
+            _logger?.LogInformation("ExistsAsync completed for key {Key} with result {Exists}", key, true);
             return Task.FromResult(true);
         }
 
+        _logger?.LogInformation("ExistsAsync completed for key {Key} with result {Exists}", key, false);
         return Task.FromResult(false);
     }
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
     {
+        _logger?.LogInformation("GetOrCreateAsync called with key {Key} and expiration {Expiration}", key, expiration);
         var existing = await GetAsync<T>(key).ConfigureAwait(false);
         if (existing  is not null)
+        {
+            _logger?.LogInformation("GetOrCreateAsync completed for key {Key} using cached value", key);
             return existing;
+        }
 
+        _logger?.LogWarning("GetOrCreateAsync is creating a value for key {Key} because no cached value was available", key);
         var value = await factory().ConfigureAwait(false);
         await SetAsync(key, value, expiration).ConfigureAwait(false);
+        _logger?.LogInformation("GetOrCreateAsync completed for key {Key} using created value", key);
         return value;
     }
 
     public Task FlushAsync()
     {
+        _logger?.LogInformation("FlushAsync called with {ItemCount} cached items", _cache.Count);
         _cache.Clear();
         lock (_cleanupLock)
         {
@@ -150,11 +198,13 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
         Interlocked.Exchange(ref _missCount, 0);
         Interlocked.Exchange(ref _setCount, 0);
         Interlocked.Exchange(ref _removeCount, 0);
+        _logger?.LogInformation("FlushAsync completed");
         return Task.CompletedTask;
     }
 
     public Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
+        _logger?.LogInformation("GetStatisticsAsync called");
         cancellationToken.ThrowIfCancellationRequested();
 
         // Clean up expired entries while gathering stats
@@ -178,6 +228,10 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
             MemoryBytes = EstimateMemoryUsage()
         };
 
+        _logger?.LogInformation(
+            "GetStatisticsAsync completed with {ItemCount} items and {ExpiredItemCount} expired items removed",
+            stats.ItemCount,
+            expiredKeys.Count);
         return Task.FromResult(stats);
     }
 
