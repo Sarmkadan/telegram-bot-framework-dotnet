@@ -192,6 +192,9 @@ public sealed class Menu : IMenu, IEquatable<Menu>
         return HashCode.Combine(Id, Title, Description, Type, Buttons, IsActive, DisplayOrder, CreatedAt);
     }
 
+    public override string ToString() =>
+        $"Menu {{ Id = {Id}, Title = {Title}, Description = {Description}, Type = {Type}, Buttons = {Buttons}, IsActive = {IsActive} }}";
+
     public static bool operator ==(Menu? left, Menu? right)
     {
         return Equals(left, right);
