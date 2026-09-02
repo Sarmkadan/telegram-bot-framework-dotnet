@@ -12,18 +12,29 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Test class for BroadcastService functionality.
+/// Contains unit tests for broadcasting messages to multiple chats.
+/// </summary>
 public class BroadcastServiceTests : IBroadcastServiceTests
 {
     private readonly Mock<ITelegramApiClient> _mockApiClient;
     private readonly BroadcastService _broadcastService;
 
+    /// <summary>
+    /// Initializes a new instance of the BroadcastServiceTests class.
+    /// Sets up mock dependencies for testing.
+    /// </summary>
     public BroadcastServiceTests()
     {
         _mockApiClient = new Mock<ITelegramApiClient>();
         _broadcastService = new BroadcastService(_mockApiClient.Object);
     }
 
-    [Fact]
+    /// <summary>
+    /// Tests that broadcasting to an empty chat ID list returns success with zero chats processed.
+    /// </summary>
+[Fact]
     public async Task BroadcastAsync_WithEmptyChatIds_ReturnsSuccessWithNoChats()
     {
         var result = await _broadcastService.BroadcastAsync(
@@ -36,6 +47,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.True(result.AllSuccessful);
     }
 
+    /// <summary>
+    /// Tests that broadcasting to valid chat IDs sends messages to all chats successfully.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithValidChats_SendsMessagesToAllChats()
     {
@@ -62,6 +76,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.Empty(result.Failures);
     }
 
+    /// <summary>
+    /// Tests that broadcasting with failed messages properly collects failures when ContinueOnError is true.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithFailedMessages_CollectsFailures()
     {
@@ -89,6 +106,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.Equal(2, result.Failures.Count);
     }
 
+    /// <summary>
+    /// Tests that broadcasting with ContinueOnError false throws an exception on the first failed message.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithContinueOnErrorFalse_ThrowsOnFirstError()
     {
@@ -107,6 +127,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
                 options: new BroadcastOptions { ContinueOnError = false }));
     }
 
+    /// <summary>
+    /// Tests that broadcasting respects the MessagesPerSecond rate limit setting.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithRateLimit_RespectsMessagesPerSecond()
     {
@@ -130,6 +153,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.Equal(5, result.SuccessCount);
     }
 
+    /// <summary>
+    /// Tests that broadcasting with a progress callback invokes the callback during execution.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithProgressCallback_CallsCallback()
     {
@@ -155,6 +181,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.True(callbackInvoked);
     }
 
+    /// <summary>
+    /// Tests that broadcasting respects cancellation tokens and stops operation when a cancellation token is triggered.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithCancellation_CancelsOperation()
     {
@@ -188,7 +217,10 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.True(result.SuccessCount <= 2);
     }
 
-    [Fact]
+    /// <summary>
+/// Tests that broadcasting to users correctly converts BotUser objects to chat IDs and sends messages.
+/// </summary>
+[Fact]
     public async Task BroadcastToUsersAsync_ConvertsUsersToChatIds()
     {
         // Arrange
@@ -211,6 +243,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.Equal(2, _mockApiClient.Invocations.Count);
     }
 
+    /// <summary>
+    /// Tests that GetRateLimitStats returns current rate limiting statistics.
+    /// </summary>
     [Fact]
     public void GetRateLimitStats_ReturnsStatistics()
     {
@@ -226,6 +261,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         Assert.Equal(0, stats.CurrentConcurrency);
     }
 
+    /// <summary>
+    /// Tests that broadcasting with a message formatter applies the formatter to the message text.
+    /// </summary>
     [Fact]
     public async Task BroadcastAsync_WithMessageFormatter_AppliesFormatter()
     {
@@ -248,6 +286,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         _mockApiClient.Verify(x => x.SendMessageAsync(123L, "[123] custom message"), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that the Dispose method properly disposes of resources without throwing exceptions.
+    /// </summary>
     [Fact]
     public void Dispose_DisposesResources()
     {
