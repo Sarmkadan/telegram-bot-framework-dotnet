@@ -137,6 +137,15 @@ namespace TelegramBotFramework.Models
         }
 
         /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>A string that represents the current object.</returns>
+        public override string ToString()
+        {
+            return $"TelegramBotFrameworkDotnetOptions {{ BotToken = {BotToken}, BotUsername = {BotUsername}, DatabaseConnectionString = {DatabaseConnectionString}, SessionTimeoutMinutes = {SessionTimeoutMinutes}, MessageProcessingTimeoutSeconds = {MessageProcessingTimeoutSeconds}, MaxConcurrentRequests = {MaxConcurrentRequests} }}";
+        }
+
+        /// <summary>
         /// Returns a value that indicates whether the values of two <see cref="TelegramBotFrameworkDotnetOptions"/> objects are equal.
         /// </summary>
         /// <param name="left">The first value to compare.</param>
