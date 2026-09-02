@@ -167,57 +167,13 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         Dictionary<string, string>? initialVariables = null,
         CancellationToken cancellationToken = default)
     {
-        if (!_flows.TryGetValue(flowId, out var flow))
-            throw new InvalidOperationException($"Flow '{flowId}' is not registered.");
+        var flow = EnsureFlowExists(flowId);
+        await HandleExistingActiveFlowAsync(userId, flowId, cancellationToken).ConfigureAwait(false);
 
-        if (_activeStates.ContainsKey(userId))
-        {
-            _logger.LogDebug(
-                ConversationFlowEngineConstants.AbortingExistingFlowLog, userId, flowId);
-            await AbortFlowAsync(userId, ConversationFlowEngineConstants.SupersededByNewFlowReason, cancellationToken).ConfigureAwait(false);
-        }
+        var state = CreateInitialState(userId, chatId, flow, initialVariables);
 
-        var state = new UserFlowState
-        {
-            StateId        = Guid.NewGuid().ToString(ConversationFlowEngineConstants.GuidFormat),
-            FlowId         = flowId,
-            UserId         = userId,
-            ChatId         = chatId,
-            CurrentStepId  = flow.InitialStepId,
-            Status         = FlowStateStatus.WaitingForInput,
-            StartedAt      = DateTime.UtcNow,
-            LastActivityAt = DateTime.UtcNow
-        };
-
-        if (initialVariables is { Count: > 0 })
-        {
-            foreach (var (key, value) in initialVariables)
-                state.Variables[key] = value;
-        }
-
-        _activeStates[userId] = state;
-        AppendHistory(userId, state);
-
-        // Persist to state store when configured.
-        if (_stateStore is not null)
-            await _stateStore.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
-
-        // Mirror flow context into the session layer so the middleware can detect active flows.
-        var session = await _sessionService.GetActiveSessionAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (session  is not null)
-        {
-            await _sessionService.UpdateSessionContextAsync(
-                session.SessionId, SessionKeys.FlowId, flowId, cancellationToken);
-            await _sessionService.UpdateSessionContextAsync(
-                session.SessionId, SessionKeys.FlowStateId, state.StateId, cancellationToken);
-        }
-
-        if (_options.EnableFlowEvents)
-            await _eventBus.PublishAsync(new FlowStartedEvent(userId, chatId, flowId, state.StateId)).ConfigureAwait(false);
-
-        _logger.LogInformation(
-            ConversationFlowEngineConstants.FlowStartedLog,
-            userId, flowId, state.StateId);
+        ActivateState(state);
+        await PersistAndPublishStateAsync(state, cancellationToken).ConfigureAwait(false);
 
         return state;
     }
@@ -272,13 +228,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         string input,
         CancellationToken cancellationToken)
     {
-        if (!_flows.TryGetValue(state.FlowId, out var flow))
-            throw new InvalidOperationException(
-                $"Flow definition '{state.FlowId}' is no longer registered.");
-
-        var step = flow.Steps.FirstOrDefault(s => s.StepId == state.CurrentStepId)
-            ?? throw new InvalidOperationException(
-                $"Step '{state.CurrentStepId}' not found in flow '{state.FlowId}'.");
+        var (flow, step) = GetCurrentFlowAndStep(state);
 
         // --- Abort keyword shortcut ---
         if (!string.IsNullOrEmpty(_options.AbortKeyword) &&
@@ -304,19 +254,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
                 ConversationFlowEngineConstants.ValidationFailedLog,
                 userId, step.StepId, validationError);
 
-            var errorPrompt = string.IsNullOrEmpty(step.HelpText)
-                ? $"{validationError}\n\n{step.Prompt}"
-                : $"{validationError}\n\n{step.Prompt}\n{step.HelpText}";
-
-            return new FlowStepResult
-            {
-                IsValid         = false,
-                ValidationError = validationError,
-                Prompt          = errorPrompt,
-                QuickReplies    = step.QuickReplies,
-                IsCompleted     = false,
-                FlowState       = state
-            };
+            return BuildValidationFailureResult(state, step, validationError);
         }
 
         // --- Store variable ---
@@ -329,23 +267,11 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         // --- Resolve next step ---
         var nextStepId = ResolveNextStep(step, state.Variables);
 
-        // --- Record history ---
-        // Hotfix: Ensure thread-safe access to state.History to prevent race conditions during concurrent updates.
-        lock (state.HistorySyncRoot)
-        {
-            state.History.Add(new FlowStepHistory
-            {
-                StepId      = step.StepId,
-                EnteredAt   = stepEnteredAt,
-                CompletedAt = state.LastActivityAt,
-                UserInput   = input,
-                NextStepId  = nextStepId
-            });
-        }
+        RecordCompletedStep(state, step, input, nextStepId, stepEnteredAt);
 
         if (_options.EnableFlowEvents)
             await _eventBus.PublishAsync(
-                new FlowStepCompletedEvent(userId, state.FlowId, step.StepId, nextStepId));
+                new FlowStepCompletedEvent(userId, state.FlowId, step.StepId, nextStepId)).ConfigureAwait(false);
 
         // --- Terminal step or no outgoing path ---
         if (step.IsTerminal || nextStepId  is null)
@@ -354,28 +280,20 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
 
             if (_options.EnableFlowEvents)
                 await _eventBus.PublishAsync(
-                    new FlowCompletedEvent(userId, state.ChatId, state.FlowId, state.StateId));
+                    new FlowCompletedEvent(userId, state.ChatId, state.FlowId, state.StateId)).ConfigureAwait(false);
 
             _logger.LogInformation(
                 ConversationFlowEngineConstants.FlowCompletedLog,
                 userId, state.FlowId, state.History.Count);
 
-            return new FlowStepResult
-            {
-                IsValid          = true,
-                Prompt           = ConversationFlowEngineConstants.FlowCompletedPrompt,
-                IsCompleted      = true,
-                FlowState        = state,
-                CompletionMenuId = flow.CompletionMenuId
-            };
+            return BuildCompletedResult(state, flow.CompletionMenuId);
         }
 
         // --- Advance to next step ---
         state.CurrentStepId = nextStepId;
         state.Status        = FlowStateStatus.WaitingForInput;
 
-        if (_stateStore is not null)
-            await _stateStore.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
+        await SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 
         var nextStep = flow.Steps.FirstOrDefault(s => s.StepId == nextStepId);
 
@@ -461,7 +379,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         if (session  is null) return null;
 
         var restoredFlowId = await _sessionService.GetSessionContextAsync(
-            session.SessionId, SessionKeys.FlowId, cancellationToken);
+            session.SessionId, SessionKeys.FlowId, cancellationToken).ConfigureAwait(false);
 
         if (!string.IsNullOrEmpty(restoredFlowId))
         {
@@ -563,6 +481,7 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
                             _logger.LogError(ex,
                                 "OnEviction callback threw for UserId: {UserId}, FlowId: {FlowId}",
                                 userId, state.FlowId);
+                            // Eviction callbacks are notifications; a failure must not stop the cleanup sweep.
                         }
                     }
                     break;
@@ -588,11 +507,155 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
         state.AbortReason = reason;
         _activeStates.TryRemove(state.UserId, out _);
 
-        if (_stateStore is not null)
+        // Persist final state for audit trail then clean up active entry.
+        await SaveStateAsync(state, CancellationToken.None).ConfigureAwait(false);
+        await ExecuteStateStoreOperationAsync(
+            store => store.DeleteStateAsync(state.UserId),
+            "delete",
+            state).ConfigureAwait(false);
+    }
+
+    private static UserFlowState CreateInitialState(
+        long userId,
+        long chatId,
+        FlowDefinition flow,
+        Dictionary<string, string>? initialVariables)
+    {
+        var state = new UserFlowState
         {
-            // Persist final state for audit trail then clean up active entry.
-            await _stateStore.SaveStateAsync(state).ConfigureAwait(false);
-            await _stateStore.DeleteStateAsync(state.UserId).ConfigureAwait(false);
+            StateId        = Guid.NewGuid().ToString(ConversationFlowEngineConstants.GuidFormat),
+            FlowId         = flow.FlowId,
+            UserId         = userId,
+            ChatId         = chatId,
+            CurrentStepId  = flow.InitialStepId,
+            Status         = FlowStateStatus.WaitingForInput,
+            StartedAt      = DateTime.UtcNow,
+            LastActivityAt = DateTime.UtcNow
+        };
+
+        if (initialVariables is not null)
+        {
+            foreach (var (key, value) in initialVariables)
+                state.Variables[key] = value;
+        }
+
+        return state;
+    }
+
+    private async Task MirrorFlowContextToSessionAsync(
+        UserFlowState state,
+        CancellationToken cancellationToken)
+    {
+        var session = await _sessionService.GetActiveSessionAsync(
+            state.UserId, cancellationToken).ConfigureAwait(false);
+        if (session is null)
+            return;
+
+        await _sessionService.UpdateSessionContextAsync(
+            session.SessionId, SessionKeys.FlowId, state.FlowId, cancellationToken).ConfigureAwait(false);
+        await _sessionService.UpdateSessionContextAsync(
+            session.SessionId, SessionKeys.FlowStateId, state.StateId, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task PublishFlowStartedAsync(UserFlowState state)
+    {
+        if (!_options.EnableFlowEvents)
+            return;
+
+        await _eventBus.PublishAsync(
+            new FlowStartedEvent(state.UserId, state.ChatId, state.FlowId, state.StateId)).ConfigureAwait(false);
+    }
+
+    private (FlowDefinition flow, FlowStep step) GetCurrentFlowAndStep(UserFlowState state)
+    {
+        if (!_flows.TryGetValue(state.FlowId, out var flow))
+            throw new InvalidOperationException(
+                $"Flow definition '{state.FlowId}' is no longer registered.");
+
+        var step = flow.Steps.FirstOrDefault(candidate => candidate.StepId == state.CurrentStepId)
+            ?? throw new InvalidOperationException(
+                $"Step '{state.CurrentStepId}' not found in flow '{state.FlowId}'.");
+
+        return (flow, step);
+    }
+
+    private static FlowStepResult BuildValidationFailureResult(
+        UserFlowState state,
+        FlowStep step,
+        string? validationError)
+    {
+        var errorPrompt = string.IsNullOrEmpty(step.HelpText)
+            ? $"{validationError}\n\n{step.Prompt}"
+            : $"{validationError}\n\n{step.Prompt}\n{step.HelpText}";
+
+        return new FlowStepResult
+        {
+            IsValid         = false,
+            ValidationError = validationError,
+            Prompt          = errorPrompt,
+            QuickReplies    = step.QuickReplies,
+            IsCompleted     = false,
+            FlowState       = state
+        };
+    }
+
+    private static void RecordCompletedStep(
+        UserFlowState state,
+        FlowStep step,
+        string input,
+        string? nextStepId,
+        DateTime enteredAt)
+    {
+        lock (state.HistorySyncRoot)
+        {
+            state.History.Add(new FlowStepHistory
+            {
+                StepId      = step.StepId,
+                EnteredAt   = enteredAt,
+                CompletedAt = state.LastActivityAt,
+                UserInput   = input,
+                NextStepId  = nextStepId
+            });
+        }
+    }
+
+    private static FlowStepResult BuildCompletedResult(UserFlowState state, string? completionMenuId)
+        => new()
+        {
+            IsValid          = true,
+            Prompt           = ConversationFlowEngineConstants.FlowCompletedPrompt,
+            IsCompleted      = true,
+            FlowState        = state,
+            CompletionMenuId = completionMenuId
+        };
+
+    private Task SaveStateAsync(UserFlowState state, CancellationToken cancellationToken)
+        => ExecuteStateStoreOperationAsync(
+            store => store.SaveStateAsync(state, cancellationToken),
+            "save",
+            state);
+
+    private async Task ExecuteStateStoreOperationAsync(
+        Func<IConversationStateStore, Task> operation,
+        string operationName,
+        UserFlowState state)
+    {
+        if (_stateStore is null)
+            return;
+
+        try
+        {
+            await operation(_stateStore).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to {Operation} conversation state — UserId: {UserId}, FlowId: {FlowId}",
+                operationName,
+                state.UserId,
+                state.FlowId);
+            throw;
         }
     }
 
@@ -729,6 +792,41 @@ public sealed class ConversationFlowEngine : IConversationFlowEngine
     // -------------------------------------------------------------------------
     // Session context key constants
     // -------------------------------------------------------------------------
+
+    private FlowDefinition EnsureFlowExists(string flowId)
+    {
+        if (!_flows.TryGetValue(flowId, out var flow))
+            throw new InvalidOperationException($"Flow '{flowId}' is not registered.");
+
+        return flow;
+    }
+
+    private async Task HandleExistingActiveFlowAsync(long userId, string flowId, CancellationToken cancellationToken)
+    {
+        if (_activeStates.ContainsKey(userId))
+        {
+            _logger.LogDebug(
+                ConversationFlowEngineConstants.AbortingExistingFlowLog, userId, flowId);
+            await AbortFlowAsync(userId, ConversationFlowEngineConstants.SupersededByNewFlowReason, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private void ActivateState(UserFlowState state)
+    {
+        _activeStates[state.UserId] = state;
+        AppendHistory(state.UserId, state);
+    }
+
+    private async Task PersistAndPublishStateAsync(UserFlowState state, CancellationToken cancellationToken)
+    {
+        await SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
+        await MirrorFlowContextToSessionAsync(state, cancellationToken).ConfigureAwait(false);
+        await PublishFlowStartedAsync(state).ConfigureAwait(false);
+
+        _logger.LogInformation(
+            ConversationFlowEngineConstants.FlowStartedLog,
+            state.UserId, state.FlowId, state.StateId);
+    }
 
     private static class SessionKeys
     {
