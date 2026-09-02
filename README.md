@@ -7466,3 +7466,26 @@ static async Task RunRateLimitingMiddlewareSmokeTestsAsync()
     new RateLimitingMiddlewareTests().Priority_ReturnsCorrectValue();
 }
 ```
+
+## InMemoryRateLimitingStrategyTests
+
+`InMemoryRateLimitingStrategyTests` is an xUnit fixture that verifies requests expire correctly at, inside, and outside the rate-limit window and that remaining-request counts honor the same boundary conditions. It also checks asynchronous action limits and confirms that separate identifiers are rate-limited independently; test runners discover these methods automatically, while they can be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Strategies.Tests;
+
+static async Task RunInMemoryRateLimitingStrategySmokeTestsAsync()
+{
+    var tests = new InMemoryRateLimitingStrategyTests();
+
+    tests.IsRequestAllowed_RequestsAtWindowBoundaryAreExpired();
+    tests.IsRequestAllowed_RequestsInsideWindowAreNotExpired();
+    tests.IsRequestAllowed_RequestsOutsideWindowAreExpired();
+    tests.GetRemainingRequests_HandlesBoundaryConditionsCorrectly();
+    await tests.IsActionAllowedAsync_HandlesBoundaryConditionsCorrectly();
+    tests.IsRequestAllowed_DifferentIdentifiersLimitedIndependently();
+}
+```
