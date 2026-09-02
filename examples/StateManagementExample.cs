@@ -170,6 +170,8 @@ public sealed class StateManagementExample : IStateManagementExample, IEquatable
             return HashCode.Combine(FirstName, Email, PhoneNumber, SatisfactionLevel, ImprovementSuggestions, WouldRecommend);
         }
 
+        public override string ToString() => $"StateManagementExample {{ FirstName = {FirstName}, Email = {Email}, PhoneNumber = {PhoneNumber}, SatisfactionLevel = {SatisfactionLevel}, ImprovementSuggestions = {ImprovementSuggestions}, WouldRecommend = {WouldRecommend} }}";
+
         public static bool operator ==(StateManagementExample? left, StateManagementExample? right)
         {
             return EqualityComparer<StateManagementExample>.Default.Equals(left, right);
