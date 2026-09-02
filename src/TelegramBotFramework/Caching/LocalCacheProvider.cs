@@ -383,6 +383,11 @@ public sealed class LocalCacheProvider : ICacheProvider, ILocalCacheProvider, IE
         }
     }
 
+    public override string ToString()
+    {
+        return $"LocalCacheProvider {{ ItemCount = {_cache.Count}, HitCount = {Interlocked.Read(ref _hitCount)}, MissCount = {Interlocked.Read(ref _missCount)} }}";
+    }
+
     private class CacheEntry
     {
         public object? Value { get; set; }
