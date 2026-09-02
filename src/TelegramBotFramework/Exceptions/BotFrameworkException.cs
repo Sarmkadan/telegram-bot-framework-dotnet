@@ -59,6 +59,36 @@ public class BotFrameworkException : Exception, IBotFrameworkException, IEquatab
         return HashCode.Combine(ErrorCode);
     }
 
+    public override string ToString()
+    {
+        string? commandName = null;
+        long? userId = null;
+        string? requiredPermission = null;
+        string? sessionId = null;
+
+        switch (this)
+        {
+            case CommandExecutionException ce:
+                commandName = ce.CommandName;
+                break;
+            case CommandNotFoundException cnf:
+                commandName = cnf.CommandName;
+                break;
+            case InsufficientPermissionException ipe:
+                userId = ipe.UserId;
+                requiredPermission = ipe.RequiredPermission;
+                break;
+            case SessionException se:
+                sessionId = se.SessionId;
+                break;
+            case UserException ue:
+                userId = ue.UserId;
+                break;
+        }
+
+        return $"BotFrameworkException {{ ErrorCode = {ErrorCode}, CommandName = {commandName}, UserId = {userId}, RequiredPermission = {requiredPermission}, SessionId = {sessionId} }}";
+    }
+
     public static bool operator ==(BotFrameworkException? left, BotFrameworkException? right)
     {
         if (left is null)
