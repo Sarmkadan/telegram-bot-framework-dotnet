@@ -2258,6 +2258,43 @@ public class UserServiceTestsExample
     [Fact]
     public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
     {
+```
+
+## UserSessionValidationTests
+
+`UserSessionValidationTests` verifies validation, validity checks, and exception enforcement for user sessions. It checks that session validation correctly identifies various error conditions including null/empty values, length limits, invalid IDs, and timestamp inconsistencies.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunUserSessionValidationSmokeTests()
+{
+    var tests = new UserSessionValidationTests();
+
+    tests.ValidateSession_ShouldReturnEmptyList_WhenSessionIsValid();
+    tests.ValidateSession_ShouldThrowArgumentNullException_WhenSessionIsNull();
+    tests.ValidateSession_ShouldReturnError_WhenSessionIdIsNull();
+    tests.ValidateSession_ShouldReturnError_WhenSessionIdIsWhitespace();
+    tests.ValidateSession_ShouldReturnError_WhenSessionIdExceeds100Characters();
+    tests.ValidateSession_ShouldReturnError_WhenUserIdIsZero();
+    tests.ValidateSession_ShouldReturnError_WhenUserIdIsNegative();
+    tests.ValidateSession_ShouldReturnError_WhenChatIdIsZero();
+    tests.ValidateSession_ShouldReturnError_WhenChatIdIsNegative();
+    tests.ValidateSession_ShouldReturnError_WhenCurrentContextIsNull();
+    tests.ValidateSession_ShouldReturnError_WhenCurrentContextIsWhitespace();
+    tests.ValidateSession_ShouldReturnError_WhenCurrentContextExceeds50Characters();
+    tests.ValidateSession_ShouldReturnError_WhenCurrentMenuIdExceeds50Characters();
+    tests.ValidateSession_ShouldReturnError_WhenCreatedAtIsDefault();
+    tests.ValidateSession_ShouldReturnError_WhenCreatedAtIsInFuture();
+    tests.ValidateSession_ShouldReturnError_WhenLastActivityAtIsDefault();
+    tests.ValidateSession_ShouldReturnError_WhenLastActivityAtIsInFuture();
+    tests.ValidateSession_ShouldReturnError_WhenLastActivityAtIsBeforeCreatedAt();
+    tests.ValidateSession_ShouldReturnError_WhenExpiresAtIsDefault();
+    tests.ValidateSession_ShouldReturnError_WhenExpiresAtIsBeforeCreatedAt();
+}
+```
         // Arrange
         var mockRepository = new Mock<IUserRepository>();
         var mockLogger = new Mock<ILogger<UserService>>();
