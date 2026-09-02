@@ -36,6 +36,15 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         _concurrencyLimiter = new SemaphoreSlim(1, 1);
     }
 
+    /// <summary>
+    /// Broadcasts a message to the distinct chat IDs, preserving their first-occurrence order.
+    /// </summary>
+    /// <param name="chatIds">The chat IDs to broadcast to.</param>
+    /// <param name="messageText">The message text to send.</param>
+    /// <param name="options">Optional broadcast configuration.</param>
+    /// <param name="progressCallback">An optional callback invoked after each batch.</param>
+    /// <param name="cancellationToken">A token used to cancel the broadcast.</param>
+    /// <returns>The result of the broadcast.</returns>
     public async Task<BroadcastResult> BroadcastAsync(
         IReadOnlyList<long> chatIds,
         string messageText,
@@ -54,6 +63,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
             throw new ArgumentException("Message text cannot be empty", nameof(messageText));
         }
 
+        var distinctChatIds = RemoveDuplicateChatIds(chatIds);
         var config = options ?? new BroadcastOptions();
         var startTime = DateTime.UtcNow;
         var successfulChatIds = new List<long>();
@@ -63,7 +73,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         var failedCount = 0;
 
         _logger.LogInformation("Starting broadcast to {ChatCount} chats with rate limit: {MessagesPerSecond} msg/s, concurrency: {MaxConcurrency}",
-            chatIds.Count, config.MessagesPerSecond, config.MaxConcurrency);
+            distinctChatIds.Count, config.MessagesPerSecond, config.MaxConcurrency);
 
         try
         {
@@ -71,11 +81,11 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
             var batchSize = Math.Max(1, config.MessagesPerSecond);
             var batchDelay = config.BatchDelay ?? CalculateBatchDelay(config.MessagesPerSecond);
 
-            for (int i = 0; i < chatIds.Count; i += batchSize)
+            for (int i = 0; i < distinctChatIds.Count; i += batchSize)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var batch = chatIds.Skip(i).Take(batchSize).ToList();
+                var batch = distinctChatIds.Skip(i).Take(batchSize).ToList();
                 var batchTasks = new List<Task>();
 
                 foreach (var chatId in batch)
@@ -158,7 +168,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
                 if (progressCallback != null)
                 {
                     var progress = CreateProgress(
-                        chatIds.Count,
+                        distinctChatIds.Count,
                         processedCount,
                         successCount,
                         failedCount,
@@ -176,7 +186,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
                 }
 
                 // Apply batch delay if configured
-                if (batchDelay > TimeSpan.Zero && i + batchSize < chatIds.Count)
+                if (batchDelay > TimeSpan.Zero && i + batchSize < distinctChatIds.Count)
                 {
                     await Task.Delay(batchDelay, cancellationToken).ConfigureAwait(false);
                 }
@@ -187,7 +197,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
                 : $"Broadcast completed: {successCount} succeeded, {failedCount} failed";
 
             return BroadcastResult.Mixed(
-                chatIds.Count,
+                distinctChatIds.Count,
                 successfulChatIds,
                 failures,
                 summary);
@@ -197,7 +207,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
             _logger.LogInformation("Broadcast was cancelled");
             var summary = $"Broadcast cancelled: {successCount} succeeded, {failedCount} failed";
             return BroadcastResult.Mixed(
-                chatIds.Count,
+                distinctChatIds.Count,
                 successfulChatIds,
                 failures,
                 summary);
@@ -206,8 +216,75 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         {
             _logger.LogError(ex, "Broadcast failed completely");
             var failure = new FailedChat(-1, ex.Message, 0);
-            return BroadcastResult.Failure(chatIds.Count, new[] { failure }, $"Broadcast failed: {ex.Message}");
+            return BroadcastResult.Failure(distinctChatIds.Count, new[] { failure }, $"Broadcast failed: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Simulates broadcasting a message to the distinct chat IDs, preserving their
+    /// first-occurrence order, without calling the Telegram API.
+    /// </summary>
+    /// <param name="chatIds">The chat IDs to include in the simulation.</param>
+    /// <param name="messageText">The message text that would be sent.</param>
+    /// <param name="options">Optional broadcast configuration used for progress reporting.</param>
+    /// <param name="progressCallback">An optional callback invoked after each simulated chat.</param>
+    /// <param name="cancellationToken">A token used to cancel the simulation.</param>
+    /// <returns>A successful result for every processed chat.</returns>
+    public async Task<BroadcastResult> BroadcastDryRunAsync(
+        IReadOnlyList<long> chatIds,
+        string messageText,
+        BroadcastOptions? options = null,
+        Func<BroadcastProgress, Task>? progressCallback = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (chatIds == null || chatIds.Count == 0)
+        {
+            _logger.LogWarning("Broadcast dry run called with empty chat IDs list");
+            return BroadcastResult.Success(0, Array.Empty<long>(), "No chats to broadcast to");
+        }
+
+        if (string.IsNullOrWhiteSpace(messageText))
+        {
+            throw new ArgumentException("Message text cannot be empty", nameof(messageText));
+        }
+
+        var distinctChatIds = RemoveDuplicateChatIds(chatIds);
+        var config = options ?? new BroadcastOptions();
+        var startTime = DateTime.UtcNow;
+        var successfulChatIds = new List<long>(distinctChatIds.Count);
+        var failures = Array.Empty<FailedChat>();
+
+        foreach (var chatId in distinctChatIds)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            successfulChatIds.Add(chatId);
+
+            if (progressCallback != null)
+            {
+                var progress = CreateProgress(
+                    distinctChatIds.Count,
+                    successfulChatIds.Count,
+                    successfulChatIds.Count,
+                    0,
+                    failures,
+                    startTime,
+                    config);
+
+                try
+                {
+                    await progressCallback(progress).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Progress callback failed");
+                }
+            }
+        }
+
+        return BroadcastResult.Success(
+            distinctChatIds.Count,
+            successfulChatIds,
+            $"Dry run successfully processed {successfulChatIds.Count} chats");
     }
 
     public async Task<BroadcastResult> BroadcastToUsersAsync(
@@ -259,6 +336,28 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         // Calculate delay to maintain rate: 1000ms / messagesPerSecond
         var delayMs = 1000.0 / messagesPerSecond;
         return TimeSpan.FromMilliseconds(delayMs);
+    }
+
+    private IReadOnlyList<long> RemoveDuplicateChatIds(IReadOnlyList<long> chatIds)
+    {
+        var seenChatIds = new HashSet<long>();
+        var distinctChatIds = new List<long>(chatIds.Count);
+
+        foreach (var chatId in chatIds)
+        {
+            if (seenChatIds.Add(chatId))
+            {
+                distinctChatIds.Add(chatId);
+            }
+        }
+
+        var duplicateCount = chatIds.Count - distinctChatIds.Count;
+        if (duplicateCount > 0)
+        {
+            _logger.LogInformation("Skipped {DuplicateCount} duplicate chat IDs", duplicateCount);
+        }
+
+        return distinctChatIds;
     }
 
     private BroadcastProgress CreateProgress(
