@@ -222,6 +222,52 @@ foreach (QuizQuestion quizQuestion in quiz.GetQuestions())
 }
 ```
 
+## QuizResult
+
+`QuizResult` represents the outcome of a completed quiz, combining the total and maximum scores with completion metadata and per-question results. Each `QuestionResult` records the submitted and correct answers, whether the response was correct, the awarded score, and optional feedback; `FormatSummary()` turns the complete result into a readable summary.
+
+**Example usage:**
+
+```csharp
+using System;
+using TelegramBotFramework.ConversationFlow.QuizFlow;
+
+var result = new QuizResult
+{
+    TotalScore = 10,
+    MaxScore = 20,
+    CompletedAt = DateTime.UtcNow,
+    UserId = 123456789,
+    ChatId = 987654321,
+    QuestionResults = new[]
+    {
+        new QuestionResult
+        {
+            QuestionNumber = 1,
+            QuestionText = "What is the capital of France?",
+            UserAnswerText = "Paris",
+            CorrectAnswerText = "Paris",
+            IsCorrect = true,
+            ScoreAwarded = 10,
+            Feedback = "Correct—the capital of France is Paris."
+        },
+        new QuestionResult
+        {
+            QuestionNumber = 2,
+            QuestionText = "Which planet is known as the Red Planet?",
+            UserAnswerText = "Venus",
+            CorrectAnswerText = "Mars",
+            IsCorrect = false,
+            ScoreAwarded = 0,
+            Feedback = "Mars appears red because of iron minerals in its soil."
+        }
+    }
+};
+
+string summary = result.FormatSummary();
+Console.WriteLine(summary);
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
