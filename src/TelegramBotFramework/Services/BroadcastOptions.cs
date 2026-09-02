@@ -126,4 +126,13 @@ public sealed class BroadcastOptions : IBroadcastOptions, IEquatable<BroadcastOp
     {
         return !(left == right);
     }
+
+    /// <summary>
+    /// Returns a string representation of the current object.
+    /// </summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+    {
+        return $"BroadcastOptions {{ MessagesPerSecond = {MessagesPerSecond}, MaxConcurrency = {MaxConcurrency}, MaxRetryAttempts = {MaxRetryAttempts}, RetryDelay = {RetryDelay}, ContinueOnError = {ContinueOnError}, MessageFormatter = {MessageFormatter} }}";
+    }
 }
