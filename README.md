@@ -141,6 +141,29 @@ static void RunReplyKeyboardBuilderSmokeTests()
 }
 ```
 
+## MessageFormatterTests
+
+`MessageFormatterTests` verifies that message formatting escapes Markdown and HTML characters, includes timestamps and edit markers, truncates previews, and combines conversations correctly. The test fixture is normally discovered by the test runner, but its public test methods can also be invoked directly for a focused smoke check.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunMessageFormatterSmokeTests()
+{
+    var tests = new MessageFormatterTests();
+
+    tests.EscapeMarkdown_EscapesAllSpecialCharacters();
+    tests.EscapeHtml_EscapesAllSpecialCharacters();
+    tests.FormatAsPlainText_IncludesTimestampAndEditedFlag();
+    tests.FormatAsMarkdown_ProducesCorrectTemplate();
+    tests.TruncateForPreview_LongMessage_IsTruncatedWithEllipsis();
+    tests.FormatAsConversation_MarkdownTrue_CombinesMultipleMessages();
+    tests.FormatAsPlainText_EmptyContent_ProducesLinesWithoutException();
+}
+```
+
 ## QuizQuestion
 
 `QuizQuestion` represents a validated multiple-choice question, including its answer options, zero-based correct-answer index, score, and optional feedback and timeout. It can format itself for display and determine whether a selected option is correct.
