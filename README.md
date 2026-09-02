@@ -6960,3 +6960,39 @@ static void RunCallbackDataSignerSmokeTests()
     tests.Sign_WithDataThatWouldExceedLimit_ThrowsArgumentException();
 }
 ```
+
+## HmacCallbackExample
+
+`HmacCallbackExample` demonstrates how to build HMAC-signed inline buttons for confirmations, pagination, menus, and batches, and how to validate callback data before acting on it. Its examples also cover the keyboard extension methods and practical secret-management guidance; the companion `CallbackHandlerExample` shows asynchronous dispatch of a validated callback.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Examples;
+using TelegramBotFramework.Utilities;
+
+static async Task RunHmacCallbackExamplesAsync()
+{
+    HmacCallbackExample.Example1_SimpleSignedButton();
+    HmacCallbackExample.Example2_SignedConfirmation();
+    HmacCallbackExample.Example3_SignedPagination();
+    HmacCallbackExample.Example4_UsingExtensions();
+    HmacCallbackExample.Example6_MenuWithSignedCallbacks();
+    HmacCallbackExample.Example7_BatchSignedButtons();
+    HmacCallbackExample.Example8_SecurityBestPractices();
+
+    const string secret = "your-secret-from-config";
+    string signedCallback = CallbackDataSigner.Sign("delete_account:123", secret);
+
+    bool isAuthentic = HmacCallbackExample.Example5_ValidateCallback(
+        signedCallback,
+        secret);
+
+    if (isAuthentic)
+    {
+        var handler = new CallbackHandlerExample();
+        await handler.HandleCallbackQueryAsync(signedCallback);
+    }
+}
+```
