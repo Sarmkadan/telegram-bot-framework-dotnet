@@ -135,6 +135,8 @@ public sealed class Command : ICommand, IEquatable<Command>
         return HashCode.Combine(Name, Description, HandlerType, Type, RequiresAdmin, IsEnabled, ExecutionCount, Parameters);
     }
 
+    public override string ToString() => $"Command {{ Name = {Name}, Description = {Description}, HandlerType = {HandlerType}, Type = {Type}, RequiresAdmin = {RequiresAdmin}, IsEnabled = {IsEnabled} }}";
+
     /// <summary>
     /// Returns a value that indicates whether the values of two <see cref="Command"/> objects are equal.
     /// </summary>
