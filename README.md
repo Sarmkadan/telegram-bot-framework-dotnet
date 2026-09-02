@@ -7489,3 +7489,40 @@ static async Task RunInMemoryRateLimitingStrategySmokeTestsAsync()
     tests.IsRequestAllowed_DifferentIdentifiersLimitedIndependently();
 }
 ```
+
+
+## InlineKeyboardBuilderEdgeCaseTests
+
+`InlineKeyboardBuilderEdgeCaseTests` is an xUnit fixture that verifies edge cases and boundary conditions for the InlineKeyboardBuilder class, including validation of inputs, handling of special characters, and correct behavior with various configurations. It tests scenarios such as empty builders, duplicate values, whitespace handling, Unicode characters, and fluent interface chaining.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunInlineKeyboardBuilderEdgeCaseTests()
+{
+    var tests = new InlineKeyboardBuilderEdgeCaseTests();
+
+    tests.Build_EmptyBuilder_ThrowsInvalidOperationException();
+    tests.Build_MaxButtonsPerRowOne_CreatesOneButtonPerRow();
+    tests.Build_MaxButtonsPerRowLarge_AllButtonsInOneRow();
+    tests.Build_AfterNewRowWithNoButtons_DoesNotCreateEmptyRow();
+    tests.Build_MultipleConsecutiveNewRows_DoesNotCreateEmptyRows();
+    tests.AddButton_DuplicateCallbackData_Allowed();
+    tests.AddButton_DuplicateText_Allowed();
+    tests.AddButton_VeryLongText_Allowed();
+    tests.AddButton_WhitespaceText_ThrowsArgumentException();
+    tests.AddButton_NullText_ThrowsArgumentException();
+    tests.AddUrlButton_NullUrl_ThrowsArgumentException();
+    tests.AddUrlButton_WhitespaceUrl_ThrowsArgumentException();
+    tests.AddSwitchInlineButton_EmptyQuery_Allowed();
+    tests.AddSwitchInlineButton_WhitespaceQuery_Allowed();
+    tests.AddButton_CallbackData64Bytes_Allowed();
+    tests.AddButton_CallbackData65Bytes_ThrowsArgumentException();
+    tests.AddButton_UnicodeCallbackData_CorrectByteCount();
+    tests.AddButton_UnicodeCallbackDataExceedsLimit_ThrowsArgumentException();
+    tests.ToButtonLabels_MultiRowKeyboard_ReturnsCorrectStructure();
+    tests.ToButtonLabels_EmptyRow_NotIncludedInOutput();
+}
+```
