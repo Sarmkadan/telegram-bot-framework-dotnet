@@ -6829,3 +6829,28 @@ static async Task RunBroadcastServiceSmokeTestsAsync()
     new BroadcastServiceTests().Dispose_DisposesResources();
 }
 ```
+
+## MessageServiceMediaGroupTests
+
+`MessageServiceMediaGroupTests` is an xUnit test fixture that verifies media-group delivery through `MessageService`, including valid and mixed media, Telegram API failures, and invalid chat IDs or album items. Test runners discover these methods automatically, while the public constructor and asynchronous test methods also allow a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests;
+
+static async Task RunMediaGroupSmokeTestsAsync()
+{
+    var tests = new MessageServiceMediaGroupTests();
+
+    await tests.SendMediaGroupAsync_WithValidInput_ReturnsMessages();
+    await tests.SendMediaGroupAsync_WithTooFewItems_ThrowsArgumentException();
+    await tests.SendMediaGroupAsync_WithTooManyItems_ThrowsArgumentException();
+    await tests.SendMediaGroupAsync_WithNullItem_ThrowsArgumentException();
+    await tests.SendMediaGroupAsync_WithEmptyFileIdOrUrl_ThrowsArgumentException();
+    await tests.SendMediaGroupAsync_WithMixedMediaTypes_ReturnsMessages();
+    await tests.SendMediaGroupAsync_WhenApiFails_ReturnsNull();
+    await tests.SendMediaGroupAsync_WithNegativeChatId_ThrowsArgumentException();
+}
+```
