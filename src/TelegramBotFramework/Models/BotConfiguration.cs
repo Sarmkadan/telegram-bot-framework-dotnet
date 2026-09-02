@@ -52,6 +52,9 @@ public sealed class BotConfiguration : IEquatable<BotConfiguration>, IBotConfigu
 
     public string? LocalizationLanguage { get; set; } = "en";
 
+    public override string ToString() =>
+        $"BotConfiguration {{ BotToken = {BotToken}, BotUsername = {BotUsername}, OwnerId = {OwnerId}, DatabaseConnectionString = {DatabaseConnectionString}, SessionTimeoutMinutes = {SessionTimeoutMinutes}, MessageProcessingTimeoutSeconds = {MessageProcessingTimeoutSeconds} }}";
+
     public bool Equals(BotConfiguration? other)
     {
         if (ReferenceEquals(null, other)) return false;
