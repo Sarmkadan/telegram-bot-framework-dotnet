@@ -7205,3 +7205,24 @@ static async Task RunHmacCallbackExamplesAsync()
     }
 }
 ```
+
+## BotFrameworkExceptionTests
+
+`BotFrameworkExceptionTests` is an xUnit test fixture that verifies the framework's exception constructors preserve messages, error codes, inner exceptions, and exception-specific properties. Test runners discover its public test methods automatically, and the methods can also be invoked directly for a focused smoke run covering command, permission, session, user, rate-limit, configuration, and duplicate-update exceptions.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunBotFrameworkExceptionSmokeTests()
+{
+    var tests = new BotFrameworkExceptionTests();
+
+    tests.BotFrameworkException_ShouldSetPropertiesCorrectly();
+    tests.CommandExceptions_ShouldSetPropertiesCorrectly();
+    tests.PermissionAndSessionExceptions_ShouldSetPropertiesCorrectly();
+    tests.UserAndRateLimitExceptions_ShouldSetPropertiesCorrectly();
+    tests.ConfigurationAndDuplicateUpdateExceptions_ShouldSetPropertiesCorrectly();
+}
+```
