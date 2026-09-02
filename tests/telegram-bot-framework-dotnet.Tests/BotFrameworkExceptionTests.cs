@@ -5,8 +5,14 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Verifies that bot framework exception constructors initialize messages, error codes, inner exceptions, and exception-specific properties correctly.
+/// </summary>
 public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
 {
+    /// <summary>
+    /// Verifies that each supported <see cref="BotFrameworkException"/> constructor preserves its message and optional error code and inner exception.
+    /// </summary>
     [Fact]
     public void BotFrameworkException_ShouldSetPropertiesCorrectly()
     {
@@ -32,6 +38,9 @@ public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
         ex4.InnerException.Should().Be(inner);
     }
 
+    /// <summary>
+    /// Verifies that command execution and command-not-found exceptions expose the expected command name, error code, message, and inner exception.
+    /// </summary>
     [Fact]
     public void CommandExceptions_ShouldSetPropertiesCorrectly()
     {
@@ -54,6 +63,9 @@ public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
         ex3.CommandName.Should().Be(command);
     }
 
+    /// <summary>
+    /// Verifies that permission and session exceptions expose their identifying values, error codes, and optional inner exception.
+    /// </summary>
     [Fact]
     public void PermissionAndSessionExceptions_ShouldSetPropertiesCorrectly()
     {
@@ -76,6 +88,9 @@ public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
         ex3.InnerException.Should().Be(inner);
     }
 
+    /// <summary>
+    /// Verifies that user and rate-limit exceptions expose the affected user, expected error codes, retry interval, and optional inner exception.
+    /// </summary>
     [Fact]
     public void UserAndRateLimitExceptions_ShouldSetPropertiesCorrectly()
     {
@@ -97,6 +112,9 @@ public class BotFrameworkExceptionTests : IBotFrameworkExceptionTests
         ex3.ErrorCode.Should().Be(RateLimitExceededErrorCode);
     }
 
+    /// <summary>
+    /// Verifies that configuration and duplicate-update exceptions expose the expected error codes, update identifier, and optional inner exception.
+    /// </summary>
     [Fact]
     public void ConfigurationAndDuplicateUpdateExceptions_ShouldSetPropertiesCorrectly()
     {
