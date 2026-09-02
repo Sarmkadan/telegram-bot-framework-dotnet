@@ -7,6 +7,9 @@ using FluentAssertions;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Verifies validation, validity checks, and exception enforcement for user sessions.
+/// </summary>
 public class UserSessionValidationTests : IUserSessionValidationTests
 {
     private UserSession CreateValidSession()
@@ -24,6 +27,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         };
     }
 
+    /// <summary>
+    /// Verifies that validating a fully populated valid session returns no errors.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnEmptyList_WhenSessionIsValid()
     {
@@ -37,6 +43,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         errors.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that validating a null session throws an <see cref="ArgumentNullException"/>.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldThrowArgumentNullException_WhenSessionIsNull()
     {
@@ -50,6 +59,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that validation reports a null session identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenSessionIdIsNull()
     {
@@ -65,6 +77,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdCannotBeNullOrWhitespace);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a whitespace-only session identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenSessionIdIsWhitespace()
     {
@@ -80,6 +95,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdCannotBeNullOrWhitespace);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a session identifier longer than 100 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenSessionIdExceeds100Characters()
     {
@@ -97,6 +115,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.SessionIdExceedsMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a zero user identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenUserIdIsZero()
     {
@@ -112,6 +133,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.UserIdMustBePositive);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a negative user identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenUserIdIsNegative()
     {
@@ -127,6 +151,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.UserIdMustBePositive);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a zero chat identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenChatIdIsZero()
     {
@@ -142,6 +169,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ChatIdMustBePositive);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a negative chat identifier.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenChatIdIsNegative()
     {
@@ -157,6 +187,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ChatIdMustBePositive);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a null current context.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCurrentContextIsNull()
     {
@@ -172,6 +205,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextCannotBeNullOrWhitespace);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a whitespace-only current context.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCurrentContextIsWhitespace()
     {
@@ -187,6 +223,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextCannotBeNullOrWhitespace);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a current context longer than 50 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCurrentContextExceeds50Characters()
     {
@@ -204,6 +243,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CurrentContextExceedsMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a current menu identifier longer than 50 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCurrentMenuIdExceeds50Characters()
     {
@@ -221,6 +263,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CurrentMenuIdExceedsMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that validation reports an unset creation timestamp.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCreatedAtIsDefault()
     {
@@ -236,6 +281,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CreatedAtMustBeSet);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a creation timestamp in the future.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCreatedAtIsInFuture()
     {
@@ -260,6 +308,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CreatedAtCannotBeInFuture);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a default last-activity timestamp when it is set.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenLastActivityAtIsDefault()
     {
@@ -283,6 +334,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtMustBeValidIfSet);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a last-activity timestamp in the future.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenLastActivityAtIsInFuture()
     {
@@ -298,6 +352,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtCannotBeInFuture);
     }
 
+    /// <summary>
+    /// Verifies that validation reports last activity occurring before session creation.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenLastActivityAtIsBeforeCreatedAt()
     {
@@ -314,6 +371,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.LastActivityAtCannotBeBeforeCreatedAt);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a default expiration timestamp when it is set.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenExpiresAtIsDefault()
     {
@@ -338,6 +398,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtMustBeValidIfSet);
     }
 
+    /// <summary>
+    /// Verifies that validation reports an expiration timestamp before session creation.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenExpiresAtIsBeforeCreatedAt()
     {
@@ -363,6 +426,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtCannotBeBeforeCreatedAt);
     }
 
+    /// <summary>
+    /// Verifies that validation reports an expiration timestamp more than one year in the future.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenExpiresAtIsMoreThanOneYearInFuture()
     {
@@ -380,6 +446,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ExpiresAtCannotBeMoreThanOneYearInFuture);
     }
 
+    /// <summary>
+    /// Verifies that validation reports context data containing more than 1,000 entries.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataExceeds1000Entries()
     {
@@ -400,6 +469,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataCannotContainMoreThanMaxEntries);
     }
 
+    /// <summary>
+    /// Verifies that validation accepts a null context-data collection without errors.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldHandleNullContextDataGracefully()
     {
@@ -414,6 +486,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         errors.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that validation reports a context-data entry with a whitespace-only key.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataHasWhitespaceKey()
     {
@@ -432,6 +507,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataContainsEntryWithNullOrWhitespaceKey);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a context-data key longer than 100 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataKeyExceeds100Characters()
     {
@@ -453,6 +531,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.ContextDataKeyCannotExceedMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a context-data entry with a null value.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataHasNullValue()
     {
@@ -470,6 +551,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
                 UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
+    /// <summary>
+    /// Verifies that validation reports a context-data entry with a whitespace-only value.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataHasWhitespaceValue()
     {
@@ -490,6 +574,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
                 UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
+    /// <summary>
+    /// Verifies that validation reports a context-data value longer than 1,000 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenContextDataValueExceeds1000Characters()
     {
@@ -512,6 +599,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
                 UserSessionValidationTestsConstants.ContextDataKey)));
     }
 
+    /// <summary>
+    /// Verifies that validation reports command history containing more than 50 entries.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCommandHistoryExceeds50Entries()
     {
@@ -531,6 +621,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryCannotContainMoreThanMaxEntries);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a null command-history entry.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCommandHistoryHasNullEntry()
     {
@@ -546,6 +639,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryContainsNullOrWhitespaceEntry);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a whitespace-only command-history entry.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCommandHistoryHasWhitespaceEntry()
     {
@@ -561,6 +657,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryContainsNullOrWhitespaceEntry);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a command-history entry longer than 200 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenCommandHistoryEntryExceeds200Characters()
     {
@@ -581,6 +680,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.CommandHistoryEntryCannotExceedMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that validation reports a negative interaction count.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenInteractionCountIsNegative()
     {
@@ -596,6 +698,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.InteractionCountCannotBeNegative);
     }
 
+    /// <summary>
+    /// Verifies that validation reports user input longer than 1,000 characters.
+    /// </summary>
     [Fact]
     public void ValidateSession_ShouldReturnError_WhenUserInputExceeds1000Characters()
     {
@@ -613,6 +718,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
             .Which.Should().Be(UserSessionValidationTestsConstants.UserInputCannotExceedMaxLength);
     }
 
+    /// <summary>
+    /// Verifies that the validity check returns true for a valid session.
+    /// </summary>
     [Fact]
     public void IsValid_ShouldReturnTrue_WhenSessionIsValid()
     {
@@ -626,6 +734,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         isValid.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that the validity check returns false when the user identifier is zero.
+    /// </summary>
     [Fact]
     public void IsValid_ShouldReturnFalse_WhenSessionIsInvalid()
     {
@@ -640,6 +751,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         isValid.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that enforcing validity does not throw for a valid session.
+    /// </summary>
     [Fact]
     public void EnsureValid_ShouldNotThrow_WhenSessionIsValid()
     {
@@ -653,6 +767,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Verifies that enforcing validity on a null session throws an <see cref="ArgumentNullException"/>.
+    /// </summary>
     [Fact]
     public void EnsureValid_ShouldThrowArgumentNullException_WhenSessionIsNull()
     {
@@ -666,6 +783,9 @@ public class UserSessionValidationTests : IUserSessionValidationTests
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that enforcing validity on a session with a zero user identifier throws an <see cref="ArgumentException"/>.
+    /// </summary>
     [Fact]
     public void EnsureValid_ShouldThrowArgumentException_WhenSessionIsInvalid()
     {
