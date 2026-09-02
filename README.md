@@ -6854,3 +6854,27 @@ static async Task RunMediaGroupSmokeTestsAsync()
     await tests.SendMediaGroupAsync_WithNegativeChatId_ThrowsArgumentException();
 }
 ```
+
+## CommandUsageTrackerTests
+
+`CommandUsageTrackerTests` is an xUnit test fixture that verifies command invocation counts, command-name normalization, descending popularity rankings, timestamp tracking, complete statistics, and safe handling of invalid names or result counts. Test runners discover its methods automatically, while each public test method can also be invoked on a fresh fixture instance for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunCommandUsageTrackerSmokeTests()
+{
+    new CommandUsageTrackerTests().RecordCommandInvocation_RecordsInvocation();
+    new CommandUsageTrackerTests().RecordCommandInvocation_NormalizesCommandName();
+    new CommandUsageTrackerTests().GetTopCommands_ReturnsCommandsSortedByCountDescending();
+    new CommandUsageTrackerTests().GetTopCommands_WithZeroOrNegativeCount_ReturnsEmptyList();
+    new CommandUsageTrackerTests().GetLastUsedTimestamp_ReturnsCorrectTimestamp();
+    new CommandUsageTrackerTests().GetLastUsedTimestamp_ForNeverUsedCommand_ReturnsNull();
+    new CommandUsageTrackerTests().GetAllCommandStats_ReturnsAllStatistics();
+    new CommandUsageTrackerTests().RecordCommandInvocation_WithNullOrEmptyCommandName_DoesNotThrow();
+    new CommandUsageTrackerTests().GetLastUsedTimestamp_WithNullOrEmptyCommandName_ReturnsNull();
+    new CommandUsageTrackerTests().RecordCommandInvocation_TracksFirstAndLastUsedTimestamps();
+}
+```
