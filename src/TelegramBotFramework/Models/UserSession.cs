@@ -143,6 +143,9 @@ public sealed class UserSession : IUserSession, IEquatable<UserSession>
         return true;
     }
 
+    public override string ToString() =>
+        $"UserSession {{ SessionId = {SessionId}, UserId = {UserId}, ChatId = {ChatId}, State = {State}, CurrentContext = {CurrentContext}, CurrentMenuId = {CurrentMenuId} }}";
+
     public bool Equals(UserSession? other)
     {
         if (other is null)
