@@ -5,8 +5,14 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Verifies JSON serialization and deserialization behavior for bot framework exceptions.
+/// </summary>
 public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJsonExtensionsTests
 {
+    /// <summary>
+    /// Verifies that serializing a valid bot framework exception produces JSON containing its message and error code.
+    /// </summary>
     public void ReturnsValidJsonString_WhenCalledWithValidException()
     {
         // Arrange
@@ -21,6 +27,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode);
     }
 
+    /// <summary>
+    /// Verifies that requesting indented serialization produces JSON containing line breaks, the message, and the error code.
+    /// </summary>
     public void ReturnsIndentedJson_WhenIndentedParameterIsTrue()
     {
         // Arrange
@@ -36,6 +45,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.Newline); // Should have newlines for indentation
     }
 
+    /// <summary>
+    /// Verifies that disabling indentation produces compact JSON without line breaks while preserving the message and error code.
+    /// </summary>
     public void ReturnsCompactJson_WhenIndentedParameterIsFalse()
     {
         // Arrange
@@ -51,6 +63,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         json.Should().NotContain(BotFrameworkExceptionJsonExtensionsTestsConstants.Newline); // Should not have newlines
     }
 
+    /// <summary>
+    /// Verifies that serializing a null exception throws an <see cref="ArgumentNullException"/>.
+    /// </summary>
     public void ThrowsArgumentNullException_WhenValueIsNull()
     {
         // Arrange
@@ -60,6 +75,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         Assert.Throws<ArgumentNullException>(() => exception!.ToJson());
     }
 
+    /// <summary>
+    /// Verifies that serialization includes the exception's error code property.
+    /// </summary>
     public void SerializesErrorCodeProperty()
     {
         // Arrange
@@ -72,6 +90,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.SessionErrorJsonProperty);
     }
 
+    /// <summary>
+    /// Verifies that serializing a command execution exception includes its message, error code, and command.
+    /// </summary>
     public void SerializesCommandExecutionException()
     {
         // Arrange
@@ -87,6 +108,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         json.Should().Contain(BotFrameworkExceptionJsonExtensionsTestsConstants.TestCommand);
     }
 
+    /// <summary>
+    /// Verifies that deserializing a null JSON value returns null.
+    /// </summary>
     public void ReturnsNull_WhenJsonIsNull()
     {
         // Arrange & Act
@@ -96,6 +120,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that deserializing an empty JSON string returns null.
+    /// </summary>
     public void ReturnsNull_WhenJsonIsEmpty()
     {
         // Arrange & Act
@@ -105,6 +132,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that deserializing whitespace-only JSON returns null.
+    /// </summary>
     public void ReturnsNull_WhenJsonIsWhitespace()
     {
         // Arrange & Act
@@ -114,6 +144,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that valid serialized exception JSON is deserialized with the original message and error code.
+    /// </summary>
     public void ReturnsDeserializedException_WhenJsonIsValid()
     {
         // Arrange
@@ -129,6 +162,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.TestErrorCode001);
     }
 
+    /// <summary>
+    /// Verifies that JSON with camel-case properties is deserialized into an exception with the expected message and error code.
+    /// </summary>
     public void ReturnsDeserializedException_WhenJsonHasCamelCaseProperties()
     {
         // Arrange
@@ -143,6 +179,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.CamelCaseTestErrorCode);
     }
 
+    /// <summary>
+    /// Verifies that deserializing malformed JSON returns null.
+    /// </summary>
     public void ReturnsNull_WhenJsonIsMalformed()
     {
         // Arrange
@@ -155,6 +194,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that deserializing JSON with an invalid structure returns null.
+    /// </summary>
     public void ReturnsNull_WhenJsonHasInvalidStructure()
     {
         // Arrange
@@ -167,6 +209,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize null JSON returns false and a null exception.
+    /// </summary>
     public void ReturnsFalse_WhenJsonIsNull()
     {
         // Arrange
@@ -180,6 +225,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize null JSON through the try-pattern API throws an <see cref="ArgumentNullException"/>.
+    /// </summary>
     public void ThrowsArgumentNullException_WhenJsonIsNull()
     {
         // Arrange
@@ -189,6 +237,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         Assert.Throws<ArgumentNullException>(() => BotFrameworkExceptionJsonExtensions.TryFromJson(json!, out _));
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize an empty JSON string returns false and a null exception.
+    /// </summary>
     public void ReturnsFalse_WhenJsonIsEmpty()
     {
         // Arrange
@@ -202,6 +253,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize whitespace-only JSON returns false and a null exception.
+    /// </summary>
     public void ReturnsFalse_WhenJsonIsWhitespace()
     {
         // Arrange
@@ -215,6 +269,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize valid JSON returns true and an exception with the original message and error code.
+    /// </summary>
     public void ReturnsTrueAndDeserializedException_WhenJsonIsValid()
     {
         // Arrange
@@ -231,6 +288,9 @@ public class BotFrameworkExceptionJsonExtensionsTests : IBotFrameworkExceptionJs
         exception.ErrorCode.Should().Be(BotFrameworkExceptionJsonExtensionsTestsConstants.ValidErrorCode);
     }
 
+    /// <summary>
+    /// Verifies that attempting to deserialize malformed JSON returns false and a null exception.
+    /// </summary>
     public void ReturnsFalseAndNull_WhenJsonIsMalformed()
     {
         // Arrange
