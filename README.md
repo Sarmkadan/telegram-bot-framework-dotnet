@@ -6455,6 +6455,40 @@ Console.WriteLine($"Current concurrency: {stats.CurrentConcurrency}");
 Console.WriteLine($"Timestamp: {stats.Timestamp}");
 ```
 
+## BroadcastResult
+
+`BroadcastResult` describes the outcome of sending a broadcast, including the total, successful, and failed chat counts together with the corresponding chat details. Use the `Success`, `Failure`, or `Mixed` factory method to represent the overall outcome, or construct an instance directly when the counts and summary come from another source.
+
+**Example usage:**
+
+```csharp
+using System;
+using TelegramBotFramework.Services;
+
+long[] successfulChatIds = [12001, 12002];
+FailedChat[] failures =
+[
+    new FailedChat(12003, "The bot was blocked by the user.", retryAttempts: 2)
+];
+
+BroadcastResult result = BroadcastResult.Mixed(
+    totalChats: 3,
+    successfulChatIds: successfulChatIds,
+    failures: failures,
+    summary: "The broadcast completed with one failed delivery.");
+
+Console.WriteLine(result.Summary);
+Console.WriteLine($"Delivered to {result.SuccessCount} of {result.TotalChats} chats.");
+Console.WriteLine($"Failed deliveries: {result.FailedCount}");
+
+foreach (long chatId in result.SuccessfulChatIds)
+{
+    Console.WriteLine($"Delivered to chat {chatId}.");
+}
+
+Console.WriteLine($"Failure records captured: {result.Failures.Count}");
+```
+
 ## IScheduledMessageService
 
 `IScheduledMessageService` schedules Telegram messages for a future time or after a delay and lets callers inspect or cancel them by ID. Scheduled entries expose their delivery state through `ScheduledMessage`, including timestamps, retry information, cancellation and sent flags, and any error message.
