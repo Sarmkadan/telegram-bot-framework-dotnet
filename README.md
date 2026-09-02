@@ -7005,6 +7005,34 @@ static async Task RunBroadcastServiceSmokeTestsAsync()
 }
 ```
 
+## EventPublisherTests
+
+`EventPublisherTests` is an xUnit test fixture that verifies `EventPublisher` dependency validation, correlation ID handling, and the payloads published for message, command, bot-state, and generic events. Test runners discover its public test methods automatically, while the constructor and methods can also be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests;
+
+static async Task RunEventPublisherSmokeTestsAsync()
+{
+    var tests = new EventPublisherTests();
+
+    tests.Constructor_WithNullEventBus_ThrowsArgumentNullException();
+    tests.Constructor_WithNullLogger_CreatesConsoleLogger();
+    tests.WithCorrelationId_SetsCorrelationIdAndReturnsPublisher();
+    tests.WithCorrelationId_MultipleCalls_OverwritesPreviousValue();
+
+    await tests.PublishMessageReceivedAsync_CallsEventBusWithCorrectEvent();
+    await tests.PublishCommandExecutedAsync_WithErrorMessage_SetsErrorMessage();
+    await tests.PublishBotStateChangedAsync_WithCorrelationId_SetsCorrelationIdOnEvent();
+    await tests.PublishAsync_GenericMethod_CallsEventBusWithCorrectEvent();
+
+    tests.LoggingMessageEventHandler_CanBeCreated();
+}
+```
+
 ## MessageServiceTests
 
 `MessageServiceTests` is an xUnit test fixture that exercises message creation and retrieval, status transitions, failure handling, archival, polls, and media-group delivery through `MessageService`. Test runners discover its asynchronous test methods automatically, while its public constructor and methods can also be used for a focused smoke run.
