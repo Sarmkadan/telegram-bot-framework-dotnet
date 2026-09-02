@@ -6911,3 +6911,27 @@ static async Task RunScheduledMessageServiceSmokeTestsAsync()
     new ScheduledMessageServiceTests().Dispose_CleansUpResources();
 }
 ```
+
+## CallbackDataSignerTests
+
+`CallbackDataSignerTests` is an xUnit test fixture that verifies deterministic callback-data signing, secret-dependent signatures, input validation, tamper detection, payload extraction, and Telegram's callback-data size limit. Test runners discover its public test methods automatically, while the methods can also be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunCallbackDataSignerSmokeTests()
+{
+    var tests = new CallbackDataSignerTests();
+
+    tests.Sign_WithValidDataAndSecret_ReturnsSignedData();
+    tests.Sign_ProducesSameOutputForSameInputAndSecret();
+    tests.Sign_ProducesDifferentOutputForSameInputWithDifferentSecrets();
+    tests.TryValidate_WithValidSignedData_ReturnsTrueAndExtractsOriginalData();
+    tests.TryValidate_WithTamperedSignedData_ReturnsFalse();
+    tests.TryValidate_WithInvalidSecret_ReturnsFalse();
+    tests.TryValidate_WithLongData_FitsWithinTelegramLimit();
+    tests.Sign_WithDataThatWouldExceedLimit_ThrowsArgumentException();
+}
+```
