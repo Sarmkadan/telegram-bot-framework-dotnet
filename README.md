@@ -173,6 +173,55 @@ Console.WriteLine(answeredCorrectly
     : "That answer is incorrect.");
 ```
 
+## QuizFlowHelper
+
+`QuizFlowHelper` groups validated `QuizQuestion` instances into a named quiz flow and exposes the configured questions for use by the conversation-flow engine. Questions can be added individually or in batches with its fluent API, while `GetQuestionCount()` and `GetQuestions()` provide read-only access to the resulting quiz definition.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.ConversationFlow.QuizFlow;
+
+using var quiz = new QuizFlowHelper("general-knowledge", "General Knowledge")
+{
+    Description = "A quick warm-up quiz.",
+    CompletionMenuId = "main-menu"
+};
+
+quiz.AddQuestion(new QuizQuestion
+{
+    QuestionId = "capital-of-france",
+    Text = "What is the capital of France?",
+    Options = new[] { "Berlin", "Madrid", "Paris", "Rome" },
+    CorrectAnswerIndex = 2
+});
+
+quiz.AddQuestions(new[]
+{
+    new QuizQuestion
+    {
+        QuestionId = "largest-ocean",
+        Text = "Which is the largest ocean?",
+        Options = new[] { "Atlantic", "Indian", "Pacific" },
+        CorrectAnswerIndex = 2
+    },
+    new QuizQuestion
+    {
+        QuestionId = "days-in-leap-year",
+        Text = "How many days are in a leap year?",
+        Options = new[] { "365", "366", "367" },
+        CorrectAnswerIndex = 1
+    }
+});
+
+Console.WriteLine($"{quiz.Name} ({quiz.FlowId}): {quiz.GetQuestionCount()} questions");
+
+foreach (QuizQuestion quizQuestion in quiz.GetQuestions())
+{
+    Console.WriteLine(quizQuestion.Text);
+}
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
