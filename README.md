@@ -96,6 +96,26 @@ Console.WriteLine(defaultLanguageMessage);
 Console.WriteLine(rawTemplate);
 ```
 
+## ReplyKeyboardBuilder
+
+`ReplyKeyboardBuilder` provides a fluent API for arranging Telegram reply-keyboard buttons into rows and configuring whether the keyboard is persistent and resized. Rows wrap automatically at the configured maximum, while `NewRow()` lets you place an explicit break before producing a `ReplyKeyboardMarkup` with `Build()`.
+
+**Example usage:**
+
+```csharp
+using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBotFramework.Keyboard;
+
+ReplyKeyboardMarkup keyboard = ReplyKeyboardBuilder.Create(maxButtonsPerRow: 2)
+    .AddButton("View orders")
+    .AddButton("Track delivery")
+    .NewRow()
+    .AddButton("Share location", button => button.RequestLocation = true)
+    .Persistent()
+    .Resize()
+    .Build();
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
