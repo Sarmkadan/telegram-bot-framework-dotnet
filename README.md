@@ -7263,3 +7263,31 @@ static void RunBotFrameworkExceptionSmokeTests()
     tests.ConfigurationAndDuplicateUpdateExceptions_ShouldSetPropertiesCorrectly();
 }
 ```
+
+## CryptoUtilityTests
+
+`CryptoUtilityTests` is an xUnit test fixture that verifies deterministic SHA-256, MD5, and HMAC hashing, password hashing and verification, random string and token generation, and Base64 round trips. It also covers invalid or empty inputs, and its public test methods can be invoked directly for a focused smoke run in addition to normal test-runner discovery.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunCryptoUtilitySmokeTests()
+{
+    var tests = new CryptoUtilityTests();
+
+    tests.HashSHA256_ShouldBeDeterministic("hello");
+    tests.HashSHA256_EmptyInput_ReturnsEmptyString();
+    tests.HashMD5_ShouldBeDeterministic();
+    tests.HashPassword_VerifyPassword_Roundtrip();
+    tests.HashPassword_EmptyPassword_ThrowsArgumentException();
+    tests.VerifyPassword_InvalidHash_ReturnsFalse();
+    tests.GenerateRandomString_ReturnsCorrectLength();
+    tests.GenerateRandomString_InvalidLength_ThrowsArgumentException();
+    tests.GenerateRandomToken_ReturnsCorrectLength();
+    tests.ComputeHmacSHA256_Deterministic("message", "key");
+    tests.Base64_Roundtrip();
+    tests.DecodeBase64_InvalidInput_ReturnsNull();
+}
+```
