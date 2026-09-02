@@ -7577,3 +7577,29 @@ static async Task RunAuthenticationMiddlewareTestsAsync()
     await tests.InvokeAsync_WhenPublicEndpoint_DoesNotRequireAuthentication();
 }
 ```
+
+## InlineQueryServiceTests
+
+InlineQueryServiceTests verifies the inline query service's functionality, including result pagination, caching, cache invalidation, query recording, and service registration. It ensures that inline queries are handled correctly with proper pagination, that caching works as expected, and that service registration validates against null dependencies.
+
+**Example usage:**
+
+
+
+## InlineQueryServiceTests
+
+InlineQueryServiceTests verifies the inline query service's functionality, including result pagination, caching, cache invalidation, query recording, and service registration. It ensures that inline queries are handled correctly with proper pagination, that caching works as expected, and that service registration validates against null dependencies.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests.Services;
+
+static async Task RunInlineQueryServiceTestsAsync()
+{
+    var tests = new InlineQueryServiceTests();
+    await tests.HandleAsync_WithValidQuery_ReturnsPagedResults();
+    await tests.GetCachedAsync_WithCachedResults_ReturnsPagedResults();
+}
+```
