@@ -7467,6 +7467,36 @@ static async Task RunRateLimitingMiddlewareSmokeTestsAsync()
 }
 ```
 
+## AuthorizationMiddlewareTests
+
+`AuthorizationMiddlewareTests` is an xUnit fixture that verifies authorization middleware behavior for invalid or missing user contexts, regular users, moderators, administrators, and admin-only commands. It also checks middleware priority and constructor null-argument validation; test runners discover its public test methods automatically, while the methods can be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Middleware.Tests;
+
+static async Task RunAuthorizationMiddlewareSmokeTestsAsync()
+{
+    var tests = new AuthorizationMiddlewareTests();
+
+    await tests.ProcessAsync_WhenContextInvalid_PassesToNext();
+    await tests.ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext();
+    await tests.ProcessAsync_WhenUserIsRegularAndNoCommand_PassesThrough();
+    await tests.ProcessAsync_WhenUserIsAdminAndNoCommand_PassesThrough();
+    await tests.ProcessAsync_WhenRegularUserTriesAdminCommand_BlocksAndAddsError();
+    await tests.ProcessAsync_WhenAdminUserExecutesAdminCommand_PassesThrough();
+    await tests.ProcessAsync_WhenModeratorTriesAdminCommand_BlocksAndAddsError();
+    await tests.ProcessAsync_WhenUserHasAdminRoleExecutesAdminCommand_PassesThrough();
+    await tests.ProcessAsync_WhenUserWithoutCommand_ExecutesRegularCommands();
+    tests.Priority_ReturnsCorrectValue();
+    tests.Constructor_WhenCommandServiceNull_Throws();
+    tests.Constructor_WhenUserServiceNull_Throws();
+    tests.Constructor_WhenLoggerNull_Throws();
+}
+```
+
 ## InMemoryRateLimitingStrategyTests
 
 `InMemoryRateLimitingStrategyTests` is an xUnit fixture that verifies requests expire correctly at, inside, and outside the rate-limit window and that remaining-request counts honor the same boundary conditions. It also checks asynchronous action limits and confirms that separate identifiers are rate-limited independently; test runners discover these methods automatically, while they can be invoked directly for a focused smoke run.
