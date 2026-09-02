@@ -7406,3 +7406,29 @@ static async Task RunFileConversationStateStoreSmokeTestsAsync()
     }
 }
 ```
+
+## PollingStrategyTests
+
+`PollingStrategyTests` is an xUnit fixture that verifies `PollingStrategy` construction, lifecycle management, update processing, status reporting, polling intervals, offset advancement, retry delays, and graceful cancellation. Test runners discover its public test methods automatically, and the methods can also be invoked directly for a focused asynchronous smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests.Integration;
+
+static async Task RunPollingStrategySmokeTestsAsync()
+{
+    var tests = new PollingStrategyTests();
+
+    tests.Constructor_WithNullApiClient_ThrowsArgumentNullException();
+    tests.Constructor_WithNullLogger_UsesConsoleLogger();
+    await tests.StopAsync_WhenNotRunning_DoesNotThrow();
+    await tests.ProcessUpdateAsync_WithNullUpdate_ThrowsArgumentNullException();
+    await tests.ProcessUpdateAsync_AdvancesLastUpdateId();
+    await tests.ProcessUpdateAsync_InvokesOnUpdateReceivedEvent();
+    tests.GetStatus_ReturnsCorrectPollingStatus();
+    await tests.Polling_WithUpdates_ProcessesThemAndAdvancesOffset();
+    await tests.Polling_WithCancellation_StopsGracefully();
+}
+```
