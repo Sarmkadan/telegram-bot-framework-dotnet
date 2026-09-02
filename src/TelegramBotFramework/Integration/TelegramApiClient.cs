@@ -98,7 +98,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="buttonLabels">Two-dimensional array representing the keyboard layout where each inner array is a row of buttons</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was sent successfully, false otherwise</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="text"/> exceeds the maximum message length.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/>, <paramref name="text"/>, or a button label is invalid.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="buttonLabels"/> is <see langword="null"/>.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
@@ -106,8 +106,20 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
+        if (string.IsNullOrWhiteSpace(text))
+            throw new ArgumentException("Message text cannot be empty", nameof(text));
+
         if (text.Length > TelegramApiClientConstants.MaxMessageTextLength)
             throw new ArgumentException("Message text cannot exceed 4096 characters", nameof(text));
+
+        if (buttonLabels == null)
+            throw new ArgumentNullException(nameof(buttonLabels));
+
+        if (buttonLabels.Any(row => row == null))
+            throw new ArgumentException("Button label rows cannot be null", nameof(buttonLabels));
+
+        if (buttonLabels.Any(row => row.Any(string.IsNullOrWhiteSpace)))
+            throw new ArgumentException("Button labels cannot be empty", nameof(buttonLabels));
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -133,7 +145,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="newText">New text of the message</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was edited successfully, false otherwise</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="messageId"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid, <paramref name="messageId"/> is not positive, or <paramref name="newText"/> is invalid.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
     {
@@ -142,6 +154,12 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         if (messageId <= 0)
             throw new ArgumentException("Message ID must be positive", nameof(messageId));
+
+        if (string.IsNullOrWhiteSpace(newText))
+            throw new ArgumentException("Message text cannot be empty", nameof(newText));
+
+        if (newText.Length > TelegramApiClientConstants.MaxMessageTextLength)
+            throw new ArgumentException("Message text cannot exceed 4096 characters", nameof(newText));
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -156,12 +174,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="messageId">Identifier of the message to delete</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     /// <returns>True if the message was deleted successfully, false otherwise</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="messageId"/> is not positive.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
+
+        if (messageId <= 0)
+            throw new ArgumentException("Message ID must be positive", nameof(messageId));
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -179,6 +200,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Message ID of the sent poll if successful, null otherwise</returns>
     /// <exception cref="ArgumentException">Thrown when the chat identifier, question, or answer options are invalid.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is <see langword="null"/>.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
     public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default)
     {
@@ -188,8 +210,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (string.IsNullOrWhiteSpace(question) || question.Length > TelegramApiClientConstants.MaxPollQuestionLength)
             throw new ArgumentException("Question must be 1-256 characters", nameof(question));
 
-        if (options == null
-            || options.Length < TelegramApiClientConstants.MinPollOptions
+        if (options == null)
+            throw new ArgumentNullException(nameof(options));
+
+        if (options.Length < TelegramApiClientConstants.MinPollOptions
             || options.Length > TelegramApiClientConstants.MaxPollOptions)
             throw new ArgumentException("Must provide 2-10 options", nameof(options));
 
@@ -255,13 +279,16 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="items"/> has an invalid count or item.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="items"/> is <see langword="null"/>.</exception>
     public async Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
 
-        if (items == null
-            || items.Count < TelegramApiClientConstants.MinMediaGroupItems
+        if (items == null)
+            throw new ArgumentNullException(nameof(items));
+
+        if (items.Count < TelegramApiClientConstants.MinMediaGroupItems
             || items.Count > TelegramApiClientConstants.MaxMediaGroupItems)
             throw new ArgumentException("Must provide 2-10 media items", nameof(items));
 
@@ -363,11 +390,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="callbackQueryId">The unique identifier of the callback query to answer.</param>
     /// <param name="notificationText">Optional text to display to the user as a notification.</param>
     /// <returns><see langword="true"/> if Telegram accepts the answer; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="callbackQueryId"/> is empty or consists only of white-space characters.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="callbackQueryId"/> or a supplied <paramref name="notificationText"/> is empty or consists only of white-space characters.</exception>
     public async Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null)
     {
         if (string.IsNullOrWhiteSpace(callbackQueryId))
             throw new ArgumentException("Callback query ID cannot be empty", nameof(callbackQueryId));
+
+        if (notificationText != null && string.IsNullOrWhiteSpace(notificationText))
+            throw new ArgumentException("Notification text cannot be empty", nameof(notificationText));
 
         var payload = new { callback_query_id = callbackQueryId, text = notificationText };
         return await SendApiRequestAsync(
@@ -413,6 +443,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
     {
         if (commands == null)
             throw new ArgumentNullException(nameof(commands));
+
+        if (commands.Any(command => command == null))
+            throw new ArgumentException("Commands cannot contain null items", nameof(commands));
+
+        if (commands.Any(command => string.IsNullOrWhiteSpace(command.Command)))
+            throw new ArgumentException("Command name cannot be empty", nameof(commands));
+
+        if (commands.Any(command => string.IsNullOrWhiteSpace(command.Description)))
+            throw new ArgumentException("Command description cannot be empty", nameof(commands));
 
         cancellationToken.ThrowIfCancellationRequested();
 
