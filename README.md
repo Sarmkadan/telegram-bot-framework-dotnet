@@ -7556,3 +7556,24 @@ static void RunInlineKeyboardBuilderEdgeCaseTests()
     tests.ToButtonLabels_EmptyRow_NotIncludedInOutput();
 }
 ```
+
+
+
+## AuthenticationMiddlewareTests
+
+`AuthenticationMiddlewareTests` is an xUnit fixture that verifies the authentication middleware's behavior for various scenarios including valid and invalid API keys (Bearer, header, query), missing headers, empty or whitespace keys, null paths, and public endpoints (like health, webhook, swagger, bot update). It also tests case sensitivity for token comparisons and ensures that public endpoints do not require authentication.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Middleware.Tests;
+
+static async Task RunAuthenticationMiddlewareTestsAsync()
+{
+    var tests = new AuthenticationMiddlewareTests();
+    await tests.InvokeAsync_WhenBearerTokenValid_PassesAuthentication();
+    await tests.InvokeAsync_WhenBearerTokenInvalid_Returns401();
+    await tests.InvokeAsync_WhenPublicEndpoint_DoesNotRequireAuthentication();
+}
+```
