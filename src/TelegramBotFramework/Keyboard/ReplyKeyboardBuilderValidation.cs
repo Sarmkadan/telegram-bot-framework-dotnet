@@ -5,12 +5,18 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Globalization;
+
 namespace TelegramBotFramework.Keyboard;
 
 /// <summary>
 /// Provides validation helpers for <see cref="IReplyKeyboardBuilder"/> to ensure
 /// keyboard configurations are valid before building or using them.
 /// </summary>
+/// <remarks>
+/// This class contains extension methods that validate the state of a <see cref="ReplyKeyboardBuilder"/>
+/// instance and report any validation errors.
+/// </remarks>
 public static class ReplyKeyboardBuilderValidation
 {
     /// <summary>
@@ -25,11 +31,13 @@ public static class ReplyKeyboardBuilderValidation
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="value"/> is not an instance of <see cref="ReplyKeyboardBuilder"/>.
+    /// </exception>
     public static IReadOnlyList<string> Validate(this IReplyKeyboardBuilder value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        // We need to cast to ReplyKeyboardBuilder to access Build method
         if (value is not ReplyKeyboardBuilder builder)
         {
             throw new ArgumentException(ReplyKeyboardBuilderValidationConstants.ValidatorOnlyWorksWithReplyKeyboardBuilderInstances, nameof(value));
@@ -37,49 +45,47 @@ public static class ReplyKeyboardBuilderValidation
 
         var errors = new List<string>();
 
-        // Validate that we can build the keyboard (checks for empty keyboard)
         try
         {
-            _ = builder.Build();
+            var markup = builder.Build();
+
+            var rowIndex = 0;
+            foreach (var row in markup.Keyboard)
+            {
+                if (!row.Any())
+                {
+                    errors.Add(string.Format(CultureInfo.InvariantCulture, "Row {0} is empty.", rowIndex));
+                    rowIndex++;
+                    continue;
+                }
+
+                var buttonIndex = 0;
+                foreach (var button in row)
+                {
+                    if (string.IsNullOrWhiteSpace(button.Text))
+                    {
+                        errors.Add(string.Format(CultureInfo.InvariantCulture, ReplyKeyboardBuilderValidationConstants.ButtonEmptyTextFormat, rowIndex, buttonIndex));
+                    }
+                    else if (button.Text.Length > ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength)
+                    {
+                        errors.Add(string.Format(
+                            CultureInfo.InvariantCulture,
+                            ReplyKeyboardBuilderValidationConstants.ButtonTextTooLongFormat,
+                            rowIndex,
+                            buttonIndex,
+                            ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength,
+                            button.Text.Length));
+                    }
+
+                    buttonIndex++;
+                }
+
+                rowIndex++;
+            }
         }
         catch (InvalidOperationException ex)
         {
             errors.Add(ex.Message);
-            return errors.AsReadOnly(); // Early return if build fails
-        }
-
-        // Validate the built markup if successful
-        var markup = builder.Build();
-
-        // Validate each row in the built markup
-        var rowIndex = 0;
-        foreach (var row in markup.Keyboard)
-        {
-            if (row.Count() == 0)
-            {
-                errors.Add($"Row {rowIndex} is empty.");
-                rowIndex++;
-                continue;
-            }
-
-            // Validate each button in the row
-            var buttonIndex = 0;
-            foreach (var button in row)
-            {
-                // Validate button text
-                if (string.IsNullOrWhiteSpace(button.Text))
-                {
-                    errors.Add(string.Format(ReplyKeyboardBuilderValidationConstants.ButtonEmptyTextFormat, rowIndex, buttonIndex));
-                }
-                else if (button.Text.Length > ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength)
-                {
-                    errors.Add(string.Format(ReplyKeyboardBuilderValidationConstants.ButtonTextTooLongFormat, rowIndex, buttonIndex, ReplyKeyboardBuilderValidationConstants.MaxButtonTextLength, button.Text.Length));
-                }
-
-                buttonIndex++;
-            }
-
-            rowIndex++;
         }
 
         return errors.AsReadOnly();
@@ -95,11 +101,10 @@ public static class ReplyKeyboardBuilderValidation
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
-    public static bool IsValid(this IReplyKeyboardBuilder value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="value"/> is not an instance of <see cref="ReplyKeyboardBuilder"/>.
+    /// </exception>
+    public static bool IsValid(this IReplyKeyboardBuilder value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="IReplyKeyboardBuilder"/> is in a valid state,
@@ -111,8 +116,7 @@ public static class ReplyKeyboardBuilderValidation
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentException">
-    /// Thrown when the builder contains validation errors. The exception message
-    /// lists all problems found.
+    /// Thrown when <paramref name="value"/> is not an instance of <see cref="ReplyKeyboardBuilder"/> or when the builder contains validation errors.
     /// </exception>
     public static void EnsureValid(this IReplyKeyboardBuilder value)
     {
@@ -126,7 +130,10 @@ public static class ReplyKeyboardBuilderValidation
         }
 
         throw new ArgumentException(
-            $"ReplyKeyboardBuilder validation failed with {errors.Count} error(s):{Environment.NewLine}" +
-            string.Join(Environment.NewLine, errors));
+            string.Format(
+                CultureInfo.InvariantCulture,
+                ReplyKeyboardBuilderValidationConstants.ValidationFailedHeader,
+                errors.Count) + Environment.NewLine + string.Join(Environment.NewLine, errors),
+            nameof(value));
     }
 }
