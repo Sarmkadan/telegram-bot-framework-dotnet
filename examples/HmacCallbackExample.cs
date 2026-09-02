@@ -25,9 +25,18 @@ using TelegramBotFramework.Utilities;
 
 namespace TelegramBotFramework.Examples;
 
+/// <summary>
+/// Provides examples of using HMAC signing for callback data security in Telegram bot framework.
+/// </summary>
 public static class HmacCallbackExample
 {
-    // Example 1: Simple signed button
+    /// <summary>
+    /// Demonstrates creating a simple inline keyboard with two HMAC-signed buttons.
+    /// </summary>
+    /// <remarks>
+    /// The callback data for each button is signed using a secret key, preventing forgery.
+    /// Example callback data format: "delete_account:123|{8-hex-chars}" and "cancel_action|{8-hex-chars}".
+    /// </remarks>
     public static void Example1_SimpleSignedButton()
     {
         var secret = HmacCallbackExampleConstants.SimpleSecret;
@@ -42,7 +51,13 @@ public static class HmacCallbackExample
         // These cannot be forged without knowing the secret key
     }
 
-    // Example 2: Signed confirmation dialog
+    /// <summary>
+    /// Demonstrates creating a signed confirmation dialog with purchase and cancel buttons.
+    /// </summary>
+    /// <remarks>
+    /// The confirmation button uses a formatted callback data string that includes a user ID,
+    /// while the cancel button uses a static callback data string. Both are signed with the same secret.
+    /// </remarks>
     public static void Example2_SignedConfirmation()
     {
         var secret = HmacCallbackExampleConstants.ConfirmationSecret;
@@ -54,7 +69,13 @@ public static class HmacCallbackExample
             .Build();
     }
 
-    // Example 3: Signed pagination
+    /// <summary>
+    /// Demonstrates creating a paginated inline keyboard with HMAC-signed navigation buttons.
+    /// </summary>
+    /// <remarks>
+    /// The keyboard includes buttons for previous page, current page display, and next page.
+    /// All callback data is signed using a secret key to prevent tampering.
+    /// </remarks>
     public static void Example3_SignedPagination()
     {
         var secret = HmacCallbackExampleConstants.PaginationSecret;
@@ -68,7 +89,13 @@ public static class HmacCallbackExample
             .Build();
     }
 
-    // Example 4: Using extension methods for convenience
+    /// <summary>
+    /// Demonstrates using extension methods for convenience when creating signed keyboards.
+    /// </summary>
+    /// <remarks>
+    /// Shows how to use AddSignedConfirmationRow() to add pre-configured confirm/cancel buttons,
+    /// and AddSignedButton() for custom actions like approve/reject.
+    /// </remarks>
     public static void Example4_UsingExtensions()
     {
         var secret = HmacCallbackExampleConstants.ExtensionSecret;
@@ -81,7 +108,20 @@ public static class HmacCallbackExample
             .Build();
     }
 
-    // Example 5: Validating incoming callback queries
+    /// <summary>
+    /// Demonstrates how to validate an incoming signed callback query from Telegram.
+    /// </summary>
+    /// <param name="signedCallbackData">The callback data received from Telegram (including the HMAC signature).</param>
+    /// <param name="secret">The secret key used to sign the callback data.</param>
+    /// <returns>
+    /// True if the callback data is authentic (signature valid) and corresponds to a known command;
+    /// false if the signature is invalid or the data is tampered.
+    /// </returns>
+    /// <remarks>
+    /// This method shows the pattern of validating the callback data, then parsing the original data
+    /// to determine the action to take. In a real bot, you would replace the placeholder logic
+    /// with actual command handling.
+    /// </remarks>
     public static bool Example5_ValidateCallback(string signedCallbackData, string secret)
     {
         ArgumentException.ThrowIfNullOrEmpty(signedCallbackData);
@@ -113,7 +153,14 @@ public static class HmacCallbackExample
         }
     }
 
-    // Example 6: Using with Menu system
+    /// <summary>
+    /// Demonstrates how to create a menu with HMAC-signed callback buttons.
+    /// </summary>
+    /// <remarks>
+    /// This example shows creating a settings menu with buttons for changing password,
+    /// updating email, notification settings, and language selection. All callback data
+    /// is signed using a secret key to prevent forgery.
+    /// </remarks>
     public static void Example6_MenuWithSignedCallbacks()
     {
         var secret = HmacCallbackExampleConstants.MenuSecret;
@@ -132,7 +179,13 @@ public static class HmacCallbackExample
         // menu.AddButton(...) would use the signed callback data
     }
 
-    // Example 7: Batch signing multiple buttons
+    /// <summary>
+    /// Demonstrates batch signing multiple buttons using the AddSignedButtons extension method.
+    /// </summary>
+    /// <remarks>
+    /// This method shows how to sign multiple button callback data in a single call, which is
+    /// more efficient than signing each button individually when you have many buttons.
+    /// </remarks>
     public static void Example7_BatchSignedButtons()
     {
         var secret = HmacCallbackExampleConstants.BatchSecret;
@@ -148,7 +201,13 @@ public static class HmacCallbackExample
             .Build();
     }
 
-    // Example 8: Security considerations
+    /// <summary>
+    /// Demonstrates security best practices for using HMAC signing in Telegram bots.
+    /// </summary>
+    /// <remarks>
+    /// This example shows what not to do (using predictable secrets, hardcoding secrets) and what to do
+    /// (using long random secrets, loading from configuration, rotating secrets).
+    /// </remarks>
     public static void Example8_SecurityBestPractices()
     {
         // ❌ DON'T: Use predictable secrets
@@ -169,6 +228,9 @@ public static class HmacCallbackExample
 }
 
 // Example usage in a bot handler:
+/// <summary>
+/// Example handler showing how to process validated callback queries in a bot.
+/// </summary>
 public class CallbackHandlerExample
 {
     private readonly string _hmacSecret = HmacCallbackExampleConstants.ConfigurationSecretPlaceholder;
