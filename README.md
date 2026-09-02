@@ -141,6 +141,38 @@ static void RunReplyKeyboardBuilderSmokeTests()
 }
 ```
 
+## QuizQuestion
+
+`QuizQuestion` represents a validated multiple-choice question, including its answer options, zero-based correct-answer index, score, and optional feedback and timeout. It can format itself for display and determine whether a selected option is correct.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.ConversationFlow.QuizFlow;
+
+var question = new QuizQuestion
+{
+    QuestionId = "geography-capital-france",
+    Text = "What is the capital of France?",
+    Options = new[] { "Berlin", "Madrid", "Paris", "Rome" },
+    CorrectAnswerIndex = 2,
+    Score = 10,
+    Feedback = "Paris has been the capital of France since 987.",
+    TimeoutSeconds = 30
+};
+
+question.Validate();
+
+Console.WriteLine(question.FormatQuestion());
+
+int selectedAnswerIndex = 2;
+bool answeredCorrectly = question.IsCorrect(selectedAnswerIndex);
+
+Console.WriteLine(answeredCorrectly
+    ? $"Correct! You earned {question.Score} points. {question.Feedback}"
+    : "That answer is incorrect.");
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
