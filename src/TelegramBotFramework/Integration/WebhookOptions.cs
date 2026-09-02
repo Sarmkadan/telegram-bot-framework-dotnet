@@ -90,6 +90,8 @@ public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
         return HashCode.Combine(Url, SecretToken, MaxConnections, AllowedUpdates != null ? AllowedUpdates.GetHashCode() : 0, ListenPath, DropPendingUpdates);
     }
 
+    public override string ToString() => $"WebhookOptions {{ Url = {Url}, SecretToken = {SecretToken}, MaxConnections = {MaxConnections}, AllowedUpdates = {AllowedUpdates}, ListenPath = {ListenPath}, DropPendingUpdates = {DropPendingUpdates} }}";
+
     public static bool operator ==(WebhookOptions? left, WebhookOptions? right)
     {
         return Equals(left, right);
