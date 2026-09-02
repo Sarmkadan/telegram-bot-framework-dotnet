@@ -50,6 +50,8 @@ public sealed class HttpErrorHandlingMiddleware : IHttpErrorHandlingMiddleware
     /// </summary>
     public string TraceId { get; set; } = string.Empty;
 
+    public override string ToString() => $"HttpErrorHandlingMiddleware {{ ErrorCode = {ErrorCode}, Message = {Message}, Timestamp = {Timestamp}, Path = {Path}, TraceId = {TraceId}, ErrorCode = {ErrorCode} }}";
+
     /// <summary>
     /// 
     /// </summary>
