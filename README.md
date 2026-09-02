@@ -4462,6 +4462,39 @@ Console.WriteLine($"Updated: {mainMenu.UpdatedAt}");
 Console.WriteLine($"Max Buttons Per Row: {mainMenu.MaxButtonsPerRow}");
 ```
 
+## InlineQueryResultBuilder
+
+`InlineQueryResultBuilder` provides a fluent way to assemble article, media, location, sticker, and existing inline query results while enforcing Telegram's result limits. Validation is enabled by default, so `Build` validates the collection and returns it as an `IList<InlineQueryResult>`; `Validate` and `IsValid` can also be used to check the collection explicitly.
+
+**Example usage:**
+
+```csharp
+using System;
+using System.Collections.Generic;
+using TelegramBotFramework.Keyboard;
+using TelegramBotFramework.Models;
+
+var builder = InlineQueryResultBuilder.Create(maxResults: 10)
+    .AddArticle(
+        id: "guide-article",
+        title: "Getting started guide",
+        content: "Open the guide at https://example.com/guides/getting-started",
+        description: "A quick introduction to the bot")
+    .AddPhoto(
+        id: "office-photo",
+        photoUrl: "https://example.com/images/office.jpg",
+        thumbnailUrl: "https://example.com/images/office-thumb.jpg",
+        caption: "Our support office")
+    .WithValidation();
+
+IReadOnlyList<string> validationErrors = builder.Validate();
+if (builder.IsValid())
+{
+    IList<InlineQueryResult> results = builder.Build();
+    Console.WriteLine($"Prepared {results.Count} inline query results.");
+}
+```
+
 ## InlineQuery
 
 The `InlineQuery` class represents an inline query received from a Telegram user. It encapsulates the query text, user information, pagination state, and processing metadata, enabling bots to handle inline queries efficiently and track their lifecycle from reception to response.
