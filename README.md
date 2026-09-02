@@ -7323,3 +7323,21 @@ static void RunCryptoUtilitySmokeTests()
     tests.DecodeBase64_InvalidInput_ReturnsNull();
 }
 ```
+
+## EventBusExtensionsTests
+
+`EventBusExtensionsTests` is an xUnit fixture that checks event-registration queries and validates the event-bus extension methods' null guards. A test runner discovers these methods automatically, while the public constructor and test methods can also be invoked directly for a focused validation run.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunEventBusExtensionsNullGuardTests()
+{
+    var tests = new EventBusExtensionsTests();
+
+    tests.IsEventRegistered_WithNullBus_ThrowsArgumentNullException();
+    tests.GetTotalSubscriberCount_WithNullBus_ThrowsArgumentNullException();
+}
+```
