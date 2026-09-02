@@ -175,6 +175,12 @@ public sealed class ConversationFlowOptions : IConversationFlowOptions, IEquatab
     }
 
     /// <summary>
+    /// Returns a string representation of the current <see cref="ConversationFlowOptions"/>.
+    /// </summary>
+    public override string ToString() =>
+        $"ConversationFlowOptions {{ DefaultFlowTimeout = {DefaultFlowTimeout}, MaxActiveFlowsPerUser = {MaxActiveFlowsPerUser}, AutoResumeOnSessionRestore = {AutoResumeOnSessionRestore}, MaxHistoryPerUser = {MaxHistoryPerUser}, FlowAbandonedMessage = {FlowAbandonedMessage}, FlowTimeoutMessage = {FlowTimeoutMessage} }}";
+
+    /// <summary>
     /// Returns a value that indicates whether the values of two <see cref="ConversationFlowOptions"/> objects are equal.
     /// </summary>
     /// <param name="left">The first value to compare.</param>
