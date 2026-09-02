@@ -6497,3 +6497,48 @@ static async Task ScheduleReminderAsync(
     }
 }
 ```
+
+## ScheduledMessageService
+
+`ScheduledMessageService` uses background timers to send Telegram messages at a specific UTC time or after a delay, returning an ID that can be used to inspect or cancel each scheduled message. It also provides snapshots of all scheduled messages or the pending messages for a particular chat, and should be disposed when it is no longer needed.
+
+**Example usage:**
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using TelegramBotFramework.Integration;
+using TelegramBotFramework.Services;
+
+static async Task ScheduleRemindersAsync(
+    ITelegramApiClient telegramApiClient,
+    long chatId,
+    CancellationToken cancellationToken = default)
+{
+    using var scheduler = new ScheduledMessageService(telegramApiClient);
+
+    var followUpId = await scheduler.ScheduleMessageAsync(
+        chatId,
+        "Remember to submit your daily report.",
+        TimeSpan.FromHours(1),
+        cancellationToken);
+
+    var meetingId = await scheduler.ScheduleMessageAsync(
+        chatId,
+        "The team meeting starts now.",
+        DateTimeOffset.UtcNow.AddDays(1),
+        cancellationToken);
+
+    var meeting = scheduler.GetScheduledMessage(meetingId);
+    var pendingForChat = scheduler.GetScheduledMessagesForChat(chatId).ToList();
+    var allScheduled = scheduler.GetAllScheduledMessages().ToList();
+
+    Console.WriteLine(
+        $"Meeting scheduled for {meeting?.ScheduledTime:u}; " +
+        $"{pendingForChat.Count} pending for this chat and {allScheduled.Count} total.");
+
+    scheduler.CancelScheduledMessage(followUpId);
+}
+```
