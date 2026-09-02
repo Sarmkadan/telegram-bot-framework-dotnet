@@ -6489,6 +6489,44 @@ foreach (long chatId in result.SuccessfulChatIds)
 Console.WriteLine($"Failure records captured: {result.Failures.Count}");
 ```
 
+## BroadcastProgress
+
+`BroadcastProgress` is a snapshot of an in-progress broadcast, reporting how many chats have been processed successfully or unsuccessfully along with elapsed time, estimated remaining time, and the current delivery rate. Its `Failures` collection provides the chat ID, error message, and retry count for each unsuccessful delivery.
+
+**Example usage:**
+
+```csharp
+using System;
+using TelegramBotFramework.Services;
+
+FailedChat[] failures =
+[
+    new FailedChat(12003, "The bot was blocked by the user.", retryAttempts: 2)
+];
+
+var progress = new BroadcastProgress(
+    totalChats: 500,
+    processedCount: 125,
+    successCount: 124,
+    failedCount: 1,
+    failures: failures,
+    elapsedTime: TimeSpan.FromSeconds(25),
+    estimatedTimeRemaining: TimeSpan.FromSeconds(75),
+    currentMessagesPerSecond: 5.0);
+
+Console.WriteLine($"Processed {progress.ProcessedCount} of {progress.TotalChats} chats.");
+Console.WriteLine($"Successful: {progress.SuccessCount}; failed: {progress.FailedCount}");
+Console.WriteLine($"Elapsed: {progress.ElapsedTime}");
+Console.WriteLine($"Estimated time remaining: {progress.EstimatedTimeRemaining}");
+Console.WriteLine($"Current rate: {progress.CurrentMessagesPerSecond:F1} messages/second");
+
+foreach (FailedChat failure in progress.Failures)
+{
+    Console.WriteLine(
+        $"Chat {failure.ChatId} failed after {failure.RetryAttempts} retries: {failure.ErrorMessage}");
+}
+```
+
 ## IScheduledMessageService
 
 `IScheduledMessageService` schedules Telegram messages for a future time or after a delay and lets callers inspect or cancel them by ID. Scheduled entries expose their delivery state through `ScheduledMessage`, including timestamps, retry information, cancellation and sent flags, and any error message.
