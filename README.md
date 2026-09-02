@@ -66,6 +66,36 @@ var fixedWindowStrategy = new FixedWindowStrategy(
 bool isFixedAllowed = fixedWindowStrategy.IsRequestAllowed(userIdentifier);
 ```
 
+## LocalizationService
+
+`LocalizationService` stores localized string templates in memory and formats them with supplied arguments. It looks up the requested language first, falls back to the default language configured in the constructor, and returns `null` from `GetTemplate` when neither translation exists.
+
+**Example usage:**
+
+```csharp
+using System.Collections.Generic;
+using TelegramBotFramework.Services;
+
+var localization = new LocalizationService(defaultLanguage: "en");
+
+localization.RegisterTemplate("welcome", "en", "Welcome, {0}!");
+localization.RegisterTemplate("welcome", "uk", "Ласкаво просимо, {0}!");
+
+localization.RegisterTemplates(new Dictionary<(string key, string language), string>
+{
+    [("unread", "en")] = "You have {0} unread messages.",
+    [("unread", "uk")] = "У вас {0} непрочитаних повідомлень."
+});
+
+string ukrainianWelcome = localization.Get("welcome", "uk", "Олена");
+string defaultLanguageMessage = localization.Get("unread", 3);
+string? rawTemplate = localization.GetTemplate("welcome", "fr"); // Falls back to English
+
+Console.WriteLine(ukrainianWelcome);
+Console.WriteLine(defaultLanguageMessage);
+Console.WriteLine(rawTemplate);
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
