@@ -116,6 +116,31 @@ ReplyKeyboardMarkup keyboard = ReplyKeyboardBuilder.Create(maxButtonsPerRow: 2)
     .Build();
 ```
 
+## ReplyKeyboardBuilderTests
+
+`ReplyKeyboardBuilderTests` verifies creation, button and row configuration, keyboard flags, validation failures, markup construction, and conversion to a menu. A test runner can execute the fixture as part of the test project, or its public methods can be called directly for a focused smoke check.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests.Keyboard;
+
+static void RunReplyKeyboardBuilderSmokeTests()
+{
+    var tests = new ReplyKeyboardBuilderTests();
+
+    tests.Create_ShouldReturnNewBuilderInstance();
+    tests.AddButton_WithText_ShouldAddButtonToCurrentRow();
+    tests.NewRow_ShouldStartNewRow();
+    tests.Build_WithMaxButtonsPerRow_ShouldCreateMultipleRows();
+    tests.Build_WithRequestContact_ShouldSetRequestContact();
+    tests.Build_WithRequestLocation_ShouldSetRequestLocation();
+    tests.Build_WithOneTime_ShouldSetOneTimeKeyboard();
+    tests.Build_WithResize_ShouldSetResizeKeyboard();
+    tests.ToMenu_ShouldConvertToMenu();
+}
+```
+
 ## Architecture
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
