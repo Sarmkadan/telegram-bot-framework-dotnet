@@ -7367,3 +7367,42 @@ static void RunBotFrameworkExceptionJsonSmokeTests()
     tests.ReturnsFalseAndNull_WhenJsonIsMalformed();
 }
 ```
+
+## FileConversationStateStoreTests
+
+`FileConversationStateStoreTests` is an xUnit fixture that verifies file-backed conversation state persistence, including save/load round trips, deletion, active-state filtering, input validation, path generation, and recovery from malformed or empty files. Test runners discover its public test methods automatically; they can also be invoked directly for a focused smoke run, with each fixture disposed to remove its temporary state directory.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests;
+
+static async Task RunFileConversationStateStoreSmokeTestsAsync()
+{
+    using (var roundtripTests = new FileConversationStateStoreTests())
+    {
+        await roundtripTests.SaveStateAsync_LoadStateAsync_Roundtrip_ReturnsSameState();
+        await roundtripTests.DeleteStateAsync_RemovesFile();
+    }
+
+    using (var recoveryTests = new FileConversationStateStoreTests())
+    {
+        await recoveryTests.LoadStateAsync_CorruptedFile_DeletesFileAndReturnsNull();
+        await recoveryTests.LoadStateAsync_EmptyFile_DeletesFileAndReturnsNull();
+        await recoveryTests.LoadStateAsync_InvalidStructure_DeletesFileAndReturnsNull();
+    }
+
+    using (var queryTests = new FileConversationStateStoreTests())
+    {
+        await queryTests.LoadAllActiveStatesAsync_ReturnsOnlyActiveStates();
+    }
+
+    using (var validationTests = new FileConversationStateStoreTests())
+    {
+        await validationTests.SaveStateAsync_NullState_ThrowsArgumentNullException();
+        validationTests.GetFilePath_ReturnsCorrectPath();
+        validationTests.Dispose_MultipleTimes_DoesNotThrow();
+    }
+}
+```
