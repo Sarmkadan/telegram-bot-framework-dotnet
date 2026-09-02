@@ -24,6 +24,13 @@ public sealed class BotController : ControllerBase, IBotController
     private readonly IMenuService _menuService;
     private readonly ILogger<BotController> _logger;
 
+    public long UserId { get; set; }
+    public long ChatId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string? LastName { get; set; }
+    public new string Content { get; set; } = string.Empty;
+    public MessageType MessageType { get; set; } = MessageType.Text;
+
     public BotController(
         IUserService userService,
         ICommandService commandService,
@@ -62,6 +69,13 @@ public sealed class BotController : ControllerBase, IBotController
 
         try
         {
+            UserId = request.UserId;
+            ChatId = request.ChatId;
+            FirstName = request.FirstName;
+            LastName = request.LastName;
+            Content = request.Content;
+            MessageType = request.MessageType;
+
             // Get or create user
             var user = await _userService.GetOrCreateUserAsync(
                 request.UserId,
@@ -236,6 +250,9 @@ public sealed class BotController : ControllerBase, IBotController
         var parts = messageContent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return parts.Length > 0 ? parts[0].TrimStart('/') : string.Empty;
     }
+
+    public override string ToString() =>
+        $"BotController {{ UserId = {UserId}, ChatId = {ChatId}, FirstName = {FirstName}, LastName = {LastName}, Content = {Content}, MessageType = {MessageType} }}";
 }
 
 /// <summary>
@@ -254,4 +271,7 @@ public sealed class ProcessMessageRequest
     public string Content { get; set; } = string.Empty;
 
     public MessageType MessageType { get; set; } = MessageType.Text;
+
+    public override string ToString() =>
+        $"ProcessMessageRequest {{ UserId = {UserId}, ChatId = {ChatId}, FirstName = {FirstName}, LastName = {LastName}, Content = {Content}, MessageType = {MessageType} }}";
 }
