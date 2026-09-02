@@ -7341,3 +7341,29 @@ static void RunEventBusExtensionsNullGuardTests()
     tests.GetTotalSubscriberCount_WithNullBus_ThrowsArgumentNullException();
 }
 ```
+
+## BotFrameworkExceptionJsonExtensionsTests
+
+`BotFrameworkExceptionJsonExtensionsTests` is an xUnit test fixture that verifies JSON serialization and deserialization for framework exceptions, including indentation, error codes, command-execution details, and camel-case properties. It also covers null, empty, whitespace, malformed, and structurally invalid JSON through both `FromJson` and `TryFromJson`; its public methods can be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunBotFrameworkExceptionJsonSmokeTests()
+{
+    var tests = new BotFrameworkExceptionJsonExtensionsTests();
+
+    tests.ReturnsValidJsonString_WhenCalledWithValidException();
+    tests.ReturnsIndentedJson_WhenIndentedParameterIsTrue();
+    tests.ReturnsCompactJson_WhenIndentedParameterIsFalse();
+    tests.SerializesErrorCodeProperty();
+    tests.SerializesCommandExecutionException();
+    tests.ReturnsDeserializedException_WhenJsonIsValid();
+    tests.ReturnsDeserializedException_WhenJsonHasCamelCaseProperties();
+    tests.ReturnsNull_WhenJsonIsMalformed();
+    tests.ReturnsTrueAndDeserializedException_WhenJsonIsValid();
+    tests.ReturnsFalseAndNull_WhenJsonIsMalformed();
+}
+```
