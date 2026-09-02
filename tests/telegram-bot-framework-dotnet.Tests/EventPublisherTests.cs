@@ -8,12 +8,18 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests;
 
+/// <summary>
+/// Verifies event publisher construction, correlation propagation, event payload publication, and logging event handler construction.
+/// </summary>
 public class EventPublisherTests : IEventPublisherTests
 {
     private readonly Mock<IEventBus> _eventBusMock;
     private readonly Mock<ILogger<EventPublisher>> _loggerMock;
     private readonly EventPublisher _publisher;
 
+    /// <summary>
+    /// Initializes publisher tests with mocked event bus and logger dependencies.
+    /// </summary>
     public EventPublisherTests()
     {
         _eventBusMock = new Mock<IEventBus>();
@@ -22,6 +28,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that constructing a publisher with a null event bus throws an argument-null exception for the event bus parameter.
+    /// </summary>
     public void Constructor_WithNullEventBus_ThrowsArgumentNullException()
     {
         _loggerMock.Object.LogInformation("Starting {TestName}", nameof(Constructor_WithNullEventBus_ThrowsArgumentNullException));
@@ -36,6 +45,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that constructing a publisher with a null logger succeeds by using the fallback logger.
+    /// </summary>
     public void Constructor_WithNullLogger_CreatesConsoleLogger()
     {
         _loggerMock.Object.LogInformation("Starting {TestName}", nameof(Constructor_WithNullLogger_CreatesConsoleLogger));
@@ -50,6 +62,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that setting a correlation identifier returns the same publisher and applies the identifier to a published message event.
+    /// </summary>
     public void WithCorrelationId_SetsCorrelationIdAndReturnsPublisher()
     {
         // Arrange
@@ -73,6 +88,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that setting the correlation identifier twice applies the second identifier to the published event.
+    /// </summary>
     public void WithCorrelationId_MultipleCalls_OverwritesPreviousValue()
     {
         // Arrange
@@ -96,6 +114,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a received message sends an event containing the supplied chat, user, and message values and the expected event type.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishMessageReceivedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
@@ -118,6 +140,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a received message with null text preserves the null value in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishMessageReceivedAsync_WithNullMessageText_SetsMessageTextToNull()
     {
         // Arrange
@@ -137,6 +163,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a received message with empty text preserves the empty value in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishMessageReceivedAsync_WithEmptyMessageText_SetsMessageTextToEmpty()
     {
         // Arrange
@@ -157,6 +187,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a configured correlation identifier is applied to a published message-received event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishMessageReceivedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
@@ -179,6 +213,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a command execution sends an event containing the supplied command details, outcome, and expected event type.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishCommandExecutedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
@@ -205,6 +243,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing an unsuccessful command execution includes its error message and failure status in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishCommandExecutedAsync_WithErrorMessage_SetsErrorMessage()
     {
         // Arrange
@@ -228,6 +270,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a command execution with null arguments preserves the null value in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishCommandExecutedAsync_WithNullArguments_SetsArgumentsToNull()
     {
         // Arrange
@@ -249,6 +295,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a command execution with empty arguments preserves the empty value in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishCommandExecutedAsync_WithEmptyArguments_SetsArgumentsToEmpty()
     {
         // Arrange
@@ -270,6 +320,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a configured correlation identifier is applied to a published command-executed event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishCommandExecutedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
@@ -292,6 +346,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a bot state change sends an event containing the previous state, new state, reason, and expected event type.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishBotStateChangedAsync_CallsEventBusWithCorrectEvent()
     {
         // Arrange
@@ -314,6 +372,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a bot state change without a reason leaves the event reason null.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishBotStateChangedAsync_WithNullReason_SetsReasonToNull()
     {
         // Arrange
@@ -333,6 +395,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that publishing a bot state change with an empty reason preserves the empty value in the event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishBotStateChangedAsync_WithEmptyReason_SetsReasonToEmpty()
     {
         // Arrange
@@ -353,6 +419,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a configured correlation identifier is applied to a published bot-state-changed event.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishBotStateChangedAsync_WithCorrelationId_SetsCorrelationIdOnEvent()
     {
         // Arrange
@@ -374,6 +444,10 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that generic event publication forwards the exact event instance to the event bus.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous publication verification.</returns>
     public async Task PublishAsync_GenericMethod_CallsEventBusWithCorrectEvent()
     {
         // Arrange
@@ -389,6 +463,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a logging message event handler can be constructed with its fallback logger.
+    /// </summary>
     public void LoggingMessageEventHandler_CanBeCreated()
     {
         _loggerMock.Object.LogInformation("Starting {TestName} without an explicit handler logger", nameof(LoggingMessageEventHandler_CanBeCreated));
@@ -403,6 +480,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a logging message event handler can be constructed with an explicitly supplied logger.
+    /// </summary>
     public void LoggingMessageEventHandler_CanBeCreatedWithLogger()
     {
         // Arrange
@@ -418,6 +498,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a logging command event handler can be constructed with its fallback logger.
+    /// </summary>
     public void LoggingCommandEventHandler_CanBeCreated()
     {
         _loggerMock.Object.LogInformation("Starting {TestName} without an explicit handler logger", nameof(LoggingCommandEventHandler_CanBeCreated));
@@ -432,6 +515,9 @@ public class EventPublisherTests : IEventPublisherTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a logging command event handler can be constructed with an explicitly supplied logger.
+    /// </summary>
     public void LoggingCommandEventHandler_CanBeCreatedWithLogger()
     {
         // Arrange
