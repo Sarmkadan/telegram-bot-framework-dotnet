@@ -11,18 +11,28 @@ using Xunit;
 
 namespace TelegramBotFramework.Tests.Services;
 
+/// <summary>
+/// Verifies inline query result pagination, caching, invalidation, recording, and service registration validation.
+/// </summary>
 public class InlineQueryServiceTests : IInlineQueryServiceTests
 {
     private readonly Mock<ICacheProvider> _cacheMock = new();
     private readonly Mock<ILogger<InlineQueryService>> _loggerMock = new();
     private readonly IInlineQueryService _service;
 
+    /// <summary>
+    /// Initializes a test fixture with mocked cache and logger dependencies for the inline query service.
+    /// </summary>
     public InlineQueryServiceTests()
     {
         _service = new InlineQueryService(_cacheMock.Object, _loggerMock.Object);
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a valid inline query returns the requested page and caches the generated results.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task HandleAsync_WithValidQuery_ReturnsPagedResults()
     {
         _loggerMock.Object.LogInformation("Starting valid inline query test for {QueryId} with page size {PageSize}", "test-query-123", 2);
@@ -74,6 +84,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that an empty offset selects the first page and produces no next offset when all results fit.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task HandleAsync_WithEmptyOffset_ReturnsFirstPage()
     {
         _loggerMock.Object.LogInformation("Starting empty offset inline query test for {QueryId}", "test-query-456");
@@ -115,6 +129,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a nonnumeric offset falls back to the first result page.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task HandleAsync_WithInvalidOffset_ReturnsFirstPage()
     {
         _loggerMock.Object.LogInformation("Starting invalid offset inline query test for {QueryId} with offset {Offset}", "test-query-789", "invalid");
@@ -155,6 +173,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that the third page contains the remaining five results and no subsequent-page offset.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task HandleAsync_WithMultiplePages_ReturnsCorrectPage()
     {
         _loggerMock.Object.LogInformation("Starting multi-page inline query test for {QueryId} with offset {Offset}", "test-query-multi", "3");
@@ -196,6 +218,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that cached inline query results are returned with first-page pagination metadata.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetCachedAsync_WithCachedResults_ReturnsPagedResults()
     {
         _loggerMock.Object.LogInformation("Starting cached inline query test for {QueryText} on page {PageNumber}", "cached query", 1);
@@ -224,6 +250,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that requesting the second cached page returns its ten results and no next offset.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetCachedAsync_WithPageNumber_ReturnsCorrectPage()
     {
         _loggerMock.Object.LogInformation("Starting paginated cache test for {QueryText} on page {PageNumber}", "paginated query", 2);
@@ -249,6 +279,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a cache miss returns a null inline query response.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetCachedAsync_WithoutCachedResults_ReturnsNull()
     {
         _loggerMock.Object.LogInformation("Starting cache miss test for {QueryText}", "nonexistent query");
@@ -268,6 +302,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that invalidating a query removes its normalized cache key exactly once.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task InvalidateCacheAsync_RemovesCachedEntry()
     {
         _loggerMock.Object.LogInformation("Starting cache invalidation test for {QueryText}", "query to invalidate");
@@ -287,6 +325,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that recording an inline query and its result count completes without throwing an exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task RecordQueryAsync_DoesNotThrow()
     {
         _loggerMock.Object.LogInformation("Starting query recording test for {QueryId} with result count {ResultCount}", "log-test-123", 5);
@@ -309,6 +351,10 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that an empty query string is processed successfully as an empty result set.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task HandleAsync_WithEmptyQueryString_ProcessesSuccessfully()
     {
         _loggerMock.Object.LogInformation("Starting empty query string test for {QueryId}", "empty-query-test");
@@ -348,6 +394,9 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that registering inline query handling on a null service collection throws an argument-null exception.
+    /// </summary>
     public void AddInlineQueryHandling_WithNullServices_Throws()
     {
         _loggerMock.Object.LogInformation("Starting service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandling));
@@ -366,6 +415,9 @@ public class InlineQueryServiceTests : IInlineQueryServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that registering local-cache inline query handling on a null service collection throws an argument-null exception.
+    /// </summary>
     public void AddInlineQueryHandlingWithLocalCache_WithNullServices_Throws()
     {
         _loggerMock.Object.LogInformation("Starting service registration validation test for {RegistrationMethod}", nameof(InlineQueryExtensions.AddInlineQueryHandlingWithLocalCache));
