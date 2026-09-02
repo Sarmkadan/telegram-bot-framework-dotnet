@@ -2295,6 +2295,38 @@ static void RunUserSessionValidationSmokeTests()
     tests.ValidateSession_ShouldReturnError_WhenExpiresAtIsBeforeCreatedAt();
 }
 ```
+## ValidationUtilityTests
+
+
+```csharp
+using TelegramBotFramework.Tests;
+
+static void RunValidationUtilitySmokeTests()
+{
+    var tests = new ValidationUtilityTests();
+
+    tests.IsValidTelegramUserId_VariousInputs_ReturnsExpectedResult();
+    tests.IsValidTelegramChatId_VariousInputs_ReturnsExpectedResult();
+    tests.IsValidTelegramToken_ValidFormats_ReturnsTrue();
+    tests.IsValidTelegramToken_InvalidFormats_ReturnsFalse();
+    tests.IsValidUrl_ValidUrls_ReturnsTrue();
+    tests.IsValidUrl_InvalidInputs_ReturnsFalse();
+    tests.IsValidIPv4_ValidAddresses_ReturnsTrue();
+    tests.IsValidIPv4_InvalidInputs_ReturnsFalse();
+    tests.IsValidPhoneNumber_ValidFormats_ReturnsTrue();
+    tests.IsValidPhoneNumber_InvalidInputs_ReturnsFalse();
+    tests.IsValidPhoneNumber_BoundaryLengths_ReturnsExpectedResult();
+    tests.IsValidCommandName_ValidFormats_ReturnsTrue();
+    tests.IsValidCommandName_InvalidInputs_ReturnsFalse();
+    tests.IsValidFilename_ValidNames_ReturnsTrue();
+    tests.IsValidFilename_InvalidInputs_ReturnsFalse();
+    tests.IsStrongPassword_ValidStrongPasswords_ReturnsTrue();
+    tests.IsStrongPassword_InvalidInputs_ReturnsFalse();
+    tests.IsStrongPassword_BoundaryLengths_ReturnsExpectedResult();
+    tests.IsValidLength_ValidLengths_ReturnsTrue();
+    tests.IsValidLength_InvalidInputs_ReturnsExpectedResult();
+}
+```
         // Arrange
         var mockRepository = new Mock<IUserRepository>();
         var mockLogger = new Mock<ILogger<UserService>>();
