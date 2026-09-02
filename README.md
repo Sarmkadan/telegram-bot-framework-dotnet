@@ -7432,3 +7432,37 @@ static async Task RunPollingStrategySmokeTestsAsync()
     await tests.Polling_WithCancellation_StopsGracefully();
 }
 ```
+
+## RateLimitingMiddlewareTests
+
+`RateLimitingMiddlewareTests` is an xUnit fixture that verifies the rate-limiting middleware's pass-through and blocking behavior for disabled limits, invalid contexts, missing users, administrators, and independent users. It also exercises fixed-window, token-bucket, and sliding-window behavior and confirms the middleware priority; test runners discover these methods automatically, while they can be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Middleware.Tests;
+
+static async Task RunRateLimitingMiddlewareSmokeTestsAsync()
+{
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenRateLimitingDisabled_PassesToNext();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenContextInvalid_PassesToNext();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenUserIsAdmin_BypassesRateLimit();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenUnderRateLimit_PassesToNext();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WhenOverRateLimit_BlocksAndAddsError();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_DifferentUsersLimitedIndependently();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WithTokenBucketStrategy_WorksCorrectly();
+    await new RateLimitingMiddlewareTests()
+        .ProcessAsync_WithSlidingWindowStrategy_WorksCorrectly();
+    new RateLimitingMiddlewareTests().Priority_ReturnsCorrectValue();
+}
+```
