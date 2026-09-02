@@ -40,33 +40,47 @@ private readonly ConcurrentDictionary<string, DateTime> _lastCommandInvocations 
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Gets a command by its primary name or alias.
+    /// </summary>
+    /// <param name="commandName">The command name or alias.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>
+    /// The matching command, or <see langword="null"/> when <paramref name="commandName"/>
+    /// is null or whitespace, or no command matches.
+    /// </returns>
     public async Task<Models.Command?> GetCommandAsync(string commandName, CancellationToken cancellationToken = default)
     {
-    var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
-
-    // First try to get the command by its primary name
-    var command = await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
-
-    if (command != null)
-    {
-        return command;
-    }
-
-    // If not found, check if it's an alias
-    // Get all commands and check their aliases
-    var allCommands = await _commandRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
-    if (allCommands != null)
+        if (string.IsNullOrWhiteSpace(commandName))
         {
-                        foreach (var cmd in allCommands)
-    {
-        if (cmd.Aliases.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-        {
-            return cmd;
+            return null;
         }
-        }
-    }
 
-    return null;
+        var normalized = commandName.StartsWith("/") ? commandName : $"/{commandName}";
+
+        // First try to get the command by its primary name
+        var command = await _commandRepository.GetByNameAsync(normalized, cancellationToken).ConfigureAwait(false);
+
+        if (command != null)
+        {
+            return command;
+        }
+
+        // If not found, check if it's an alias
+        // Get all commands and check their aliases
+        var allCommands = await _commandRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        if (allCommands != null)
+        {
+            foreach (var cmd in allCommands)
+            {
+                if (cmd.Aliases.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+                {
+                    return cmd;
+                }
+            }
+        }
+
+        return null;
     }
 
     public async Task<Models.Command> RegisterCommandAsync(Models.Command command, CancellationToken cancellationToken = default)
