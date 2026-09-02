@@ -20,8 +20,10 @@ public static class BroadcastServiceExtensions
     /// </summary>
     /// <param name="services">Service collection</param>
     /// <returns>Service collection for chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
     public static IServiceCollection AddBroadcastService(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
         services.TryAddTransient<IBroadcastService, BroadcastService>();
         return services;
     }
@@ -32,14 +34,14 @@ public static class BroadcastServiceExtensions
     /// <param name="services">Service collection</param>
     /// <param name="configure">Configuration action</param>
     /// <returns>Service collection for chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configure"/> is null.</exception>
     public static IServiceCollection AddBroadcastService(
         this IServiceCollection services,
         Action<BroadcastOptions> configure)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
 
         services.Configure(configure);
         services.TryAddTransient<IBroadcastService, BroadcastService>();
@@ -52,14 +54,14 @@ public static class BroadcastServiceExtensions
     /// <param name="services">Service collection</param>
     /// <param name="configure">Configuration action</param>
     /// <returns>Service collection for chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configure"/> is null.</exception>
     public static IServiceCollection AddBroadcastServiceSingleton(
         this IServiceCollection services,
         Action<BroadcastOptions> configure)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
 
         services.Configure(configure);
         services.AddSingleton<IBroadcastService>(provider =>
