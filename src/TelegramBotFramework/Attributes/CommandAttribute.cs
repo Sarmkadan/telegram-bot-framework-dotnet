@@ -52,4 +52,7 @@ public sealed class CommandAttribute : Attribute, ICommandAttribute
 
         Name = name.TrimStart('/');
     }
+
+    /// <inheritdoc />
+    public override string ToString() => $"CommandAttribute {{ Description = {Description}, Aliases = {Aliases} }}";
 }
