@@ -55,6 +55,9 @@ public sealed class BotUser : IBotUser, IEquatable<BotUser>
 
     public Dictionary<string, string>? Metadata { get; set; }
 
+    public override string ToString() =>
+        $"BotUser {{ TelegramId = {TelegramId}, FirstName = {FirstName}, LastName = {LastName}, Username = {Username}, PhoneNumber = {PhoneNumber}, Status = {Status} }}";
+
     /// <summary>
     /// Validates the bot user data.
     /// </summary>
