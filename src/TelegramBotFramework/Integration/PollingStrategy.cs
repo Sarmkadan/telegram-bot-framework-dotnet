@@ -299,6 +299,12 @@ public sealed class PollingStrategy : IHostedService
         return !(left == right);
     }
 
+    public override string ToString()
+    {
+        bool isRunning = _pollingTask is not null && !_pollingTask.IsCompleted;
+        return $"PollingStrategy {{ IsRunning = {isRunning}, LastUpdateId = {_lastUpdateId}, LastPollTime = {LastPollTime} }}";
+    }
+
     private async Task PollAsync(TimeSpan interval, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Polling loop started");
