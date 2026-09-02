@@ -7,6 +7,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 using TelegramBotFramework.Events;
 
 namespace TelegramBotFramework.ConversationFlow.QuizFlow;
@@ -24,14 +25,18 @@ public static class QuizFlowExtensions
     /// <param name="name">The human-readable name of the quiz.</param>
     /// <param name="configureQuestions">Action to configure quiz questions.</param>
     /// <returns>The service collection for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="quizId"/> is null or white space.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or white space.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configureQuestions"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when required services (<see cref="ILogger{QuizFlowHelper}"/> or <see cref="IEventBus"/>) are not registered.</exception>
     public static IServiceCollection AddQuizFlow(
         this IServiceCollection services,
         string quizId,
         string name,
         Action<QuizFlowHelper> configureQuestions)
     {
-        if (services == null)
-            throw new ArgumentNullException(nameof(services));
+        ArgumentNullException.ThrowIfNull(services);
 
         if (string.IsNullOrWhiteSpace(quizId))
             throw new ArgumentException(QuizFlowExtensionsConstants.QuizIdEmptyExceptionMessage, nameof(quizId));
@@ -39,13 +44,20 @@ public static class QuizFlowExtensions
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException(QuizFlowExtensionsConstants.QuizNameEmptyExceptionMessage, nameof(name));
 
-        if (configureQuestions == null)
-            throw new ArgumentNullException(nameof(configureQuestions));
+        ArgumentNullException.ThrowIfNull(configureQuestions);
+
+        // Build service provider once to get required services
+        var serviceProvider = services.BuildServiceProvider();
+        var logger = serviceProvider.GetService<ILogger<QuizFlowHelper>>();
+        var eventBus = serviceProvider.GetService<IEventBus>();
+
+        if (logger == null)
+            throw new InvalidOperationException($"Required service {typeof(ILogger<QuizFlowHelper>).Name} is not registered.");
+
+        if (eventBus == null)
+            throw new InvalidOperationException($"Required service {typeof(IEventBus).Name} is not registered.");
 
         // Create the quiz flow helper
-        var logger = services.BuildServiceProvider()?.GetService<ILogger<QuizFlowHelper>>();
-        var eventBus = services.BuildServiceProvider()?.GetService<IEventBus>();
-
         var quizHelper = new QuizFlowHelper(quizId, name, logger, eventBus);
         configureQuestions(quizHelper);
 
@@ -57,8 +69,13 @@ public static class QuizFlowExtensions
     /// <summary>
     /// Creates a FlowDefinition from a QuizFlowHelper.
     /// </summary>
+    /// <param name="quizHelper">The quiz flow helper.</param>
+    /// <returns>A flow definition representing the quiz.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="quizHelper"/> is null.</exception>
     internal static FlowDefinition CreateQuizFlowDefinition(QuizFlowHelper quizHelper)
     {
+        ArgumentNullException.ThrowIfNull(quizHelper);
+
         var questions = quizHelper.GetFieldValue("_questions") as List<QuizQuestion> ?? new List<QuizQuestion>();
         var completionMenuId = quizHelper.GetType().GetProperty("CompletionMenuId")?.GetValue(quizHelper) as string;
 
@@ -71,7 +88,7 @@ public static class QuizFlowExtensions
         steps.Add(new FlowStep
         {
             StepId = initialStepId,
-            Prompt = string.Format(QuizFlowExtensionsConstants.WelcomeMessageFormat, quizHelper.Name, questions.Count),
+            Prompt = string.Format(CultureInfo.InvariantCulture, QuizFlowExtensionsConstants.WelcomeMessageFormat, quizHelper.Name, questions.Count),
             InputType = FlowInputType.Confirmation,
             IsTerminal = false,
             QuickReplies = new[] { "/start" }
@@ -87,8 +104,8 @@ public static class QuizFlowExtensions
             {
                 MinLength = QuizFlowExtensionsConstants.ValidationMinLength,
                 MaxLength = QuizFlowExtensionsConstants.ValidationMaxLength,
-                AllowedValues = Enumerable.Range(1, question.Options.Count).Select(x => x.ToString()).ToList(),
-                ErrorMessage = string.Format(QuizFlowExtensionsConstants.ValidationErrorMessageFormat, question.Options.Count)
+                AllowedValues = Enumerable.Range(1, question.Options.Count).Select(x => x.ToString(CultureInfo.InvariantCulture)).ToList(),
+                ErrorMessage = string.Format(CultureInfo.InvariantCulture, QuizFlowExtensionsConstants.ValidationErrorMessageFormat, question.Options.Count)
             };
 
             var quickReplies = question.Options.Select((opt, idx) => $"{idx + 1}").ToList();
@@ -175,7 +192,7 @@ public static class QuizFlowExtensions
             Metadata = new Dictionary<string, string>
             {
                 [QuizFlowExtensionsConstants.MetadataQuizTypeKey] = QuizFlowExtensionsConstants.QuizTypeValue,
-                [QuizFlowExtensionsConstants.MetadataQuestionCountKey] = questions.Count.ToString()
+                [QuizFlowExtensionsConstants.MetadataQuestionCountKey] = questions.Count.ToString(CultureInfo.InvariantCulture)
             }
         };
     }
@@ -183,8 +200,13 @@ public static class QuizFlowExtensions
     /// <summary>
     /// Uses reflection to get a private field value (for internal use only).
     /// </summary>
+    /// <param name="obj">The object to get the field value from.</param>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The value of the field, or null if the field does not exist.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="obj"/> is null.</exception>
     internal static object? GetFieldValue(this object obj, string fieldName)
     {
+        ArgumentNullException.ThrowIfNull(obj);
         var field = obj.GetType().GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return field?.GetValue(obj);
     }
