@@ -6419,3 +6419,38 @@ public class MyBotBenchmarks
     }
 }
 ```
+
+## RateLimitStats
+
+The  class provides statistics about rate limiting and broadcast performance, including message rates, concurrency, and timestamps.
+
+**Example usage:**
+
+
+
+## RateLimitStats
+
+The `RateLimitStats` class provides statistics about rate limiting and broadcast performance, including message rates, concurrency, and timestamps.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Services;
+
+// Create an instance of RateLimitStats with sample data
+var stats = new RateLimitStats(
+    messagesPerSecond: 10,
+    maxConcurrency: 5,
+    totalMessagesSent: 1000,
+    totalMessagesFailed: 10,
+    averageMessagesPerSecond: 8.5,
+    currentConcurrency: 3 );
+
+Console.WriteLine($"Messages per second: {stats.MessagesPerSecond}");
+Console.WriteLine($"Max concurrency: {stats.MaxConcurrency}");
+Console.WriteLine($"Total messages sent: {stats.TotalMessagesSent}");
+Console.WriteLine($"Total messages failed: {stats.TotalMessagesFailed}");
+Console.WriteLine($"Average messages per second: {stats.AverageMessagesPerSecond}");
+Console.WriteLine($"Current concurrency: {stats.CurrentConcurrency}");
+Console.WriteLine($"Timestamp: {stats.Timestamp}");
+```
