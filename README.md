@@ -7603,3 +7603,41 @@ static async Task RunInlineQueryServiceTestsAsync()
     await tests.GetCachedAsync_WithCachedResults_ReturnsPagedResults();
 }
 ```
+
+## QuizFlowExample
+
+`QuizFlowExample` demonstrates registering a five-question multiple-choice quiz and running a complete simulated quiz session for a Telegram user and chat. It can also inspect an existing user's active quiz state or abort that quiz, using the conversation-flow services resolved from the supplied `IServiceProvider`.
+
+**Example usage:**
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using TelegramBotFramework.Examples;
+
+static async Task RunSampleQuizAsync(
+    IServiceProvider serviceProvider,
+    long userId,
+    long chatId)
+{
+    var quizExample = new QuizFlowExample(serviceProvider);
+
+    await quizExample.RegisterSampleQuizAsync();
+    await quizExample.RunQuizExampleAsync(userId, chatId);
+}
+
+static async Task ManageActiveQuizAsync(
+    IServiceProvider serviceProvider,
+    long userId,
+    bool abortQuiz)
+{
+    var quizExample = new QuizFlowExample(serviceProvider);
+
+    await quizExample.CheckQuizStatusAsync(userId);
+
+    if (abortQuiz)
+    {
+        await quizExample.AbortQuizExampleAsync(userId);
+    }
+}
+```
