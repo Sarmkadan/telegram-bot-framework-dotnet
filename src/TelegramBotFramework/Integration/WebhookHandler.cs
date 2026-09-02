@@ -126,12 +126,14 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
             if (root.TryGetProperty("message", out var messageElement))
             {
                 update.MessageType = UpdateType.Message;
+                _logger.LogDebug("Processing webhook update {UpdateId} of type {UpdateType}", update.UpdateId, update.MessageType);
                 update.Message = ParseTelegramMessage(messageElement);
             }
             // Check for callback query (button click)
             else if (root.TryGetProperty("callback_query", out var callbackElement))
             {
                 update.MessageType = UpdateType.CallbackQuery;
+                _logger.LogDebug("Processing webhook update {UpdateId} of type {UpdateType}", update.UpdateId, update.MessageType);
 
                 // Parse and validate callback query ID
                 var callbackQueryId = callbackElement.GetProperty("id").GetString();
@@ -172,12 +174,14 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
             else if (root.TryGetProperty("edited_message", out var editedMsgElement))
             {
                 update.MessageType = UpdateType.EditedMessage;
+                _logger.LogDebug("Processing webhook update {UpdateId} of type {UpdateType}", update.UpdateId, update.MessageType);
                 update.Message = ParseTelegramMessage(editedMsgElement);
             }
             // Check for inline query
             else if (root.TryGetProperty("inline_query", out var inlineElement))
             {
                 update.MessageType = UpdateType.InlineQuery;
+                _logger.LogDebug("Processing webhook update {UpdateId} of type {UpdateType}", update.UpdateId, update.MessageType);
                 var inlineQuery = inlineElement.GetProperty("query").GetString();
                 if (inlineQuery != null && inlineQuery.Length > MaxMessageTextLength)
                 {
@@ -190,7 +194,7 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
                 }
             }
 
-            _logger.LogInformation("Successfully parsed webhook update {UpdateId} of type {Type}", update.UpdateId, update.MessageType);
+            _logger.LogInformation("Successfully parsed webhook update {UpdateId} of type {UpdateType}", update.UpdateId, update.MessageType);
 
             return update;
         }
@@ -224,7 +228,7 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
         // If header is missing but secret is configured, reject
         if (string.IsNullOrEmpty(secretTokenHeader))
         {
-            _logger.LogWarning($"Webhook request rejected: {WebhookHandlerConstants.TelegramSecretTokenHeaderName} header is missing");
+            _logger.LogWarning("Webhook request rejected: {HeaderName} header is missing", WebhookHandlerConstants.TelegramSecretTokenHeaderName);
             return false;
         }
 
@@ -381,7 +385,7 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to parse inline keyboard button. Skipping.");
+                    _logger.LogError(ex, "Failed to parse inline keyboard button. Skipping.");
                 }
 
                 if (row.Count > 0)
