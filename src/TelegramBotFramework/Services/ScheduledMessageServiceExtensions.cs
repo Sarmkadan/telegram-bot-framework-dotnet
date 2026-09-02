@@ -22,6 +22,8 @@ public static class ScheduledMessageServiceExtensions
     /// <param name="sendAt">The date and time when the message should be sent</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A unique identifier for the scheduled message</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="text"/> is null or empty.</exception>
     public static Task<string> ScheduleMessageAsync(
         this IScheduledMessageService service,
         long chatId,
@@ -30,7 +32,7 @@ public static class ScheduledMessageServiceExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(service);
-        ArgumentNullException.ThrowIfNull(text);
+        ArgumentException.ThrowIfNullOrEmpty(text);
 
         return service.ScheduleMessageAsync(chatId, text, new DateTimeOffset(sendAt), cancellationToken);
     }
@@ -44,6 +46,8 @@ public static class ScheduledMessageServiceExtensions
     /// <param name="delay">The delay before sending the message</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A unique identifier for the scheduled message</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="text"/> is null or empty.</exception>
     public static Task<string> ScheduleMessageAsync(
         this IScheduledMessageService service,
         long chatId,
@@ -52,7 +56,7 @@ public static class ScheduledMessageServiceExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(service);
-        ArgumentNullException.ThrowIfNull(text);
+        ArgumentException.ThrowIfNullOrEmpty(text);
 
         return service.ScheduleMessageAsync(chatId, text, delay, cancellationToken);
     }
@@ -63,6 +67,7 @@ public static class ScheduledMessageServiceExtensions
     /// <param name="service">The scheduled message service instance</param>
     /// <param name="chatId">The chat identifier</param>
     /// <returns>Collection of scheduled messages for the chat</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
     public static IEnumerable<ScheduledMessage> GetScheduledMessagesForChat(
         this IScheduledMessageService service,
         long chatId)
@@ -78,6 +83,7 @@ public static class ScheduledMessageServiceExtensions
     /// <param name="service">The scheduled message service instance</param>
     /// <param name="messageId">The scheduled message identifier</param>
     /// <returns>The scheduled message if found, null otherwise</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
     public static ScheduledMessage? GetScheduledMessage(
         this IScheduledMessageService service,
         string messageId)
