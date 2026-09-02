@@ -6454,3 +6454,46 @@ Console.WriteLine($"Average messages per second: {stats.AverageMessagesPerSecond
 Console.WriteLine($"Current concurrency: {stats.CurrentConcurrency}");
 Console.WriteLine($"Timestamp: {stats.Timestamp}");
 ```
+
+## IScheduledMessageService
+
+`IScheduledMessageService` schedules Telegram messages for a future time or after a delay and lets callers inspect or cancel them by ID. Scheduled entries expose their delivery state through `ScheduledMessage`, including timestamps, retry information, cancellation and sent flags, and any error message.
+
+**Example usage:**
+
+```csharp
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using TelegramBotFramework.Services;
+
+static async Task ScheduleReminderAsync(
+    IServiceProvider serviceProvider,
+    CancellationToken cancellationToken = default)
+{
+    var scheduler = serviceProvider.GetRequiredService<IScheduledMessageService>();
+    const long chatId = 123456789;
+
+    var messageId = await scheduler.ScheduleMessageAsync(
+        chatId,
+        "Your appointment starts in 30 minutes.",
+        TimeSpan.FromMinutes(30),
+        cancellationToken);
+
+    var message = scheduler.GetScheduledMessage(messageId);
+    if (message is null)
+    {
+        return;
+    }
+
+    Console.WriteLine(
+        $"Message {message.Id} for chat {message.ChatId} is scheduled at " +
+        $"{message.ScheduledTime:u} (attempts: {message.AttemptCount}).");
+
+    if (!message.IsSent && !message.IsCancelled && message.ErrorMessage is not null)
+    {
+        Console.WriteLine($"Delivery error: {message.ErrorMessage}");
+    }
+}
+```
