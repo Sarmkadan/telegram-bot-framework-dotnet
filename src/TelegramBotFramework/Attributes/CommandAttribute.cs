@@ -22,19 +22,6 @@ namespace TelegramBotFramework.Attributes;
 /// }
 /// </code>
 /// </example>
-/// <example>
-/// <code>
-/// [Command("start")]
-/// public class StartCommand : ICommandHandler
-/// {
-///     public Task HandleAsync(Update update, CancellationToken cancellationToken)
-///     {
-///         // Handle the /start command
-///         return Task.CompletedTask;
-///     }
-/// }
-/// </code>
-/// </example>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class CommandAttribute : Attribute, ICommandAttribute
 {
@@ -53,6 +40,11 @@ public sealed class CommandAttribute : Attribute, ICommandAttribute
     /// </summary>
     public string[] Aliases { get; set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandAttribute"/> class.
+    /// </summary>
+    /// <param name="name">The command name, with or without a leading slash.</param>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is null, empty, or consists only of white-space characters.</exception>
     public CommandAttribute(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
