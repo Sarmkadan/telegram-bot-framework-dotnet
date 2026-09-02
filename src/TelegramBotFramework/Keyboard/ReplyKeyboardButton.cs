@@ -25,4 +25,5 @@ public sealed class ReplyKeyboardButton : IReplyKeyboardButton
     /// </summary>
     public bool RequestLocation { get; set; }
 
+    public override string ToString() => $"ReplyKeyboardButton {{ RequestContact = {RequestContact}, RequestLocation = {RequestLocation} }}";
 }
