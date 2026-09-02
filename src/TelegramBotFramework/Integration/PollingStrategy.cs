@@ -21,30 +21,24 @@ public sealed class PollingStrategy : IHostedService
     private readonly ILogger<PollingStrategy> _logger;
     private readonly IUpdateOffsetStore _offsetStore;
     private readonly EventPublisher _eventPublisher;
-    private long _lastUpdateId = 0;
+    private long _lastUpdateId = PollingDefaults.InitialUpdateId;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _pollingTask;
     private readonly List<Task> _inFlightHandlers = [];
     private readonly object _inFlightLock = new();
     private readonly PollingOptions _options;
     private TimeSpan _shutdownTimeout;
-    private bool _isShuttingDown = false;
+    private bool _isShuttingDown;
 
     // Update flood protection configuration
-    private int _maxUpdatesPerBatch = 100; // Maximum updates to process per polling cycle
-    private int _maxInFlightUpdates = 1000; // Maximum concurrent in-flight updates
-
-    // Backoff configuration constants
-    private const int BasePollIntervalMs = 1000; // Default 1 second
-    private const int MaxBackoffMs = 30000; // Maximum 30 seconds
-    private const double BackoffMultiplier = 1.5; // Exponential backoff multiplier
-    private const double JitterFactor = 0.1; // 10% jitter to avoid thundering herd
+    private int _maxUpdatesPerBatch = PollingDefaults.DefaultMaxUpdatesPerBatch;
+    private int _maxInFlightUpdates = PollingDefaults.DefaultMaxInFlightUpdates;
 
     // Backoff tracking state
-    private int _currentBackoffMs = 0;
-    private int _consecutiveFailureCount = 0;
-    private int _updatesProcessedThisBatch = 0;
-    private bool _updateFloodDetected = false;
+    private int _currentBackoffMs;
+    private int _consecutiveFailureCount;
+    private int _updatesProcessedThisBatch;
+    private bool _updateFloodDetected;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PollingStrategy"/> class with an in-memory offset store.
@@ -103,22 +97,22 @@ public sealed class PollingStrategy : IHostedService
 
         if (_options.PollInterval <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(options), "Poll interval must be positive");
+            throw new ArgumentOutOfRangeException(nameof(options), "Poll interval" + PollingDefaults.MustBePositiveErrorSuffix);
         }
 
         if (_options.ShutdownTimeout <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(options), "Shutdown timeout must be positive");
+            throw new ArgumentOutOfRangeException(nameof(options), "Shutdown timeout" + PollingDefaults.MustBePositiveErrorSuffix);
         }
 
-        if (_maxUpdatesPerBatch < 1)
+        if (_maxUpdatesPerBatch < PollingDefaults.MinimumUpdateLimit)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxUpdatesPerBatch), "Maximum updates per batch must be at least 1");
+            throw new ArgumentOutOfRangeException(nameof(maxUpdatesPerBatch), "Maximum updates per batch" + PollingDefaults.MustBeAtLeastOneErrorSuffix);
         }
 
-        if (_maxInFlightUpdates < 1)
+        if (_maxInFlightUpdates < PollingDefaults.MinimumUpdateLimit)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxInFlightUpdates), "Maximum in-flight updates must be at least 1");
+            throw new ArgumentOutOfRangeException(nameof(maxInFlightUpdates), "Maximum in-flight updates" + PollingDefaults.MustBeAtLeastOneErrorSuffix);
         }
 
         // Initialize with offset from store
@@ -242,9 +236,9 @@ public sealed class PollingStrategy : IHostedService
                 LastPollTime = LastPollTime,
                 CurrentBackoffMs = _currentBackoffMs,
                 ConsecutiveFailureCount = _consecutiveFailureCount,
-                BasePollIntervalMs = BasePollIntervalMs,
+                BasePollIntervalMs = PollingDefaults.BasePollIntervalMs,
                 IsDraining = _isShuttingDown,
-                IsDrainComplete = _isShuttingDown && _inFlightHandlers.Count == 0,
+                IsDrainComplete = _isShuttingDown && _inFlightHandlers.Count == PollingDefaults.EmptyInFlightHandlerCount,
                 InFlightCount = _inFlightHandlers.Count,
                 MaxUpdatesPerBatch = _maxUpdatesPerBatch,
                 MaxInFlightUpdates = _maxInFlightUpdates,
@@ -313,12 +307,14 @@ public sealed class PollingStrategy : IHostedService
             try
             {
                 LastPollTime = DateTime.UtcNow;
-                _updatesProcessedThisBatch = 0;
+                _updatesProcessedThisBatch = PollingDefaults.EmptyUpdateCount;
                 _updateFloodDetected = false;
 
                 _logger.LogDebug("Polling for updates, last update ID: {LastUpdateId}", _lastUpdateId);
 
-                var offset = _lastUpdateId > 0 ? _lastUpdateId + 1 : 0;
+                var offset = _lastUpdateId > PollingDefaults.InitialUpdateId
+                    ? _lastUpdateId + PollingDefaults.UpdateOffsetIncrement
+                    : PollingDefaults.InitialUpdateId;
                 var updates = await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false);
 
                 _logger.LogInformation("Received {UpdateCount} updates from Telegram API", updates.Count);
@@ -333,7 +329,7 @@ public sealed class PollingStrategy : IHostedService
                     {
                         await ProcessUpdateAsync(update).ConfigureAwait(false);
                     }
-                    else if (updateElement.TryGetProperty("update_id", out var updateIdElement) &&
+                    else if (updateElement.TryGetProperty(PollingDefaults.UpdateIdPropertyName, out var updateIdElement) &&
                              updateIdElement.TryGetInt64(out var rawUpdateId))
                     {
                         // Advance the offset even when the update cannot be parsed;
@@ -348,7 +344,7 @@ public sealed class PollingStrategy : IHostedService
                     }
                 }
 
-                if (updates.Count == 0)
+                if (updates.Count == PollingDefaults.EmptyUpdateCount)
                 {
                     // Small delay to avoid hammering the API when there is nothing to fetch
                     _logger.LogDebug("No updates received, waiting {IntervalMs}ms before next poll", interval.TotalMilliseconds);
@@ -356,11 +352,11 @@ public sealed class PollingStrategy : IHostedService
                 }
 
                 // Reset failure count on successful poll
-                if (_consecutiveFailureCount > 0)
+                if (_consecutiveFailureCount > PollingDefaults.NoConsecutiveFailures)
                 {
                     _logger.LogInformation("Polling successful after {FailureCount} consecutive failures, resetting failure count", _consecutiveFailureCount);
-                    _consecutiveFailureCount = 0;
-                    _currentBackoffMs = 0;
+                    _consecutiveFailureCount = PollingDefaults.NoConsecutiveFailures;
+                    _currentBackoffMs = PollingDefaults.NoBackoffDelayMs;
                 }
             }
             catch (OperationCanceledException)
@@ -424,19 +420,21 @@ public sealed class PollingStrategy : IHostedService
         _logger.LogDebug("Calculating backoff delay. ConsecutiveFailureCount: {FailureCount}", _consecutiveFailureCount);
 
         // Calculate exponential backoff with jitter
-        double exponentialBackoff = Math.Pow(BackoffMultiplier, _consecutiveFailureCount - 1);
-        double backoffMs = BasePollIntervalMs * exponentialBackoff;
+        double exponentialBackoff = Math.Pow(
+            PollingDefaults.BackoffMultiplier,
+            _consecutiveFailureCount - PollingDefaults.FirstFailureCount);
+        double backoffMs = PollingDefaults.BasePollIntervalMs * exponentialBackoff;
 
         // Apply jitter to avoid thundering herd problems
-        double jitterRange = backoffMs * JitterFactor;
-        double jitter = (Random.Shared.NextDouble() * 2 - 1) * jitterRange; // Range: [-jitterRange, +jitterRange]
+        double jitterRange = backoffMs * PollingDefaults.JitterFactor;
+        double jitter = (Random.Shared.NextDouble() * PollingDefaults.JitterRangeMultiplier - PollingDefaults.JitterRangeOffset) * jitterRange;
         backoffMs += jitter;
 
         // Clamp to maximum backoff
-        int result = (int)Math.Min(backoffMs, MaxBackoffMs);
+        int result = (int)Math.Min(backoffMs, PollingDefaults.MaxBackoffDelayMs);
 
         // Ensure we don't go below base interval
-        _currentBackoffMs = Math.Max(result, BasePollIntervalMs);
+        _currentBackoffMs = Math.Max(result, PollingDefaults.BasePollIntervalMs);
 
         _logger.LogInformation("Calculated backoff delay: {BackoffDelayMs}ms (failure count: {FailureCount})", _currentBackoffMs, _consecutiveFailureCount);
 
@@ -533,7 +531,7 @@ public sealed class PollingStrategy : IHostedService
         {
             lock (_inFlightLock)
             {
-                if (_inFlightHandlers.Count == 0)
+                if (_inFlightHandlers.Count == PollingDefaults.EmptyInFlightHandlerCount)
                 {
                     _logger.LogInformation("All in-flight handlers completed");
                     return;
@@ -547,15 +545,15 @@ public sealed class PollingStrategy : IHostedService
                 }
             }
 
-            // Log progress every 5 seconds
+            // Log progress periodically
             var elapsed = DateTime.UtcNow - startTime;
-            if (elapsed.TotalSeconds % 5 < 0.1) // Small tolerance for timing
+            if (elapsed.TotalSeconds % PollingDefaults.DrainProgressLogIntervalSeconds < PollingDefaults.DrainProgressLogToleranceSeconds)
             {
                 _logger.LogInformation("Waiting for in-flight handlers... {Elapsed}s elapsed, {RemainingCount} remaining",
                     (int)elapsed.TotalSeconds, _inFlightHandlers.Count);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+            await Task.Delay(PollingDefaults.DrainCheckInterval, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -589,9 +587,9 @@ public sealed class PollingStrategy : IHostedService
         try
         {
             await _eventPublisher.PublishBotStateChangedAsync(
-                "Running",
-                "Stopped",
-                "Graceful shutdown completed"
+                PollingDefaults.RunningStateName,
+                PollingDefaults.StoppedStateName,
+                PollingDefaults.GracefulShutdownReason
             ).ConfigureAwait(false);
             _logger.LogInformation("Bot state change event published successfully");
         }
@@ -610,11 +608,40 @@ public sealed class PollingStrategy : IHostedService
     {
         if (timeout <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive");
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout" + PollingDefaults.MustBePositiveErrorSuffix);
         }
 
         _shutdownTimeout = timeout;
         _logger.LogInformation("Shutdown timeout set to {TimeoutSeconds}s", (int)timeout.TotalSeconds);
+    }
+
+    private static class PollingDefaults
+    {
+        public const long InitialUpdateId = 0;
+        public const long UpdateOffsetIncrement = 1;
+        public const int DefaultMaxUpdatesPerBatch = 100;
+        public const int DefaultMaxInFlightUpdates = 1000;
+        public const int MinimumUpdateLimit = 1;
+        public const int EmptyUpdateCount = 0;
+        public const int EmptyInFlightHandlerCount = 0;
+        public const int NoConsecutiveFailures = 0;
+        public const int FirstFailureCount = 1;
+        public const int NoBackoffDelayMs = 0;
+        public const int BasePollIntervalMs = 1000;
+        public const int MaxBackoffDelayMs = 30000;
+        public const double BackoffMultiplier = 1.5;
+        public const double JitterFactor = 0.1;
+        public const double JitterRangeMultiplier = 2;
+        public const double JitterRangeOffset = 1;
+        public const double DrainProgressLogIntervalSeconds = 5;
+        public const double DrainProgressLogToleranceSeconds = 0.1;
+        public const string UpdateIdPropertyName = "update_id";
+        public const string RunningStateName = "Running";
+        public const string StoppedStateName = "Stopped";
+        public const string GracefulShutdownReason = "Graceful shutdown completed";
+        public const string MustBePositiveErrorSuffix = " must be positive";
+        public const string MustBeAtLeastOneErrorSuffix = " must be at least 1";
+        public static readonly TimeSpan DrainCheckInterval = TimeSpan.FromSeconds(1);
     }
 }
 
