@@ -6645,6 +6645,28 @@ static async Task ScheduleRemindersAsync(
 }
 ```
 
+## BroadcastOptions
+
+`BroadcastOptions` configures the delivery rate, concurrency, retry behavior, and error handling for a broadcast. It can also customize each message for its destination chat and apply an explicit delay between rate-limited batches.
+
+**Example usage:**
+
+```csharp
+using System;
+using TelegramBotFramework.Services;
+
+var options = new BroadcastOptions
+{
+    MessagesPerSecond = 20,
+    MaxConcurrency = 5,
+    MaxRetryAttempts = 3,
+    RetryDelay = TimeSpan.FromSeconds(2),
+    ContinueOnError = true,
+    MessageFormatter = (message, chatId) => $"{message}\nReference: {chatId}",
+    BatchDelay = TimeSpan.FromMilliseconds(500)
+};
+```
+
 ## BroadcastService
 
 The `BroadcastService` is a service for broadcasting messages to multiple chat IDs with configurable rate limiting, failure collection, progress callbacks, and cancellation support. It implements `IBroadcastService` and `IDisposable`, providing methods to broadcast to raw chat IDs or to `BotUser` objects, and to monitor rate limiting statistics.
