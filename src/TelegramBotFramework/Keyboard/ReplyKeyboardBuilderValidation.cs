@@ -6,6 +6,7 @@
 // =============================================================================
 
 using System.Globalization;
+using System.Linq;
 
 namespace TelegramBotFramework.Keyboard;
 
@@ -48,6 +49,11 @@ public static class ReplyKeyboardBuilderValidation
         try
         {
             var markup = builder.Build();
+
+            if (markup.Keyboard is null)
+            {
+                return errors.AsReadOnly();
+            }
 
             var rowIndex = 0;
             foreach (var row in markup.Keyboard)
