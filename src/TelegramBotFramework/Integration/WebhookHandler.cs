@@ -64,6 +64,8 @@ public sealed class WebhookHandler : IWebhookHandler, IEquatable<WebhookHandler>
         return HashCode.Combine(UpdateId, MessageType, Timestamp, Message, CallbackData, CallbackQueryId, InlineQuery, MessageId);
     }
 
+    public override string ToString() => $"WebhookHandler {{ UpdateId = {UpdateId}, MessageType = {MessageType}, Timestamp = {Timestamp}, Message = {Message}, CallbackData = {CallbackData}, CallbackQueryId = {CallbackQueryId} }}";
+
     public static bool operator ==(WebhookHandler? left, WebhookHandler? right)
     {
         return EqualityComparer<WebhookHandler?>.Default.Equals(left, right);
