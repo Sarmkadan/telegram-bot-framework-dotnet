@@ -10,9 +10,14 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramBotFramework.Tests.Keyboard;
 
+/// <summary>
+/// Tests for the <see cref="ReplyKeyboardBuilder"/> class.
+/// </summary>
 public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
 {
-    [Fact]
+/// <summary>
+    /// Tests that the Create method returns a new builder instance.
+/// </summary>
     public void Create_ShouldReturnNewBuilderInstance()
     {
         // Act
@@ -22,7 +27,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.NotNull(builder);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that create with max buttons per row should set max buttons per row.
+/// </summary>
     public void Create_WithMaxButtonsPerRow_ShouldSetMaxButtonsPerRow()
     {
         // Act
@@ -32,7 +39,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.NotNull(builder);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that add button with text should add button to current row.
+/// </summary>
     public void AddButton_WithText_ShouldAddButtonToCurrentRow()
     {
         // Arrange
@@ -45,7 +54,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that add button with empty text should throw argument exception.
+/// </summary>
     public void AddButton_WithEmptyText_ShouldThrowArgumentException()
     {
         // Arrange
@@ -57,7 +68,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Throws<ArgumentException>(() => builder.AddButton(null!));
     }
 
-    [Fact]
+/// <summary>
+/// Tests that add button with configure action should add button with configuration.
+/// </summary>
     public void AddButton_WithConfigureAction_ShouldAddButtonWithConfiguration()
     {
         // Arrange
@@ -70,7 +83,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that add button with configure action null configure should throw argument null exception.
+/// </summary>
     public void AddButton_WithConfigureAction_NullConfigure_ShouldThrowArgumentNullException()
     {
         // Arrange
@@ -80,7 +95,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Throws<ArgumentNullException>(() => builder.AddButton("Test", null!));
     }
 
-    [Fact]
+/// <summary>
+/// Tests that new row should start new row.
+/// </summary>
     public void NewRow_ShouldStartNewRow()
     {
         // Arrange
@@ -97,7 +114,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that one time should set one time keyboard to false.
+/// </summary>
     public void OneTime_ShouldSetOneTimeKeyboardToFalse()
     {
         // Arrange
@@ -110,7 +129,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that persistent should set one time keyboard to true.
+/// </summary>
     public void Persistent_ShouldSetOneTimeKeyboardToTrue()
     {
         // Arrange
@@ -123,7 +144,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that resize should set resize keyboard to true.
+/// </summary>
     public void Resize_ShouldSetResizeKeyboardToTrue()
     {
         // Arrange
@@ -136,7 +159,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that no resize should set resize keyboard to false.
+/// </summary>
     public void NoResize_ShouldSetResizeKeyboardToFalse()
     {
         // Arrange
@@ -149,7 +174,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Same(builder, result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with no buttons should throw invalid operation exception.
+/// </summary>
     public void Build_WithNoButtons_ShouldThrowInvalidOperationException()
     {
         // Arrange
@@ -159,7 +186,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Throws<InvalidOperationException>(() => builder.Build());
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with buttons should return reply keyboard markup.
+/// </summary>
     public void Build_WithButtons_ShouldReturnReplyKeyboardMarkup()
     {
         // Arrange
@@ -180,7 +209,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Equal("Button 2", result.Keyboard[0][1].Text);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with max buttons per row should create multiple rows.
+/// </summary>
     public void Build_WithMaxButtonsPerRow_ShouldCreateMultipleRows()
     {
         // Arrange
@@ -200,7 +231,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Equal(2, result.Keyboard[1].Count);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with request contact should set request contact.
+/// </summary>
     public void Build_WithRequestContact_ShouldSetRequestContact()
     {
         // Arrange
@@ -215,7 +248,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.True(result.Keyboard[0][0].RequestContact);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with request location should set request location.
+/// </summary>
     public void Build_WithRequestLocation_ShouldSetRequestLocation()
     {
         // Arrange
@@ -230,7 +265,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.True(result.Keyboard[0][0].RequestLocation);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with one time should set one time keyboard.
+/// </summary>
     public void Build_WithOneTime_ShouldSetOneTimeKeyboard()
     {
         // Arrange
@@ -246,7 +283,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.False(result.OneTimeKeyboard);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that build with resize should set resize keyboard.
+/// </summary>
     public void Build_WithResize_ShouldSetResizeKeyboard()
     {
         // Arrange
@@ -262,7 +301,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.True(result.ResizeKeyboard);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that to menu should convert to menu.
+/// </summary>
     public void ToMenu_ShouldConvertToMenu()
     {
         // Arrange
@@ -282,7 +323,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Equal(2, menu.Buttons.Count);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that to menu with empty menu id should throw argument exception.
+/// </summary>
     public void ToMenu_WithEmptyMenuId_ShouldThrowArgumentException()
     {
         // Arrange
@@ -293,7 +336,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Throws<ArgumentException>(() => builder.ToMenu(null!, "Test Menu"));
     }
 
-    [Fact]
+/// <summary>
+/// Tests that to menu with empty title should throw argument exception.
+/// </summary>
     public void ToMenu_WithEmptyTitle_ShouldThrowArgumentException()
     {
         // Arrange
@@ -304,7 +349,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Throws<ArgumentException>(() => builder.ToMenu("test-menu", null!));
     }
 
-    [Fact]
+/// <summary>
+/// Tests that validation empty builder should have error.
+/// </summary>
     public void Validation_EmptyBuilder_ShouldHaveError()
     {
         // Arrange
@@ -318,7 +365,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Contains("empty keyboard", errors[0]);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that validation valid builder should have no errors.
+/// </summary>
     public void Validation_ValidBuilder_ShouldHaveNoErrors()
     {
         // Arrange
@@ -334,7 +383,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.Empty(result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that is valid valid builder should return true.
+/// </summary>
     public void IsValid_ValidBuilder_ShouldReturnTrue()
     {
         // Arrange
@@ -349,7 +400,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.True(result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that is valid invalid builder should return false.
+/// </summary>
     public void IsValid_InvalidBuilder_ShouldReturnFalse()
     {
         // Arrange
@@ -362,7 +415,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         Assert.False(result);
     }
 
-    [Fact]
+/// <summary>
+/// Tests that ensure valid valid builder should not throw.
+/// </summary>
     public void EnsureValid_ValidBuilder_ShouldNotThrow()
     {
         // Arrange
@@ -377,7 +432,9 @@ public class ReplyKeyboardBuilderTests : IReplyKeyboardBuilderTests
         // Assert - no exception thrown
     }
 
-    [Fact]
+/// <summary>
+/// Tests that ensure valid invalid builder should throw argument exception.
+/// </summary>
     public void EnsureValid_InvalidBuilder_ShouldThrowArgumentException()
     {
         // Arrange
