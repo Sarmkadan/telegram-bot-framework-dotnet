@@ -9,6 +9,32 @@ namespace TelegramBotFramework.Attributes;
 /// <summary>
 /// Marks a class as a handler for a specific bot command.
 /// </summary>
+/// <example>
+/// <code>
+/// [Command("start")]
+/// public class StartCommand : ICommandHandler
+/// {
+///     public Task HandleAsync(Update update, CancellationToken cancellationToken)
+///     {
+///         // Handle the /start command
+///         return Task.CompletedTask;
+///     }
+/// }
+/// </code>
+/// </example>
+/// <example>
+/// <code>
+/// [Command("start")]
+/// public class StartCommand : ICommandHandler
+/// {
+///     public Task HandleAsync(Update update, CancellationToken cancellationToken)
+///     {
+///         // Handle the /start command
+///         return Task.CompletedTask;
+///     }
+/// }
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class CommandAttribute : Attribute, ICommandAttribute
 {
