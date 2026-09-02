@@ -6797,3 +6797,35 @@ Console.WriteLine($"Rate limit stats: {stats.TotalMessagesSent} sent, {stats.Tot
 // Dispose the service when done
 broadcastService.Dispose();
 ```
+
+## BroadcastServiceTests
+
+`BroadcastServiceTests` is an xUnit test fixture that verifies `BroadcastService` behavior for successful and failed deliveries, rate limiting, progress reporting, cancellation, user-to-chat conversion, message formatting, statistics, and disposal. Test runners normally discover its test methods automatically, but its public constructor and methods can also be invoked directly for a focused smoke run.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests;
+
+static async Task RunBroadcastServiceSmokeTestsAsync()
+{
+    await new BroadcastServiceTests()
+        .BroadcastAsync_WithEmptyChatIds_ReturnsSuccessWithNoChats();
+
+    await new BroadcastServiceTests()
+        .BroadcastAsync_WithValidChats_SendsMessagesToAllChats();
+
+    await new BroadcastServiceTests()
+        .BroadcastAsync_WithFailedMessages_CollectsFailures();
+
+    await new BroadcastServiceTests()
+        .BroadcastToUsersAsync_ConvertsUsersToChatIds();
+
+    await new BroadcastServiceTests()
+        .BroadcastAsync_WithMessageFormatter_AppliesFormatter();
+
+    new BroadcastServiceTests().GetRateLimitStats_ReturnsStatistics();
+    new BroadcastServiceTests().Dispose_DisposesResources();
+}
+```
