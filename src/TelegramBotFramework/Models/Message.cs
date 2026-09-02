@@ -110,6 +110,9 @@ public sealed class Message : IMessage, IEquatable<Message>
         return true;
     }
 
+    public override string ToString() =>
+        $"Message {{ MessageId = {MessageId}, UserId = {UserId}, ChatId = {ChatId}, Content = {Content}, Type = {Type}, Status = {Status} }}";
+
     public bool Equals(Message? other)
     {
         if (other is null) return false;
