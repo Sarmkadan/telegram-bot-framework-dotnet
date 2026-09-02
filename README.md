@@ -6878,3 +6878,36 @@ static void RunCommandUsageTrackerSmokeTests()
     new CommandUsageTrackerTests().RecordCommandInvocation_TracksFirstAndLastUsedTimestamps();
 }
 ```
+
+## ScheduledMessageServiceTests
+
+`ScheduledMessageServiceTests` is an xUnit test fixture that verifies scheduling by timestamp or delay, input validation, cancellation and message queries, successful delivery, retry and failure handling, and resource cleanup. Test runners discover its test methods automatically; its public constructor and methods can also be used for a focused smoke run, with each fixture disposed after use.
+
+**Example usage:**
+
+```csharp
+using System.Threading.Tasks;
+using TelegramBotFramework.Tests;
+
+static async Task RunScheduledMessageServiceSmokeTestsAsync()
+{
+    using (var schedulingTests = new ScheduledMessageServiceTests())
+    {
+        await schedulingTests.ScheduleMessageAsync_WithDelay_SchedulesSuccessfully();
+    }
+
+    using (var validationTests = new ScheduledMessageServiceTests())
+    {
+        await validationTests.ScheduleMessageAsync_InvalidChatId_ThrowsArgumentException();
+        await validationTests.ScheduleMessageAsync_EmptyText_ThrowsArgumentException();
+        await validationTests.ScheduleMessageAsync_PastTime_ThrowsArgumentException();
+    }
+
+    using (var cancellationTests = new ScheduledMessageServiceTests())
+    {
+        cancellationTests.CancelScheduledMessage_InvalidId_ReturnsFalse();
+    }
+
+    new ScheduledMessageServiceTests().Dispose_CleansUpResources();
+}
+```
