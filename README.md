@@ -6644,3 +6644,81 @@ static async Task ScheduleRemindersAsync(
     scheduler.CancelScheduledMessage(followUpId);
 }
 ```
+
+## BroadcastService
+
+The `BroadcastService` is a service for broadcasting messages to multiple chat IDs with configurable rate limiting, failure collection, progress callbacks, and cancellation support. It implements `IBroadcastService` and `IDisposable`, providing methods to broadcast to raw chat IDs or to `BotUser` objects, and to monitor rate limiting statistics.
+
+**Example usage:**
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TelegramBotFramework.Integration;
+using TelegramBotFramework.Models;
+using TelegramBotFramework.Services;
+
+// Setup your services
+var services = new ServiceCollection();
+services.AddLogging(builder => builder.AddConsole());
+// Register your Telegram API client (e.g., from integration)
+services.AddSingleton<ITelegramApiClient, TelegramApiClient>(); // Assuming you have an implementation
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the broadcast service
+var broadcastService = serviceProvider.GetRequiredService<BroadcastService>();
+
+// Define the chat IDs to broadcast to
+var chatIds = new List<long> { 123456789, 987654321, 1122334455 };
+
+// Define the message to broadcast
+string message = "Hello! This is a broadcast message to all users.";
+
+// Configure broadcast options (optional)
+var options = new BroadcastOptions
+{
+    MessagesPerSecond = 20, // Rate limit: 20 messages per second
+    MaxConcurrency = 5,     // Maximum concurrent sends
+    ContinueOnError = true  // Continue broadcasting even if some chats fail
+};
+
+// Optional progress callback
+Func<BroadcastProgress, Task> progressCallback = async progress =>
+{
+    Console.WriteLine($"Broadcast progress: {progress.ProcessedCount}/{progress.TotalChats} processed, " +
+                      $"{progress.SuccessCount} succeeded, {progress.FailedCount} failed.");
+};
+
+// Perform the broadcast
+BroadcastResult result = await broadcastService.BroadcastAsync(
+    chatIds,
+    message,
+    options,
+    progressCallback);
+
+Console.WriteLine($"Broadcast result: {result.Summary}");
+
+// Alternatively, broadcast to a list of BotUser objects
+var users = new List<BotUser>
+{
+    new BotUser { TelegramId = 123456789, FirstName = "John", LastName = "Doe" },
+    new BotUser { TelegramId = 987654321, FirstName = "Jane", LastName = "Smith" }
+};
+
+BroadcastResult userResult = await broadcastService.BroadcastToUsersAsync(
+    users,
+    "Hello users! This is a broadcast to BotUser objects.",
+    options,
+    progressCallback);
+
+Console.WriteLine($"Broadcast to users result: {userResult.Summary}");
+
+// Get rate limiting statistics
+RateLimitStats stats = broadcastService.GetRateLimitStats();
+Console.WriteLine($"Rate limit stats: {stats.TotalMessagesSent} sent, {stats.TotalMessagesFailed} failed, " +
+                  $"{stats.AverageMessagesPerSecond:F2} avg msg/s");
+
+// Dispose the service when done
+broadcastService.Dispose();
+```
