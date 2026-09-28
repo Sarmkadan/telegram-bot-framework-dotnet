@@ -6,6 +6,8 @@
 
 namespace TelegramBotFramework.Configuration;
 
+using TelegramBotFramework.Middleware;
+
 /// <summary>
 /// Dependency injection setup and service registration.
 /// </summary>
@@ -57,11 +59,18 @@ services.AddSingleton<Services.ILocalizationService, Services.LocalizationServic
         // Register rate limiting strategy
         services.AddSingleton<Strategies.IRateLimitingStrategy, Strategies.InMemoryRateLimitingStrategy>();
 
-        // Register middleware components
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.BotErrorHandlingMiddleware>();
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.BotLoggingMiddleware>();
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.AuthorizationMiddleware>();
-        services.AddTransient<Middleware.IBotMiddleware, Middleware.RateLimitingMiddleware>();
+        // Register middleware components using the pipeline builder
+        var middlewarePipeline = new MiddlewarePipelineBuilder()
+            .Use<Middleware.BotErrorHandlingMiddleware>()
+            .Use<Middleware.BotLoggingMiddleware>()
+            .Use<Middleware.AuthorizationMiddleware>()
+            .Use<Middleware.RateLimitingMiddleware>()
+            .Build();
+
+        foreach (var middlewareType in middlewarePipeline)
+        {
+            services.AddTransient(typeof(Middleware.IBotMiddleware), middlewareType);
+        }
 
         // Register logging
         services.AddLogging(config =>
