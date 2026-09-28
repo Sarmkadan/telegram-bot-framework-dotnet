@@ -13,14 +13,14 @@ using TelegramBotFramework.Models;
 /// Middleware for structured logging of bot execution contexts.
 /// </summary>
 /// <summary>
-/// 
+///
 /// </summary>
 public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
 {
     private readonly ILogger<BotLoggingMiddleware> _logger;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public BotLoggingMiddleware(ILogger<BotLoggingMiddleware> logger)
     {
@@ -28,12 +28,12 @@ public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public int Priority => 100;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public async Task<Models.ExecutionContext> ProcessAsync(
         Models.ExecutionContext context,
@@ -65,14 +65,14 @@ public sealed class BotLoggingMiddleware : IBotMiddleware, IBotLoggingMiddleware
 /// Middleware for translating bot framework exceptions into execution context errors.
 /// </summary>
 /// <summary>
-/// 
+///
 /// </summary>
 public sealed class BotErrorHandlingMiddleware : IBotMiddleware
 {
     private readonly ILogger<BotErrorHandlingMiddleware> _logger;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public BotErrorHandlingMiddleware(ILogger<BotErrorHandlingMiddleware> logger)
     {
@@ -80,12 +80,12 @@ public sealed class BotErrorHandlingMiddleware : IBotMiddleware
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public int Priority => 10;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public async Task<Models.ExecutionContext> ProcessAsync(
         Models.ExecutionContext context,
@@ -108,4 +108,29 @@ public sealed class BotErrorHandlingMiddleware : IBotMiddleware
             return context;
         }
     }
+}
+
+/// <summary>
+/// Fluent builder for constructing the middleware pipeline.
+/// </summary>
+public sealed class MiddlewarePipelineBuilder
+{
+    private readonly List<Type> _middlewareTypes = new();
+
+    /// <summary>
+    /// Adds a middleware type to the pipeline.
+    /// </summary>
+    /// <typeparam name="TMiddleware">The type of middleware to add.</typeparam>
+    /// <returns>The builder instance for chaining.</returns>
+    public MiddlewarePipelineBuilder Use<TMiddleware>() where TMiddleware : IBotMiddleware
+    {
+        _middlewareTypes.Add(typeof(TMiddleware));
+        return this;
+    }
+
+    /// <summary>
+    /// Builds the middleware pipeline as an array of middleware types.
+    /// </summary>
+    /// <returns>An array of middleware types in the order they were added.</returns>
+    public Type[] Build() => _middlewareTypes.ToArray();
 }
