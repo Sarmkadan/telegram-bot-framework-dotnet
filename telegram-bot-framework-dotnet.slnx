@@ -1,2 +1,11 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/telegram-bot-framework-dotnet.Benchmarks/telegram-bot-framework-dotnet.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/TelegramBotFramework/TelegramBotFramework.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/telegram-bot-framework-dotnet.Tests/telegram-bot-framework-dotnet.Tests.csproj" />
+  </Folder>
 </Solution>
