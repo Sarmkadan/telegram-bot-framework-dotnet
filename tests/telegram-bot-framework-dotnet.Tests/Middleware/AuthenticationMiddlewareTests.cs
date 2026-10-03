@@ -21,6 +21,8 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
 {
     private readonly Mock<ILogger<AuthenticationMiddleware>> _loggerMock;
 
+    public Mock<ILogger<AuthenticationMiddleware>> LoggerMock => _loggerMock;
+
     public AuthenticationMiddlewareTests()
     {
         _loggerMock = new Mock<ILogger<AuthenticationMiddleware>>();
