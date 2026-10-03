@@ -25,7 +25,7 @@ public static class AuthenticationMiddlewareTestsExtensions
     /// <returns>A configured AuthenticationMiddleware instance.</returns>
     public static AuthenticationMiddleware CreateTestMiddleware(
         this AuthenticationMiddlewareTests tests,
-        Func<HttpContext, Task>? next = null)
+        RequestDelegate? next = null)
     {
         ArgumentNullException.ThrowIfNull(tests);
 
@@ -35,7 +35,7 @@ public static class AuthenticationMiddlewareTestsExtensions
                 context.Items[AuthenticationMiddlewareTestsConstants.AuthenticatedItemKey] = true;
                 await Task.CompletedTask;
             }),
-            logger: tests._loggerMock.Object);
+            logger: tests.LoggerMock.Object);
     }
 
     /// <summary>
