@@ -19,11 +19,20 @@ public sealed class EventBus : IEventBus
     private readonly ConcurrentDictionary<Type, List<object>> _subscribers = new();
     private readonly List<IEventMiddleware> _middleware = new();
     private readonly ILogger<EventBus> _logger;
+    private readonly EventDispatchOptions _dispatchOptions;
     private readonly object _syncLock = new();
 
-    public EventBus(ILogger<EventBus>? logger = null)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventBus"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used for bus diagnostics. A console logger is used when <c>null</c>.</param>
+    /// <param name="dispatchOptions">Controls handler dispatch mode and failure reporting. Defaults to sequential dispatch.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="dispatchOptions"/> has a <c>MaxDegreeOfParallelism</c> below 1.</exception>
+    public EventBus(ILogger<EventBus>? logger = null, EventDispatchOptions? dispatchOptions = null)
     {
         _logger = logger ?? new ConsoleLogger<EventBus>();
+        _dispatchOptions = dispatchOptions ?? new EventDispatchOptions();
+        _dispatchOptions.Validate();
     }
 
     public void Subscribe<TEvent>(IEventHandler<TEvent> handler) where TEvent : class, IEvent
@@ -111,44 +120,14 @@ public sealed class EventBus : IEventBus
         }
 
         // Create the handler invocation function
-        async Task InvokeHandlers()
+        Task InvokeHandlers()
         {
-            var tasks = new List<Task>();
-
-            foreach (var handler in handlersCopy)
-            {
-                // Use reflection to call the handler
-                var handleMethod = handler.GetType()
-                    .GetMethod("HandleAsync", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-
-                if (handleMethod is not null)
-                {
-                    try
-                    {
-                        var task = (Task)handleMethod.Invoke(handler, new object[] { @event })!;
-                        tasks.Add(task);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error invoking handler for event {EventType}",
-                            eventType.Name);
-                    }
-                }
-            }
-
-            // Wait for all handlers to complete
-            try
-            {
-                await Task.WhenAll(tasks).ConfigureAwait(false);
-                _logger.LogInformation("Event {EventType} published to {Count} handlers successfully",
-                    eventType.Name, handlersCopy.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "One or more event handlers failed for {EventType}",
-                    eventType.Name);
-                throw;
-            }
+            return EventHandlerDispatcher.DispatchAsync(
+                handlersCopy.OfType<IEventHandler<TEvent>>().ToList(),
+                @event,
+                _dispatchOptions,
+                _logger,
+                failure => PublishAsync(failure));
         }
 
         // Execute middleware pipeline starting from the first middleware

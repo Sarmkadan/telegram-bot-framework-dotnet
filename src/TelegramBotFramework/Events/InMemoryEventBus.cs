@@ -15,6 +15,21 @@ public sealed class InMemoryEventBus : IEventBus
 {
     private readonly ConcurrentDictionary<Type, List<object>> _subscribers = new();
     private readonly List<IEventMiddleware> _middleware = new();
+    private readonly ILogger<InMemoryEventBus> _logger;
+    private readonly EventDispatchOptions _dispatchOptions;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InMemoryEventBus"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used for bus diagnostics. A console logger is used when <c>null</c>.</param>
+    /// <param name="dispatchOptions">Controls handler dispatch mode and failure reporting. Defaults to sequential dispatch.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="dispatchOptions"/> has a <c>MaxDegreeOfParallelism</c> below 1.</exception>
+    public InMemoryEventBus(ILogger<InMemoryEventBus>? logger = null, EventDispatchOptions? dispatchOptions = null)
+    {
+        _logger = logger ?? new ConsoleLogger<InMemoryEventBus>();
+        _dispatchOptions = dispatchOptions ?? new EventDispatchOptions();
+        _dispatchOptions.Validate();
+    }
 
     /// <summary>
     /// Subscribes a handler to an event type.
@@ -81,15 +96,14 @@ public sealed class InMemoryEventBus : IEventBus
             var handlersCopy = handlers.ToArray();
 
             // Create the handler invocation function
-            async Task InvokeHandlers()
+            Task InvokeHandlers()
             {
-                foreach (var handler in handlersCopy)
-                {
-                    if (handler is IEventHandler<TEvent> typedHandler)
-                    {
-                        await typedHandler.HandleAsync(@event).ConfigureAwait(false);
-                    }
-                }
+                return EventHandlerDispatcher.DispatchAsync(
+                    handlersCopy.OfType<IEventHandler<TEvent>>().ToList(),
+                    @event,
+                    _dispatchOptions,
+                    _logger,
+                    failure => PublishAsync(failure));
             }
 
             // Create a recursive middleware invocation function
