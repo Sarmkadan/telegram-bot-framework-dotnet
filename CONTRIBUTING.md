@@ -1,77 +1,75 @@
 # Contributing to Telegram Bot Framework
 
-Thank you for your interest in contributing! This document explains how to get started, build and test locally, and submit quality pull requests.
-
-## Code of Conduct
-
-Please read our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before participating.
+Thanks for your interest in contributing! Please read our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before participating.
 
 ## Prerequisites
 
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- **.NET SDK 10.0.100 or newer in the 10.0 line.** `global.json` pins `10.0.100` with `rollForward: latestMinor`. All projects target `net10.0`.
 - Git
-- A GitHub account
+- Optional: `make` (thin wrappers around the commands below)
 
-## Building Locally
+## Project Layout
+
+| Path | Contents |
+|------|----------|
+| `src/TelegramBotFramework/` | The library (NuGet `Zaiets.telegram.bot.framework.dotnet`) |
+| `tests/telegram-bot-framework-dotnet.Tests/` | xUnit test project (flat, `<Type>Tests.cs` files) |
+| `benchmarks/telegram-bot-framework-dotnet.Benchmarks/` | BenchmarkDotNet benchmarks |
+| `examples/` | Standalone usage samples (not part of the solution) |
+| `docs/` | Per-type reference documentation |
+
+The solution file is `telegram-bot-framework-dotnet.slnx`.
+
+## Building
 
 ```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/telegram-bot-framework-dotnet.git
-cd telegram-bot-framework-dotnet
-
-# Restore dependencies
 dotnet restore
-
-# Build in Release mode
-dotnet build --configuration Release
-
-# Or use the Makefile shortcut
-make build
+dotnet build --configuration Release    # or: make build
 ```
 
-## Running Tests
+`src/TelegramBotFramework` builds with `TreatWarningsAsErrors=true`, so warnings fail the build. Keep it warning-free.
+
+## Testing
 
 ```bash
-# Run all tests
-dotnet test --verbosity normal
-
-# Run with TRX output for detailed results
-dotnet test --verbosity normal --logger "trx" --results-directory TestResults
-
-# Or use the Makefile shortcut
-make test
+dotnet test --configuration Release --verbosity normal                  # or: make test
+dotnet test --filter "FullyQualifiedName~BotOrchestratorTests"         # a single test class
 ```
+
+- Frameworks: xUnit, FluentAssertions, Moq.
+- Name tests `Method_Scenario_Expectation`, use Arrange/Act/Assert comments, and assert with `.Should()`.
+- The test project can see `internal` members through `InternalsVisibleTo`.
+
+## Coding Conventions
+
+- Follow `.editorconfig`: C#, 4-space indentation, LF line endings, lines up to 120 columns, Allman braces, braces always.
+- Run `make format` (`dotnet format`) before committing and `make lint` to check code style.
+- Nullable reference types are enabled. Guard public entry points with `ArgumentNullException.ThrowIfNull` or `ArgumentException.ThrowIfNullOrWhiteSpace`.
+- File-scoped namespaces (`TelegramBotFramework.<Folder>`), one type per file.
+- Naming:
+  - Private fields use `_camelCase` (e.g. `_service`).
+  - Interfaces are prefixed with `I` (e.g. `ICommandHandler`).
+  - Async methods use the `Async` suffix and take `CancellationToken` as their last parameter.
+  - Library code uses `ConfigureAwait(false)` on every `await`.
+- Mark classes `sealed` unless they are designed for inheritance.
+- Add XML `///` documentation to all public members.
 
 ## Branching and Pull Requests
 
-1. Fork the repository and create a feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-2. Keep commits focused and atomic. Use conventional commit prefixes:
-   - `feat:` for new features
-   - `fix:` for bug fixes
-   - `docs:` for documentation changes
-   - `ci:` for CI/CD changes
-   - `refactor:` for code restructuring without behaviour change
-3. Ensure all tests pass before opening a PR.
-4. Open a pull request against `main` with a clear description of the change and why it is needed.
-5. Link any relevant issues in the PR description.
+1. Fork the repository and branch from `main`, using a conventional prefix in the branch name, e.g. `feat/retry-policy`.
+2. Keep PRs small and focused: one logical change per PR. Split refactors from behaviour changes.
+3. Use conventional commit prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `ci:`, `chore:`.
+4. Before opening the PR, make sure `dotnet build` and `dotnet test` pass locally and `make format` leaves no changes. Add or update tests for any behaviour change.
+5. Open the PR against `main`. Describe what changed and why, and link any related issue.
+6. CI must pass. The `ci.yml` and `build.yml` workflows run restore, a Release build, and the tests on every PR.
 
-## Code Style
+## Reporting Bugs and Requesting Features
 
-- Follow the rules defined in [.editorconfig](.editorconfig).
-- Use 4 spaces for indentation in C# files.
-- Prefix private fields with `_` (e.g. `_service`).
-- Prefix interfaces with `I` (e.g. `ICommandHandler`).
-- Provide XML documentation comments (`///`) for all public APIs.
-- Keep lines under 120 characters.
-
-## Reporting Issues
-
-- Search existing issues before opening a new one.
-- Provide a minimal reproduction case, expected vs actual behaviour, and environment details (.NET version, OS).
+- Search the existing issues first.
+- **Bugs:** include a minimal reproduction, expected vs actual behaviour, the .NET SDK version (`dotnet --version`), the OS, and the framework package version.
+- **Security issues:** do not open a public issue. Follow [SECURITY.md](SECURITY.md).
+- **Feature requests:** describe the use case and why it belongs in the framework. For larger changes, open an issue to agree on the approach before writing code.
 
 ## License
 
-By contributing you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).
