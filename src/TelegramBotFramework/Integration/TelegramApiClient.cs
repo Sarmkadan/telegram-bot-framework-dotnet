@@ -434,14 +434,21 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// Sets the webhook URL for receiving updates.
     /// </summary>
     /// <param name="webhookUrl">The absolute URL to which Telegram sends updates.</param>
+    /// <param name="secretToken">Optional secret token sent as <c>secret_token</c>; <see langword="null"/> or empty registers without one.</param>
     /// <returns><see langword="true"/> if Telegram accepts the webhook; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty or is not a valid URL.</exception>
-    public async Task<bool> SetWebhookAsync(string webhookUrl)
+    /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty or is not a valid URL, or when <paramref name="secretToken"/> is not a valid Telegram secret token.</exception>
+    public async Task<bool> SetWebhookAsync(string webhookUrl, string? secretToken = null)
     {
         if (string.IsNullOrWhiteSpace(webhookUrl) || !ValidationUtility.IsValidUrl(webhookUrl))
             throw new ArgumentException("Invalid webhook URL", nameof(webhookUrl));
 
-        var payload = new { url = webhookUrl };
+        if (!string.IsNullOrEmpty(secretToken) && !WebhookSecretToken.IsValid(secretToken))
+            throw new ArgumentException("Invalid webhook secret token", nameof(secretToken));
+
+        object payload = string.IsNullOrEmpty(secretToken)
+            ? new { url = webhookUrl }
+            : new { url = webhookUrl, secret_token = secretToken };
+
         return await SendApiRequestAsync(TelegramApiClientConstants.SetWebhookMethod, payload).ConfigureAwait(false);
     }
 

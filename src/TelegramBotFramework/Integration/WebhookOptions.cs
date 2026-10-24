@@ -90,7 +90,7 @@ public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
         return HashCode.Combine(Url, SecretToken, MaxConnections, AllowedUpdates != null ? AllowedUpdates.GetHashCode() : 0, ListenPath, DropPendingUpdates);
     }
 
-    public override string ToString() => $"WebhookOptions {{ Url = {Url}, SecretToken = {SecretToken}, MaxConnections = {MaxConnections}, AllowedUpdates = {AllowedUpdates}, ListenPath = {ListenPath}, DropPendingUpdates = {DropPendingUpdates} }}";
+    public override string ToString() => $"WebhookOptions {{ Url = {Url}, SecretToken = {(string.IsNullOrEmpty(SecretToken) ? "<none>" : "<redacted>")}, MaxConnections = {MaxConnections}, AllowedUpdates = {AllowedUpdates}, ListenPath = {ListenPath}, DropPendingUpdates = {DropPendingUpdates} }}";
 
     public static bool operator ==(WebhookOptions? left, WebhookOptions? right)
     {
@@ -123,5 +123,8 @@ public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
 
         if (MaxRequestBodySize <= 0)
             throw new InvalidOperationException("MaxRequestBodySize must be positive.");
+
+        if (!string.IsNullOrEmpty(SecretToken) && !WebhookSecretToken.IsValid(SecretToken))
+            throw new InvalidOperationException(WebhookSecretTokenConstants.InvalidSecretTokenMessage);
     }
 }
