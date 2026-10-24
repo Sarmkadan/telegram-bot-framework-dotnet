@@ -11,8 +11,8 @@ namespace TelegramBotFramework.Middleware.Tests;
 /// </summary>
 public interface IAuthorizationMiddlewareTests
 {
-    Task ProcessAsync_WhenContextInvalid_PassesToNext();
-    Task ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext();
+    Task ProcessAsync_WhenContextInvalid_ShortCircuitsWithoutNext();
+    Task ProcessAsync_WhenUserNull_LogsWarningAndRejectsWithoutNext();
     Task ProcessAsync_WhenUserIsRegularAndNoCommand_PassesThrough();
     Task ProcessAsync_WhenUserIsAdminAndNoCommand_PassesThrough();
     Task ProcessAsync_WhenRegularUserTriesAdminCommand_BlocksAndAddsError();

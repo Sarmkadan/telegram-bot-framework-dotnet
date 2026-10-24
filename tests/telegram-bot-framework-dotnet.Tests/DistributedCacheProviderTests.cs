@@ -112,10 +112,8 @@ public class DistributedCacheProviderTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
     [InlineData("   ")]
-    public async Task Operations_HandleNullOrWhiteSpaceKey_Gracefully(string? key)
+    public async Task Operations_HandleWhiteSpaceKey_Gracefully(string key)
     {
         var provider = new TestableCacheProvider();
 
@@ -124,7 +122,21 @@ public class DistributedCacheProviderTests
         await provider.SetAsync(key, new TestData(1, "Test"));
         await provider.RemoveAsync(key);
         var exists = await provider.ExistsAsync(key);
-        
+
         Assert.False(exists);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task Operations_HandleNullOrEmptyKey_Throws(string? key)
+    {
+        var provider = new TestableCacheProvider();
+
+        // Null or empty keys are rejected with ArgumentNullException / ArgumentException.
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetAsync<TestData>(key!));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.SetAsync(key!, new TestData(1, "Test")));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.RemoveAsync(key!));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.ExistsAsync(key!));
     }
 }

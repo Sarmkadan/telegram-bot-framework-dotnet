@@ -127,7 +127,8 @@ public sealed class MessageFormatter : IMessageFormatter
             return text;
 
         // Escape markdown special characters
-        var specialChars = new[] { '_', '*', '[', ']', '(', ')', '~', '`', '\\' };
+        // The backslash must be escaped first so the escapes added for the other characters are not escaped again.
+        var specialChars = new[] { '\\', '_', '*', '[', ']', '(', ')', '~', '`' };
         var result = text;
 
         foreach (var ch in specialChars)

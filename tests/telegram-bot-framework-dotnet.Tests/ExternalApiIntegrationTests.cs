@@ -19,6 +19,9 @@ public sealed class ExternalApiIntegrationTests
     private readonly HttpClientFactory _httpClientFactory = new();
     private readonly Mock<ILogger<ExternalApiIntegration>> _loggerMock = new();
 
+    // A closed local port: requests fail at the transport level without touching the network.
+    private const string UnreachableUrl = "http://127.0.0.1:1";
+
     public ExternalApiIntegrationTests()
     {
         // Setup logger mock to avoid console output during tests
@@ -161,7 +164,7 @@ public sealed class ExternalApiIntegrationTests
     public void ParseResponse_WithComplexNestedJson_ReturnsDeserializedObject()
     {
         // Arrange
-        var complexJson = "{\"User\":{\"Id\":123,\"Name\":\"John\",\"Settings\":{\"DarkMode\":true,\"Notifications\":false}}";
+        var complexJson = "{\"User\":{\"Id\":123,\"Name\":\"John\",\"Settings\":{\"DarkMode\":true,\"Notifications\":false}}}";
 
         // Act
         var result = ExternalApiIntegration.ParseResponse<ComplexModel>(complexJson);
@@ -196,7 +199,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/post";
+        var url = UnreachableUrl + "/post";
 
         // Act
         var result = await integration.PostAsync<object>(url, null);
@@ -210,7 +213,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/post";
+        var url = UnreachableUrl + "/post";
         var payload = new { Test = "data" };
 
         // Act
@@ -240,7 +243,7 @@ public sealed class ExternalApiIntegrationTests
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
         var headers = new Dictionary<string, string>();
-        var url = "https://httpbin.org/headers";
+        var url = UnreachableUrl + "/headers";
 
         // Act
         var result = await integration.GetWithHeadersAsync(url, headers);
@@ -254,7 +257,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/headers";
+        var url = UnreachableUrl + "/headers";
 
         // Act
         var result = await integration.GetWithHeadersAsync(url, null!);
@@ -268,7 +271,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/status/500";
+        var url = UnreachableUrl + "/status/500";
 
         // Act - should retry 3 times by default
         var result = await integration.GetAsync<object>(url, maxRetries: 3);
@@ -283,7 +286,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/status/500";
+        var url = UnreachableUrl + "/status/500";
 
         // Act
         var result = await integration.GetAsync<object>(url, maxRetries: 0);
@@ -298,7 +301,7 @@ public sealed class ExternalApiIntegrationTests
     {
         // Arrange
         var integration = new ExternalApiIntegration(_httpClientFactory, _loggerMock.Object);
-        var url = "https://httpbin.org/status/500";
+        var url = UnreachableUrl + "/status/500";
 
         // Act - should retry once
         var result = await integration.GetAsync<object>(url, maxRetries: 1);
@@ -312,7 +315,7 @@ public sealed class ExternalApiIntegrationTests
     public void ParseResponse_WithArrayJson_ReturnsDeserializedArray()
     {
         // Arrange
-        var arrayJson = "[{\"Id\":1},{\"Id\":2},{\"Id\":3}]";
+        var arrayJson = "[1,2,3]";
 
         // Act
         var result = ExternalApiIntegration.ParseResponse<int[]>(arrayJson);

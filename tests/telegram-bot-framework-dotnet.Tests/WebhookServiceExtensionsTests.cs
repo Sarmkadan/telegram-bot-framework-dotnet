@@ -271,7 +271,6 @@ public class WebhookServiceExtensionsTests
     public async Task GetRegisteredAt_ReturnsRegisteredAt()
     {
         // Arrange
-        var expected = new DateTime(2026, 8, 31, 12, 0, 0, DateTimeKind.Utc);
         // Register the service to set _registeredAt
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
             .ReturnsAsync(true);
@@ -283,7 +282,7 @@ public class WebhookServiceExtensionsTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.Date.Should().Be(expected.Date); // Just check date part since time may vary slightly
+        result.Value.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
     }
 
     [Fact]

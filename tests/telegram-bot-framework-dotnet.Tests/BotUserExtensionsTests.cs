@@ -19,7 +19,7 @@ public class BotUserExtensionsTests
             LastName = "Doe"
         };
 
-        var result = user.GetDisplayName();
+        var result = BotUserExtensions.GetDisplayName(user);
 
         Assert.Equal("cool_user", result);
     }
@@ -59,7 +59,7 @@ public class BotUserExtensionsTests
     {
         BotUser? user = null;
 
-        Assert.Throws<ArgumentNullException>(() => user!.GetDisplayName());
+        Assert.Throws<ArgumentNullException>(() => BotUserExtensions.GetDisplayName(user!));
     }
 
     #endregion
@@ -173,7 +173,7 @@ public class BotUserExtensionsTests
             Metadata = new Dictionary<string, string>()
         };
 
-        Assert.Throws<ArgumentException>(() => user.GetMetadataValue(key!));
+        Assert.ThrowsAny<ArgumentException>(() => user.GetMetadataValue(key!));
     }
 
     [Fact]

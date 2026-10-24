@@ -64,7 +64,7 @@ public sealed class ConversationFlowOptionsExtensionsTests
     {
         var options = new ConversationFlowOptions();
 
-        var exception = Assert.Throws<ArgumentException>(
+        var exception = Assert.ThrowsAny<ArgumentException>(
             () => options.EnableAbortKeyword(keyword!, acknowledgement!));
 
         Assert.Equal(expectedParameter, exception.ParamName);

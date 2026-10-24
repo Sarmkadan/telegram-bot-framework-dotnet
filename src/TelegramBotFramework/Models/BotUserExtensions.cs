@@ -51,7 +51,7 @@ namespace TelegramBotFramework.Models
         public static string? GetMetadataValue(this BotUser? user, string key)
         {
             ArgumentNullException.ThrowIfNull(user);
-            ArgumentException.ThrowIfNullOrEmpty(key);
+            ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
             return user.Metadata?.TryGetValue(key, out var value) == true
                 ? value

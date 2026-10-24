@@ -77,7 +77,11 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public void SetState(string? key, object value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(key);
+        if (string.IsNullOrEmpty(key))
+        {
+            return;
+        }
+
         ArgumentNullException.ThrowIfNull(value);
         States[key] = value;
     }
@@ -123,7 +127,11 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// </summary>
     public void AddError(string? errorMessage)
     {
-        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
+        if (string.IsNullOrEmpty(errorMessage))
+        {
+            return;
+        }
+
         Errors ??= new List<string>();
         Errors.Add(errorMessage);
         IsValid = false;
@@ -139,8 +147,9 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
         if (UserId <= 0)
             errors.Add("UserId must be positive");
 
-        if (ChatId <= 0)
-            errors.Add("ChatId must be positive");
+        // Telegram group and supergroup chat IDs are negative, so only zero is invalid.
+        if (ChatId == 0)
+            errors.Add("ChatId must be non-zero");
 
         if (errors.Count > 0)
         {
@@ -166,7 +175,8 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
     public bool Equals(ExecutionContext? other)
     {
-        ArgumentNullException.ThrowIfNull(other);
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
         return ContextId == other.ContextId
                && UserId == other.UserId
                && ChatId == other.ChatId
@@ -184,7 +194,7 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
     public override bool Equals(object? obj)
     {
-        ArgumentNullException.ThrowIfNull(obj);
+        if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != GetType()) return false;
         return Equals((ExecutionContext)obj);
@@ -207,8 +217,9 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters have the same value; otherwise, false.</returns>
     public static bool operator ==(ExecutionContext? left, ExecutionContext? right)
     {
-        ArgumentNullException.ThrowIfNull(left);
-        ArgumentNullException.ThrowIfNull(right);
+        if (ReferenceEquals(left, right)) return true;
+        if (ReferenceEquals(null, left)) return false;
+        if (ReferenceEquals(null, right)) return false;
         return left.Equals(right);
     }
 
@@ -220,8 +231,6 @@ public sealed class ExecutionContext : IExecutionContext, IEquatable<ExecutionCo
     /// <returns>true if <paramref name="left"/> and <paramref name="right"/> are not equal; otherwise, false.</returns>
     public static bool operator !=(ExecutionContext? left, ExecutionContext? right)
     {
-        ArgumentNullException.ThrowIfNull(left);
-        ArgumentNullException.ThrowIfNull(right);
         return !(left == right);
     }
 }

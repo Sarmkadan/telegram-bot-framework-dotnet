@@ -20,7 +20,7 @@ namespace TelegramBotFramework.Integration
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid or <paramref name="text"/> is null or whitespace or <paramref name="buttonLabels"/> is null</exception>
         public static async Task<bool> SendMessageWithButtonsAsync(
-            this TelegramApiClient client,
+            this ITelegramApiClient client,
             long chatId,
             string text,
             string[][] buttonLabels)
@@ -54,7 +54,7 @@ namespace TelegramBotFramework.Integration
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid, <paramref name="messageId"/> is not positive, or <paramref name="newText"/> is null or whitespace</exception>
         public static async Task<bool> EditMessageTextAsync(
-            this TelegramApiClient client,
+            this ITelegramApiClient client,
             long chatId,
             int messageId,
             string newText)
@@ -90,7 +90,7 @@ namespace TelegramBotFramework.Integration
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="callbackQueryId"/> is null or whitespace</exception>
         public static async Task<bool> AnswerCallbackQueryWithTextAsync(
-            this TelegramApiClient client,
+            this ITelegramApiClient client,
             string callbackQueryId,
             string? text = null)
         {
@@ -110,7 +110,7 @@ namespace TelegramBotFramework.Integration
         /// <param name="client">The Telegram API client</param>
         /// <returns>Bot information if successful, null otherwise</returns>
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
-        public static async Task<string?> GetBotInformationAsync(this TelegramApiClient client)
+        public static async Task<string?> GetBotInformationAsync(this ITelegramApiClient client)
         {
             ArgumentNullException.ThrowIfNull(client);
 

@@ -18,6 +18,18 @@ public abstract class DistributedCacheProvider : ICacheProvider, IDistributedCac
 {
     protected readonly ILogger<DistributedCacheProvider> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistributedCacheProvider"/> class with a console logger.
+    /// </summary>
+    protected DistributedCacheProvider()
+        : this(null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistributedCacheProvider"/> class.
+    /// </summary>
+    /// <param name="logger">The logger to use; a console logger is created when <see langword="null"/>.</param>
     protected DistributedCacheProvider(ILogger<DistributedCacheProvider>? logger = null)
     {
         _logger = logger ?? new ConsoleLogger<DistributedCacheProvider>();

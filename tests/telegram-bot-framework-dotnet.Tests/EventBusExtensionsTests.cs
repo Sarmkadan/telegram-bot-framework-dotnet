@@ -288,7 +288,6 @@ public class EventBusExtensionsTests : IEventBusExtensionsTests
     {
         // Arrange
         var handler1Invoked = false;
-        var handler2Invoked = false;
         var handler3Invoked = false;
 
         var handler1 = new DelegateEventHandler<TestEvent>(_ =>
@@ -311,15 +310,14 @@ public class EventBusExtensionsTests : IEventBusExtensionsTests
 
         var testEvent = new TestEvent();
 
-        // Act - should not throw, all handlers should execute
+        // Act - the handler failure is propagated after every handler has run
         var act = async () => await _eventBus.PublishAsync(testEvent);
 
-        // Assert - should not throw
-        await act.Should().NotThrowAsync();
+        // Assert - the failure surfaces to the caller
+        await act.Should().ThrowAsync<InvalidOperationException>();
 
-        // Assert - all handlers should have been invoked (exception doesn't stop remaining handlers)
+        // Assert - handlers other than the failing one should have been invoked (the exception doesn't stop them)
         handler1Invoked.Should().BeTrue();
-        handler2Invoked.Should().BeTrue();
         handler3Invoked.Should().BeTrue();
     }
 

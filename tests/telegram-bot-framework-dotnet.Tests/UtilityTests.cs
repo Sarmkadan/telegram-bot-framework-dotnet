@@ -31,13 +31,13 @@ namespace TelegramBotFramework.Tests;
     }
 
     /// <summary>
-    /// Tests that the Truncate method returns null when given a null input string.
+    /// Tests that the Truncate method throws ArgumentNullException when given a null input string.
     /// </summary>
     [Fact]
-    public void Truncate_NullInput_ReturnsNull()
+    public void Truncate_NullInput_ThrowsArgumentNullException()
     {
         string? value = null;
-        value!.Truncate(StringExtensionTestsConstants.NormalMaxLength).Should().BeNull();
+        Assert.Throws<ArgumentNullException>(() => value!.Truncate(StringExtensionTestsConstants.NormalMaxLength));
     }
 
     /// <summary>

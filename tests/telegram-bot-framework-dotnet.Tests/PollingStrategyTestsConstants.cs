@@ -33,8 +33,12 @@ internal static class PollingStrategyTestsConstants
     public const string AlreadyRunningLogSubstring = "already running";
     public const string PollingStoppedLogSubstring = "Polling stopped";
     public const string ErrorProcessingUpdateLogSubstring = "Error processing update";
-    public const string CustomIntervalLogSubstring = "500ms";
-    public const string DefaultIntervalLogSubstring = "1000ms";
+    public const string CustomIntervalLogSubstring = "pollInterval=500ms";
+    public const string DefaultIntervalLogSubstring = "pollInterval=1000ms";
+
+    // Upper bound for waiting on backoff-driven state changes (the base backoff is one second).
+    public static readonly System.TimeSpan StateWaitTimeout = System.TimeSpan.FromSeconds(15);
+    public static readonly System.TimeSpan StateWaitPollDelay = System.TimeSpan.FromMilliseconds(20);
     public const string TestExceptionMessage = "Test exception";
     public const string ApiFailureMessage = "API failure";
     public const string UpdateJsonFormat = "{{ \"update_id\": {0}, \"message\": {{ \"message_id\": {1}, \"chat\": {{ \"id\": {2} }}, \"from\": {{ \"id\": {3} }}, \"date\": {4}, \"text\": \"{5}\" }} }}";

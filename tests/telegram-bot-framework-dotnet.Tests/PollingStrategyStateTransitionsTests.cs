@@ -135,9 +135,9 @@ public class PollingStrategyStateTransitionsTests
                 return new List<JsonElement>(); // Success after failures
             });
 
-        // Act - start polling
+        // Act - start polling; the backoff is at least one second, so wait for the state instead of fixed delays
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-        await Task.Delay(200); // Let it fail and backoff a few times
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount >= 3, "three consecutive failures");
 
         // Assert - should be in backoff state with increased failure count
         var backoffStatus = _pollingStrategy.GetStatus();
@@ -145,8 +145,8 @@ public class PollingStrategyStateTransitionsTests
         backoffStatus.ConsecutiveFailureCount.Should().BeGreaterOrEqualTo(3);
         backoffStatus.CurrentBackoffMs.Should().BeGreaterThan(1000); // Base interval
 
-        // Wait for recovery - let it try again after backoff
-        await Task.Delay(100);
+        // Wait for recovery - the fourth poll succeeds once the backoff has elapsed
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount == 0, "recovery after backoff");
 
         // Assert - failure count should reset after successful poll
         var recoveredStatus = _pollingStrategy.GetStatus();
@@ -157,6 +157,7 @@ public class PollingStrategyStateTransitionsTests
         await _pollingStrategy.StopAsync();
     }
 
+
     [Fact]
     public async Task Polling_WithPersistentFailure_RemainsInBackoffState()
     {
@@ -164,9 +165,9 @@ public class PollingStrategyStateTransitionsTests
         _mockApiClient.Setup(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException("Persistent API failure"));
 
-        // Act - start polling
+        // Act - start polling and wait until a second failure has been recorded
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-        await Task.Delay(150); // Let it fail and apply backoff
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount >= 2, "two consecutive failures");
 
         // Assert - should be running but in backoff state
         var backoffStatus = _pollingStrategy.GetStatus();
@@ -177,6 +178,7 @@ public class PollingStrategyStateTransitionsTests
         // Cleanup
         await _pollingStrategy.StopAsync();
     }
+
 
     [Fact]
     public async Task Polling_WithCancellationToken_MidPoll_StopsGracefullyAndMaintainsState()
@@ -211,27 +213,31 @@ public class PollingStrategyStateTransitionsTests
         var jsonElement = JsonDocument.Parse(updateJson).RootElement;
         var updates = new List<JsonElement> { jsonElement };
 
+        // The handler stays in flight until the test releases it, so the shutdown is exercised while it runs
+        var handlerGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         bool handlerCompleted = false;
         _pollingStrategy.OnUpdateReceived += async (u) => {
-            await Task.Delay(100); // Simulate slow handler
+            await handlerGate.Task.ConfigureAwait(false);
             handlerCompleted = true;
-            await Task.CompletedTask;
         };
 
-        _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
+        // Later polls use the advanced offset, so match any offset
+        _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(It.IsAny<long>(), It.IsAny<int>()))
             .ReturnsAsync(updates)
             .ReturnsAsync(new List<JsonElement>());
 
-        // Act - start polling
+        // Act - start polling and wait for the handler to be in flight
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-        await Task.Delay(200); // Let it process update
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().InFlightCount == 1, "the update handler to be in flight");
 
         var statusDuringPoll = _pollingStrategy.GetStatus();
         statusDuringPoll.InFlightCount.Should().Be(1);
         statusDuringPoll.IsDraining.Should().BeFalse();
 
-        // Act - stop while handler is in flight
-        await _pollingStrategy.StopAsync();
+        // Act - stop while handler is in flight, then let the handler finish
+        var stopTask = _pollingStrategy.StopAsync();
+        handlerGate.SetResult();
+        await stopTask;
 
         // Assert - handler should complete and drain should be complete
         handlerCompleted.Should().BeTrue();
@@ -240,48 +246,28 @@ public class PollingStrategyStateTransitionsTests
         finalStatus.InFlightCount.Should().Be(0);
     }
 
+
     [Fact]
     public async Task Polling_WithMultipleConsecutiveFailures_AppliesExponentialBackoff()
     {
-        // Arrange - track backoff delays
-        var backoffDelays = new List<int>();
-        var failureCount = 0;
-
+        // Arrange - every poll fails
         _mockApiClient.Setup(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
-            .ReturnsAsync(() => {
-                failureCount++;
-                if (failureCount <= 5)
-                {
-                    // Calculate expected backoff for this failure count
-                    var expectedBackoff = (int)Math.Min(
-                        1000 * Math.Pow(1.5, failureCount - 1),
-                        30000
-                    );
-                    backoffDelays.Add(expectedBackoff);
-                    throw new InvalidOperationException($"API failure #{failureCount}");
-                }
-                return new List<JsonElement>();
-            });
+            .ThrowsAsync(new InvalidOperationException("API failure"));
 
-        // Act - start polling
+        // Act - start polling and observe the backoff after the second and third consecutive failures
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-        await Task.Delay(400); // Let it fail multiple times
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount >= 2, "two consecutive failures");
+        var backoffAfterSecondFailure = _pollingStrategy.GetStatus().CurrentBackoffMs;
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount >= 3, "three consecutive failures");
+        var backoffAfterThirdFailure = _pollingStrategy.GetStatus().CurrentBackoffMs;
 
-        // Assert - backoff should increase exponentially
-        var status = _pollingStrategy.GetStatus();
-        status.ConsecutiveFailureCount.Should().BeGreaterOrEqualTo(5);
-        status.CurrentBackoffMs.Should().BeGreaterThan(1000);
-
-        // Verify exponential growth (approximately)
-        backoffDelays.Should().HaveCountGreaterOrEqualTo(5);
-        for (int i = 1; i < backoffDelays.Count; i++)
-        {
-            backoffDelays[i].Should().BeGreaterThan(backoffDelays[i - 1]);
-        }
+        // Assert - backoff grows with each consecutive failure
+        backoffAfterThirdFailure.Should().BeGreaterThan(backoffAfterSecondFailure);
 
         // Cleanup
         await _pollingStrategy.StopAsync();
     }
+
 
     [Fact]
     public void GetStatus_ReturnsAccurateStateAfterMultipleTransitions()
@@ -334,16 +320,15 @@ public class PollingStrategyStateTransitionsTests
         var update1 = JsonDocument.Parse(update1Json).RootElement;
         var update2 = JsonDocument.Parse(update2Json).RootElement;
 
-        _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
+        // Later polls use the advanced offset, so match any offset
+        _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(It.IsAny<long>(), It.IsAny<int>()))
             .ReturnsAsync(new List<JsonElement> { update1 })
             .ReturnsAsync(new List<JsonElement> { update2 })
             .ReturnsAsync(new List<JsonElement>());
 
-        // Act - start polling
+        // Act - start polling and wait until both updates have been processed
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-
-        // Wait for multiple polls
-        await Task.Delay(300);
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().LastUpdateId == 101, "both updates to be processed");
 
         // Assert
         var status = _pollingStrategy.GetStatus();
@@ -354,6 +339,7 @@ public class PollingStrategyStateTransitionsTests
         // Cleanup
         await _pollingStrategy.StopAsync();
     }
+
 
     [Fact]
     public async Task StopAsync_WithInFlightHandlers_WaitsForCompletion()
@@ -427,7 +413,7 @@ public class PollingStrategyStateTransitionsTests
         _mockLogger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("1000ms")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("pollInterval=1000ms")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -487,15 +473,15 @@ public class PollingStrategyStateTransitionsTests
                 return new List<JsonElement>();
             });
 
-        // Act - start polling
+        // Act - start polling and wait for the second failure
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
-        await Task.Delay(200); // Let it fail and backoff
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount == 2, "two consecutive failures");
 
         var backoffStatus = _pollingStrategy.GetStatus();
         backoffStatus.ConsecutiveFailureCount.Should().Be(2);
 
-        // Wait for success
-        await Task.Delay(100);
+        // Wait for the successful poll that follows the backoff
+        await WaitUntilAsync(() => _pollingStrategy.GetStatus().ConsecutiveFailureCount == 0, "success after backoff");
 
         var successStatus = _pollingStrategy.GetStatus();
         successStatus.ConsecutiveFailureCount.Should().Be(0);
@@ -503,5 +489,23 @@ public class PollingStrategyStateTransitionsTests
 
         // Cleanup
         await _pollingStrategy.StopAsync();
+    }
+
+
+    /// <summary>
+    /// Waits until the condition holds, checking state at short intervals instead of relying on fixed delays.
+    /// </summary>
+    private static async Task WaitUntilAsync(Func<bool> condition, string description)
+    {
+        var deadline = DateTime.UtcNow + PollingStrategyTestsConstants.StateWaitTimeout;
+        while (!condition())
+        {
+            if (DateTime.UtcNow >= deadline)
+            {
+                throw new TimeoutException($"Timed out waiting for {description}.");
+            }
+
+            await Task.Delay(PollingStrategyTestsConstants.StateWaitPollDelay);
+        }
     }
 }

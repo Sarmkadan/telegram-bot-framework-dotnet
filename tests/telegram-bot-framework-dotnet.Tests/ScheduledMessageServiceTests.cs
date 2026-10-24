@@ -17,6 +17,9 @@ namespace TelegramBotFramework.Tests;
 /// </summary>
 public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessageServiceTests
 {
+    // Short retry delay so retry attempts complete within the test's wait window.
+    private const int RetryDelayMilliseconds = 50;
+
     private readonly Mock<ITelegramApiClient> _mockTelegramApiClient;
     private readonly Mock<ILogger<ScheduledMessageService>> _mockLogger;
     private readonly ScheduledMessageService _service;
@@ -29,7 +32,8 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
 
         _service = new ScheduledMessageService(
             _mockTelegramApiClient.Object,
-            _mockLogger.Object);
+            _mockLogger.Object,
+            TimeSpan.FromMilliseconds(RetryDelayMilliseconds));
     }
 
     public void Dispose()

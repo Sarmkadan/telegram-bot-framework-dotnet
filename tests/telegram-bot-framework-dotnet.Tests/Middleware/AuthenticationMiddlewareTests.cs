@@ -361,7 +361,7 @@ public sealed class AuthenticationMiddlewareTests : IAuthenticationMiddlewareTes
         );
 
         var context = new DefaultHttpContext();
-        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.TestKey;
+        context.Request.Headers[AuthenticationMiddlewareTestsConstants.AuthorizationHeader] = AuthenticationMiddlewareTestsConstants.BearerPrefix + AuthenticationMiddlewareTestsConstants.AlternativeValidApiKey;
         context.Request.Path = null;
 
         _loggerMock.Object.LogInformation("Test arranged with null Request.Path");

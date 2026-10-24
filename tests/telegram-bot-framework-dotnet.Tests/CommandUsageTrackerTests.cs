@@ -48,9 +48,10 @@ public sealed class CommandUsageTrackerTests : ICommandUsageTrackerTests
 
         // Assert
         var topCommands = _tracker.GetTopCommands(CommandUsageTrackerTestsConstants.TopCommandsCount);
+        // Both commands have a count of 1, so their relative order is not defined; check the normalized names only.
         topCommands.Should().HaveCount(2);
-        topCommands[0].CommandName.Should().Be(CommandUsageTrackerTestsConstants.TestCommand);
-        topCommands[1].CommandName.Should().Be(CommandUsageTrackerTestsConstants.Test2Command);
+        topCommands.Select(c => c.CommandName).Should().BeEquivalentTo(
+            new[] { CommandUsageTrackerTestsConstants.TestCommand, CommandUsageTrackerTestsConstants.Test2Command });
     }
 
     /// <summary>

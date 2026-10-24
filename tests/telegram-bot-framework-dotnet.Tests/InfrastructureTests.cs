@@ -745,7 +745,7 @@ public sealed class EventBusTests
         var tasks = new List<Task>();
         for (int i = 0; i < 10; i++)
         {
-            var evt = new MessageReceivedEvent(i, i + 100, $"Message {i}");
+            var evt = new MessageReceivedEvent(i + 1, i + 101, $"Message {i}");
             tasks.Add(_bus.PublishAsync(evt));
         }
 
