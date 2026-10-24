@@ -34,6 +34,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
     private readonly ILogger<TelegramApiClient> _logger;
     private readonly TelegramApiRetryHandler _retryHandler;
     private readonly TelegramApiRetryOptions _retryOptions;
+    private readonly TelegramCircuitBreaker? _circuitBreaker;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TelegramApiClient"/> class.
@@ -42,12 +43,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="httpClientFactory">Optional factory used to create the underlying HTTP client.</param>
     /// <param name="logger">Optional logger used to record client activity.</param>
     /// <param name="retryOptions">Optional retry configuration; defaults are used when not provided.</param>
+    /// <param name="circuitBreaker">Optional circuit breaker that stops calls to Telegram while the API is degraded.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="botToken"/> is empty or has an invalid format, or when <paramref name="retryOptions"/> contains invalid values.</exception>
     public TelegramApiClient(
         string botToken,
         HttpClientFactory? httpClientFactory = null,
         ILogger<TelegramApiClient>? logger = null,
-        TelegramApiRetryOptions? retryOptions = null)
+        TelegramApiRetryOptions? retryOptions = null,
+        TelegramCircuitBreaker? circuitBreaker = null)
     {
         if (string.IsNullOrWhiteSpace(botToken))
             throw new ArgumentException("Bot token cannot be empty", nameof(botToken));
@@ -62,7 +65,13 @@ public sealed class TelegramApiClient : ITelegramApiClient
         _retryOptions = retryOptions ?? new TelegramApiRetryOptions();
         _retryOptions.Validate();
         _retryHandler = new TelegramApiRetryHandler(_retryOptions, _logger);
+        _circuitBreaker = circuitBreaker;
     }
+
+    /// <summary>
+    /// Gets the circuit breaker guarding this client's Telegram API calls, or <see langword="null"/> when none was supplied.
+    /// </summary>
+    public TelegramCircuitBreaker? CircuitBreaker => _circuitBreaker;
 
     /// <summary>
     /// Sends a simple text message to a chat.
@@ -230,6 +239,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
             allows_multiple_answers = allowsMultipleAnswers
         };
 
+        if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.SendPollMethod).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
@@ -243,6 +257,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
             var content = new StringContent(json, Encoding.UTF8, TelegramApiClientConstants.JsonContentType);
 
             var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+            await ReportResponseOutcomeAsync(response.StatusCode).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -266,6 +281,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (Exception ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error sending poll to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
             return null;
         }
@@ -294,6 +310,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         if (items.Any(item => item == null || string.IsNullOrWhiteSpace(item.FileIdOrUrl)))
             throw new ArgumentException("Each item must have a valid FileIdOrUrl", nameof(items));
+
+        if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.SendMediaGroupMethod).ConfigureAwait(false))
+        {
+            return new List<int>();
+        }
 
         try
         {
@@ -332,6 +353,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 _botToken,
                 TelegramApiClientConstants.SendMediaGroupMethod);
             var response = await client.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+            await ReportResponseOutcomeAsync(response.StatusCode).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -365,11 +387,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (OperationCanceledException)
         {
+            // A timeout surfaces as TaskCanceledException too; only caller cancellation is reported as abandoned.
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Media group send operation was cancelled");
             return new List<int>();
         }
         catch (Exception ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error sending media group to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
             return new List<int>();
         }
@@ -518,6 +543,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
         if (string.IsNullOrWhiteSpace(fileId))
             throw new ArgumentException("File ID cannot be empty", nameof(fileId));
 
+        if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.GetFileMethod).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
@@ -528,6 +558,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 Uri.EscapeDataString(fileId));
 
             var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            await ReportResponseOutcomeAsync(response.StatusCode).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -563,11 +594,14 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (OperationCanceledException)
         {
+            // A timeout surfaces as TaskCanceledException too; only caller cancellation is reported as abandoned.
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("GetFile operation was cancelled for file_id: {FileId}", fileId);
             return null;
         }
         catch (Exception ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error getting file info for file_id: {FileId}", fileId);
             return null;
         }
@@ -588,6 +622,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
     private async Task<bool> SendApiRequestAsync<T>(string method, T payload, CancellationToken cancellationToken = default) where T : class
     {
+        if (!await TryAcquireCircuitAsync(method).ConfigureAwait(false))
+        {
+            return false;
+        }
+
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
@@ -610,6 +649,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 method,
                 isIdempotent,
                 cancellationToken).ConfigureAwait(false);
+            await ReportResponseOutcomeAsync(response.StatusCode).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -624,16 +664,19 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (TelegramRateLimitedException ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning(ex, "Rate limited calling Telegram API method: {Method}", method);
             return false;
         }
         catch (TelegramServerException ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning(ex, "Server error calling Telegram API method: {Method}", method);
             return false;
         }
         catch (Exception ex)
         {
+            await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error calling Telegram API method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
             return false;
         }
@@ -641,6 +684,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
     private async Task<string?> GetApiRequestAsync(string method)
     {
+        if (!await TryAcquireCircuitAsync(method).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         try
         {
             var client = _httpClientFactory.GetTelegramClient();
@@ -655,6 +703,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 client,
                 url,
                 method).ConfigureAwait(false);
+            await ReportResponseOutcomeAsync(response.StatusCode).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -667,19 +716,86 @@ public sealed class TelegramApiClient : ITelegramApiClient
         }
         catch (TelegramRateLimitedException ex)
         {
+            await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogWarning(ex, "Rate limited calling Telegram API GET method: {Method}", method);
             return null;
         }
         catch (TelegramServerException ex)
         {
+            await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogWarning(ex, "Server error calling Telegram API GET method: {Method}", method);
             return null;
         }
         catch (Exception ex)
         {
+            await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogError(ex, "Error calling Telegram API GET method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
             return null;
         }
+    }
+
+    /// <summary>
+    /// Asks the circuit breaker whether a Telegram API call may proceed.
+    /// </summary>
+    /// <param name="method">The Telegram API method about to be called (for logging).</param>
+    /// <returns><see langword="true"/> if the call may proceed; otherwise <see langword="false"/>.</returns>
+    private async Task<bool> TryAcquireCircuitAsync(string method)
+    {
+        if (_circuitBreaker is null || await _circuitBreaker.TryAcquireAsync().ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        _logger.LogWarning("Telegram API circuit is open; skipping call to {Method}", method);
+        return false;
+    }
+
+    /// <summary>
+    /// Reports the outcome of a Telegram HTTP response to the circuit breaker. Rate limiting (429) and server errors (5xx)
+    /// indicate degradation; any other response means the API answered and counts as healthy.
+    /// </summary>
+    /// <param name="statusCode">The HTTP status code returned by Telegram.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task ReportResponseOutcomeAsync(HttpStatusCode statusCode)
+    {
+        if (_circuitBreaker is null)
+        {
+            return;
+        }
+
+        var isDegraded = statusCode == HttpStatusCode.TooManyRequests || (int)statusCode >= (int)HttpStatusCode.InternalServerError;
+
+        if (isDegraded)
+        {
+            await _circuitBreaker.RecordFailureAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            await _circuitBreaker.RecordSuccessAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Reports a transport-level failure (network error, timeout or exhausted retries) to the circuit breaker.
+    /// When the caller cancelled the operation, the call is reported as abandoned instead, so that it is not
+    /// counted as an API failure but still frees a half-open probe slot.
+    /// </summary>
+    /// <param name="cancellationToken">The token supplied by the caller for the operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private async Task ReportFailureAsync(CancellationToken cancellationToken = default)
+    {
+        if (_circuitBreaker is null)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            _circuitBreaker.RecordAbandoned();
+            return;
+        }
+
+        await _circuitBreaker.RecordFailureAsync().ConfigureAwait(false);
     }
 
     /// <summary>
