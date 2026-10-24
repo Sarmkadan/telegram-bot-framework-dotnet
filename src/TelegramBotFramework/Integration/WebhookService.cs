@@ -79,7 +79,7 @@ public sealed class WebhookService : IWebhookService, IHostedService
         {
             _options.Validate();
 
-            var success = await _apiClient.SetWebhookAsync(_options.Url).ConfigureAwait(false);
+            var success = await _apiClient.SetWebhookAsync(_options.Url, _options.SecretToken).ConfigureAwait(false);
 
             if (success)
             {
@@ -87,8 +87,8 @@ public sealed class WebhookService : IWebhookService, IHostedService
                 _registeredAt = DateTime.UtcNow;
 
                 _logger.LogInformation(
-                    "Webhook registered successfully — URL: {WebhookUrl}, MaxConnections: {MaxConnections}",
-                    _options.Url, _options.MaxConnections);
+                    "Webhook registered successfully — URL: {WebhookUrl}, MaxConnections: {MaxConnections}, SecretTokenEnabled: {SecretTokenEnabled}",
+                    _options.Url, _options.MaxConnections, _options.HasSecretToken());
             }
             else
             {

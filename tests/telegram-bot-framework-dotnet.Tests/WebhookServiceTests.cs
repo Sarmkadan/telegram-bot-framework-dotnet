@@ -32,14 +32,14 @@ public class WebhookServiceTests
         await service.StartAsync(CancellationToken.None);
 
         // Assert
-        _apiClientMock.Verify(x => x.SetWebhookAsync(_options.Url), Times.Once);
+        _apiClientMock.Verify(x => x.SetWebhookAsync(_options.Url, _options.SecretToken), Times.Once);
     }
 
     [Fact]
     public async Task StopAsync_UnregistersWebhook()
     {
         // Arrange
-        _apiClientMock.Setup(x => x.SetWebhookAsync(It.IsAny<string>())).ReturnsAsync(true);
+        _apiClientMock.Setup(x => x.SetWebhookAsync(It.IsAny<string>(), It.IsAny<string?>())).ReturnsAsync(true);
         _apiClientMock.Setup(x => x.RemoveWebhookAsync()).ReturnsAsync(true);
         var service = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await service.StartAsync(CancellationToken.None);

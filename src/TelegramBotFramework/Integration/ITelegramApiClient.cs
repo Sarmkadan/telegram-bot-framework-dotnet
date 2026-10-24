@@ -98,8 +98,13 @@ public interface ITelegramApiClient
     /// <summary>Answers a callback query, optionally showing a notification.</summary>
     Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null);
 
-    /// <summary>Registers a webhook URL with Telegram.</summary>
-    Task<bool> SetWebhookAsync(string webhookUrl);
+    /// <summary>
+    /// Registers a webhook URL with Telegram. When a secret token is supplied, Telegram includes it in the
+    /// <c>X-Telegram-Bot-Api-Secret-Token</c> header of every update it delivers.
+    /// </summary>
+    /// <param name="webhookUrl">The absolute URL to which Telegram sends updates.</param>
+    /// <param name="secretToken">Optional secret token (see <see cref="WebhookSecretToken"/>); <see langword="null"/> registers without one.</param>
+    Task<bool> SetWebhookAsync(string webhookUrl, string? secretToken = null);
 
     /// <summary>Removes the currently registered webhook.</summary>
     Task<bool> RemoveWebhookAsync();
