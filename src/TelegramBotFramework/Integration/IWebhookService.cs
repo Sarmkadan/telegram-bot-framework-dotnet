@@ -36,11 +36,27 @@ public interface IWebhookService
 
     /// <summary>
     /// Dispatches an already-parsed update to all <see cref="OnUpdateReceived"/> subscribers.
-    /// Typically called by the webhook controller upon receiving a valid request from Telegram.
+    /// Called by the background workers for each update taken from the queue; it runs on the worker,
+    /// not on the webhook request.
     /// </summary>
     /// <param name="update">The parsed update to dispatch.</param>
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     Task DispatchUpdateAsync(TelegramUpdate update, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Offers a parsed update to the bounded update queue without waiting for it to be processed.
+    /// The webhook endpoint calls this so it can answer Telegram immediately; queued updates are dispatched
+    /// by background workers started when the hosted service starts.
+    /// </summary>
+    /// <param name="update">The parsed update to queue.</param>
+    /// <returns>
+    /// <see cref="WebhookEnqueueResult.Accepted"/> when the update was queued;
+    /// <see cref="WebhookEnqueueResult.Rejected"/> when the queue was full under the
+    /// <see cref="WebhookQueueFullPolicy.Reject"/> policy; <see cref="WebhookEnqueueResult.Closed"/>
+    /// when the service is stopping.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="update"/> is <see langword="null"/>.</exception>
+    WebhookEnqueueResult EnqueueUpdate(TelegramUpdate update);
 
     /// <summary>
     /// Parses and validates a raw JSON payload received at the webhook endpoint.
@@ -75,4 +91,13 @@ public sealed class WebhookInfo
 
     /// <summary>Gets the number of updates dispatched since the last registration.</summary>
     public long UpdatesDispatched { get; init; }
+
+    /// <summary>Gets the number of received updates currently waiting in the queue for a worker.</summary>
+    public int QueueDepth { get; init; }
+
+    /// <summary>Gets the maximum number of updates the queue can hold.</summary>
+    public int QueueCapacity { get; init; }
+
+    /// <summary>Gets the number of queued updates evicted under <see cref="WebhookQueueFullPolicy.DropOldest"/>.</summary>
+    public long UpdatesDropped { get; init; }
 }

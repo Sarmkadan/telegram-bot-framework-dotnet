@@ -37,7 +37,10 @@ public sealed class WebhookOptionsBuilder
                 ListenPath = template.ListenPath,
                 DropPendingUpdates = template.DropPendingUpdates,
                 UpdateDeduplicationWindow = template.UpdateDeduplicationWindow,
-                MaxRequestBodySize = template.MaxRequestBodySize
+                MaxRequestBodySize = template.MaxRequestBodySize,
+                QueueCapacity = template.QueueCapacity,
+                QueueFullPolicy = template.QueueFullPolicy,
+                QueueWorkerCount = template.QueueWorkerCount
             }
         };
     }
@@ -117,6 +120,39 @@ public sealed class WebhookOptionsBuilder
     }
 
     /// <summary>
+    /// Sets the maximum number of received updates buffered before processing.
+    /// </summary>
+    /// <param name="queueCapacity">The queue capacity. Must be between 1 and 100000.</param>
+    /// <returns>The same builder instance for chaining.</returns>
+    public WebhookOptionsBuilder WithQueueCapacity(int queueCapacity)
+    {
+        _options.QueueCapacity = queueCapacity;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets what happens to an incoming update when the queue is full.
+    /// </summary>
+    /// <param name="queueFullPolicy">The full-queue policy.</param>
+    /// <returns>The same builder instance for chaining.</returns>
+    public WebhookOptionsBuilder WithQueueFullPolicy(WebhookQueueFullPolicy queueFullPolicy)
+    {
+        _options.QueueFullPolicy = queueFullPolicy;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the number of background workers that dispatch queued updates.
+    /// </summary>
+    /// <param name="queueWorkerCount">The worker count. Must be between 1 and 64.</param>
+    /// <returns>The same builder instance for chaining.</returns>
+    public WebhookOptionsBuilder WithQueueWorkerCount(int queueWorkerCount)
+    {
+        _options.QueueWorkerCount = queueWorkerCount;
+        return this;
+    }
+
+    /// <summary>
     /// Builds and validates the <see cref="WebhookOptions"/> instance.
     /// </summary>
     /// <returns>A configured <see cref="WebhookOptions"/> instance.</returns>
@@ -142,6 +178,15 @@ public sealed class WebhookOptionsBuilder
 
         if (_options.MaxRequestBodySize <= 0)
             throw new ArgumentException("MaxRequestBodySize must be positive.");
+
+        if (_options.QueueCapacity is < 1 or > WebhookQueueConstants.MaxQueueCapacity)
+            throw new ArgumentException(WebhookQueueConstants.InvalidQueueCapacityMessage);
+
+        if (_options.QueueWorkerCount is < 1 or > WebhookQueueConstants.MaxQueueWorkerCount)
+            throw new ArgumentException(WebhookQueueConstants.InvalidQueueWorkerCountMessage);
+
+        if (!Enum.IsDefined(_options.QueueFullPolicy))
+            throw new ArgumentException(WebhookQueueConstants.InvalidQueueFullPolicyMessage);
 
         return _options;
     }

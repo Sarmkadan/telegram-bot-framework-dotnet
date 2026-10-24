@@ -54,7 +54,10 @@ public sealed class HealthController : ControllerBase
                     isRegistered = webhookInfo.IsRegistered,
                     url = webhookInfo.Url,
                     registeredAt = webhookInfo.RegisteredAt,
-                    updatesDispatched = webhookInfo.UpdatesDispatched
+                    updatesDispatched = webhookInfo.UpdatesDispatched,
+                    queueDepth = webhookInfo.QueueDepth,
+                    queueCapacity = webhookInfo.QueueCapacity,
+                    updatesDropped = webhookInfo.UpdatesDropped
                 },
                 timestamp = DateTime.UtcNow
             };

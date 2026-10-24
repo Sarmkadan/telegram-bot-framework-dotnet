@@ -67,6 +67,24 @@ public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
     /// </summary>
     public long MaxRequestBodySize { get; set; } = 1_048_576; // 1 MB
 
+    /// <summary>
+    /// Gets or sets the maximum number of received updates buffered between the webhook endpoint
+    /// and the background workers. Accepted values: 1–100000. Defaults to <c>1000</c>.
+    /// </summary>
+    public int QueueCapacity { get; set; } = WebhookQueueConstants.DefaultQueueCapacity;
+
+    /// <summary>
+    /// Gets or sets what happens to an incoming update when the queue holds <see cref="QueueCapacity"/> updates.
+    /// Defaults to <see cref="WebhookQueueFullPolicy.Reject"/>.
+    /// </summary>
+    public WebhookQueueFullPolicy QueueFullPolicy { get; set; } = WebhookQueueFullPolicy.Reject;
+
+    /// <summary>
+    /// Gets or sets the number of background workers that dispatch queued updates concurrently.
+    /// Accepted values: 1–64. Defaults to <c>4</c>. With more than one worker, updates may be handled out of order.
+    /// </summary>
+    public int QueueWorkerCount { get; set; } = WebhookQueueConstants.DefaultQueueWorkerCount;
+
     public bool Equals(WebhookOptions? other)
     {
         if (other is null) return false;
@@ -123,6 +141,15 @@ public sealed class WebhookOptions : IEquatable<WebhookOptions>, IWebhookOptions
 
         if (MaxRequestBodySize <= 0)
             throw new InvalidOperationException("MaxRequestBodySize must be positive.");
+
+        if (QueueCapacity is < 1 or > WebhookQueueConstants.MaxQueueCapacity)
+            throw new InvalidOperationException(WebhookQueueConstants.InvalidQueueCapacityMessage);
+
+        if (QueueWorkerCount is < 1 or > WebhookQueueConstants.MaxQueueWorkerCount)
+            throw new InvalidOperationException(WebhookQueueConstants.InvalidQueueWorkerCountMessage);
+
+        if (!Enum.IsDefined(QueueFullPolicy))
+            throw new InvalidOperationException(WebhookQueueConstants.InvalidQueueFullPolicyMessage);
 
         if (!string.IsNullOrEmpty(SecretToken) && !WebhookSecretToken.IsValid(SecretToken))
             throw new InvalidOperationException(WebhookSecretTokenConstants.InvalidSecretTokenMessage);

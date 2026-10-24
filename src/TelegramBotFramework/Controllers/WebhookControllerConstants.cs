@@ -45,6 +45,41 @@ internal static class WebhookControllerConstants
     /// </summary>
     public const int PayloadTooLargeStatusCode = 413;
 
+    /// <summary>
+    /// HTTP status code returned when the update queue is full and the update is rejected.
+    /// </summary>
+    public const int TooManyRequestsStatusCode = 429;
+
+    /// <summary>
+    /// HTTP status code returned when the service is stopping and no longer accepts updates.
+    /// </summary>
+    public const int ServiceUnavailableStatusCode = 503;
+
+    /// <summary>
+    /// Name of the <c>Retry-After</c> response header.
+    /// </summary>
+    public const string RetryAfterHeaderName = "Retry-After";
+
+    /// <summary>
+    /// Value of the <c>Retry-After</c> header sent with a rejected update, in seconds.
+    /// </summary>
+    public const string QueueFullRetryAfterSeconds = "1";
+
+    /// <summary>
+    /// Message returned when the update queue is full.
+    /// </summary>
+    public const string QueueFullMessage = "Update queue is full, retry later.";
+
+    /// <summary>
+    /// Message returned while the service is stopping.
+    /// </summary>
+    public const string ServiceUnavailableMessage = "Bot is shutting down.";
+
+    /// <summary>
+    /// Log message for an update received while the service is stopping.
+    /// </summary>
+    public const string ServiceStoppingLogMessage = "Webhook update received while the service is stopping";
+
     public const string EndpointCalledLogMessage =
         "Webhook endpoint called - Path: {Path}, Method: {Method}";
 
@@ -65,6 +100,4 @@ internal static class WebhookControllerConstants
     public const string ValidationSucceededLogMessage =
         "Webhook request validated successfully - UpdateId: {UpdateId}, Type: {UpdateType}";
 
-    public const string UpdateDispatchedLogMessage =
-        "Webhook update dispatched successfully - UpdateId: {UpdateId}";
 }
