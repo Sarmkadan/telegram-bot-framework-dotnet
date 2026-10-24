@@ -289,7 +289,7 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
 
         // Assert
         Assert.Equal(2, chat1Messages.Count);
-        Assert.Equal(1, chat2Messages.Count);
+        Assert.Single(chat2Messages);
         Assert.All(chat1Messages, m => Assert.Equal(chatId1, m.ChatId));
         Assert.All(chat2Messages, m => Assert.Equal(chatId2, m.ChatId));
         _mockLogger.Object.LogInformation(

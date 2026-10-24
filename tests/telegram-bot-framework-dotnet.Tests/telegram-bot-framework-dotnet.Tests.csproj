@@ -2,11 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
-    <NoWarn>xUnit1030</NoWarn>
+    <!--
+      xUnit1030: pre-existing suppression.
+      CS8600/CS8602/CS8603/CS8604/CS8620/CS8625/CS8629: tests pass null on purpose to exercise guard clauses
+      and dereference nullable results of fixtures.
+      CS0618/SYSLIB0050: tests cover the legacy MD5 hash and FormatterServices paths on purpose.
+      xUnit1012/1013/1025/1031: test style and blocking-Task rules; converting existing tests is a separate cleanup.
+      IDE0161: block-scoped namespaces, same as src (convert in a separate change).
+    -->
+    <NoWarn>$(NoWarn);xUnit1030;CS8600;CS8602;CS8603;CS8604;CS8620;CS8625;CS8629;CS0618;SYSLIB0050;xUnit1012;xUnit1013;xUnit1025;xUnit1031;IDE0161</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
