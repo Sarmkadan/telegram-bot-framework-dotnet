@@ -1,10 +1,19 @@
 <Project>
   <PropertyGroup>
+    <!-- Language and analysis -->
     <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Common package metadata -->
+    <Copyright>Copyright (c) 2026 Vladyslav Zaiets</Copyright>
     <Authors>Vladyslav Zaiets</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 </Project>

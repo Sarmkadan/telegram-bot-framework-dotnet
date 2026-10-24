@@ -2,23 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>1591</NoWarn>
     <PackageId>Zaiets.telegram.bot.framework.dotnet</PackageId>
     <Version>1.0.0</Version>
-    <Authors>Vladyslav Zaiets</Authors>
     <Description>A robust and extensible framework for building Telegram bots in .NET, featuring conversation flow, middleware, and dependency injection support.</Description>
     <PackageTags>telegram bot framework dotnet csharp middleware state-machine commands menus</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/sarmkadan/telegram-bot-framework-dotnet</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1573;CS1574;CS1587;CS1591</NoWarn>
+    <!-- IDE0161: 35 existing files still use block-scoped namespaces; convert to file-scoped in a separate change -->
+    <NoWarn>$(NoWarn);CS1573;CS1574;CS1587;CS1591;IDE0161</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

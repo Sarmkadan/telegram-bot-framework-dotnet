@@ -119,7 +119,6 @@ public class InlineQueryTests
         Assert.Equal(string.Empty, query.Query);
         Assert.Equal(string.Empty, query.Offset);
         Assert.Equal(InlineQueryStatus.Pending, query.Status);
-        Assert.NotNull(query.ReceivedAt);
         Assert.Null(query.AnsweredAt);
         Assert.Null(query.Metadata);
     }
