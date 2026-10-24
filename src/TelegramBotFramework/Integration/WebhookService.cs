@@ -5,6 +5,7 @@
 // CTO & Software Architect
 // ===================================================================
 
+using System.Threading.Channels;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,8 +14,9 @@ namespace TelegramBotFramework.Integration;
 
 /// <summary>
 /// Production implementation of <see cref="IWebhookService"/>.
-/// Registers and unregisters the Telegram webhook automatically as a hosted service,
-/// and dispatches validated updates to subscribed handlers.
+/// Registers and unregisters the Telegram webhook automatically as a hosted service.
+/// Validated updates are placed on a bounded queue so the webhook endpoint can answer Telegram at once;
+/// background workers then dispatch them to subscribed handlers.
 /// </summary>
 public sealed class WebhookService : IWebhookService, IHostedService
 {
@@ -22,13 +24,19 @@ public sealed class WebhookService : IWebhookService, IHostedService
     private readonly WebhookHandler _webhookHandler;
     private readonly WebhookOptions _options;
     private readonly ILogger<WebhookService> _logger;
+    private readonly List<Task> _workers = [];
+
+    private volatile Channel<TelegramUpdate> _updateQueue;
+    private CancellationTokenSource? _workerCancellation;
+    private volatile bool _isQueueClosed;
 
     private bool _isRegistered;
     private DateTime? _registeredAt;
     private long _updatesDispatched;
+    private long _updatesDropped;
 
     /// <summary>
-    /// Raised whenever a validated update arrives at the webhook endpoint.
+    /// Raised whenever a validated update is taken from the queue for processing.
     /// Subscribe to this event to receive and process updates.
     /// </summary>
     public event Func<TelegramUpdate, Task>? OnUpdateReceived;
@@ -36,6 +44,10 @@ public sealed class WebhookService : IWebhookService, IHostedService
     /// <summary>
     /// Initialises a new instance of <see cref="WebhookService"/>.
     /// </summary>
+    /// <param name="apiClient">The Telegram API client used to register the webhook.</param>
+    /// <param name="options">The webhook configuration, including the queue capacity and full-queue policy.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     public WebhookService(
         ITelegramApiClient apiClient,
         WebhookOptions options,
@@ -45,6 +57,7 @@ public sealed class WebhookService : IWebhookService, IHostedService
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _webhookHandler = new WebhookHandler();
+        _updateQueue = CreateUpdateQueue();
     }
 
     /// <summary>
@@ -56,15 +69,25 @@ public sealed class WebhookService : IWebhookService, IHostedService
     // IHostedService
     // -------------------------------------------------------------------------
 
-    /// <summary>Registers the webhook on application startup.</summary>
+    /// <summary>
+    /// Starts the background workers that dispatch queued updates, then registers the webhook.
+    /// Updates received before this point stay queued and are processed once the workers start.
+    /// </summary>
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        StartUpdateWorkers();
         await RegisterAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Unregisters the webhook on application shutdown.</summary>
+    /// <summary>
+    /// Stops accepting updates, waits for queued updates to be processed, then unregisters the webhook.
+    /// </summary>
+    /// <param name="cancellationToken">
+    /// Bounds how long the queue is drained. When it fires, remaining queued updates are abandoned and logged.
+    /// </param>
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        await DrainUpdateQueueAsync(cancellationToken).ConfigureAwait(false);
         await UnregisterAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -158,13 +181,119 @@ public sealed class WebhookService : IWebhookService, IHostedService
     }
 
     /// <inheritdoc/>
+    public WebhookEnqueueResult EnqueueUpdate(TelegramUpdate update)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+
+        if (_updateQueue.Writer.TryWrite(update))
+        {
+            return WebhookEnqueueResult.Accepted;
+        }
+
+        if (_isQueueClosed)
+        {
+            return WebhookEnqueueResult.Closed;
+        }
+
+        _logger.LogWarning(WebhookQueueConstants.LogQueueFullRejected, _options.QueueCapacity, update.UpdateId);
+        return WebhookEnqueueResult.Rejected;
+    }
+
+    /// <inheritdoc/>
     public WebhookInfo GetInfo() => new()
     {
         IsRegistered = _isRegistered,
         Url = _isRegistered ? _options.Url : null,
         RegisteredAt = _registeredAt,
-        UpdatesDispatched = _updatesDispatched
+        UpdatesDispatched = _updatesDispatched,
+        QueueDepth = _updateQueue.Reader.Count,
+        QueueCapacity = _options.QueueCapacity,
+        UpdatesDropped = Interlocked.Read(ref _updatesDropped)
     };
+
+    private Channel<TelegramUpdate> CreateUpdateQueue()
+    {
+        var channelOptions = new BoundedChannelOptions(_options.QueueCapacity)
+        {
+            FullMode = _options.QueueFullPolicy switch
+            {
+                WebhookQueueFullPolicy.DropOldest => BoundedChannelFullMode.DropOldest,
+                _ => BoundedChannelFullMode.Wait
+            }
+        };
+
+        return Channel.CreateBounded<TelegramUpdate>(channelOptions, OnQueuedUpdateDropped);
+    }
+
+    private void OnQueuedUpdateDropped(TelegramUpdate evictedUpdate)
+    {
+        Interlocked.Increment(ref _updatesDropped);
+        _logger.LogWarning(
+            WebhookQueueConstants.LogQueueFullDroppedOldest, _options.QueueCapacity, evictedUpdate.UpdateId);
+    }
+
+    private void StartUpdateWorkers()
+    {
+        if (_workers.Count > 0)
+        {
+            return;
+        }
+
+        if (_isQueueClosed)
+        {
+            _updateQueue = CreateUpdateQueue();
+            _isQueueClosed = false;
+        }
+
+        _workerCancellation = new CancellationTokenSource();
+        var reader = _updateQueue.Reader;
+
+        for (var i = 0; i < _options.QueueWorkerCount; i++)
+        {
+            _workers.Add(RunUpdateWorkerAsync(reader, _workerCancellation.Token));
+        }
+    }
+
+    private async Task RunUpdateWorkerAsync(ChannelReader<TelegramUpdate> reader, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var update in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await DispatchUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Abandoned by StopAsync after its drain timeout; the remaining depth is logged there.
+        }
+    }
+
+    private async Task DrainUpdateQueueAsync(CancellationToken cancellationToken)
+    {
+        _isQueueClosed = true;
+        _updateQueue.Writer.TryComplete();
+
+        try
+        {
+            await Task.WhenAll(_workers).WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            _workerCancellation?.Cancel();
+        }
+        finally
+        {
+            var remaining = _updateQueue.Reader.Count;
+            if (remaining > 0)
+            {
+                _logger.LogWarning(WebhookQueueConstants.LogQueueDrainIncomplete, remaining);
+            }
+
+            _workers.Clear();
+            _workerCancellation = null;
+        }
+    }
 
     /// <summary>
     /// Parses and validates a raw JSON payload received at the webhook endpoint.

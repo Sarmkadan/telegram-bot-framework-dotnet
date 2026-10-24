@@ -33,14 +33,17 @@ public sealed class WebhookController : ControllerBase, IWebhookController
     }
 
     /// <summary>
-    /// Receives and processes a Telegram update delivered via webhook.
-    /// Returns <c>200 OK</c> immediately to prevent Telegram from retrying, regardless
-    /// of downstream processing errors (per Telegram Bot API guidance).
+    /// Receives a Telegram update delivered via webhook and queues it for background processing.
+    /// Returns <c>200 OK</c> as soon as the update is queued, so Telegram does not retry because of
+    /// slow handlers; processing errors never affect the response.
     /// </summary>
     /// <remarks>
     /// When <see cref="WebhookOptions.SecretToken"/> is configured, the controller
     /// validates the <c>X-Telegram-Bot-Api-Secret-Token</c> header and returns
-    /// <c>401 Unauthorized</c> on mismatch.
+    /// <c>401 Unauthorized</c> on mismatch. When the queue is full under
+    /// <see cref="WebhookQueueFullPolicy.Reject"/>, it returns <c>429 Too Many Requests</c> with a
+    /// <c>Retry-After</c> header so Telegram redelivers the update. While the service is stopping, it returns
+    /// <c>503 Service Unavailable</c>.
     /// </remarks>
     [HttpPost(WebhookControllerConstants.TelegramRoute)]
     [Consumes(WebhookControllerConstants.JsonMediaType)]
@@ -91,12 +94,34 @@ public sealed class WebhookController : ControllerBase, IWebhookController
             update.UpdateId,
             update.MessageType);
 
-        await _webhookService.DispatchUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+        // Queue for the background workers so the response does not wait for handler work
+        return _webhookService.EnqueueUpdate(update) switch
+        {
+            WebhookEnqueueResult.Accepted => Ok(),
+            WebhookEnqueueResult.Rejected => QueueFull(),
+            _ => ServiceStopping()
+        };
+    }
 
-        _logger.LogDebug(WebhookControllerConstants.UpdateDispatchedLogMessage, update.UpdateId);
+    /// <summary>
+    /// Answers <c>429 Too Many Requests</c> with <c>Retry-After</c> so Telegram redelivers the rejected update later.
+    /// </summary>
+    private IActionResult QueueFull()
+    {
+        Response.Headers[WebhookControllerConstants.RetryAfterHeaderName] =
+            WebhookControllerConstants.QueueFullRetryAfterSeconds;
+        return StatusCode(WebhookControllerConstants.TooManyRequestsStatusCode,
+            WebhookControllerConstants.QueueFullMessage);
+    }
 
-        // Always return 200 OK so Telegram does not re-deliver
-        return Ok();
+    /// <summary>
+    /// Answers <c>503 Service Unavailable</c> while the bot is shutting down and no longer queues updates.
+    /// </summary>
+    private IActionResult ServiceStopping()
+    {
+        _logger.LogWarning(WebhookControllerConstants.ServiceStoppingLogMessage);
+        return StatusCode(WebhookControllerConstants.ServiceUnavailableStatusCode,
+            WebhookControllerConstants.ServiceUnavailableMessage);
     }
 
     /// <summary>
