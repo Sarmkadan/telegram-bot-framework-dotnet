@@ -121,6 +121,13 @@ public interface ITelegramApiClient
 /// <returns>File information including file path and size, or null if not found</returns>
 Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the circuit breaker guarding this client's Telegram API calls, or <see langword="null"/> when none is configured.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="PollingStrategy"/> consults this breaker and pauses polling while it is open.
+    /// </remarks>
+    TelegramCircuitBreaker? CircuitBreaker => null;
 }
 
 /// <summary>

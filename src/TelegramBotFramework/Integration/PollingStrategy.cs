@@ -319,6 +319,15 @@ public sealed class PollingStrategy : IHostedService
         {
             try
             {
+                // While the Telegram API circuit is open, pause instead of issuing getUpdates calls that would be rejected.
+                var circuitPauseDuration = _apiClient.CircuitBreaker?.GetPauseDuration() ?? TimeSpan.Zero;
+                if (circuitPauseDuration > TimeSpan.Zero)
+                {
+                    _logger.LogWarning("Telegram API circuit is not accepting calls; pausing polling for {PauseMs}ms", circuitPauseDuration.TotalMilliseconds);
+                    await Task.Delay(circuitPauseDuration, cancellationToken).ConfigureAwait(false);
+                    continue;
+                }
+
                 LastPollTime = DateTime.UtcNow;
                 _updatesProcessedThisBatch = PollingDefaults.EmptyUpdateCount;
                 _updateFloodDetected = false;
