@@ -313,8 +313,9 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         // Arrange
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, HandlerType = CommandServiceAdditionalTestsConstants.TestHandlerType, ExecutionCount = CommandServiceAdditionalTestsConstants.InitialExecutionCount };
 
+        // The service normalizes the lookup key to the "/"-prefixed form, so the repository is queried with TestCommandInput.
         _mockRepository
-            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandName, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandInput, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
         _mockRepository
             .Setup(r => r.UpdateAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
@@ -361,7 +362,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, ExecutionCount = CommandServiceAdditionalTestsConstants.ExecutionCountForGetTest };
 
         _mockRepository
-            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandName, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandInput, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         // Act
@@ -431,7 +432,7 @@ public sealed class CommandServiceAdditionalTests : ICommandServiceAdditionalTes
         var command = new Command { Name = CommandServiceAdditionalTestsConstants.TestCommandName, RateLimitPerMinute = CommandServiceAdditionalTestsConstants.RateLimitPerMinute };
 
         _mockRepository
-            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandName, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByNameAsync(CommandServiceAdditionalTestsConstants.TestCommandInput, It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
 
         // First user - should not be rate limited

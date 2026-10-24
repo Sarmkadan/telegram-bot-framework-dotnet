@@ -11,7 +11,7 @@ namespace TelegramBotFrameworkDotnet.Tests
         public void Validate_HappyPath_ReturnsTrue()
         {
             // Arrange
-            var command = new Command { Name = "test", HandlerType = "handler" };
+            var command = new Command { Name = "/test", HandlerType = "handler" };
 
             // Act
             var result = command.Validate();

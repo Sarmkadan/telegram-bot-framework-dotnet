@@ -20,15 +20,17 @@ public sealed class ScheduledMessageService : IScheduledMessageService
     private readonly Dictionary<string, ScheduledMessage> _scheduledMessages = new();
     private readonly Dictionary<string, System.Threading.Timer> _timers = new();
     private readonly object _lockObj = new();
-    private readonly TimeSpan _defaultRetryDelay = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _defaultRetryDelay;
     private readonly int _maxRetryAttempts = 3;
 
     public ScheduledMessageService(
         ITelegramApiClient telegramApiClient,
-        ILogger<ScheduledMessageService>? logger = null)
+        ILogger<ScheduledMessageService>? logger = null,
+        TimeSpan? retryDelay = null)
     {
         _telegramApiClient = telegramApiClient ?? throw new ArgumentNullException(nameof(telegramApiClient));
         _logger = logger ?? new ConsoleLogger<ScheduledMessageService>();
+        _defaultRetryDelay = retryDelay ?? TimeSpan.FromSeconds(30);
     }
 
     public async Task<string> ScheduleMessageAsync(long chatId, string text, DateTimeOffset sendAt, CancellationToken cancellationToken = default)

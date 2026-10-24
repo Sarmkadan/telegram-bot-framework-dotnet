@@ -29,8 +29,7 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public async Task<T?> GetAsync<T>(string url, int maxRetries = 3)
     {
-        ArgumentException.ThrowIfNullOrEmpty(url);
-        if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
+        if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url) || !IsHttpUrl(url))
         {
             _logger.LogWarning("Invalid URL for external API call: {Url}", url);
             return default;
@@ -123,18 +122,14 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// </summary>
     public Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers)
     {
-        ArgumentException.ThrowIfNullOrEmpty(url);
-        ArgumentNullException.ThrowIfNull(headers);
         return GetWithHeadersAsync(url, headers, CancellationToken.None);
     }
 
     public async Task<string?> GetWithHeadersAsync(string url, Dictionary<string, string> headers, CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrEmpty(url);
-        ArgumentNullException.ThrowIfNull(headers);
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (string.IsNullOrWhiteSpace(url) || !ValidationUtility.IsValidUrl(url))
+        if (string.IsNullOrWhiteSpace(url) || headers is null || !ValidationUtility.IsValidUrl(url) || !IsHttpUrl(url))
             return null;
 
         try
@@ -162,9 +157,15 @@ public sealed class ExternalApiIntegration : IExternalApiIntegration
     /// <summary>
     /// Parses JSON response from external API.
     /// </summary>
-    public static T? ParseResponse<T>(string jsonContent)
+    public static T? ParseResponse<T>(string? jsonContent)
     {
-        ArgumentException.ThrowIfNullOrEmpty(jsonContent);
+        if (string.IsNullOrWhiteSpace(jsonContent))
+            return default;
+
         return JsonUtility.Deserialize<T>(jsonContent);
     }
+
+    private static bool IsHttpUrl(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 }

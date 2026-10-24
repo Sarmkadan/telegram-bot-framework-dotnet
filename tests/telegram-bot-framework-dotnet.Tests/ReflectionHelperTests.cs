@@ -53,8 +53,7 @@ public class ReflectionHelperTests
         Assert.NotNull(instance2);
 
         // Act & Assert - Null Type
-        var instance3 = ReflectionHelper.CreateInstance<TestClass>(null);
-        Assert.Null(instance3);
+        Assert.Throws<ArgumentNullException>(() => ReflectionHelper.CreateInstance<TestClass>(null!));
 
         // Act & Assert - Invalid Args
         var instance4 = ReflectionHelper.CreateInstance<TestClass>(typeof(TestClass), 1);
@@ -96,8 +95,7 @@ public class ReflectionHelperTests
         Assert.False(invalidSet);
 
         // Act & Assert - Null Object
-        var nullVal = ReflectionHelper.GetPropertyValue(null, "Id");
-        Assert.Null(nullVal);
+        Assert.Throws<ArgumentNullException>(() => ReflectionHelper.GetPropertyValue(null!, "Id"));
     }
 
     [Fact]

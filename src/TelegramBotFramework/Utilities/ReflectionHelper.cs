@@ -169,15 +169,16 @@ public static class ReflectionHelper
     {
         ArgumentNullException.ThrowIfNull(type);
 
+        // Nullable<T> is a generic type, so it must be handled before the generic branch.
+        if (Nullable.GetUnderlyingType(type) is Type underlyingType)
+            return GetDisplayName(underlyingType) + "?";
+
         if (type.IsGenericType)
         {
             var genericArgs = string.Join(", ", type.GetGenericArguments().Select(GetDisplayName));
             var baseName = type.Name.Split('`')[0];
             return $"{baseName}<{genericArgs}>";
         }
-
-        if (Nullable.GetUnderlyingType(type) is Type underlyingType)
-            return GetDisplayName(underlyingType) + "?";
 
         return type.Name;
     }

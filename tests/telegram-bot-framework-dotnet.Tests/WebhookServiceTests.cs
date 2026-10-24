@@ -39,6 +39,8 @@ public class WebhookServiceTests
     public async Task StopAsync_UnregistersWebhook()
     {
         // Arrange
+        _apiClientMock.Setup(x => x.SetWebhookAsync(It.IsAny<string>())).ReturnsAsync(true);
+        _apiClientMock.Setup(x => x.RemoveWebhookAsync()).ReturnsAsync(true);
         var service = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await service.StartAsync(CancellationToken.None);
 

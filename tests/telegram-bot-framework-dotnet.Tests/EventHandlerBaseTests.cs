@@ -14,12 +14,12 @@ namespace TelegramBotFramework.Tests;
 /// </summary>
 public class EventHandlerBaseTests
 {
-    private readonly Mock<ILogger<TestEventHandler>> _loggerMock;
+    private readonly Mock<ILogger<EventHandlerBase<TestEvent>>> _loggerMock;
     private readonly TestEventHandler _handler;
 
     public EventHandlerBaseTests()
     {
-        _loggerMock = new Mock<ILogger<TestEventHandler>>();
+        _loggerMock = new Mock<ILogger<EventHandlerBase<TestEvent>>>();
         _handler = new TestEventHandler(_loggerMock.Object);
     }
 
@@ -169,7 +169,7 @@ public class EventHandlerBaseTests
     /// </summary>
     private sealed class TestEventHandler : EventHandlerBase<TestEvent>
     {
-        public TestEventHandler(ILogger<TestEventHandler>? logger = null) : base(logger)
+        public TestEventHandler(ILogger<EventHandlerBase<TestEvent>>? logger = null) : base(logger)
         {
         }
 
@@ -200,7 +200,7 @@ public class EventHandlerBaseTests
     /// <summary>
     /// Test event implementation.
     /// </summary>
-    private sealed class TestEvent : EventBase
+    public sealed class TestEvent : EventBase
     {
         public TestEvent() : base()
         {

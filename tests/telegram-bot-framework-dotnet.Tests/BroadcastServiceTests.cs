@@ -205,10 +205,14 @@ public class BroadcastServiceTests : IBroadcastServiceTests
             return Task.CompletedTask;
         }
 
+        // One chat per batch (progress is reported per batch), so cancellation can take effect between batches.
+        var options = new BroadcastOptions { MessagesPerSecond = 1 };
+
         // Act
         var result = await _broadcastService.BroadcastAsync(
             chatIds: chatIds,
             messageText: "test",
+            options: options,
             progressCallback: Callback,
             cancellationToken: cts.Token);
 

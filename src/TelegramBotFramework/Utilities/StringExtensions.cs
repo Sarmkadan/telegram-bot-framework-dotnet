@@ -23,10 +23,11 @@ public static class StringExtensions
     /// <param name="maxLength">The maximum length of the resulting string.</param>
     /// <param name="suffix">The suffix to append when truncating. Defaults to "…".</param>
     /// <returns>The truncated string, or the original string if it's shorter than maxLength.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="suffix"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="suffix"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxLength"/> is negative.</exception>
     public static string Truncate(this string value, int maxLength, string suffix = StringExtensionsConstants.DefaultSuffix)
     {
+        ArgumentNullException.ThrowIfNull(value);
         ArgumentOutOfRangeException.ThrowIfNegative(maxLength);
         ArgumentNullException.ThrowIfNull(suffix);
 
@@ -191,16 +192,15 @@ public static class StringExtensions
     /// <param name="value">The string to check and potentially prefix.</param>
     /// <param name="prefix">The prefix to ensure is present.</param>
     /// <returns>The string with prefix prepended if it didn't start with it; otherwise, the original string.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="prefix"/> is null.</exception>
-    public static string EnsureStartsWith(this string? value, string prefix)
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="prefix"/> is null.</exception>
+    public static string EnsureStartsWith(this string value, string prefix)
     {
+        ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(prefix);
 
-        return value is null
-            ? prefix
-            : value.StartsWith(prefix)
-                ? value
-                : prefix + value;
+        return value.StartsWith(prefix)
+            ? value
+            : prefix + value;
     }
 
     /// <summary>
@@ -209,16 +209,15 @@ public static class StringExtensions
     /// <param name="value">The string to check and potentially suffix.</param>
     /// <param name="suffix">The suffix to ensure is present.</param>
     /// <returns>The string with suffix appended if it didn't end with it; otherwise, the original string.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="suffix"/> is null.</exception>
-    public static string EnsureEndsWith(this string? value, string suffix)
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="suffix"/> is null.</exception>
+    public static string EnsureEndsWith(this string value, string suffix)
     {
+        ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(suffix);
 
-        return value is null
-            ? suffix
-            : value.EndsWith(suffix)
-                ? value
-                : value + suffix;
+        return value.EndsWith(suffix)
+            ? value
+            : value + suffix;
     }
 
     /// <summary>

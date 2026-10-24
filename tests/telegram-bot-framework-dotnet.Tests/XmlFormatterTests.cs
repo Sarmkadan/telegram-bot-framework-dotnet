@@ -35,16 +35,12 @@ public sealed class XmlFormatterTests
     }
 
     [Fact]
-    public void Format_NullInput_ReturnsEmptyRootElement()
+    public void Format_NullInput_ThrowsArgumentNullException()
     {
         var formatter = new XmlFormatter();
         TestData? data = null;
 
-        string result = formatter.Format(data);
-        XElement root = XElement.Parse(result);
-
-        Assert.Equal("TestData", root.Name.LocalName);
-        Assert.Empty(root.Elements());
+        Assert.Throws<ArgumentNullException>(() => formatter.Format(data!));
     }
 
     [Fact]

@@ -12,7 +12,7 @@ namespace tests.telegram_bot_framework_dotnet.Tests
         public async Task SendMessageWithButtonsAsync_HappyPath_ReturnsTrue()
         {
             // Arrange
-            var clientMock = new Mock<TelegramApiClient>();
+            var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.SendMessageWithButtonsAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string[][]>()))
                 .ReturnsAsync(true);
 
@@ -34,7 +34,7 @@ namespace tests.telegram_bot_framework_dotnet.Tests
         public async Task EditMessageTextAsync_HappyPath_ReturnsTrue()
         {
             // Arrange
-            var clientMock = new Mock<TelegramApiClient>();
+            var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.EditMessageAsync(It.IsAny<long>(), It.IsAny<int>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
@@ -56,7 +56,7 @@ namespace tests.telegram_bot_framework_dotnet.Tests
         public async Task AnswerCallbackQueryWithTextAsync_HappyPath_ReturnsTrue()
         {
             // Arrange
-            var clientMock = new Mock<TelegramApiClient>();
+            var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.AnswerCallbackQueryAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
@@ -71,7 +71,7 @@ namespace tests.telegram_bot_framework_dotnet.Tests
         public async Task GetBotInformationAsync_HappyPath_ReturnsBotInfo()
         {
             // Arrange
-            var clientMock = new Mock<TelegramApiClient>();
+            var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.GetMeAsync())
                 .ReturnsAsync("Bot info");
 

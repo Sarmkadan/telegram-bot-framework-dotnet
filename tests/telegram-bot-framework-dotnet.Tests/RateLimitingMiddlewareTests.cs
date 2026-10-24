@@ -79,7 +79,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().NotContain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("RateLimitingMiddleware")));
+            a != null && a.ToString().Contains("RateLimitingMiddleware")));
         _loggerMock.Object.LogInformation("Completed disabled rate limiting test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
@@ -163,7 +163,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("User not found")));
+            a != null && a.ToString().Contains("User not found")));
         _loggerMock.Object.LogInformation("Completed missing user test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
@@ -206,7 +206,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         result.Should().BeSameAs(context);
         nextCalled.Should().BeTrue();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("is admin, bypassing rate limit")));
+            a != null && a.ToString().Contains("is admin, bypassing rate limit")));
         _loggerMock.Object.LogInformation("Completed admin bypass test for user {UserId}; next called: {NextCalled}", context.UserId, nextCalled);
     }
 
@@ -322,7 +322,7 @@ public sealed class RateLimitingMiddlewareTests : IRateLimitingMiddlewareTests
         context.Errors.Should().ContainSingle(e => e.Contains("Rate limit exceeded"));
         context.IsValid.Should().BeFalse();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("exceeded rate limit")));
+            a != null && a.ToString().Contains("exceeded rate limit")));
         _loggerMock.Object.LogInformation("Completed exceeded rate limit test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 

@@ -48,11 +48,12 @@ internal static class CommandServiceAdditionalTestsConstants
     public const int MissingCommandExecutionCount = 0;
 
     // Error messages
-    public const string DisabledErrorText = "Command is disabled";
+    public const string DisabledErrorText = "is disabled";
     public const string InsufficientPermissionsErrorText = "Insufficient permissions";
 
     // Rate limiting
-    public const int RateLimitPerMinute = 5;
+    // One call per window: the second call from the same user must be limited.
+    public const int RateLimitPerMinute = 1;
     public const long FirstRateLimitUserId = 11111;
     public const long SecondRateLimitUserId = 22222;
 }

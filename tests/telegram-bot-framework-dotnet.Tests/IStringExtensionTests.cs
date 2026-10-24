@@ -6,7 +6,7 @@ namespace TelegramBotFramework.Tests;
 public interface IStringExtensionTests
 {
     void Truncate_VariousInputs_TruncatesCorrectly(string input, int maxLength, string expected);
-    void Truncate_NullInput_ReturnsNull();
+    void Truncate_NullInput_ThrowsArgumentNullException();
     void IsValidEmail_WithValidFormat_ReturnsTrue();
     void IsValidEmail_WithMissingAtSign_ReturnsFalse();
     void IsValidEmail_WithEmptyString_ReturnsFalse();

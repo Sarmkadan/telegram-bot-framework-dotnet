@@ -34,6 +34,14 @@ public sealed class XmlFormatter : IOutputFormatter, IXmlFormatter
     public string Format<T>(T data)
     {
         ArgumentNullException.ThrowIfNull(data);
+
+        // Route non-string collections to the items-wrapper overload; a List<T> argument would
+        // otherwise bind to this overload and produce an invalid XML element name such as "List`1".
+        if (data is System.Collections.IEnumerable items and not string)
+        {
+            return Format<object>(items.Cast<object>());
+        }
+
         var element = SerializeObject(data, typeof(T).Name);
         return element.ToString(GetSaveOptions());
     }

@@ -40,6 +40,8 @@ public abstract class EventHandlerBase<TEvent> : IEventHandler<TEvent> where TEv
 
     public async Task HandleAsync(TEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(@event);
+
         try
         {
             _logger.LogInformation("Handling event {EventType} with ID {CorrelationId}",

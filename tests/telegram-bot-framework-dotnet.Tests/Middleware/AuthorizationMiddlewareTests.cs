@@ -34,10 +34,10 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
     }
 
     /// <summary>
-    /// Tests that middleware with invalid context passes to next.
+    /// Tests that middleware with invalid context short-circuits without calling next.
     /// </summary>
     [Fact]
-    public async Task ProcessAsync_WhenContextInvalid_PassesToNext()
+    public async Task ProcessAsync_WhenContextInvalid_ShortCircuitsWithoutNext()
     {
         _loggerMock.Object.LogInformation("Starting invalid context authorization test for user {UserId} and chat {ChatId}", InvalidUserId, TestChatId);
 
@@ -70,17 +70,17 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Assert
         result.Should().BeSameAs(context);
-        nextCalled.Should().BeTrue();
+        nextCalled.Should().BeFalse();
         context.Errors.Should().BeEmpty();
 
         _loggerMock.Object.LogInformation("Completed invalid context authorization test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }
 
     /// <summary>
-    /// Tests that middleware with null user logs warning and passes to next.
+    /// Tests that middleware with null user logs warning, records an error and rejects without calling next.
     /// </summary>
     [Fact]
-    public async Task ProcessAsync_WhenUserNull_LogsWarningAndPassesToNext()
+    public async Task ProcessAsync_WhenUserNull_LogsWarningAndRejectsWithoutNext()
     {
         _loggerMock.Object.LogInformation("Starting missing-user authorization test for user {UserId} and chat {ChatId}", RegularUserId, TestChatId);
 
@@ -113,10 +113,10 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
 
         // Assert
         result.Should().BeSameAs(context);
-        nextCalled.Should().BeTrue();
+        nextCalled.Should().BeFalse();
         context.Errors.Should().ContainSingle(e => e.Contains("User not found in context for authorization"));
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("User not found")));
+            a != null && a.ToString().Contains("User not found")));
 
         _loggerMock.Object.LogInformation("Completed missing-user authorization test for user {UserId}; error count: {ErrorCount}", context.UserId, context.Errors.Count);
     }
@@ -257,7 +257,7 @@ public sealed class AuthorizationMiddlewareTests : IAuthorizationMiddlewareTests
         context.Errors.Should().ContainSingle(e => e.Contains(UnauthorizedCommandErrorFragment));
         context.IsValid.Should().BeFalse();
         _loggerMock.Invocations.Should().Contain(x => x.Arguments.Any(a =>
-            a.ToString() != null && a.ToString().Contains("denied access to command")));
+            a != null && a.ToString().Contains("denied access to command")));
 
         _loggerMock.Object.LogInformation("Completed denied admin-command authorization test for user {UserId}; context valid: {IsValid}", context.UserId, context.IsValid);
     }

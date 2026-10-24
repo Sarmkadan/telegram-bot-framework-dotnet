@@ -444,9 +444,9 @@ public sealed class BotOrchestratorTests : IBotOrchestratorTests
             .ReturnsAsync(user);
         _mockSessionService.Setup(s => s.GetActiveSessionAsync(BotOrchestratorTestsConstants.TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
-        _mockCommandService.Setup(s => s.GetCommandAsync(BotOrchestratorTestsConstants.TestCommandName.Substring(1), It.IsAny<CancellationToken>()))
+        _mockCommandService.Setup(s => s.GetCommandAsync(BotOrchestratorTestsConstants.TestTestCommand.Substring(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(command);
-        _mockCommandService.Setup(s => s.RecordCommandExecutionAsync(BotOrchestratorTestsConstants.TestCommandName.Substring(1), It.IsAny<CancellationToken>()))
+        _mockCommandService.Setup(s => s.RecordCommandExecutionAsync(BotOrchestratorTestsConstants.TestTestCommand.Substring(1), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _mockMiddleware1.Setup(m => m.ProcessAsync(It.IsAny<ExecutionContext>(), It.IsAny<Func<ExecutionContext, Task<ExecutionContext>>>(), It.IsAny<CancellationToken>()))

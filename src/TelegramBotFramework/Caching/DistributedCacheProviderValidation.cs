@@ -39,7 +39,8 @@ public static class DistributedCacheProviderValidation
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this DistributedCacheProvider? value)
     {
-        return value is not null && value.Validate().Count == 0;
+        ArgumentNullException.ThrowIfNull(value);
+        return value.Validate().Count == 0;
     }
 
     /// <summary>

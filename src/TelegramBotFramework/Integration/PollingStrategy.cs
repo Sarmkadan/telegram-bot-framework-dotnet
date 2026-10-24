@@ -29,6 +29,7 @@ public sealed class PollingStrategy : IHostedService
     private readonly PollingOptions _options;
     private TimeSpan _shutdownTimeout;
     private bool _isShuttingDown;
+    private bool _drainCompleted;
 
     // Update flood protection configuration
     private int _maxUpdatesPerBatch = PollingDefaults.DefaultMaxUpdatesPerBatch;
@@ -140,6 +141,13 @@ public sealed class PollingStrategy : IHostedService
             return;
         }
 
+        lock (_inFlightLock)
+        {
+            // A previous StopAsync leaves these flags set; a fresh start must accept updates again.
+            _isShuttingDown = false;
+            _drainCompleted = false;
+        }
+
         _cancellationTokenSource = new CancellationTokenSource();
         var interval = pollInterval ?? _options.PollInterval;
 
@@ -204,6 +212,11 @@ public sealed class PollingStrategy : IHostedService
         await PublishBotStoppedEventAsync().ConfigureAwait(false);
 
         // Cleanup
+        lock (_inFlightLock)
+        {
+            _drainCompleted = true;
+        }
+
         _cancellationTokenSource.Dispose();
         _cancellationTokenSource = null;
         _pollingTask = null;
@@ -237,8 +250,8 @@ public sealed class PollingStrategy : IHostedService
                 CurrentBackoffMs = _currentBackoffMs,
                 ConsecutiveFailureCount = _consecutiveFailureCount,
                 BasePollIntervalMs = PollingDefaults.BasePollIntervalMs,
-                IsDraining = _isShuttingDown,
-                IsDrainComplete = _isShuttingDown && _inFlightHandlers.Count == PollingDefaults.EmptyInFlightHandlerCount,
+                IsDraining = _isShuttingDown && !_drainCompleted,
+                IsDrainComplete = _drainCompleted && _inFlightHandlers.Count == PollingDefaults.EmptyInFlightHandlerCount,
                 InFlightCount = _inFlightHandlers.Count,
                 MaxUpdatesPerBatch = _maxUpdatesPerBatch,
                 MaxInFlightUpdates = _maxInFlightUpdates,
@@ -450,8 +463,8 @@ public sealed class PollingStrategy : IHostedService
     /// <exception cref="ArgumentNullException">Thrown when update is null.</exception>
     public async Task ProcessUpdateAsync(TelegramUpdate update)
     {
-        _logger.LogInformation("Processing update {UpdateId}", update.UpdateId);
         ArgumentNullException.ThrowIfNull(update);
+        _logger.LogInformation("Processing update {UpdateId}", update.UpdateId);
 
         // Track in-flight handler
         Task? handlerTask = null;
@@ -479,7 +492,17 @@ public sealed class PollingStrategy : IHostedService
 
             _lastUpdateId = update.UpdateId;
             _updatesProcessedThisBatch++;
-            handlerTask = OnUpdateReceived?.Invoke(update);
+
+            try
+            {
+                handlerTask = OnUpdateReceived?.Invoke(update);
+            }
+            catch (Exception ex)
+            {
+                // A synchronous handler failure is handled like an asynchronous one: log and keep polling.
+                _logger.LogError(ex, "Error processing update {UpdateId}", update.UpdateId);
+                return;
+            }
 
             if (handlerTask is not null)
             {

@@ -95,6 +95,6 @@ public class EnumHelperTests
         // HasFlag
         var combined = TestFlagsEnum.A | TestFlagsEnum.B;
         Assert.True(combined.HasFlag(TestFlagsEnum.A));
-        Assert.False(combined.HasFlag(TestFlagsEnum.None));
+        Assert.False(TestFlagsEnum.A.HasFlag(TestFlagsEnum.B));
     }
 }

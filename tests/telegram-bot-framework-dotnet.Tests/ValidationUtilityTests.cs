@@ -89,7 +89,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("1234567890:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", false)]
     public void IsValidTelegramToken_InvalidFormats_ReturnsFalse(string? token, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(token);
         ValidationUtility.IsValidTelegramToken(token).Should().Be(expected);
     }
 
@@ -126,7 +125,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.IncompleteHttpsUrl, false)]
     public void IsValidUrl_InvalidInputs_ReturnsFalse(string? url, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(url);
         ValidationUtility.IsValidUrl(url).Should().Be(expected);
     }
 
@@ -166,7 +164,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("192.168.1.1:8080", false)]
     public void IsValidIPv4_InvalidInputs_ReturnsFalse(string? ipAddress, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(ipAddress);
         ValidationUtility.IsValidIPv4(ipAddress).Should().Be(expected);
     }
 
@@ -258,7 +255,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("/hello.world", false)]
     public void IsValidCommandName_InvalidInputs_ReturnsFalse(string? commandName, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(commandName);
         ValidationUtility.IsValidCommandName(commandName).Should().Be(expected);
     }
 
@@ -300,7 +296,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData("file|name.txt", false)]
     public void IsValidFilename_InvalidInputs_ReturnsFalse(string? filename, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(filename);
         ValidationUtility.IsValidFilename(filename).Should().Be(expected);
     }
 
@@ -369,7 +364,6 @@ public sealed class ValidationUtilityTests : IValidationUtilityTests
     [InlineData(ValidationUtilityTestsConstants.EmptyValue, ValidationUtilityTestsConstants.ZeroLength, ValidationUtilityTestsConstants.ZeroLength, true)]
     public void IsValidLength_ValidLengths_ReturnsTrue(string value, int minLength, int maxLength, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(value);
         ValidationUtility.IsValidLength(value, minLength, maxLength).Should().Be(expected);
     }
 

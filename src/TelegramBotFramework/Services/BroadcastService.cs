@@ -79,7 +79,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         {
             // Process chats in batches based on rate limit
             var batchSize = Math.Max(1, config.MessagesPerSecond);
-            var batchDelay = config.BatchDelay ?? CalculateBatchDelay(config.MessagesPerSecond);
+            var batchDelay = config.BatchDelay ?? CalculateBatchDelay(batchSize, config.MessagesPerSecond);
 
             for (int i = 0; i < distinctChatIds.Count; i += batchSize)
             {
@@ -212,6 +212,11 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
                 failures,
                 summary);
         }
+        catch (BroadcastException)
+        {
+            // Raised for the first failure when ContinueOnError is false; propagate to the caller.
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Broadcast failed completely");
@@ -326,15 +331,16 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
         }
     }
 
-    private TimeSpan CalculateBatchDelay(int messagesPerSecond)
+    private static TimeSpan CalculateBatchDelay(int batchSize, int messagesPerSecond)
     {
         if (messagesPerSecond <= 0)
         {
             return TimeSpan.Zero;
         }
 
-        // Calculate delay to maintain rate: 1000ms / messagesPerSecond
-        var delayMs = 1000.0 / messagesPerSecond;
+        // A batch of `batchSize` messages must occupy batchSize / messagesPerSecond seconds
+        // so that the overall send rate does not exceed messagesPerSecond.
+        var delayMs = 1000.0 * batchSize / messagesPerSecond;
         return TimeSpan.FromMilliseconds(delayMs);
     }
 
