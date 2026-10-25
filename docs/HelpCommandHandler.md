@@ -98,12 +98,14 @@ public sealed class StartCommandHandler : ICommandHandler
 }
 ```
 
+The registration above adds the handler only as `ICommandHandler`. `IHelpCommandHandler` is not registered, so `GetRequiredService<IHelpCommandHandler>()` throws unless your application registers it. To use the handler directly, construct it yourself or register the interface in your own setup.
+
 ### Reading the result
 
 Code that runs after the handler can read the text from the context:
 
 ```csharp
-var handler = serviceProvider.GetRequiredService<IHelpCommandHandler>();
+var handler = new HelpCommandHandler(handlers, logger);
 var context = await handler.HandleAsync(executionContext, cancellationToken).ConfigureAwait(false);
 var helpText = context.GetState<string>("help_text");
 ```
