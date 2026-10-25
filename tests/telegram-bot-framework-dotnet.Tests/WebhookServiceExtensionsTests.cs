@@ -30,7 +30,7 @@ public class WebhookServiceExtensionsTests
     {
         // Arrange
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         // Create service with mock for this test
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
 
@@ -47,7 +47,7 @@ public class WebhookServiceExtensionsTests
     {
         // Arrange
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
-            .ReturnsAsync(false);
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"));
         // Create service with mock for this test
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
 
@@ -95,13 +95,13 @@ public class WebhookServiceExtensionsTests
         // Arrange
         // First register the service
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await serviceWithMock.RegisterAsync(CancellationToken.None);
 
         // Setup unregister to succeed
         _apiClientMock.Setup(x => x.RemoveWebhookAsync())
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var result = await serviceWithMock.EnsureUnregisteredAsync(CancellationToken.None);
@@ -117,13 +117,13 @@ public class WebhookServiceExtensionsTests
         // Arrange
         // First register the service
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await serviceWithMock.RegisterAsync(CancellationToken.None);
 
         // Setup unregister to fail
         _apiClientMock.Setup(x => x.RemoveWebhookAsync())
-            .ReturnsAsync(false);
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"));
 
         // Act
         var result = await serviceWithMock.EnsureUnregisteredAsync(CancellationToken.None);
@@ -273,7 +273,7 @@ public class WebhookServiceExtensionsTests
         // Arrange
         // Register the service to set _registeredAt
         _apiClientMock.Setup(x => x.SetWebhookAsync(_options.Url))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await serviceWithMock.RegisterAsync(CancellationToken.None);
 
@@ -289,9 +289,11 @@ public class WebhookServiceExtensionsTests
     public async Task GetRegisteredAt_ReturnsNullWhenNotRegistered()
     {
         // Arrange
-        // Ensure service is not registered by unsetting webhook
+        // Ensure service is not registered: Telegram rejects the registration, so no registration time is recorded
+        _apiClientMock.Setup(x => x.SetWebhookAsync(It.IsAny<string>(), It.IsAny<string?>()))
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"));
         _apiClientMock.Setup(x => x.RemoveWebhookAsync())
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         var serviceWithMock = new WebhookService(_apiClientMock.Object, _options, _loggerMock.Object);
         await serviceWithMock.RegisterAsync(CancellationToken.None);
         await serviceWithMock.UnregisterAsync(CancellationToken.None);

@@ -16,10 +16,10 @@ namespace TelegramBotFramework.Integration
         /// <param name="chatId">Target chat identifier</param>
         /// <param name="text">Message text</param>
         /// <param name="buttonLabels">2D array of button labels (rows x columns)</param>
-        /// <returns>True if successful, false otherwise</returns>
+        /// <returns>The result of the send; its value is true when the message was sent</returns>
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid or <paramref name="text"/> is null or whitespace or <paramref name="buttonLabels"/> is null</exception>
-        public static async Task<bool> SendMessageWithButtonsAsync(
+        public static async Task<ApiResult<bool>> SendMessageWithButtonsAsync(
             this ITelegramApiClient client,
             long chatId,
             string text,
@@ -50,10 +50,10 @@ namespace TelegramBotFramework.Integration
         /// <param name="chatId">Target chat identifier</param>
         /// <param name="messageId">Message identifier to edit</param>
         /// <param name="newText">New message text</param>
-        /// <returns>True if successful, false otherwise</returns>
+        /// <returns>The result of the edit; its value is true when the message was edited</returns>
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid, <paramref name="messageId"/> is not positive, or <paramref name="newText"/> is null or whitespace</exception>
-        public static async Task<bool> EditMessageTextAsync(
+        public static async Task<ApiResult<bool>> EditMessageTextAsync(
             this ITelegramApiClient client,
             long chatId,
             int messageId,
@@ -86,10 +86,10 @@ namespace TelegramBotFramework.Integration
         /// <param name="client">The Telegram API client</param>
         /// <param name="callbackQueryId">Callback query identifier</param>
         /// <param name="text">Optional text to show to user</param>
-        /// <returns>True if successful, false otherwise</returns>
+        /// <returns>The result of the answer; its value is true when Telegram accepts it</returns>
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
         /// <exception cref="ArgumentException"><paramref name="callbackQueryId"/> is null or whitespace</exception>
-        public static async Task<bool> AnswerCallbackQueryWithTextAsync(
+        public static async Task<ApiResult<bool>> AnswerCallbackQueryWithTextAsync(
             this ITelegramApiClient client,
             string callbackQueryId,
             string? text = null)
@@ -108,9 +108,9 @@ namespace TelegramBotFramework.Integration
         /// Gets information about the bot
         /// </summary>
         /// <param name="client">The Telegram API client</param>
-        /// <returns>Bot information if successful, null otherwise</returns>
+        /// <returns>The result carrying the raw bot information JSON on success; otherwise a failed result</returns>
         /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
-        public static async Task<string?> GetBotInformationAsync(this ITelegramApiClient client)
+        public static async Task<ApiResult<string>> GetBotInformationAsync(this ITelegramApiClient client)
         {
             ArgumentNullException.ThrowIfNull(client);
 

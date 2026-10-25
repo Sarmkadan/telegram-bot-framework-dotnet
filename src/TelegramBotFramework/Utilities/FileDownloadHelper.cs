@@ -47,7 +47,7 @@ public static class FileDownloadHelper
         try
         {
             // Step 1: Get file information
-            var fileInfo = await apiClient.GetFileAsync(fileId, cancellationToken).ConfigureAwait(false);
+            var fileInfo = (await apiClient.GetFileAsync(fileId, cancellationToken).ConfigureAwait(false)).Value;
 
             if (fileInfo == null)
             {

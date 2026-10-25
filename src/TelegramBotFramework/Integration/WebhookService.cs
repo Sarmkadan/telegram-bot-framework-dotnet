@@ -102,7 +102,7 @@ public sealed class WebhookService : IWebhookService, IHostedService
         {
             _options.Validate();
 
-            var success = await _apiClient.SetWebhookAsync(_options.Url, _options.SecretToken).ConfigureAwait(false);
+            var success = (await _apiClient.SetWebhookAsync(_options.Url, _options.SecretToken).ConfigureAwait(false)).Success;
 
             if (success)
             {
@@ -133,7 +133,7 @@ public sealed class WebhookService : IWebhookService, IHostedService
 
         try
         {
-            var success = await _apiClient.RemoveWebhookAsync().ConfigureAwait(false);
+            var success = (await _apiClient.RemoveWebhookAsync().ConfigureAwait(false)).Success;
 
             if (success)
             {

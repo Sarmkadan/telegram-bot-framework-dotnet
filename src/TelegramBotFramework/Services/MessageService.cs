@@ -149,12 +149,13 @@ public sealed class MessageService : IMessageService
         try
         {
             // Send poll using the bot's API client
-            var messageId = await _telegramApiClient.SendPollAsync(
+            var pollResult = await _telegramApiClient.SendPollAsync(
                 chatId,
                 question,
                 options,
                 allowsMultipleAnswers
             ).ConfigureAwait(false);
+            var messageId = pollResult.Success ? pollResult.Value : (int?)null;
 
             if (messageId.HasValue)
             {
@@ -216,7 +217,7 @@ public sealed class MessageService : IMessageService
         try
         {
             // Send media group using the bot's API client
-            var messageIds = await _telegramApiClient.SendMediaGroupAsync(chatId, items, cancellationToken).ConfigureAwait(false);
+            var messageIds = (await _telegramApiClient.SendMediaGroupAsync(chatId, items, cancellationToken).ConfigureAwait(false)).Value;
 
             if (messageIds != null && messageIds.Count > 0)
             {

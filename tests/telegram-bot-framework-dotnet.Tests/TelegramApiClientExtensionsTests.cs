@@ -14,13 +14,13 @@ namespace tests.telegram_bot_framework_dotnet.Tests
             // Arrange
             var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.SendMessageWithButtonsAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string[][]>()))
-                .ReturnsAsync(true);
+                .ReturnsAsync(ApiResult<bool>.Ok(true));
 
             // Act
             var result = await TelegramApiClientExtensions.SendMessageWithButtonsAsync(clientMock.Object, 123, "Hello", new[] { new[] { "Button1", "Button2" } });
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -36,13 +36,13 @@ namespace tests.telegram_bot_framework_dotnet.Tests
             // Arrange
             var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.EditMessageAsync(It.IsAny<long>(), It.IsAny<int>(), It.IsAny<string>()))
-                .ReturnsAsync(true);
+                .ReturnsAsync(ApiResult<bool>.Ok(true));
 
             // Act
             var result = await TelegramApiClientExtensions.EditMessageTextAsync(clientMock.Object, 123, 1, "New text");
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -58,13 +58,13 @@ namespace tests.telegram_bot_framework_dotnet.Tests
             // Arrange
             var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.AnswerCallbackQueryAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(true);
+                .ReturnsAsync(ApiResult<bool>.Ok(true));
 
             // Act
             var result = await TelegramApiClientExtensions.AnswerCallbackQueryWithTextAsync(clientMock.Object, "callbackQueryId", "Text");
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -73,13 +73,13 @@ namespace tests.telegram_bot_framework_dotnet.Tests
             // Arrange
             var clientMock = new Mock<ITelegramApiClient>();
             clientMock.Setup(c => c.GetMeAsync())
-                .ReturnsAsync("Bot info");
+                .ReturnsAsync(ApiResult<string>.Ok("Bot info"));
 
             // Act
             var result = await TelegramApiClientExtensions.GetBotInformationAsync(clientMock.Object);
 
             // Assert
-            Assert.Equal("Bot info", result);
+            Assert.Equal("Bot info", result.Value);
         }
 
         [Fact]

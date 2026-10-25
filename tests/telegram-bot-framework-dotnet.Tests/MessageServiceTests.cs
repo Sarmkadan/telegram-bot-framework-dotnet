@@ -507,7 +507,7 @@ public sealed class MessageServiceTests : IMessageServiceTests
 
             _mockTelegramApiClient
                 .Setup(x => x.SendPollAsync(chatId, question, options, allowsMultipleAnswers))
-                .ReturnsAsync(MessageServiceTestsConstants.TelegramPollMessageId); // Returns messageId from Telegram API
+                .ReturnsAsync(ApiResult<int>.Ok(MessageServiceTestsConstants.TelegramPollMessageId)); // Returns messageId from Telegram API
 
             var createdMessage = new Message
             {
@@ -645,7 +645,7 @@ public sealed class MessageServiceTests : IMessageServiceTests
 
             _mockTelegramApiClient
                 .Setup(x => x.SendPollAsync(chatId, question, options, false))
-                .ReturnsAsync((int?)null); // Simulates API failure
+                .ReturnsAsync(ApiResult<int>.Fail(null, "Telegram rejected the request")); // Simulates API failure
 
             // Act
             var result = await _messageService.SendPollAsync(chatId, question, options);
@@ -727,7 +727,7 @@ public sealed class MessageServiceTests : IMessageServiceTests
 
             _mockTelegramApiClient
                 .Setup(x => x.SendMediaGroupAsync(chatId, items, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(messageIds);
+                .ReturnsAsync(ApiResult<IList<int>>.Ok(messageIds));
 
             var createdMessage1 = new Message
             {
@@ -882,7 +882,7 @@ public sealed class MessageServiceTests : IMessageServiceTests
 
             _mockTelegramApiClient
                 .Setup(x => x.SendMediaGroupAsync(chatId, items, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((IList<int>)null!);
+                .ReturnsAsync(ApiResult<IList<int>>.Fail(null, "Telegram rejected the request"));
 
             // Act
             var result = await _messageService.SendMediaGroupAsync(chatId, items);

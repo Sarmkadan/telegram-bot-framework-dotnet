@@ -311,7 +311,7 @@ public async Task Polling_WithEmptyUpdates_AppliesDelay()
     // Arrange
     var emptyUpdates = new List<JsonElement>();
     _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(emptyUpdates);
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(emptyUpdates));
 
     // Act
     _pollingStrategy.Start(TimeSpan.FromMilliseconds(StandardPollIntervalMs));
@@ -340,8 +340,8 @@ public async Task Polling_WithUpdates_ProcessesThemAndAdvancesOffset()
     var updates = new List<JsonElement> { jsonElement };
 
     _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(updates)
-        .ReturnsAsync(new List<JsonElement>()); // Empty on second call
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(updates))
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>())); // Empty on second call
 
     bool eventInvoked = false;
     TelegramUpdate? receivedUpdate = null;
@@ -430,9 +430,9 @@ public async Task Polling_AdvancesUpdateIdThroughMultiplePolls()
     var update3 = CreateUpdateJson(ThirdUpdateId);
 
     _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(new List<JsonElement> { update1 })
-        .ReturnsAsync(new List<JsonElement> { update2 })
-        .ReturnsAsync(new List<JsonElement> { update3 });
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update1 }))
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update2 }))
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update3 }));
 
     long lastUpdateId = InitialUpdateOffset;
     _pollingStrategy.OnUpdateReceived += async (u) =>
@@ -472,12 +472,12 @@ public async Task Polling_WithOffsetAdvancement_RequestsUpdatesWithCorrectOffset
     var update2 = CreateUpdateJson(SecondUpdateId);
 
     _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(new List<JsonElement> { update1 })
-        .ReturnsAsync(new List<JsonElement> { update2 })
-        .ReturnsAsync(new List<JsonElement>());
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update1 }))
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update2 }))
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
     _mockApiClient.Setup(x => x.GetUpdatesAsync(SecondUpdateId, It.IsAny<int>()))
-        .ReturnsAsync(new List<JsonElement>());
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
     // Act
     _pollingStrategy.Start(TimeSpan.FromMilliseconds(ShortPollIntervalMs));
@@ -509,7 +509,7 @@ public async Task LastPollTime_IsUpdatedOnEachPoll()
     // Arrange
     var emptyUpdates = new List<JsonElement>();
     _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(emptyUpdates);
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(emptyUpdates));
 
     // Act
     _pollingStrategy.Start(TimeSpan.FromMilliseconds(StandardPollIntervalMs));
@@ -546,7 +546,7 @@ public async Task Polling_WithCancellation_StopsGracefully()
     // Arrange
     var cts = new CancellationTokenSource();
     _mockApiClient.Setup(x => x.GetUpdatesAsync(InitialUpdateOffset, It.IsAny<int>()))
-        .ReturnsAsync(new List<JsonElement>());
+        .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
     _pollingStrategy.Start(TimeSpan.FromMilliseconds(ShortPollIntervalMs));
     await Task.Delay(ShortDelayMs); // Let it start

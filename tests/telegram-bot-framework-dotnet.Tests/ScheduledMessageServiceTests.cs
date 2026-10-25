@@ -60,7 +60,7 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
 
         _mockTelegramApiClient
             .Setup(x => x.SendMessageAsync(chatId, text))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var messageId = await _service.ScheduleMessageAsync(chatId, text, sendAt, _cts.Token);
@@ -104,7 +104,7 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
 
         _mockTelegramApiClient
             .Setup(x => x.SendMessageAsync(chatId, text))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var messageId = await _service.ScheduleMessageAsync(chatId, text, delay, _cts.Token);
@@ -313,7 +313,7 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
 
         _mockTelegramApiClient
             .Setup(x => x.SendMessageAsync(chatId, text))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var messageId = await _service.ScheduleMessageAsync(chatId, text, sendAt, _cts.Token);
 
@@ -348,9 +348,9 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
         // First two attempts fail, third succeeds
         _mockTelegramApiClient
             .SetupSequence(x => x.SendMessageAsync(chatId, text))
-            .ReturnsAsync(false)
-            .ReturnsAsync(false)
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"))
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"))
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var messageId = await _service.ScheduleMessageAsync(chatId, text, sendAt, _cts.Token);
 
@@ -386,7 +386,7 @@ public sealed class ScheduledMessageServiceTests : IDisposable, IScheduledMessag
         // All attempts fail
         _mockTelegramApiClient
             .Setup(x => x.SendMessageAsync(chatId, text))
-            .ReturnsAsync(false);
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"));
 
         var messageId = await _service.ScheduleMessageAsync(chatId, text, sendAt, _cts.Token);
 

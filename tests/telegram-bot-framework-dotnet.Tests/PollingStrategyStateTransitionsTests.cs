@@ -132,7 +132,7 @@ public class PollingStrategyStateTransitionsTests
                 {
                     throw new InvalidOperationException($"API failure #{failureCount}");
                 }
-                return new List<JsonElement>(); // Success after failures
+                return ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()); // Success after failures
             });
 
         // Act - start polling; the backoff is at least one second, so wait for the state instead of fixed delays
@@ -185,7 +185,7 @@ public class PollingStrategyStateTransitionsTests
     {
         // Arrange - setup API to return empty updates
         _mockApiClient.Setup(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
-            .ReturnsAsync(new List<JsonElement>());
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
         // Act - start polling
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
@@ -223,8 +223,8 @@ public class PollingStrategyStateTransitionsTests
 
         // Later polls use the advanced offset, so match any offset
         _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(It.IsAny<long>(), It.IsAny<int>()))
-            .ReturnsAsync(updates)
-            .ReturnsAsync(new List<JsonElement>());
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(updates))
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
         // Act - start polling and wait for the handler to be in flight
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
@@ -322,9 +322,9 @@ public class PollingStrategyStateTransitionsTests
 
         // Later polls use the advanced offset, so match any offset
         _mockApiClient.SetupSequence(x => x.GetUpdatesAsync(It.IsAny<long>(), It.IsAny<int>()))
-            .ReturnsAsync(new List<JsonElement> { update1 })
-            .ReturnsAsync(new List<JsonElement> { update2 })
-            .ReturnsAsync(new List<JsonElement>());
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update1 }))
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { update2 }))
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>()));
 
         // Act - start polling and wait until both updates have been processed
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
@@ -356,7 +356,7 @@ public class PollingStrategyStateTransitionsTests
         var jsonElement = JsonDocument.Parse(updateJson).RootElement;
 
         _mockApiClient.Setup(x => x.GetUpdatesAsync(0, It.IsAny<int>()))
-            .ReturnsAsync(new List<JsonElement> { jsonElement });
+            .ReturnsAsync(ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement> { jsonElement }));
 
         // Act - start polling
         _pollingStrategy.Start(TimeSpan.FromMilliseconds(50));
@@ -470,7 +470,7 @@ public class PollingStrategyStateTransitionsTests
                 {
                     throw new InvalidOperationException($"API failure #{callCount}");
                 }
-                return new List<JsonElement>();
+                return ApiResult<IReadOnlyList<JsonElement>>.Ok(new List<JsonElement>());
             });
 
         // Act - start polling and wait for the second failure

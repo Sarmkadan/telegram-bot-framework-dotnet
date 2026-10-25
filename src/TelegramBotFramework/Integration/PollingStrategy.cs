@@ -337,7 +337,7 @@ public sealed class PollingStrategy : IHostedService
                 var offset = _lastUpdateId > PollingDefaults.InitialUpdateId
                     ? _lastUpdateId + PollingDefaults.UpdateOffsetIncrement
                     : PollingDefaults.InitialUpdateId;
-                var updates = await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false);
+                var updates = (await _apiClient.GetUpdatesAsync(offset).ConfigureAwait(false)).Value ?? Array.Empty<JsonElement>();
 
                 _logger.LogInformation("Received {UpdateCount} updates from Telegram API", updates.Count);
 
