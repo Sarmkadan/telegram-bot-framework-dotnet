@@ -7,8 +7,17 @@ using System.Text;
 
 namespace TelegramBotFramework.Integration
 {
+    /// <summary>
+    /// Provides factory methods for creating pre-configured <see cref="HttpClient"/> instances.
+    /// </summary>
     public static class HttpClientFactoryExtensions
     {
+        /// <summary>
+        /// Creates an <see cref="HttpClient"/> with the specified base address and request timeout.
+        /// </summary>
+        /// <param name="baseUrl">The base URL used for relative request addresses.</param>
+        /// <param name="timeout">The timeout applied to each request.</param>
+        /// <returns>A new <see cref="HttpClient"/> configured with the given base address and timeout.</returns>
         public static HttpClient GetClientWithCustomTimeout(string baseUrl, TimeSpan timeout)
         {
             return new HttpClient(new SocketsHttpHandler
@@ -23,6 +32,12 @@ namespace TelegramBotFramework.Integration
             };
         }
 
+        /// <summary>
+        /// Creates an <see cref="HttpClient"/> with the specified base address and default request headers.
+        /// </summary>
+        /// <param name="baseUrl">The base URL used for relative request addresses.</param>
+        /// <param name="headers">The default headers to add to the client. An existing header with the same name is replaced.</param>
+        /// <returns>A new <see cref="HttpClient"/> configured with the given base address and headers.</returns>
         public static HttpClient GetClientWithCustomHeaders(string baseUrl, Dictionary<string, string> headers)
         {
             var client = new HttpClient(new SocketsHttpHandler
