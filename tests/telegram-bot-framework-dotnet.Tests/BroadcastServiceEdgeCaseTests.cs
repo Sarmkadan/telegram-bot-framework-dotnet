@@ -52,7 +52,7 @@ public class BroadcastServiceEdgeCaseTests
         using var cancellationSource = new CancellationTokenSource();
         _mockApiClient
             .Setup(client => client.SendMessageAsync(It.IsAny<long>(), "message", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         Task CancelAfterFirstChat(BroadcastProgress progress)
         {
@@ -81,11 +81,11 @@ public class BroadcastServiceEdgeCaseTests
     {
         var service = new BroadcastService(_mockApiClient.Object);
         _mockApiClient.Setup(client => client.SendMessageAsync(1L, "message", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request"));
         _mockApiClient.Setup(client => client.SendMessageAsync(2L, "message", It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("API unavailable"));
         _mockApiClient.Setup(client => client.SendMessageAsync(3L, "message", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var result = await service.BroadcastAsync(
             new[] { 1L, 2L, 3L },
@@ -110,7 +110,7 @@ public class BroadcastServiceEdgeCaseTests
         var processedCounts = new List<int>();
         _mockApiClient
             .Setup(client => client.SendMessageAsync(It.IsAny<long>(), "message", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         Task RecordProgress(BroadcastProgress progress)
         {

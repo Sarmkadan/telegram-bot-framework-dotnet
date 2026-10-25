@@ -31,7 +31,7 @@ public sealed class CommandMenuSyncService
     {
         cancellationToken.ThrowIfCancellationRequested();
         var commands = CollectCommands();
-        return await _apiClient.SetMyCommandsAsync(commands, cancellationToken);
+        return (await _apiClient.SetMyCommandsAsync(commands, cancellationToken)).Success;
     }
 
     private static IReadOnlyList<BotCommand> CollectCommands()

@@ -217,7 +217,7 @@ public sealed class ScheduledMessageService : IScheduledMessageService
                 messageId, message.AttemptCount, _maxRetryAttempts);
 
             // Send the message via Telegram API
-            var success = await _telegramApiClient.SendMessageAsync(message.ChatId, message.Text).ConfigureAwait(false);
+            var success = (await _telegramApiClient.SendMessageAsync(message.ChatId, message.Text).ConfigureAwait(false)).Success;
 
             if (success)
             {

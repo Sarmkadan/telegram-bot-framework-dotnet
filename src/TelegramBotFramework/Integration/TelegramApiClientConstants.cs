@@ -61,6 +61,25 @@ internal static class TelegramApiClientConstants
     public const string SetMyCommandsMethod = "setMyCommands";
 
     // ------------------------------------------------------------------
+    // Failure descriptions reported through ApiResult
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Description reported when the circuit breaker rejects a call before it is sent.
+    /// </summary>
+    public const string CircuitOpenDescription = "Telegram API circuit is open";
+
+    /// <summary>
+    /// Description reported when the caller cancels a call.
+    /// </summary>
+    public const string CancelledDescription = "Operation was cancelled";
+
+    /// <summary>
+    /// HTTP status code reported for rate-limited calls, which surface as an exception rather than a response.
+    /// </summary>
+    public const int RateLimitedErrorCode = 429;
+
+    // ------------------------------------------------------------------
     // Validation limits
     // ------------------------------------------------------------------
 

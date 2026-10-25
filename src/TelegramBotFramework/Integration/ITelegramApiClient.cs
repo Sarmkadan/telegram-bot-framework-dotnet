@@ -69,19 +69,19 @@ public record BotCommand(string Command, string Description);
 public interface ITelegramApiClient
 {
     /// <summary>Sends a plain text message to a chat.</summary>
-    Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default);
+    Task<ApiResult<bool>> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default);
 
     /// <summary>Sends a message with an inline keyboard.</summary>
-    Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default);
+    Task<ApiResult<bool>> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default);
 
     /// <summary>Edits a previously sent message.</summary>
-    Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default);
+    Task<ApiResult<bool>> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default);
 
     /// <summary>Deletes a message from a chat.</summary>
-    Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default);
+    Task<ApiResult<bool>> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default);
 
-    /// <summary>Sends a poll to a chat.</summary>
-    Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default);
+    /// <summary>Sends a poll to a chat. The value is the poll message ID.</summary>
+    Task<ApiResult<int>> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a media group (album) to a chat.
@@ -89,14 +89,14 @@ public interface ITelegramApiClient
     /// <param name="chatId">Target chat identifier</param>
     /// <param name="items">List of media items (MediaGroupItemConstants.MinimumMediaGroupSize-MediaGroupItemConstants.MaximumMediaGroupSize items)</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
-    Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default);
+    /// <returns>The message IDs of the sent media items on success; a failed result otherwise</returns>
+    Task<ApiResult<IList<int>>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default);
 
-    /// <summary>Returns the bot username via <c>getMe</c>, or null on failure.</summary>
-    Task<string?> GetMeAsync();
+    /// <summary>Returns the raw JSON describing the bot via <c>getMe</c>.</summary>
+    Task<ApiResult<string>> GetMeAsync();
 
     /// <summary>Answers a callback query, optionally showing a notification.</summary>
-    Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null);
+    Task<ApiResult<bool>> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null);
 
     /// <summary>
     /// Registers a webhook URL with Telegram. When a secret token is supplied, Telegram includes it in the
@@ -104,27 +104,27 @@ public interface ITelegramApiClient
     /// </summary>
     /// <param name="webhookUrl">The absolute URL to which Telegram sends updates.</param>
     /// <param name="secretToken">Optional secret token (see <see cref="WebhookSecretToken"/>); <see langword="null"/> registers without one.</param>
-    Task<bool> SetWebhookAsync(string webhookUrl, string? secretToken = null);
+    Task<ApiResult<bool>> SetWebhookAsync(string webhookUrl, string? secretToken = null);
 
     /// <summary>Removes the currently registered webhook.</summary>
-    Task<bool> RemoveWebhookAsync();
+    Task<ApiResult<bool>> RemoveWebhookAsync();
 
     /// <summary>Long-polls Telegram for new updates starting at <paramref name="offset"/>.</summary>
-    Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = TelegramApiClientConstants.DefaultGetUpdatesTimeoutSeconds);
+    Task<ApiResult<IReadOnlyList<JsonElement>>> GetUpdatesAsync(long offset = 0, int timeoutSeconds = TelegramApiClientConstants.DefaultGetUpdatesTimeoutSeconds);
 
     /// <summary>Sets the list of bot commands shown in the Telegram UI.</summary>
     /// <param name="commands">Collection of command name / description pairs.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    /// <returns>True if the request succeeded, false otherwise.</returns>
-    Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default);
+    /// <returns>A result whose <see cref="ApiResult{T}.Success"/> is true when Telegram accepted the commands.</returns>
+    Task<ApiResult<bool>> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default);
 
 /// <summary>
 /// Gets information about a file stored on Telegram servers.
 /// </summary>
 /// <param name="fileId">File identifier to get info for</param>
 /// <param name="cancellationToken">Cancellation token</param>
-/// <returns>File information including file path and size, or null if not found</returns>
-Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default);
+/// <returns>File information including file path and size on success; a failed result otherwise</returns>
+Task<ApiResult<FileInfoResult>> GetFileAsync(string fileId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the circuit breaker guarding this client's Telegram API calls, or <see langword="null"/> when none is configured.

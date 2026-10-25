@@ -24,8 +24,8 @@ using TelegramBotFramework.Utilities;
 /// Provides methods for sending messages, managing updates, and querying bot state.
 /// </summary>
 /// <remarks>
-/// The client validates request arguments before sending them and returns failure values when
-/// Telegram rejects a request or an unexpected error occurs.
+/// The client validates request arguments before sending them (invalid arguments throw) and reports rejected
+/// requests and transport failures through <see cref="ApiResult{T}"/> instead of throwing.
 /// </remarks>
 public sealed class TelegramApiClient : ITelegramApiClient
 {
@@ -79,10 +79,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
     /// <param name="text">Text of the message to be sent</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    /// <returns>True if the message was sent successfully, false otherwise</returns>
+    /// <returns>A result whose value is <see langword="true"/> when the message was sent; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="text"/> is empty or exceeds the maximum message length.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<bool> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<bool>> SendMessageAsync(long chatId, string text, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -106,11 +106,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="text">Text of the message to be sent</param>
     /// <param name="buttonLabels">Two-dimensional array representing the keyboard layout where each inner array is a row of buttons</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    /// <returns>True if the message was sent successfully, false otherwise</returns>
+    /// <returns>A result whose value is <see langword="true"/> when the message was sent; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/>, <paramref name="text"/>, or a button label is invalid.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="buttonLabels"/> is <see langword="null"/>.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<bool> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<bool>> SendMessageWithButtonsAsync(long chatId, string text, string[][] buttonLabels, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -153,10 +153,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="messageId">Identifier of the sent message</param>
     /// <param name="newText">New text of the message</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    /// <returns>True if the message was edited successfully, false otherwise</returns>
+    /// <returns>A result whose value is <see langword="true"/> when the message was edited; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid, <paramref name="messageId"/> is not positive, or <paramref name="newText"/> is invalid.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<bool> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<bool>> EditMessageAsync(long chatId, int messageId, string newText, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -182,10 +182,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="chatId">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
     /// <param name="messageId">Identifier of the message to delete</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    /// <returns>True if the message was deleted successfully, false otherwise</returns>
+    /// <returns>A result whose value is <see langword="true"/> when the message was deleted; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="messageId"/> is not positive.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<bool> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<bool>> DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -207,11 +207,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="options">List of answer options (2-10 options, each 1-100 characters)</param>
     /// <param name="allowsMultipleAnswers">Whether users can select multiple answers</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Message ID of the sent poll if successful, null otherwise</returns>
+    /// <returns>A result carrying the message ID of the sent poll if successful; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when the chat identifier, question, or answer options are invalid.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is <see langword="null"/>.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<int?> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<int>> SendPollAsync(long chatId, string question, string[] options, bool allowsMultipleAnswers = false, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -241,7 +241,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.SendPollMethod).ConfigureAwait(false))
         {
-            return null;
+            return ApiResult<int>.Fail(null, TelegramApiClientConstants.CircuitOpenDescription);
         }
 
         try
@@ -269,7 +269,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                     root.TryGetProperty("result", out var resultElement) &&
                     resultElement.TryGetProperty("message_id", out var messageIdElement))
                 {
-                    return messageIdElement.GetInt32();
+                    return ApiResult<int>.Ok(messageIdElement.GetInt32());
                 }
             }
 
@@ -277,13 +277,13 @@ public sealed class TelegramApiClient : ITelegramApiClient
             _logger.LogWarning("Poll send failed: Status: {StatusCode}, Error: {Error}",
                 response.StatusCode, errorContent);
 
-            return null;
+            return FailFromResponse<int>(errorContent, (int)response.StatusCode);
         }
         catch (Exception ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error sending poll to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
-            return null;
+            return ApiResult<int>.Fail(null, TokenRedaction.RedactToken(ex));
         }
     }
 
@@ -293,10 +293,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <param name="chatId">Target chat identifier</param>
     /// <param name="items">List of media items (2-10 items)</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of message IDs for the sent media items if successful, empty list otherwise</returns>
+    /// <returns>A result carrying the message IDs of the sent media items if successful; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="chatId"/> is invalid or <paramref name="items"/> has an invalid count or item.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="items"/> is <see langword="null"/>.</exception>
-    public async Task<IList<int>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<IList<int>>> SendMediaGroupAsync(long chatId, IList<MediaGroupItem> items, CancellationToken cancellationToken = default)
     {
         if (!ValidationUtility.IsValidTelegramChatId(chatId))
             throw new ArgumentException("Invalid chat ID", nameof(chatId));
@@ -313,7 +313,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
         if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.SendMediaGroupMethod).ConfigureAwait(false))
         {
-            return new List<int>();
+            return ApiResult<IList<int>>.Fail(null, TelegramApiClientConstants.CircuitOpenDescription);
         }
 
         try
@@ -360,7 +360,7 @@ public sealed class TelegramApiClient : ITelegramApiClient
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 _logger.LogWarning("Media group send failed: Status={StatusCode}, Error={Error}",
                     response.StatusCode, errorContent);
-                return new List<int>();
+                return FailFromResponse<IList<int>>(errorContent, (int)response.StatusCode);
             }
 
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -383,28 +383,28 @@ public sealed class TelegramApiClient : ITelegramApiClient
             }
 
             _logger.LogInformation("Sent media group with {Count} items to chat {ChatId}", messageIds.Count, chatId);
-            return messageIds;
+            return ApiResult<IList<int>>.Ok(messageIds);
         }
         catch (OperationCanceledException)
         {
             // A timeout surfaces as TaskCanceledException too; only caller cancellation is reported as abandoned.
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Media group send operation was cancelled");
-            return new List<int>();
+            return ApiResult<IList<int>>.Fail(null, TelegramApiClientConstants.CancelledDescription);
         }
         catch (Exception ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error sending media group to Telegram API: {RedactedMessage}", TokenRedaction.RedactToken(ex));
-            return new List<int>();
+            return ApiResult<IList<int>>.Fail(null, TokenRedaction.RedactToken(ex));
         }
     }
 
     /// <summary>
     /// Gets information about the bot itself.
     /// </summary>
-    /// <returns>The raw JSON response describing the bot, or <see langword="null"/> if the request fails.</returns>
-    public async Task<string?> GetMeAsync()
+    /// <returns>A result carrying the raw JSON response describing the bot; otherwise a failed result.</returns>
+    public async Task<ApiResult<string>> GetMeAsync()
     {
         return await GetApiRequestAsync(TelegramApiClientConstants.GetMeMethod).ConfigureAwait(false);
     }
@@ -414,9 +414,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     /// <param name="callbackQueryId">The unique identifier of the callback query to answer.</param>
     /// <param name="notificationText">Optional text to display to the user as a notification.</param>
-    /// <returns><see langword="true"/> if Telegram accepts the answer; otherwise, <see langword="false"/>.</returns>
+    /// <returns>A result whose value is <see langword="true"/> when Telegram accepts the answer; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="callbackQueryId"/> or a supplied <paramref name="notificationText"/> is empty or consists only of white-space characters.</exception>
-    public async Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null)
+    public async Task<ApiResult<bool>> AnswerCallbackQueryAsync(string callbackQueryId, string? notificationText = null)
     {
         if (string.IsNullOrWhiteSpace(callbackQueryId))
             throw new ArgumentException("Callback query ID cannot be empty", nameof(callbackQueryId));
@@ -435,9 +435,9 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     /// <param name="webhookUrl">The absolute URL to which Telegram sends updates.</param>
     /// <param name="secretToken">Optional secret token sent as <c>secret_token</c>; <see langword="null"/> or empty registers without one.</param>
-    /// <returns><see langword="true"/> if Telegram accepts the webhook; otherwise, <see langword="false"/>.</returns>
+    /// <returns>A result whose value is <see langword="true"/> when Telegram accepts the webhook; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty or is not a valid URL, or when <paramref name="secretToken"/> is not a valid Telegram secret token.</exception>
-    public async Task<bool> SetWebhookAsync(string webhookUrl, string? secretToken = null)
+    public async Task<ApiResult<bool>> SetWebhookAsync(string webhookUrl, string? secretToken = null)
     {
         if (string.IsNullOrWhiteSpace(webhookUrl) || !ValidationUtility.IsValidUrl(webhookUrl))
             throw new ArgumentException("Invalid webhook URL", nameof(webhookUrl));
@@ -455,8 +455,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// <summary>
     /// Removes the webhook (switches to polling mode).
     /// </summary>
-    /// <returns><see langword="true"/> if Telegram removes the webhook; otherwise, <see langword="false"/>.</returns>
-    public async Task<bool> RemoveWebhookAsync()
+    /// <returns>A result whose value is <see langword="true"/> when Telegram removes the webhook; otherwise a failed result.</returns>
+    public async Task<ApiResult<bool>> RemoveWebhookAsync()
     {
         return await SendApiRequestAsync(
             TelegramApiClientConstants.SetWebhookMethod,
@@ -468,10 +468,10 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     /// <param name="commands">Collection of command name / description pairs.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    /// <returns>True if the request succeeded, false otherwise.</returns>
+    /// <returns>A result whose value is <see langword="true"/> when the request succeeded; otherwise a failed result.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="commands"/> is <see langword="null"/>.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/> is canceled before the request is sent.</exception>
-    public async Task<bool> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<bool>> SetMyCommandsAsync(IReadOnlyList<BotCommand> commands, CancellationToken cancellationToken = default)
     {
         if (commands == null)
             throw new ArgumentNullException(nameof(commands));
@@ -503,8 +503,8 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     /// <param name="offset">Identifier of the first update to return; pass the last processed update ID + 1 to avoid duplicates.</param>
     /// <param name="timeoutSeconds">Long-polling timeout in seconds.</param>
-    /// <returns>The raw update objects returned by Telegram, or an empty list if the call failed.</returns>
-    public async Task<IReadOnlyList<JsonElement>> GetUpdatesAsync(
+    /// <returns>A result carrying the raw update objects returned by Telegram; otherwise a failed result.</returns>
+    public async Task<ApiResult<IReadOnlyList<JsonElement>>> GetUpdatesAsync(
         long offset = 0,
         int timeoutSeconds = TelegramApiClientConstants.DefaultGetUpdatesTimeoutSeconds)
     {
@@ -513,10 +513,15 @@ public sealed class TelegramApiClient : ITelegramApiClient
             TelegramApiClientConstants.GetUpdatesQueryStringFormat,
             offset,
             timeoutSeconds);
-        var json = await GetApiRequestAsync(method).ConfigureAwait(false);
+        var response = await GetApiRequestAsync(method).ConfigureAwait(false);
+
+        if (!response.Success)
+            return ApiResult<IReadOnlyList<JsonElement>>.Fail(response.ErrorCode, response.Description);
+
+        var json = response.Value;
 
         if (string.IsNullOrWhiteSpace(json))
-            return Array.Empty<JsonElement>();
+            return ApiResult<IReadOnlyList<JsonElement>>.Ok(Array.Empty<JsonElement>());
 
         try
         {
@@ -524,17 +529,17 @@ public sealed class TelegramApiClient : ITelegramApiClient
             var root = doc.RootElement;
 
             if (!root.TryGetProperty("ok", out var okElement) || !okElement.GetBoolean())
-                return Array.Empty<JsonElement>();
+                return FailFromResponse<IReadOnlyList<JsonElement>>(json, null);
 
             if (!root.TryGetProperty("result", out var resultElement) || resultElement.ValueKind != JsonValueKind.Array)
-                return Array.Empty<JsonElement>();
+                return ApiResult<IReadOnlyList<JsonElement>>.Ok(Array.Empty<JsonElement>());
 
-            return resultElement.EnumerateArray().Select(static element => element.Clone()).ToArray();
+            return ApiResult<IReadOnlyList<JsonElement>>.Ok(resultElement.EnumerateArray().Select(static element => element.Clone()).ToArray());
         }
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Failed to parse getUpdates response");
-            return Array.Empty<JsonElement>();
+            return ApiResult<IReadOnlyList<JsonElement>>.Fail(null, ex.Message);
         }
     }
 
@@ -543,16 +548,16 @@ public sealed class TelegramApiClient : ITelegramApiClient
     /// </summary>
     /// <param name="fileId">File identifier to get info for</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>File information including file path and size, or null if not found</returns>
+    /// <returns>A result carrying the file information including file path and size; otherwise a failed result.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="fileId"/> is empty or consists only of white-space characters.</exception>
-    public async Task<FileInfoResult?> GetFileAsync(string fileId, CancellationToken cancellationToken = default)
+    public async Task<ApiResult<FileInfoResult>> GetFileAsync(string fileId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(fileId))
             throw new ArgumentException("File ID cannot be empty", nameof(fileId));
 
         if (!await TryAcquireCircuitAsync(TelegramApiClientConstants.GetFileMethod).ConfigureAwait(false))
         {
-            return null;
+            return ApiResult<FileInfoResult>.Fail(null, TelegramApiClientConstants.CircuitOpenDescription);
         }
 
         try
@@ -585,32 +590,33 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
                     if (filePath != null)
                     {
-                        return new FileInfoResult(
+                        return ApiResult<FileInfoResult>.Ok(new FileInfoResult(
                             fileIdResult ?? fileId,
                             fileUniqueId ?? string.Empty,
                             filePath,
                             fileSize,
                             createdAt
-                        );
+                        ));
                     }
                 }
             }
 
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning("Failed to get file info for file_id: {FileId}, Status: {StatusCode}", fileId, response.StatusCode);
-            return null;
+            return FailFromResponse<FileInfoResult>(errorContent, (int)response.StatusCode);
         }
         catch (OperationCanceledException)
         {
             // A timeout surfaces as TaskCanceledException too; only caller cancellation is reported as abandoned.
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("GetFile operation was cancelled for file_id: {FileId}", fileId);
-            return null;
+            return ApiResult<FileInfoResult>.Fail(null, TelegramApiClientConstants.CancelledDescription);
         }
         catch (Exception ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error getting file info for file_id: {FileId}", fileId);
-            return null;
+            return ApiResult<FileInfoResult>.Fail(null, TokenRedaction.RedactToken(ex));
         }
     }
 
@@ -627,11 +633,11 @@ public sealed class TelegramApiClient : ITelegramApiClient
         };
     }
 
-    private async Task<bool> SendApiRequestAsync<T>(string method, T payload, CancellationToken cancellationToken = default) where T : class
+    private async Task<ApiResult<bool>> SendApiRequestAsync<T>(string method, T payload, CancellationToken cancellationToken = default) where T : class
     {
         if (!await TryAcquireCircuitAsync(method).ConfigureAwait(false))
         {
-            return false;
+            return ApiResult<bool>.Fail(null, TelegramApiClientConstants.CircuitOpenDescription);
         }
 
         try
@@ -661,39 +667,39 @@ public sealed class TelegramApiClient : ITelegramApiClient
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Telegram API call succeeded: {Method}", method);
-                return true;
+                return ApiResult<bool>.Ok(true);
             }
 
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning("Telegram API call failed: {Method}, Status: {StatusCode}, Error: {Error}", method, response.StatusCode, errorContent);
 
-            return false;
+            return FailFromResponse<bool>(errorContent, (int)response.StatusCode);
         }
         catch (TelegramRateLimitedException ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning(ex, "Rate limited calling Telegram API method: {Method}", method);
-            return false;
+            return ApiResult<bool>.Fail(TelegramApiClientConstants.RateLimitedErrorCode, TokenRedaction.RedactToken(ex));
         }
         catch (TelegramServerException ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning(ex, "Server error calling Telegram API method: {Method}", method);
-            return false;
+            return ApiResult<bool>.Fail((int)ex.StatusCode, TokenRedaction.RedactToken(ex));
         }
         catch (Exception ex)
         {
             await ReportFailureAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogError(ex, "Error calling Telegram API method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
-            return false;
+            return ApiResult<bool>.Fail(null, TokenRedaction.RedactToken(ex));
         }
     }
 
-    private async Task<string?> GetApiRequestAsync(string method)
+    private async Task<ApiResult<string>> GetApiRequestAsync(string method)
     {
         if (!await TryAcquireCircuitAsync(method).ConfigureAwait(false))
         {
-            return null;
+            return ApiResult<string>.Fail(null, TelegramApiClientConstants.CircuitOpenDescription);
         }
 
         try
@@ -714,31 +720,71 @@ public sealed class TelegramApiClient : ITelegramApiClient
 
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return ApiResult<string>.Ok(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
             }
 
+            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             _logger.LogWarning("Telegram API GET call failed: {Method}, Status: {StatusCode}", method, response.StatusCode);
 
-            return null;
+            return FailFromResponse<string>(errorContent, (int)response.StatusCode);
         }
         catch (TelegramRateLimitedException ex)
         {
             await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogWarning(ex, "Rate limited calling Telegram API GET method: {Method}", method);
-            return null;
+            return ApiResult<string>.Fail(TelegramApiClientConstants.RateLimitedErrorCode, TokenRedaction.RedactToken(ex));
         }
         catch (TelegramServerException ex)
         {
             await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogWarning(ex, "Server error calling Telegram API GET method: {Method}", method);
-            return null;
+            return ApiResult<string>.Fail((int)ex.StatusCode, TokenRedaction.RedactToken(ex));
         }
         catch (Exception ex)
         {
             await ReportFailureAsync().ConfigureAwait(false);
             _logger.LogError(ex, "Error calling Telegram API GET method: {Method}. {RedactedMessage}", method, TokenRedaction.RedactToken(ex));
-            return null;
+            return ApiResult<string>.Fail(null, TokenRedaction.RedactToken(ex));
         }
+    }
+
+    /// <summary>
+    /// Builds a failed <see cref="ApiResult{T}"/> from a Telegram response body. When the body is a Telegram error object,
+    /// its <c>error_code</c> and <c>description</c> are used; otherwise the fallback code and the raw body are used.
+    /// </summary>
+    /// <typeparam name="T">The value type of the result.</typeparam>
+    /// <param name="body">The response body, or <see langword="null"/> when there is none.</param>
+    /// <param name="fallbackErrorCode">The error code to report when the body does not carry one.</param>
+    /// <returns>A failed result describing the rejected request.</returns>
+    private static ApiResult<T> FailFromResponse<T>(string? body, int? fallbackErrorCode)
+    {
+        var errorCode = fallbackErrorCode;
+        var description = body;
+
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("error_code", out var codeElement) && codeElement.TryGetInt32(out var code))
+                {
+                    errorCode = code;
+                }
+
+                if (root.TryGetProperty("description", out var descriptionElement) && descriptionElement.ValueKind == JsonValueKind.String)
+                {
+                    description = descriptionElement.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // Non-JSON bodies (for example proxy error pages) keep the fallback code and the raw body as description.
+            }
+        }
+
+        return ApiResult<T>.Fail(errorCode, description);
     }
 
     /// <summary>

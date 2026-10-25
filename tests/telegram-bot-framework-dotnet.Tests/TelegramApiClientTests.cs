@@ -131,15 +131,16 @@ public class TelegramApiClientTests
         var webhook = await client.SetWebhookAsync("https://example.com/hook");
 
         // Assert
-        sent.Should().BeFalse();
-        buttons.Should().BeFalse();
-        edited.Should().BeFalse();
-        deleted.Should().BeFalse();
-        poll.Should().BeNull();
-        group.Should().BeEmpty();
-        me.Should().BeNull();
-        callback.Should().BeFalse();
-        webhook.Should().BeFalse();
+        sent.Success.Should().BeFalse();
+        sent.Description.Should().Be(TelegramApiClientConstants.CircuitOpenDescription);
+        buttons.Success.Should().BeFalse();
+        edited.Success.Should().BeFalse();
+        deleted.Success.Should().BeFalse();
+        poll.Success.Should().BeFalse();
+        group.Success.Should().BeFalse();
+        me.Success.Should().BeFalse();
+        callback.Success.Should().BeFalse();
+        webhook.Success.Should().BeFalse();
         breaker.State.Should().Be(CircuitState.Open);
     }
 }

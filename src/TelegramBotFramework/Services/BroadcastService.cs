@@ -107,7 +107,7 @@ public sealed class BroadcastService : IBroadcastService, IDisposable
                             }
 
                             var messageToSend = config.MessageFormatter?.Invoke(messageText, chatId) ?? messageText;
-                            var success = await _telegramApiClient.SendMessageAsync(chatId, messageToSend).ConfigureAwait(false);
+                            var success = (await _telegramApiClient.SendMessageAsync(chatId, messageToSend).ConfigureAwait(false)).Success;
 
                             Interlocked.Increment(ref _totalMessagesSent);
                             Interlocked.Increment(ref processedCount);

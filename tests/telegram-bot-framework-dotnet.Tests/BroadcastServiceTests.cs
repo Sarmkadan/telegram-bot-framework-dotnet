@@ -56,11 +56,11 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 123L, 456L, 789L };
         _mockApiClient.Setup(x => x.SendMessageAsync(123L, "test message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         _mockApiClient.Setup(x => x.SendMessageAsync(456L, "test message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         _mockApiClient.Setup(x => x.SendMessageAsync(789L, "test message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var result = await _broadcastService.BroadcastAsync(
@@ -85,9 +85,9 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 123L, 456L, 789L };
         _mockApiClient.Setup(x => x.SendMessageAsync(123L, "test message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         _mockApiClient.Setup(x => x.SendMessageAsync(456L, "test message"))
-            .ReturnsAsync(false); // Failure
+            .ReturnsAsync(ApiResult<bool>.Fail(null, "Telegram rejected the request")); // Failure
         _mockApiClient.Setup(x => x.SendMessageAsync(789L, "test message"))
             .ThrowsAsync(new Exception("API error")); // Exception
 
@@ -115,7 +115,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 123L, 456L };
         _mockApiClient.Setup(x => x.SendMessageAsync(123L, "test message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
         _mockApiClient.Setup(x => x.SendMessageAsync(456L, "test message"))
             .ThrowsAsync(new Exception("API error"));
 
@@ -136,7 +136,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 1L, 2L, 3L, 4L, 5L };
         _mockApiClient.Setup(x => x.SendMessageAsync(It.IsAny<long>(), It.IsAny<string>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var options = new BroadcastOptions { MessagesPerSecond = 2 };
         var startTime = DateTime.UtcNow;
@@ -162,7 +162,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 1L, 2L };
         _mockApiClient.Setup(x => x.SendMessageAsync(It.IsAny<long>(), It.IsAny<string>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var callbackInvoked = false;
         Task Callback(BroadcastProgress progress)
@@ -190,7 +190,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 1L, 2L, 3L, 4L, 5L };
         _mockApiClient.Setup(x => x.SendMessageAsync(It.IsAny<long>(), It.IsAny<string>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         var cts = new CancellationTokenSource();
         var callbackInvokedCount = 0;
@@ -234,7 +234,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
             new BotUser { TelegramId = 222L, FirstName = "User2" }
         };
         _mockApiClient.Setup(x => x.SendMessageAsync(It.IsAny<long>(), It.IsAny<string>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var result = await _broadcastService.BroadcastToUsersAsync(
@@ -274,7 +274,7 @@ public class BroadcastServiceTests : IBroadcastServiceTests
         // Arrange
         var chatIds = new long[] { 123L };
         _mockApiClient.Setup(x => x.SendMessageAsync(123L, "[123] custom message"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ApiResult<bool>.Ok(true));
 
         // Act
         var result = await _broadcastService.BroadcastAsync(
