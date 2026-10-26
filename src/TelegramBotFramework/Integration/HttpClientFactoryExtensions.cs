@@ -20,6 +20,8 @@ namespace TelegramBotFramework.Integration
         /// <returns>A new <see cref="HttpClient"/> configured with the given base address and timeout.</returns>
         public static HttpClient GetClientWithCustomTimeout(string baseUrl, TimeSpan timeout)
         {
+            ArgumentNullException.ThrowIfNull(baseUrl);
+
             return new HttpClient(new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(2),
@@ -40,6 +42,9 @@ namespace TelegramBotFramework.Integration
         /// <returns>A new <see cref="HttpClient"/> configured with the given base address and headers.</returns>
         public static HttpClient GetClientWithCustomHeaders(string baseUrl, Dictionary<string, string> headers)
         {
+            ArgumentNullException.ThrowIfNull(baseUrl);
+            ArgumentNullException.ThrowIfNull(headers);
+
             var client = new HttpClient(new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(2),
