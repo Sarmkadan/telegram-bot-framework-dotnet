@@ -57,5 +57,19 @@ namespace TelegramBotFramework.Models
                 ? value
                 : null;
         }
+
+        /// <summary>
+        /// Determines whether the bot user is restricted from interacting with the bot,
+        /// i.e. its <see cref="BotUser.Status"/> is <see cref="UserStatus.Banned"/> or <see cref="UserStatus.Suspended"/>.
+        /// </summary>
+        /// <param name="user">The bot user.</param>
+        /// <returns>True if the bot user is banned or suspended; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="user"/> is null.</exception>
+        public static bool IsRestricted(this BotUser? user)
+        {
+            ArgumentNullException.ThrowIfNull(user);
+
+            return user.Status is UserStatus.Banned or UserStatus.Suspended;
+        }
     }
 }
