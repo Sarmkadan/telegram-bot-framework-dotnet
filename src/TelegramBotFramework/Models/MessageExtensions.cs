@@ -54,4 +54,16 @@ public static class MessageExtensions
         ArgumentNullException.ThrowIfNull(message);
         return message.ReplyToMessageId.HasValue && message.ReplyToMessageId > 0;
     }
+
+    /// <summary>
+    /// Determines whether the message was forwarded from another user.
+    /// </summary>
+    /// <param name="message">The message to check.</param>
+    /// <returns>True if the message was forwarded from another user; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/> is null.</exception>
+    public static bool IsForwarded(this Message message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        return message.ForwardedFromUserId.HasValue;
+    }
 }
