@@ -39,6 +39,7 @@ internal sealed class ConsoleLogger<T> : ILogger<T>
     /// <param name="state">The state object passed to the formatter.</param>
     /// <param name="exception">An optional exception to pass to the formatter. May be <c>null</c>.</param>
     /// <param name="formatter">Produces the message text from the state and exception.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <c>null</c>.</exception>
     public void Log<TState>(
         LogLevel logLevel,
         EventId eventId,
@@ -46,6 +47,8 @@ internal sealed class ConsoleLogger<T> : ILogger<T>
         Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
+        ArgumentNullException.ThrowIfNull(formatter);
+
         Console.WriteLine($"[{logLevel}] {formatter(state, exception)}");
     }
 }
