@@ -2,6 +2,9 @@ using System;
 
 namespace TelegramBotFramework.ConversationFlow;
 
+/// <summary>
+/// Validation error messages used by the file-based conversation state store and its state models.
+/// </summary>
 internal static class FileConversationStateStoreValidationConstants
 {
     // Error messages
