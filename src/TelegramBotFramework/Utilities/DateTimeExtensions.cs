@@ -63,6 +63,16 @@ public static class DateTimeExtensions
     }
 
     /// <summary>
+    /// Determines if a DateTime falls on a weekend (Saturday or Sunday).
+    /// </summary>
+    /// <param name="dateTime">The DateTime to check.</param>
+    /// <returns>True if the DateTime is a Saturday or Sunday; otherwise, false.</returns>
+    public static bool IsWeekend(this DateTime dateTime)
+    {
+        return dateTime.DayOfWeek == DayOfWeek.Saturday || dateTime.DayOfWeek == DayOfWeek.Sunday;
+    }
+
+    /// <summary>
     /// Gets the start of the day (00:00:00).
     /// </summary>
     /// <param name="dateTime">The DateTime to normalize.</param>
