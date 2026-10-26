@@ -1,6 +1,10 @@
 #nullable enable
 namespace TelegramBotFramework.ConversationFlow;
 
+/// <summary>
+/// Constants for ConversationFlowExtensions: validation and error messages for conversation flow
+/// builders, and the default comparer used for step identifiers.
+/// </summary>
 internal static class ConversationFlowExtensionsConstants
 {
     public const string StateDirectoryCannotBeEmpty = "State directory cannot be empty.";
