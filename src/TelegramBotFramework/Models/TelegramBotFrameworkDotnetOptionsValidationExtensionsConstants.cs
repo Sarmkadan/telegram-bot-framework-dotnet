@@ -1,5 +1,9 @@
 namespace TelegramBotFramework.Models
 {
+    /// <summary>
+    /// Internal constants used by <see cref="TelegramBotFrameworkDotnetOptionsValidationExtensions"/>:
+    /// validation error message templates and the allowed numeric bounds for framework options.
+    /// </summary>
     internal static class TelegramBotFrameworkDotnetOptionsValidationExtensionsConstants
     {
         // String literals for error messages
