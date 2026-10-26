@@ -157,4 +157,18 @@ public static class CollectionExtensions
             yield return item;
         }
     }
+
+    /// <summary>
+    /// Filters a sequence of reference types, removing all <see langword="null"/> elements.
+    /// </summary>
+    /// <param name="source">The source sequence that may contain <see langword="null"/> elements.</param>
+    /// <typeparam name="T">The reference type of elements in the source.</typeparam>
+    /// <returns>A sequence containing only the non-null elements of <paramref name="source"/>, in their original order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source.Where(static item => item is not null)!;
+    }
 }
