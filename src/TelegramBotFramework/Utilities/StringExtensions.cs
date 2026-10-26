@@ -235,4 +235,19 @@ public static class StringExtensions
 
         return char.ToUpperInvariant(value[0]) + value[1..];
     }
+
+    /// <summary>
+    /// Converts a string to title case, capitalizing the first letter of each word and lowercasing the rest.
+    /// Uses invariant culture rules.
+    /// Example: "hELLO wORLD" => "Hello World"
+    /// </summary>
+    /// <param name="value">The string to convert to title case.</param>
+    /// <returns>The title-cased string.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+    public static string ToTitleCase(this string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value.ToLowerInvariant());
+    }
 }
