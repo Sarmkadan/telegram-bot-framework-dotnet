@@ -63,4 +63,36 @@ public static class EventPublisherExtensions
                 .ConfigureAwait(false);
         }
     }
+
+    /// <summary>
+    /// Attempts to publish an event with correlation ID tracking, reporting the outcome instead of throwing.
+    /// Failures are already logged by the <see cref="EventPublisher"/> before they are caught here.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of event to publish.</typeparam>
+    /// <param name="publisher">The event publisher instance.</param>
+    /// <param name="event">The event to publish.</param>
+    /// <param name="correlationId">The correlation ID to associate with the event.</param>
+    /// <returns>A task whose result is <c>true</c> if the event was published; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/>, <paramref name="event"/>, or <paramref name="correlationId"/> is <see langword="null"/>.</exception>
+    public static async Task<bool> TryPublishWithCorrelationAsync<TEvent>(
+        this EventPublisher publisher,
+        TEvent @event,
+        string correlationId) where TEvent : class, IEvent
+    {
+        ArgumentNullException.ThrowIfNull(publisher);
+        ArgumentNullException.ThrowIfNull(@event);
+        ArgumentNullException.ThrowIfNull(correlationId);
+
+        try
+        {
+            await publisher
+                .PublishWithCorrelationAsync(@event, correlationId)
+                .ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 }
