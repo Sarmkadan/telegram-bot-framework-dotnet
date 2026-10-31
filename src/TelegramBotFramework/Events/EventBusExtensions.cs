@@ -23,6 +23,19 @@ namespace TelegramBotFramework.Events
         }
 
         /// <summary>
+        /// Determines whether at least one handler is subscribed to the specified event type.
+        /// </summary>
+        /// <typeparam name="TEvent">The event type to check.</typeparam>
+        /// <param name="bus">The <see cref="EventBus"/> instance.</param>
+        /// <returns><c>true</c> if one or more handlers are subscribed; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="bus"/> is <c>null</c>.</exception>
+        public static bool HasSubscribers<TEvent>(this EventBus bus) where TEvent : class, IEvent
+        {
+            ArgumentNullException.ThrowIfNull(bus);
+            return bus.GetSubscriberCount<TEvent>() > 0;
+        }
+
+        /// <summary>
         /// Calculates the total number of subscribers across all registered event types.
         /// </summary>
         /// <param name="bus">The <see cref="EventBus"/> instance.</param>
