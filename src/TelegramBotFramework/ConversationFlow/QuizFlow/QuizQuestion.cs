@@ -100,4 +100,14 @@ public sealed record QuizQuestion
     {
         return selectedIndex == CorrectAnswerIndex;
     }
+
+    /// <summary>
+    /// Returns a concise, human-readable representation of the question for logging and diagnostics.
+    /// </summary>
+    /// <returns>A string containing the question ID, text, option count, correct index, and score.</returns>
+    public override string ToString()
+    {
+        return $"QuizQuestion {{ Id = {QuestionId}, Text = \"{Text}\", Options = {Options?.Count ?? 0}, " +
+               $"Correct = {CorrectAnswerIndex}, Score = {Score} }}";
+    }
 }
