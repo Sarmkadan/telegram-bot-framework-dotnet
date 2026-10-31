@@ -295,6 +295,50 @@ Console.WriteLine(summary);
 
 The framework is a single assembly built around one idea: every update becomes an `ExecutionContext` that flows through a priority-ordered middleware pipeline into domain services backed by swappable repositories. Webhook and polling modes feed the same pipeline. Layers, design decisions with their trade-offs, data flow and extension points are documented in [docs/architecture.md](docs/architecture.md).
 
+## Middleware Pipeline
+
+Every update runs through the `IBotMiddleware` pipeline inside `BotOrchestrator`. The order is decided by `IBotMiddleware.Priority`, not by registration order: the orchestrator sorts middleware by priority in descending order, so **higher values run earlier**. Middleware with equal priority keeps the order in which it was registered. Each middleware calls `next(context)` to continue the chain and can return early, skipping the rest of the pipeline, when `ExecutionContext.IsStopped` is set.
+
+The built-in middleware uses these priorities:
+
+| Middleware | Priority | Registered by default |
+|------------|----------|-----------------------|
+| `BotLoggingMiddleware` | 100 | Yes |
+| `ConversationFlowMiddleware` | 85 | Via `AddConversationFlows` |
+| `AuthorizationMiddleware` | 30 | Yes |
+| `ThrottlingMiddleware` | 30 | No |
+| `RateLimitingMiddleware` | 20 | Yes |
+| `BotErrorHandlingMiddleware` | 10 | Yes |
+
+`MiddlewarePipelineBuilder` lists the default middleware types in the order they are added. Registration order does not set execution order, so the priority values above are what matter.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Middleware;
+using TelegramBotFramework.Models;
+
+// Runs after logging (100) and before authorization (30)
+public sealed class TimingMiddleware : IBotMiddleware
+{
+    public int Priority => 50;
+
+    public async Task<ExecutionContext> ProcessAsync(
+        ExecutionContext context,
+        Func<ExecutionContext, Task<ExecutionContext>> next,
+        CancellationToken cancellationToken = default)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var result = await next(context).ConfigureAwait(false);
+        Console.WriteLine($"Update {result.ContextId} took {stopwatch.ElapsedMilliseconds} ms");
+        return result;
+    }
+}
+
+// Register it alongside the framework services
+services.AddTransient<IBotMiddleware, TimingMiddleware>();
+```
+
 ## Configuration
 
 All configuration is done via `appsettings.json`. Here are the available settings:
