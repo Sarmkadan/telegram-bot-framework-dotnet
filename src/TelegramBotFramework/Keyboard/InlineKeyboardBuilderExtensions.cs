@@ -9,6 +9,9 @@ namespace TelegramBotFramework.Keyboard;
 /// </summary>
 public static class InlineKeyboardBuilderExtensions
 {
+    private const string DefaultBackButtonText = "⬅️ Back";
+    private const string DefaultBackCallbackData = "back";
+
     /// <summary>
     /// Adds multiple callback buttons in a single fluent call.
     /// </summary>
@@ -172,6 +175,27 @@ public static class InlineKeyboardBuilderExtensions
         builder.AddButton(text, callbackData ?? InlineKeyboardBuilderExtensionsConstants.NoOpCallbackData);
 
         return builder.NewRow();
+    }
+
+    /// <summary>
+    /// Adds a row with a single "⬅️ Back" callback button, typically used to return to the previous menu.
+    /// The button is placed on its own row, so the next buttons start a new row.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="text">Button text. Defaults to "⬅️ Back".</param>
+    /// <param name="callbackData">Callback data sent when pressed. Defaults to "back".</param>
+    /// <returns>The builder for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="text"/> or <paramref name="callbackData"/> is null or whitespace.</exception>
+    public static InlineKeyboardBuilder AddBackRow(this InlineKeyboardBuilder builder, string text = DefaultBackButtonText, string callbackData = DefaultBackCallbackData)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        ArgumentException.ThrowIfNullOrWhiteSpace(callbackData);
+
+        return builder
+            .AddButton(text, callbackData)
+            .NewRow();
     }
 
     /// <summary>
