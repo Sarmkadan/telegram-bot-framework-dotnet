@@ -135,4 +135,37 @@ public static class MessageServiceExtensions
 
         return allSuccess;
     }
+
+    /// <summary>
+    /// Marks multiple messages as failed with the same error message in a single batch operation.
+    /// </summary>
+    /// <param name="messageService">The message service instance.</param>
+    /// <param name="messageIds">Collection of message identifiers to mark as failed.</param>
+    /// <param name="errorMessage">The error description recorded for each failed message.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if all messages were successfully marked, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="messageService"/>, <paramref name="messageIds"/> or <paramref name="errorMessage"/> is null.</exception>
+    public static async Task<bool> MarkMessagesAsFailedAsync(
+        this MessageService messageService,
+        IEnumerable<long> messageIds,
+        string errorMessage,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(messageService);
+        ArgumentNullException.ThrowIfNull(messageIds);
+        ArgumentNullException.ThrowIfNull(errorMessage);
+
+        var allSuccess = true;
+
+        foreach (var messageId in messageIds)
+        {
+            var success = await messageService.MarkAsFailedAsync(messageId, errorMessage, cancellationToken).ConfigureAwait(false);
+            if (!success)
+            {
+                allSuccess = false;
+            }
+        }
+
+        return allSuccess;
+    }
 }
