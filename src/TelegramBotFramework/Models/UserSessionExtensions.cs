@@ -62,6 +62,21 @@ public static class UserSessionExtensions
     }
 
     /// <summary>
+    /// Gets the elapsed time since the session's last recorded activity.
+    /// </summary>
+    /// <param name="session">The user session to check.</param>
+    /// <returns>The time elapsed since the last activity, or null if no activity has been recorded.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
+    public static TimeSpan? GetTimeSinceLastActivity(this UserSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+
+        return session.LastActivityAt.HasValue
+            ? DateTime.UtcNow - session.LastActivityAt.Value
+            : null;
+    }
+
+    /// <summary>
     /// Safely gets a typed value from context data.
     /// </summary>
     /// <typeparam name="T">The type to deserialize the value to.</typeparam>
