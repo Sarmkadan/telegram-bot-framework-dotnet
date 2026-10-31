@@ -43,6 +43,19 @@ public static class WebhookOptionsExtensions
     }
 
     /// <summary>
+    /// Determines whether the webhook URL is an absolute HTTPS URL, the only scheme Telegram accepts for webhooks.
+    /// </summary>
+    /// <param name="options">The webhook options.</param>
+    /// <returns><see langword="true"/> if <see cref="WebhookOptions.Url"/> is an absolute HTTPS URL; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is <see langword="null"/>.</exception>
+    public static bool IsHttpsUrl(this WebhookOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        return Uri.TryCreate(options.Url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+    }
+
+    /// <summary>
     /// Ensures the webhook options carry a secret token. When none is configured, a cryptographically random
     /// token is generated and stored in <see cref="WebhookOptions.SecretToken"/>; a configured token is kept.
     /// </summary>
