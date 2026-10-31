@@ -13,6 +13,8 @@ namespace TelegramBotFramework.Middleware;
 /// </summary>
 public sealed class AuthenticationMiddleware
 {
+    private const string AuthenticatedAtItemKey = "AuthenticatedAt";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<AuthenticationMiddleware> _logger;
     private readonly HashSet<string> _publicEndpoints;
@@ -57,7 +59,7 @@ public sealed class AuthenticationMiddleware
             return;
         }
 
-        context.Items["AuthenticatedAt"] = DateTime.UtcNow;
+        context.Items[AuthenticatedAtItemKey] = DateTime.UtcNow;
         await _next(context);
     }
 
