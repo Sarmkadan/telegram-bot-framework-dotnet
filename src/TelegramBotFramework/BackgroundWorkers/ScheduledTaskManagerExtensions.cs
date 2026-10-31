@@ -237,6 +237,20 @@ public static class ScheduledTaskManagerExtensions
     }
 
     /// <summary>
+    /// Gets all tasks whose timer is currently enabled.
+    /// </summary>
+    /// <param name="taskManager">The task manager instance.</param>
+    /// <returns>Collection of running tasks.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="taskManager"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<ScheduledTask> GetRunningTasks(this ScheduledTaskManager taskManager)
+    {
+        ArgumentNullException.ThrowIfNull(taskManager);
+
+        return taskManager.GetAllTasks()
+            .Where(t => t.Timer?.Enabled == true);
+    }
+
+    /// <summary>
     /// Gets all overdue tasks (tasks that should have run but haven't executed yet).
     /// </summary>
     /// <param name="taskManager">The task manager instance.</param>
