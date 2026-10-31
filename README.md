@@ -3393,6 +3393,56 @@ if (invalidBase64 == null)
 }
 ```
 
+## CallbackDataSigner
+
+The `CallbackDataSigner` class protects inline keyboard `callback_data` against forgery. It appends a truncated HMAC-SHA256 signature to the payload when a button is created and verifies that signature when the callback query arrives, so the bot only acts on button presses it generated itself. Telegram limits `callback_data` to 64 bytes, so the signature is cut to 8 bytes (16 hex characters).
+
+**Key features:**
+- HMAC-SHA256 signatures appended as `{data}|{signature}`
+- Fits Telegram's 64-byte `callback_data` limit
+- Constant-time signature comparison
+- `TryValidate` returns the original payload without the signature
+- Tampered, unsigned, or wrongly keyed data is rejected without throwing
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Keyboard;
+using TelegramBotFramework.Utilities;
+
+// The secret should come from configuration, never from source code
+string secret = configuration["CallbackSigningSecret"]!;
+
+// Sign the payload when building the keyboard
+string signed = CallbackDataSigner.Sign("delete_account:123", secret);
+// e.g., "delete_account:123|3F2A9C1B7E4D0A58" (signature value depends on the secret)
+
+var keyboard = InlineKeyboardBuilder.Create()
+    .AddButton("🗑 Delete account", signed)
+    .AddButton("❌ Cancel", CallbackDataSigner.Sign("cancel", secret));
+
+// When the callback query arrives, verify it before processing
+string callbackData = update.CallbackData!;
+
+if (CallbackDataSigner.TryValidate(callbackData, secret, out var originalData))
+{
+    // originalData == "delete_account:123"
+    Console.WriteLine($"Verified action: {originalData}");
+}
+else
+{
+    // Forged, tampered, or unsigned callback data
+    Console.WriteLine("Rejected callback data");
+}
+
+// Tampering with the payload invalidates the signature
+bool forged = CallbackDataSigner.TryValidate("delete_account:999|3F2A9C1B7E4D0A58", secret, out _);
+Console.WriteLine(forged); // false
+
+// Sign throws ArgumentException if the signed value would exceed 64 bytes,
+// so keep the original payload short (about 47 ASCII characters at most)
+```
+
 ## ReflectionHelper
 
 The `ReflectionHelper` class provides utility methods for reflection operations, enabling dynamic type inspection, instantiation, and property manipulation at runtime. It simplifies common reflection patterns used throughout the framework for plugin architectures, dependency injection, and metadata-driven development.
