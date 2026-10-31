@@ -5804,6 +5804,70 @@ eventBus.Unsubscribe<UserRegisteredEvent>(handler);
 eventBus.Clear();
 ```
 
+## IEventBus
+
+The `IEventBus` interface defines the contract for the publish-subscribe event bus in the Telegram Bot Framework. It lets components depend on an abstraction instead of a concrete bus, so you can swap implementations or substitute a test double. The framework includes two built-in implementations: `EventBus`, which dispatches handlers according to `EventDispatchOptions`, and `InMemoryEventBus`. Both support event middleware, which wraps handler execution in a pipeline (for example, for logging, timing, or filtering).
+
+The interface exposes the following members:
+
+- `Subscribe<TEvent>(IEventHandler<TEvent> handler)` and `Unsubscribe<TEvent>(IEventHandler<TEvent> handler)` manage handlers for an event type.
+- `PublishAsync<TEvent>(TEvent @event)` delivers an event to all subscribers, running registered middleware first. Throws `ArgumentNullException` when the event is `null`.
+- `GetSubscriberCount<TEvent>()` returns the number of handlers subscribed to an event type.
+- `RegisterMiddleware(IEventMiddleware middleware)` adds middleware. Middleware runs in registration order, and registering the same instance twice has no effect.
+- `GetMiddleware()` returns the registered middleware in registration order.
+- `Clear()` removes all subscriptions. Registered middleware is kept.
+
+Events implement `IEvent`, or inherit from the `EventBase` class, which sets `OccurredAt` and generates a `CorrelationId` automatically. Middleware implements `IEventMiddleware` and calls `next()` to continue the pipeline.
+
+**Example usage:**
+
+```csharp
+using TelegramBotFramework.Events;
+
+// Define an event by inheriting from EventBase
+public sealed class OrderPlacedEvent : EventBase
+{
+    public long UserId { get; init; }
+    public decimal Total { get; init; }
+}
+
+// Define a handler
+public sealed class OrderPlacedHandler : IEventHandler<OrderPlacedEvent>
+{
+    public Task HandleAsync(OrderPlacedEvent @event)
+    {
+        Console.WriteLine($"Order for user {@event.UserId}: {@event.Total}");
+        return Task.CompletedTask;
+    }
+}
+
+// Define middleware that times handler execution
+public sealed class TimingEventMiddleware : IEventMiddleware
+{
+    public string MiddlewareName => nameof(TimingEventMiddleware);
+
+    public async Task InvokeAsync(IEvent evt, Func<Task> next)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        await next();
+        Console.WriteLine($"{evt.EventType} handled in {stopwatch.ElapsedMilliseconds} ms");
+    }
+}
+
+// Program against the interface
+IEventBus eventBus = new EventBus();
+eventBus.RegisterMiddleware(new TimingEventMiddleware());
+
+var handler = new OrderPlacedHandler();
+eventBus.Subscribe<OrderPlacedEvent>(handler);
+
+await eventBus.PublishAsync(new OrderPlacedEvent { UserId = 42, Total = 19.99m });
+
+eventBus.GetSubscriberCount<OrderPlacedEvent>(); // Returns 1
+eventBus.Unsubscribe<OrderPlacedEvent>(handler);
+eventBus.Clear();
+```
+
 ## WebhookOptions
 
 The `WebhookOptions` class provides configuration settings for Telegram webhook mode. It defines the URL, secret token, connection limits, and update filtering options that control how your bot receives updates from Telegram via HTTPS webhooks.
