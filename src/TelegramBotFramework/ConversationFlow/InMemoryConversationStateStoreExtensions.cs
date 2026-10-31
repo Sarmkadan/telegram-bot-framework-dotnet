@@ -228,4 +228,26 @@ public static class InMemoryConversationStateStoreExtensions
 
         return removedCount;
     }
+
+    /// <summary>
+    /// Loads all active states (Active or WaitingForInput) that belong to the specified flow.
+    /// Useful for flow-scoped batch operations such as notifying only users inside a given flow.
+    /// </summary>
+    /// <param name="store">The state store instance.</param>
+    /// <param name="flowId">The flow identifier to filter by.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A read-only list of active states for the specified flow.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="flowId"/> is <c>null</c>, empty, or whitespace.</exception>
+    public static async Task<IReadOnlyList<UserFlowState>> LoadStatesByFlowAsync(
+        this InMemoryConversationStateStore store,
+        string flowId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentException.ThrowIfNullOrWhiteSpace(flowId);
+
+        var activeStates = await store.LoadAllActiveStatesAsync(cancellationToken).ConfigureAwait(false);
+        return activeStates.Where(s => string.Equals(s.FlowId, flowId, StringComparison.Ordinal)).ToList().AsReadOnly();
+    }
 }
