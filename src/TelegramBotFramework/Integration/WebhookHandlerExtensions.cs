@@ -8,6 +8,8 @@ namespace TelegramBotFramework.Integration;
 /// </summary>
 public static class WebhookHandlerExtensions
 {
+    private const char CommandPrefix = '/';
+
     /// <summary>
     /// Extracts the message text from the webhook update if available.
     /// </summary>
@@ -73,5 +75,21 @@ public static class WebhookHandlerExtensions
         ArgumentNullException.ThrowIfNull(update);
 
         return update.Message?.UserId ?? 0;
+    }
+
+    /// <summary>
+    /// Determines whether the update contains a message whose text is a bot command (starts with <c>/</c>).
+    /// </summary>
+    /// <param name="handler">The webhook handler instance.</param>
+    /// <param name="update">The Telegram update to check.</param>
+    /// <returns>True if the message text starts with a command prefix, otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="update"/> is <see langword="null"/></exception>
+    public static bool IsCommandMessage(this WebhookHandler handler, TelegramUpdate update)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ArgumentNullException.ThrowIfNull(update);
+
+        return update.Message?.Text?.StartsWith(CommandPrefix) ?? false;
     }
 }
