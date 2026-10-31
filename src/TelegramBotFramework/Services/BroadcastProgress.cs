@@ -80,6 +80,17 @@ public sealed class BroadcastProgress : IBroadcastProgress
         EstimatedTimeRemaining = estimatedTimeRemaining;
         CurrentMessagesPerSecond = currentMessagesPerSecond;
     }
+
+    /// <summary>
+    /// Returns a concise human-readable summary of the broadcast progress.
+    /// </summary>
+    public override string ToString()
+    {
+        var eta = EstimatedTimeRemaining.HasValue ? EstimatedTimeRemaining.Value.ToString() : "unknown";
+        return $"Broadcast {ProcessedCount}/{TotalChats} ({ProgressPercentage}%): " +
+               $"{SuccessCount} sent, {FailedCount} failed, elapsed {ElapsedTime}, ETA {eta}, " +
+               $"{CurrentMessagesPerSecond:F2} msg/s";
+    }
 }
 
 /// <summary>
