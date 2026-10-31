@@ -3443,6 +3443,42 @@ Console.WriteLine(forged); // false
 // so keep the original payload short (about 47 ASCII characters at most)
 ```
 
+## TokenRedaction
+
+The `TokenRedaction` class masks Telegram bot tokens in strings before they reach logs, error reports, or telemetry. Telegram puts the token in every request URL (`https://api.telegram.org/bot<token>/method`), and HTTP client exceptions often echo that URL back. Each helper replaces the token with `[BOT_TOKEN_REDACTED]` and leaves the rest of the text unchanged.
+
+**Key features:**
+- Redacts `bot<id>:<secret>` tokens from URLs and free-form messages
+- `RedactToken` checks an exception's message and its inner exceptions
+- Inner exception text is included (redacted) only when the outer message contained a token
+- Text without a token is returned unchanged
+- Null arguments throw `ArgumentNullException`
+
+**Example usage**
+
+```csharp
+using TelegramBotFramework.Utilities;
+
+// Redact a request URL before logging it
+string url = "https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getMe";
+string safeUrl = TokenRedaction.RedactTokenFromUrl(url);
+Console.WriteLine(safeUrl); // https://api.telegram.org/[BOT_TOKEN_REDACTED]/getMe
+
+// Redact a free-form message
+string message = "Request failed for bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11";
+Console.WriteLine(TokenRedaction.RedactTokenFromMessage(message)); // Request failed for [BOT_TOKEN_REDACTED]
+
+// Redact an exception before logging it
+try
+{
+    await httpClient.GetAsync(url, cancellationToken);
+}
+catch (HttpRequestException ex)
+{
+    logger.LogError("Telegram call failed: {Message}", TokenRedaction.RedactToken(ex));
+}
+```
+
 ## ReflectionHelper
 
 The `ReflectionHelper` class provides utility methods for reflection operations, enabling dynamic type inspection, instantiation, and property manipulation at runtime. It simplifies common reflection patterns used throughout the framework for plugin architectures, dependency injection, and metadata-driven development.
