@@ -81,6 +81,38 @@ namespace TelegramBotFramework.Integration
         }
 
         /// <summary>
+        /// Deletes a message from a chat after validating the chat and message identifiers
+        /// </summary>
+        /// <param name="client">The Telegram API client</param>
+        /// <param name="chatId">Target chat identifier</param>
+        /// <param name="messageId">Message identifier to delete</param>
+        /// <returns>The result of the deletion; its value is true when the message was deleted</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+        /// <exception cref="ArgumentException"><paramref name="chatId"/> is invalid or <paramref name="messageId"/> is not positive</exception>
+        public static async Task<ApiResult<bool>> DeleteMessageWithValidationAsync(
+            this ITelegramApiClient client,
+            long chatId,
+            int messageId)
+        {
+            ArgumentNullException.ThrowIfNull(client);
+
+            if (!ValidationUtility.IsValidTelegramChatId(chatId))
+            {
+                throw new ArgumentException(TelegramApiClientExtensionsConstants.InvalidChatIdError, nameof(chatId));
+            }
+
+            if (messageId < TelegramApiClientExtensionsConstants.MinimumMessageId)
+            {
+                throw new ArgumentException(TelegramApiClientExtensionsConstants.MessageIdMustBePositiveError, nameof(messageId));
+            }
+
+            return await client.DeleteMessageAsync(
+                chatId,
+                messageId
+            ).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Answers a callback query with optional notification text
         /// </summary>
         /// <param name="client">The Telegram API client</param>
