@@ -124,4 +124,12 @@ public sealed class BroadcastResult : IBroadcastResult
             failures,
             summary);
     }
+
+    /// <summary>
+    /// Returns a concise human-readable summary of the broadcast outcome.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"Total: {TotalChats}, Succeeded: {SuccessCount}, Failed: {FailedCount}, AllSuccessful: {AllSuccessful}";
+    }
 }
