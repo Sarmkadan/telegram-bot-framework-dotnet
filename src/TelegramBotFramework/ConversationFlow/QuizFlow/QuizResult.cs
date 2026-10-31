@@ -96,6 +96,17 @@ public sealed record QuizResult
 
         return summary.ToString().Trim();
     }
+
+    /// <summary>
+    /// Returns a concise, human-readable representation of the quiz result.
+    /// </summary>
+    /// <returns>A string containing the score, grade, question count, and completion time.</returns>
+    public override string ToString()
+    {
+        return $"QuizResult {{ Score = {TotalScore}/{MaxScore} ({Percentage:F1}%), Grade = {Grade}, " +
+               $"Questions = {QuestionResults.Count}, CompletedAt = {CompletedAt:O}, " +
+               $"UserId = {UserId?.ToString() ?? "n/a"}, ChatId = {ChatId?.ToString() ?? "n/a"} }}";
+    }
 }
 
 /// <summary>
