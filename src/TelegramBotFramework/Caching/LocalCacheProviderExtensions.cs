@@ -134,5 +134,29 @@ public static class LocalCacheProviderExtensions
         }
     }
 
+    /// <summary>
+    /// Gets a value from cache, throwing if the key is missing or the cached value is <see langword="null"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of value to retrieve.</typeparam>
+    /// <param name="provider">The cache provider instance.</param>
+    /// <param name="key">The cache key.</param>
+    /// <returns>The cached value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No value is cached under <paramref name="key"/>.</exception>
+    public static async Task<T> GetRequiredAsync<T>(this ILocalCacheProvider provider, string key)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+        ArgumentNullException.ThrowIfNull(key);
+
+        var value = await provider.GetAsync<T>(key).ConfigureAwait(false);
+        if (value is null)
+        {
+            throw new KeyNotFoundException($"No value is cached under key '{key}'.");
+        }
+
+        return value;
+    }
+
 
 }
