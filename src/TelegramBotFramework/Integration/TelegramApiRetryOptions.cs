@@ -111,6 +111,21 @@ public sealed class TelegramApiRetryOptions
                 nameof(BaseDelayMilliseconds));
         }
     }
+
+    /// <summary>
+    /// Returns a concise human-readable representation of the retry options.
+    /// </summary>
+    /// <returns>A string listing the retry attempts, delays and retry flags.</returns>
+    public override string ToString()
+    {
+        return $"TelegramApiRetryOptions {{ MaxRetryAttempts: {MaxRetryAttempts}, " +
+               $"BaseDelay: {BaseDelayMilliseconds}ms, MaxDelay: {MaxDelayMilliseconds}ms, " +
+               $"RespectRetryAfter: {RespectRetryAfter}, RetryOnServerErrors: {RetryOnServerErrors}, " +
+               $"RetryOnNetworkErrors: {RetryOnNetworkErrors}, RetryOnRateLimited: {RetryOnRateLimited}, " +
+               $"RetryOnTimeout: {RetryOnTimeout}, RetryOnServiceUnavailable: {RetryOnServiceUnavailable}, " +
+               $"RetryOnBadGateway: {RetryOnBadGateway}, RetryOnGatewayTimeout: {RetryOnGatewayTimeout}, " +
+               $"RetryOnInternalServerError: {RetryOnInternalServerError} }}";
+    }
 }
 
 /// <summary>
