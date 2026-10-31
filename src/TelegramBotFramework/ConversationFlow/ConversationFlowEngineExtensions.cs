@@ -114,4 +114,26 @@ public static class ConversationFlowEngineExtensions
         var state = await engine.GetActiveFlowStateAsync(userId, cancellationToken).ConfigureAwait(false);
         return state == null ? null : await engine.GetFlowAsync(state.FlowId, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Determines whether the user's active flow is currently holding for input at its current step.
+    /// </summary>
+    /// <param name="engine">The conversation flow engine. Cannot be <c>null</c>.</param>
+    /// <param name="userId">The Telegram user identifier.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>
+    /// <c>true</c> if the user has an active flow in <see cref="FlowStateStatus.WaitingForInput"/> status;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="engine"/> is <c>null</c>.</exception>
+    public static async Task<bool> IsWaitingForInputAsync(
+        this IConversationFlowEngine engine,
+        long userId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(engine);
+
+        var state = await engine.GetActiveFlowStateAsync(userId, cancellationToken).ConfigureAwait(false);
+        return state?.Status == FlowStateStatus.WaitingForInput;
+    }
 }
