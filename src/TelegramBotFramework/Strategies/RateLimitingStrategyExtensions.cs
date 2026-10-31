@@ -57,4 +57,25 @@ public static class RateLimitingStrategyExtensions
 
         return Task.FromResult(strategy.IsRequestAllowed(identifier));
     }
+
+    /// <summary>
+    /// Gets the number of requests remaining for the specified identifier under the rate limiting strategy.
+    /// </summary>
+    /// <param name="strategy">The rate limiting strategy to query.</param>
+    /// <param name="identifier">The identifier for the rate limiting bucket (e.g., user ID).</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The number of remaining requests allowed for the identifier.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="strategy"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="identifier"/> is null or empty.</exception>
+    public static Task<int> GetRemainingRequestsAsync(
+        this IRateLimitingStrategy strategy,
+        string identifier,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(strategy);
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Task.FromResult(strategy.GetRemainingRequests(identifier));
+    }
 }
