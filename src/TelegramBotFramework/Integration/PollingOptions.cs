@@ -27,4 +27,13 @@ public sealed class PollingOptions
     /// Gets or sets the graceful shutdown timeout used when draining in-flight handlers. Defaults to 30 seconds.
     /// </summary>
     public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Returns a concise human-readable summary of the polling options.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"PollInterval: {PollInterval}, MaxUpdatesPerBatch: {MaxUpdatesPerBatch}, " +
+               $"MaxInFlightUpdates: {MaxInFlightUpdates}, ShutdownTimeout: {ShutdownTimeout}";
+    }
 }
