@@ -31,4 +31,19 @@ public static class ExecutionContextExtensions
         ArgumentNullException.ThrowIfNull(context);
         return context.Errors?.Count > 0;
     }
+
+    /// <summary>
+    /// Checks if a parameter with the specified key has been set on the execution context.
+    /// </summary>
+    /// <param name="context">The execution context.</param>
+    /// <param name="key">The parameter key to look up.</param>
+    /// <returns>true if a parameter with the specified key exists; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
+    public static bool HasParameter(this ExecutionContext context, string key)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return context.Parameters?.ContainsKey(key) == true;
+    }
 }
