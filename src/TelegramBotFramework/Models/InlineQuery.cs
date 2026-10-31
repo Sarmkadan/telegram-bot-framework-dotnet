@@ -89,6 +89,14 @@ public sealed class InlineQuery : IInlineQuery, IEquatable<InlineQuery>
         AnsweredAt.HasValue
             ? (long)(AnsweredAt.Value - ReceivedAt).TotalMilliseconds
             : -1;
+
+    /// <summary>Returns a concise, human-readable representation of this inline query.</summary>
+    public override string ToString()
+    {
+        var answeredAt = AnsweredAt.HasValue ? AnsweredAt.Value.ToString("O") : "null";
+        return $"InlineQuery {{ QueryId={QueryId}, UserId={UserId}, Query=\"{Query}\", Offset=\"{Offset}\", " +
+               $"Status={Status}, ReceivedAt={ReceivedAt:O}, AnsweredAt={answeredAt} }}";
+    }
 }
 
 /// <summary>
