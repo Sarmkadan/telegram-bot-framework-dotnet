@@ -212,4 +212,21 @@ public static class FileConversationStateStoreExtensions
             .ToList()
             .AsReadOnly();
     }
+
+    /// <summary>
+    /// Counts the states that are currently active or waiting for user input.
+    /// </summary>
+    /// <param name="store">The conversation state store instance.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>The number of active or waiting-for-input states on disk.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="store"/> is <c>null</c>.</exception>
+    public static async Task<int> CountActiveStatesAsync(
+        this FileConversationStateStore store,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+
+        var allStates = await store.LoadAllActiveStatesAsync(cancellationToken).ConfigureAwait(false);
+        return allStates.Count;
+    }
 }
