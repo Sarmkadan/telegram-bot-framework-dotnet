@@ -48,4 +48,18 @@ public static class InlineQueryExtensions
         services.AddSingleton<IInlineQueryService, InlineQueryService>();
         return services;
     }
+
+    /// <summary>
+    /// Returns the query text in the normalized form used for case-insensitive matching:
+    /// surrounding whitespace removed and converted to lower case using the invariant culture.
+    /// </summary>
+    /// <param name="query">The inline query whose text should be normalized.</param>
+    /// <returns>The normalized query text; an empty string when the query has no text.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
+    public static string GetNormalizedQueryText(this Models.InlineQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        return query.Query.Trim().ToLowerInvariant();
+    }
 }
