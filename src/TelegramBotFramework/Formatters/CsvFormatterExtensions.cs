@@ -185,6 +185,43 @@ public static class CsvFormatterExtensions
     }
 
     /// <summary>
+    /// Formats a collection of objects as CSV data rows without a header line.
+    /// Useful for appending records to an existing CSV file that already has a header.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to format.</typeparam>
+    /// <param name="formatter">The CSV formatter instance.</param>
+    /// <param name="data">The collection of objects to format.</param>
+    /// <returns>CSV formatted string containing only data rows, or an empty string when there is no data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="formatter"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is <see langword="null"/>.</exception>
+    public static string FormatWithoutHeaders<T>(this CsvFormatter formatter, IEnumerable<T> data)
+    {
+        ArgumentNullException.ThrowIfNull(formatter);
+        ArgumentNullException.ThrowIfNull(data);
+
+        var list = data.ToList();
+        if (list.Count == 0)
+            return CsvFormatterExtensionsConstants.EmptyString;
+
+        var properties = typeof(T).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+            .Where(p => p.CanRead)
+            .ToList();
+
+        if (properties.Count == 0)
+            return CsvFormatterExtensionsConstants.EmptyString;
+
+        var sb = new System.Text.StringBuilder();
+
+        foreach (var item in list)
+        {
+            var values = properties.Select(p => EscapeField(p.GetValue(item)?.ToString()));
+            sb.AppendLine(string.Join(CsvFormatterExtensionsConstants.FieldSeparator, values));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Escapes a field value for CSV format.
     /// </summary>
     private static string EscapeField(string? field)
