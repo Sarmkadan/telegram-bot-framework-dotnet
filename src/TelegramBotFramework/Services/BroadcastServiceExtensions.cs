@@ -73,4 +73,19 @@ public static class BroadcastServiceExtensions
         });
         return services;
     }
+
+    /// <summary>
+    /// Adds BroadcastService as a singleton with default configuration.
+    /// Singleton lifetime shares the rate limiter and concurrency limiter across all callers,
+    /// so the overall send rate to Telegram stays bounded.
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <returns>Service collection for chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
+    public static IServiceCollection AddBroadcastServiceSingleton(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.TryAddSingleton<IBroadcastService, BroadcastService>();
+        return services;
+    }
 }
