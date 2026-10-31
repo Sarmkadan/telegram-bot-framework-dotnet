@@ -92,4 +92,18 @@ public static class ScheduledMessageServiceExtensions
 
         return service.GetScheduledMessage(messageId);
     }
+
+    /// <summary>
+    /// Gets all scheduled messages that are still waiting to be sent (neither cancelled nor already sent).
+    /// </summary>
+    /// <param name="service">The scheduled message service instance</param>
+    /// <returns>Collection of pending scheduled messages</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    public static IEnumerable<ScheduledMessage> GetPendingScheduledMessages(
+        this IScheduledMessageService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        return service.GetAllScheduledMessages().Where(m => !m.IsCancelled && !m.IsSent);
+    }
 }
