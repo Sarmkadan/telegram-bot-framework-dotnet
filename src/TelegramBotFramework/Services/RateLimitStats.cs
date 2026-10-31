@@ -62,4 +62,14 @@ public sealed class RateLimitStats : IRateLimitStats
         CurrentConcurrency = currentConcurrency;
         Timestamp = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Returns a concise, human-readable summary of the statistics.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"RateLimitStats {{ Limit: {MessagesPerSecond}/s, Concurrency: {CurrentConcurrency}/{MaxConcurrency}, " +
+               $"Sent: {TotalMessagesSent}, Failed: {TotalMessagesFailed}, Avg: {AverageMessagesPerSecond:F2}/s, " +
+               $"At: {Timestamp:u} }}";
+    }
 }
