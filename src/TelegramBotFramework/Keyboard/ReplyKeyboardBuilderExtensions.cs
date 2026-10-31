@@ -283,4 +283,28 @@ public static class ReplyKeyboardBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Adds a new row containing a Yes and a No button, for simple binary confirmations.
+    /// </summary>
+    /// <param name="builder">The keyboard builder.</param>
+    /// <param name="yesText">Label of the affirmative button.</param>
+    /// <param name="noText">Label of the negative button.</param>
+    /// <returns>The same builder instance for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="builder"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="yesText"/> or <paramref name="noText"/> is null, empty, or whitespace.
+    /// </exception>
+    public static IReplyKeyboardBuilder AddYesNoRow(this IReplyKeyboardBuilder builder,
+        string yesText = "✅ Yes",
+        string noText = "❌ No")
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.NewRow();
+        builder.AddButton(yesText);
+        return builder.AddButton(noText);
+    }
 }
